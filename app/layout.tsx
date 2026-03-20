@@ -54,10 +54,12 @@ export default function RootLayout({
         {typeof window !== "undefined" && window.location.pathname === "/app" && (
           <nav className="w-full flex justify-between items-center px-6 py-4 border-b border-white/10">
             
-            {/* LOGO */}
-            <Link href="/" className="font-bold text-lg">
-              Mastrify
-            </Link>
+            <Link
+  href="/"
+  className="font-bold text-lg bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent"
+>
+  Mastrify
+</Link>
 
           </nav>
         )}

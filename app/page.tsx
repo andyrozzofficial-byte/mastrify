@@ -48,9 +48,9 @@ export default function Home() {
       {/* HERO */}
       <section id="hero" className="flex flex-col items-center justify-center text-center px-6 pt-48 pb-40 animate-fadeIn">
 
-        <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-white via-gray-300 to-gray-500 bg-clip-text text-transparent tracking-tight drop-shadow-[0_0_40px_rgba(139,92,246,0.5)]">
-          Mastrify
-        </h1>
+        <h1 className="text-6xl md:text-7xl font-bold tracking-tight bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent">
+  Mastrify
+</h1>
 
         <p className="text-gray-400 max-w-xl mb-4 text-lg leading-relaxed">
           Turn your track into a professional master in seconds

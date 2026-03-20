@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { supabase } from "../../lib/supabase"
+import { motion } from "framer-motion"
 
 export default function Landing() {
 
@@ -60,7 +61,6 @@ export default function Landing() {
     setCount(prev => prev + 1)
     setEmail("")
 
-    // optional: auto-hide success efter 3 sek
     setTimeout(() => {
       setSubmitted(false)
     }, 3000)
@@ -70,51 +70,87 @@ export default function Landing() {
     <main className="min-h-screen bg-black text-white flex items-center justify-center px-6 relative overflow-hidden">
 
       {/* BACKGROUND */}
-      <div className="absolute inset-0 -z-10">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.5 }}
+        className="absolute inset-0 -z-10"
+      >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.25),transparent_65%)]" />
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-purple-500/25 blur-[220px] rounded-full" />
-        <div className="absolute bottom-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-500/20 blur-[220px] rounded-full" />
+
+        {/* subtle floating blobs */}
+        <motion.div
+          animate={{ y: [0, -20, 0] }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-purple-500/25 blur-[220px] rounded-full"
+        />
+
+        <motion.div
+          animate={{ y: [0, 20, 0] }}
+          transition={{ duration: 10, repeat: Infinity }}
+          className="absolute bottom-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-500/20 blur-[220px] rounded-full"
+        />
+
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
-      </div>
+      </motion.div>
 
-      {/* EXTRA GLOW */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(120,119,198,0.15),transparent_70%)]" />
-      <div className="absolute w-[800px] h-[800px] bg-purple-500/25 blur-[200px] rounded-full top-[-300px] left-[-200px]" />
-      <div className="absolute w-[700px] h-[700px] bg-blue-500/20 blur-[200px] rounded-full bottom-[-250px] right-[-150px]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black" />
-
+      {/* CONTENT */}
       <div className="relative z-10 text-center max-w-xl w-full">
 
         {/* TITLE */}
-        <h1 className="text-6xl md:text-7xl font-bold mb-4 tracking-tight bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent">
+        <motion.h1
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-6xl md:text-7xl font-bold mb-4 tracking-tight bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent"
+        >
           Mastrify
-        </h1>
+        </motion.h1>
 
         {/* COMING SOON */}
-        <p className="text-purple-400 text-xs tracking-widest uppercase mb-4">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+          className="text-purple-400 text-xs tracking-widest uppercase mb-4"
+        >
           Coming Soon
-        </p>
+        </motion.p>
 
         {/* DESCRIPTION */}
-        <p className="text-white/70 text-base md:text-lg mb-10 leading-relaxed max-w-2xl mx-auto">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.8 }}
+          className="text-white/70 text-base md:text-lg mb-10 leading-relaxed max-w-2xl mx-auto"
+        >
           AI-powered mix & mastering. <br />
           Release-ready in seconds.
-        </p>
+        </motion.p>
 
         {/* SUCCESS */}
         {submitted && (
-          <div className="mb-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-4"
+          >
             <p className="text-purple-300 text-lg font-semibold">
               🚀 You're on the list
             </p>
             <p className="text-white/40 text-xs mt-2">
               🔥 Join {count}+ producers already on the list
             </p>
-          </div>
+          </motion.div>
         )}
 
         {/* INPUT */}
-        <div className="flex gap-2 bg-white/5 border border-white/10 p-2 rounded-2xl backdrop-blur-xl shadow-[0_0_40px_rgba(139,92,246,0.15)]">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="flex gap-2 bg-white/5 border border-white/10 p-2 rounded-2xl backdrop-blur-xl shadow-[0_0_40px_rgba(139,92,246,0.15)]"
+        >
 
           <input
             type="email"
@@ -124,21 +160,27 @@ export default function Landing() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
             onClick={handleSubmit}
             disabled={loading}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-sm font-medium hover:scale-105 transition shadow-lg shadow-purple-500/30 disabled:opacity-50"
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-sm font-medium shadow-lg shadow-purple-500/30 disabled:opacity-50"
           >
             {loading ? "Joining..." : "Join"}
-          </button>
+          </motion.button>
 
-        </div>
+        </motion.div>
 
         {/* ERROR */}
         {errorMsg && (
-          <p className="text-red-400 text-sm mt-3">
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-red-400 text-sm mt-3"
+          >
             {errorMsg}
-          </p>
+          </motion.p>
         )}
 
       </div>
