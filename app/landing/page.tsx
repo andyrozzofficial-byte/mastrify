@@ -124,8 +124,10 @@ export default function Landing() {
   ref={audioRef}
   src={src}
   playsInline
+  playsInline
   preload="auto"
   controls={false}
+  controlsList="nodownload nofullscreen noremoteplayback"
   style={{ display: "none" }}
 />
 
@@ -260,6 +262,7 @@ border border-white/50"
               <div className="absolute left-1/2 -translate-x-1/2">
                 <motion.button
   onClick={togglePlay}
+  onTouchStart={() => {}}
   animate={
   playing
     ? { scale: 1 }
