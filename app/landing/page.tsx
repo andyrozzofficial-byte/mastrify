@@ -1,8 +1,7 @@
 "use client"
-
-import { useState, useEffect } from "react"
-import { supabase } from "../../lib/supabase"
 import { motion } from "framer-motion"
+import { useState, useEffect, useRef } from "react"
+import { supabase } from "../../lib/supabase"
 
 export default function Landing() {
 
@@ -11,6 +10,54 @@ export default function Landing() {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState("")
   const [count, setCount] = useState(0)
+  
+
+  // AUDIO
+  const [playing, setPlaying] = useState(false)
+  const [mode, setMode] = useState<"before" | "after">("before")
+  const [progress, setProgress] = useState(0)
+
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  const src =
+    mode === "before" ? "/audio/before.mp3" : "/audio/after.mp3"
+
+  /* LOAD AUDIO */
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    audio.pause()
+    setPlaying(false)
+    setProgress(0)
+
+    audio.src = src
+    audio.load()
+  }, [mode])
+
+  /* PROGRESS */
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const update = () => {
+      if (!audio.duration) return
+      setProgress((audio.currentTime / audio.duration) * 100)
+    }
+
+    audio.addEventListener("timeupdate", update)
+    return () => audio.removeEventListener("timeupdate", update)
+  }, [])
+
+  const handleSeek = (e: any) => {
+    const audio = audioRef.current
+    if (!audio || !audio.duration) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const percent = (e.clientX - rect.left) / rect.width
+
+    audio.currentTime = percent * audio.duration
+  }
 
   useEffect(() => {
     const fetchCount = async () => {
@@ -27,15 +74,8 @@ export default function Landing() {
   const handleSubmit = async () => {
     setErrorMsg("")
 
-    if (!email) {
-      setErrorMsg("Enter an email")
-      return
-    }
-
-    if (!email.includes("@")) {
-      setErrorMsg("Enter a valid email")
-      return
-    }
+    if (!email) return setErrorMsg("Enter an email")
+    if (!email.includes("@")) return setErrorMsg("Enter a valid email")
 
     setLoading(true)
 
@@ -46,145 +86,256 @@ export default function Landing() {
     setLoading(false)
 
     if (error) {
-      console.log(error)
-
       if (error.message.includes("duplicate")) {
         setErrorMsg("You're already on the list 😉")
       } else {
         setErrorMsg("Something went wrong")
       }
-
       return
     }
 
     setSubmitted(true)
     setCount(prev => prev + 1)
     setEmail("")
+    setTimeout(() => setSubmitted(false), 3000)
+  }
 
-    setTimeout(() => {
-      setSubmitted(false)
-    }, 3000)
+  const togglePlay = async () => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    try {
+      if (playing) {
+        audio.pause()
+        setPlaying(false)
+      } else {
+        await audio.play()
+        setPlaying(true)
+      }
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center px-6 relative overflow-hidden">
+    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-20 relative overflow-hidden">
+
+      <audio ref={audioRef} preload="auto" />
 
       {/* BACKGROUND */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.5 }}
-        className="absolute inset-0 -z-10"
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.25),transparent_65%)]" />
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.35),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(59,130,246,0.25),transparent_60%)]" />
+      </div>
 
-        {/* subtle floating blobs */}
-        <motion.div
-          animate={{ y: [0, -20, 0] }}
-          transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-purple-500/25 blur-[220px] rounded-full"
-        />
-
-        <motion.div
-          animate={{ y: [0, 20, 0] }}
-          transition={{ duration: 10, repeat: Infinity }}
-          className="absolute bottom-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-500/20 blur-[220px] rounded-full"
-        />
-
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
-      </motion.div>
-
-      {/* CONTENT */}
-      <div className="relative z-10 text-center max-w-xl w-full">
-
-        {/* TITLE */}
-        <motion.h1
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-6xl md:text-7xl font-bold mb-4 tracking-tight bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent"
-        >
+      {/* 🔥 MASRIFY LOGO TEXT */}
+      <div className="mb-6 text-center">
+        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight 
+bg-gradient-to-r from-white via-purple-300 to-purple-500 
+bg-clip-text text-transparent 
+drop-shadow-[0_0_35px_rgba(139,92,246,0.8)]">
           Mastrify
-        </motion.h1>
+        </h1>
+        <p className="text-purple-400 text-xs tracking-widest mt-2">
+          COMING SOON
+        </p>
+      </div>
 
-        {/* COMING SOON */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
-          className="text-purple-400 text-xs tracking-widest uppercase mb-4"
-        >
-          Coming Soon
-        </motion.p>
+      {/* 🔥 HEADLINE */}
+      <div className="text-center max-w-2xl">
 
-        {/* DESCRIPTION */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.8 }}
-          className="text-white/70 text-base md:text-lg mb-10 leading-relaxed max-w-2xl mx-auto"
-        >
-          AI-powered mix & mastering. <br />
-          Release-ready in seconds.
-        </motion.p>
+        <h1 className="text-5xl md:text-7xl font-extrabold leading-tight 
+bg-gradient-to-r from-white via-purple-200 to-blue-400 
+bg-clip-text text-transparent 
+drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
+  Fix your mix before <br /> you master it.
+</h1>
 
-        {/* SUCCESS */}
-        {submitted && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-4"
-          >
-            <p className="text-purple-300 text-lg font-semibold">
-              🚀 You're on the list
-            </p>
-            <p className="text-white/40 text-xs mt-2">
-              🔥 Join {count}+ producers already on the list
-            </p>
-          </motion.div>
-        )}
+        <p className="mt-6 text-white/70 text-lg">
+          AI shows exactly what's wrong with your track — before you release it.
+        </p>
 
         {/* INPUT */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-          className="flex gap-2 bg-white/5 border border-white/10 p-2 rounded-2xl backdrop-blur-xl shadow-[0_0_40px_rgba(139,92,246,0.15)]"
-        >
+        <div className="mt-10 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 blur-xl rounded-full" />
 
-          <input
-            type="email"
-            placeholder="Enter your email"
-            className="flex-1 bg-transparent px-4 py-3 text-sm outline-none text-white placeholder:text-white/40"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <div className="relative flex items-center bg-white/[0.05] border border-white/10 rounded-full p-2 backdrop-blur-xl">
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={handleSubmit}
-            disabled={loading}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-sm font-medium shadow-lg shadow-purple-500/30 disabled:opacity-50"
-          >
-            {loading ? "Joining..." : "Join"}
-          </motion.button>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder="Enter your email"
+              className="bg-transparent px-4 py-2 flex-1 outline-none"
+            />
 
-        </motion.div>
+            <button
+              onClick={handleSubmit}
+              className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 hover:scale-105 active:scale-95 transition shadow-[0_0_25px_rgba(139,92,246,0.8)]"
+            >
+              Try it now
+            </button>
 
-        {/* ERROR */}
-        {errorMsg && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-red-400 text-sm mt-3"
-          >
-            {errorMsg}
-          </motion.p>
-        )}
+          </div>
+        </div>
+
+        {count > 0 ? (
+  <p className="text-xs text-white/30 mt-3">
+    Join {count}+ producers already testing Mastrify
+  </p>
+) : (
+  <p className="text-xs text-white/20 mt-3">
+    Fix your mix in seconds
+  </p>
+)}
 
       </div>
 
+      {/* PLAYER */}
+      <div className="mt-16 md:mt-20 w-full max-w-3xl">
+
+        <h2 className="text-center text-2xl mb-6">
+          Hear the difference
+        </h2>
+
+        <div className="relative">
+
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-2xl rounded-2xl" />
+
+          <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-2xl shadow-[0_0_60px_rgba(139,92,246,0.25)]">
+
+            {/* TOGGLE */}
+            <div className="flex justify-center gap-4 mb-6">
+              {["before", "after"].map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m as any)}
+                  className={`px-6 py-2 rounded-full transition ${
+                    mode === m
+                      ? "bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_15px_rgba(139,92,246,0.6)]"
+                      : "bg-white/10 text-white/50"
+                  }`}
+                >
+                  {m.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            {/* PLAYER */}
+            <div className="relative h-20 flex items-center">
+
+              {/* WAVEFORM */}
+              <div
+                onClick={handleSeek}
+                className="absolute inset-0 flex items-center cursor-pointer"
+              >
+                <div className="w-full flex justify-between text-[6px] text-white/20">
+                  {Array.from({ length: 120 }).map((_, i) => (
+                    <span key={i}>|</span>
+                  ))}
+                </div>
+
+                <div
+                  className="absolute left-0 h-[2px] bg-gradient-to-r from-purple-400 to-blue-400 shadow-[0_0_20px_rgba(139,92,246,0.8)]"
+                  style={{ width: `${progress}%` }}
+                />
+
+                <div
+                  className="absolute w-5 h-5 rounded-full 
+bg-white 
+shadow-[0_0_25px_white] 
+border border-white/50"
+                  style={{ left: `${progress}%` }}
+                />
+              </div>
+
+              {/* PLAY */}
+              <div className="absolute left-1/2 -translate-x-1/2">
+                <motion.button
+  onClick={togglePlay}
+  animate={
+  playing
+    ? { scale: 1 }
+    : { scale: [1, 1.15, 1] }
+}
+  transition={{
+    duration: 1.8,
+    repeat: Infinity,
+  }}
+  className="w-20 h-20 rounded-full 
+  bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 
+  flex items-center justify-center 
+  hover:scale-110 active:scale-95 transition 
+  shadow-[0_0_60px_rgba(139,92,246,0.7)]"
+>
+  {playing ? "❚❚" : "▶"}
+</motion.button>
+              </div>
+
+            </div>
+
+            <p className="mt-6 text-center text-sm text-white/50">
+              <span className="block">Before: muddy, harsh, flat</span>
+              <span className="block mt-1">After: clean, punchy, wide</span>
+            </p>
+
+          </div>
+        </div>
+      </div>
+
+      {/* ANALYSIS + FEEDBACK (oförändrat) */}
+
+{/* ANALYSIS */}
+<div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl w-full">
+
+  {[
+    ["LUFS", "-17", "target -9"],
+    ["BASS", "Weak"],
+    ["HIGHS", "Harsh"],
+    ["STEREO", "Narrow"],
+  ].map((item, i) => (
+    <div key={i} className="relative">
+
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 blur-xl rounded-xl" />
+
+      <div className="relative h-[120px] flex flex-col justify-center bg-white/[0.04] border border-white/10 rounded-xl p-5 text-center backdrop-blur-xl hover:scale-[1.05] transition shadow-[0_0_25px_rgba(139,92,246,0.25)]">
+        <p className="text-xs text-white/40">{item[0]}</p>
+        <p className="text-lg font-semibold mt-2">{item[1]}</p>
+        {item[2] && <p className="text-xs text-white/40">{item[2]}</p>}
+      </div>
+
+    </div>
+  ))}
+
+</div>
+
+{/* FEEDBACK */}
+<div className="mt-16 max-w-xl w-full">
+
+  <h2 className="text-center text-2xl mb-6">
+    What needs fixing
+  </h2>
+
+  <div className="relative">
+
+    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 blur-2xl rounded-2xl" />
+
+    <div className="relative bg-white/[0.04] border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-[0_0_30px_rgba(139,92,246,0.25)]">
+
+      <ul className="space-y-3 text-white/70">
+        <li>• Your drop lacks low-end weight</li>
+        <li>• High frequencies are too sharp</li>
+        <li>• Mix feels too narrow</li>
+      </ul>
+
+    </div>
+
+  </div>
+
+</div>
+
     </main>
+
+    
   )
 }

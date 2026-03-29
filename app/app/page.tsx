@@ -5,10 +5,12 @@ import axios from "axios"
 
 
 
+
 /* 🔥 AUDIO PLAYER (UTANFÖR APP) */
 const AudioPlayer = ({ src, label }: { src: string; label: string }) => {
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
+  
   
 
 
@@ -190,8 +192,16 @@ export default function App() {
   const [showModal, setShowModal] = useState(false)
   const [email, setEmail] = useState("")
   const [submitted, setSubmitted] = useState(false)
-
+  const [flowData, setFlowData] = useState<any>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+ useEffect(() => {
+  const url = sessionStorage.getItem("audioUrl")
+
+  if (url) {
+    setBeforeUrl(url)
+  }
+}, [])
 
   const handleUpload = async () => {
     if (!file) return
@@ -291,14 +301,28 @@ const res = await resPromise
         <h1 className="text-7xl font-bold text-center mb-3 tracking-tight bg-gradient-to-r from-white to-purple-300 bg-clip-text text-transparent">
   Mastrify
 </h1>
+        
 
         <p className="text-center text-gray-400 mb-4 text-sm">
           AI mastering for modern artists
         </p>
 
         <p className="text-center text-purple-300 text-xs mb-12">
-          Upload your track → hear it like Spotify
+            Upload your track → hear it like Spotify
         </p>
+
+        {beforeUrl && (
+  <div className="mb-8">
+    <p className="text-xs text-gray-400 mb-2 text-center">
+      Your track is ready for mastering
+    </p>
+
+    <audio controls className="w-full">
+      <source src={beforeUrl} />
+    </audio>
+  </div>
+)}
+
 
         {/* CARD */}
         <div className="bg-white/5 border border-white/10 rounded-3xl p-10 backdrop-blur-md shadow-[0_0_40px_rgba(139,92,246,0.15),0_0_80px_rgba(59,130,246,0.08)] shadow-[0_0_120px_rgba(139,92,246,0.25)] hover:shadow-[0_0_160px_rgba(139,92,246,0.35)] transition-all duration-500 relative">

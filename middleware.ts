@@ -4,25 +4,42 @@ import type { NextRequest } from "next/server"
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
 
-  // 🔓 DEV MODE → du ser allt
+  const pathname = url.pathname
+
+  // 🔥 SKIP AUDIO FILES (DETTA ÄR FIXEN)
+  if (pathname.startsWith("/audio")) {
+    return NextResponse.next()
+  }
+
+  // 🔓 DEV MODE
   if (url.searchParams.get("dev") === "true") {
     return NextResponse.next()
   }
 
-  // ✅ Tillåt landing
-  if (url.pathname === "/landing") {
+  // 🔓 Flow bypass
+  if (url.searchParams.get("from") === "flow") {
     return NextResponse.next()
   }
 
-  // ✅ Tillåt assets
+  // ✅ Tillåt sidor
   if (
-    url.pathname.startsWith("/_next") ||
-    url.pathname.startsWith("/favicon")
+    pathname === "/" ||
+    pathname.startsWith("/flow") ||
+    pathname === "/app" ||
+    pathname === "/landing"
   ) {
     return NextResponse.next()
   }
 
-  // 🚫 ALLT annat → landing
+  // ✅ Static assets
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon")
+  ) {
+    return NextResponse.next()
+  }
+
+  // 🚫 Allt annat → landing
   url.pathname = "/landing"
   return NextResponse.redirect(url)
 }

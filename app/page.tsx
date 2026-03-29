@@ -1,8 +1,10 @@
 "use client"
+import { useRouter } from "next/navigation"
 
 import FadeIn from "./components/FadeIn"
 
 export default function Home() {
+  const router = useRouter()
 
   const scrollTo = (id: string) => {
     const el = document.getElementById(id)
@@ -27,7 +29,7 @@ export default function Home() {
           </div>
 
           <button
-            onClick={() => window.location.href = "/app"}
+            onClick={() => router.push("/flow")}
             className="relative px-4 py-2 rounded-lg text-sm bg-gradient-to-r from-purple-500 to-blue-500 hover:scale-105 transition duration-200 hover:shadow-[0_0_20px_rgba(139,92,246,0.6)]"
           >
             <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 blur-md opacity-40"></span>
@@ -48,7 +50,7 @@ export default function Home() {
       {/* HERO */}
       <section id="hero" className="flex flex-col items-center justify-center text-center px-6 pt-48 pb-40 animate-fadeIn">
 
-        <h1 className="text-6xl md:text-7xl font-bold tracking-tight bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent">
+        <h1 className="text-6xl md:text-7xl font-bold tracking-tight bg-gradient-to-r from-white via-purple-100 to-purple-300 bg-clip-text text-transparent">
   Mastrify
 </h1>
 
@@ -61,16 +63,20 @@ export default function Home() {
         </p>
 
         <button
-          onClick={() => window.location.href = "/app"}
+          onClick={() => window.location.href = "/flow"}
           className="relative px-6 py-3 rounded-xl font-medium bg-gradient-to-r from-purple-500 to-blue-500 hover:scale-105 active:scale-95 transition duration-200 hover:shadow-[0_0_40px_rgba(139,92,246,0.6)]"
         >
           <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 blur-lg opacity-40"></span>
-          <span className="relative">Upload your track</span>
+          <span className="relative">Try it now — free</span>
         </button>
 
         <p className="text-xs text-gray-500 mt-3">
-          Used by producers worldwide • No signup required
-        </p>
+  Used by producers worldwide
+</p>
+
+<p className="text-xs text-white/40 mt-2">
+  No signup required
+</p>
 
       </section>
 
@@ -96,7 +102,9 @@ export default function Home() {
 
       {/* 🔥 ABOUT */}
       <section id="about" className="px-6 pb-32 text-center max-w-2xl mx-auto">
-        <h2 className="text-3xl font-bold mb-6">About Mastrify</h2>
+        <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+  About Mastrify
+</h2>
         <p className="text-gray-400 leading-relaxed">
           Mastrify is built for producers who want professional sound fast.
           <br /><br />
@@ -108,7 +116,9 @@ export default function Home() {
 
       {/* 🔥 HOW */}
       <section id="how" className="px-6 pb-32 text-center">
-        <h2 className="text-3xl font-bold mb-10">How it works</h2>
+        <h2 className="text-3xl font-bold mb-10 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+  How it works
+</h2>
 
         <div className="flex flex-col md:flex-row justify-center gap-16 text-gray-400">
 
@@ -134,7 +144,9 @@ export default function Home() {
       <section id="pricing" className="px-6 pb-32">
         <div className="max-w-4xl mx-auto text-center">
 
-          <h2 className="text-3xl font-bold mb-4">Simple pricing</h2>
+          <h2 className="text-3xl font-bold mb-10 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+  How it works
+</h2>
           <p className="text-gray-400 mb-10 text-sm">
             Hear the difference before you pay
           </p>
@@ -145,8 +157,8 @@ export default function Home() {
               <h3 className="text-xl font-semibold mb-2">Free</h3>
               <p className="text-gray-400 mb-6 text-sm">Try before you buy</p>
               <p className="text-3xl font-bold mb-6">0€</p>
-              <button onClick={() => window.location.href = "/app"} className="w-full py-3 rounded-xl bg-white/10">
-                Try it
+             <button onClick={() => router.push("/flow")}>
+              Try it
               </button>
             </div>
 
@@ -156,7 +168,7 @@ export default function Home() {
               <p className="text-3xl font-bold mb-6">5€</p>
 
               <button
-                onClick={() => window.location.href = "/app"}
+                onClick={() => router.push("/flow")}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500"
               >
                 Download full master
@@ -182,6 +194,10 @@ export default function Home() {
           <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 blur-lg opacity-40"></span>
           <span className="relative">Upload your track</span>
         </button>
+
+        <p className="text-xs text-white/40 mt-3">
+  WAV • ~-6 dB headroom • no limiter
+</p>
 
       </section>
 
