@@ -275,7 +275,19 @@ border border-white/50"
   hover:scale-110 active:scale-95 transition 
   shadow-[0_0_60px_rgba(139,92,246,0.7)]"
 >
-  {playing ? "❚❚" : "▶"}
+  {playing ? (
+  <div className="flex gap-[3px]">
+    <div className="w-[3px] h-4 bg-white rounded-sm" />
+    <div className="w-[3px] h-4 bg-white rounded-sm" />
+  </div>
+) : (
+  <svg
+    viewBox="0 0 24 24"
+    className="w-6 h-6 fill-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
+  >
+    <polygon points="5,3 19,12 5,21" />
+  </svg>
+)}
 </motion.button>
               </div>
 
