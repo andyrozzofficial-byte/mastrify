@@ -120,7 +120,14 @@ export default function Landing() {
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-20 relative overflow-hidden">
 
-      <audio ref={audioRef} preload="auto" />
+      <audio
+  ref={audioRef}
+  src={src}
+  playsInline
+  preload="auto"
+  controls={false}
+  style={{ display: "none" }}
+/>
 
       {/* BACKGROUND */}
       <div className="absolute inset-0 -z-10">
