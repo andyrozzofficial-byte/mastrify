@@ -1,9 +1,11 @@
 "use client"
 import { motion } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { supabase } from "../../lib/supabase"
 
 export default function Landing() {
+  const router = useRouter()
 
   const [email, setEmail] = useState("")
   const [submitted, setSubmitted] = useState(false)
@@ -124,7 +126,7 @@ export default function Landing() {
   ref={audioRef}
   src={src}
   playsInline
-  playsInline
+  
   preload="auto"
   controls={false}
   controlsList="nodownload nofullscreen noremoteplayback"
@@ -179,11 +181,21 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
             />
 
             <button
-              onClick={handleSubmit}
-              className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 hover:scale-105 active:scale-95 transition shadow-[0_0_25px_rgba(139,92,246,0.8)]"
-            >
-              Try it now
-            </button>
+  onClick={async () => {
+  try {
+    if (email && email.includes("@")) {
+      await supabase.from("waitlist").insert([{ email }])
+    }
+  } catch (err) {
+    console.log("waitlist error", err)
+  }
+
+  router.push("/analyze")
+}}
+  className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 hover:scale-105 active:scale-95 transition"
+>
+  Try it now
+</button>
 
           </div>
         </div>

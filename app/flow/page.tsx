@@ -420,7 +420,7 @@ hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(139,92,246,0.6)]"
   Original vs Master
 </p>
 
-            {masteredUrl && (
+            {(audioUrl || masteredUrl) && (
               <div className="flex justify-center">
   <div className="bg-white/5 p-1 rounded-full flex gap-1 backdrop-blur-md border border-white/10">
 
