@@ -139,7 +139,7 @@ drop-shadow-[0_0_35px_rgba(139,92,246,0.8)]">
         ANALYSIS
       </p>
 
-      <h1 className="text-5xl md:text-7xl font-extrabold leading-tight 
+      <h1 className="text-5xl md:text-7xl font-extrabold leading-tight text-center 
 bg-gradient-to-r from-white via-purple-200 to-blue-400 
 bg-clip-text text-transparent 
 drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
