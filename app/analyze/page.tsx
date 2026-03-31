@@ -1,7 +1,7 @@
 "use client"
 
 import { supabase } from "../../lib/supabase"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import axios from "axios"
 import { motion } from "framer-motion"
 
@@ -31,6 +31,7 @@ export default function AnalyzePage() {
 
   const [showWaitlist, setShowWaitlist] = useState(false)
   const [file, setFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [loadingStep, setLoadingStep] = useState<string | null>(null)
@@ -152,43 +153,52 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
       </p>
 
       {/* UPLOAD */}
-      {!result && (
-        <div className="w-full max-w-md flex flex-col gap-4">
+{!result && (
+  <div className="w-full max-w-md flex flex-col gap-4">
 
-          <label className="w-full">
-  <div className="relative">
+    {/* hidden input */}
+    <input
+      type="file"
+      ref={fileInputRef}
+      className="hidden"
+      accept="audio/*"
+      onChange={(e) => {
+        const selectedFile = e.target.files?.[0]
+        if (selectedFile) {
+          setFile(selectedFile)
+        }
+      }}
+    />
 
-    {/* 🔥 GLOW BACKGROUND */}
-    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-xl rounded-xl" />
+    {/* DROP BOX */}
+    <div
+      onClick={() => fileInputRef.current?.click()}
+      className="relative cursor-pointer"
+    >
+      {/* glow */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-xl rounded-xl" />
 
-    {/* 🔥 DIN BOX (oförändrad men wrapped) */}
-    <div className="relative bg-white/5 border border-white/10 p-4 rounded-xl text-white/60 hover:border-purple-500 transition cursor-pointer text-center">
-      {file ? file.name : "Drop your track here"}
+      {/* box */}
+      <div className="relative bg-white/5 border border-white/10 p-4 rounded-xl text-white/60 hover:border-purple-500 transition text-center">
+        {file ? file.name : "Drop your track here"}
+      </div>
     </div>
 
+    {/* BUTTON */}
+    <button
+      onClick={() => fileInputRef.current?.click()}
+      className="bg-gradient-to-r from-purple-500 to-blue-500 px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition"
+    >
+      Scan my track
+    </button>
+
+    {/* INFO TEXT */}
+    <p className="text-xs text-gray-500 text-center mt-2 opacity-80">
+      Instant feedback • Takes 10 seconds • No signup
+    </p>
+
   </div>
-
-  <input
-    type="file"
-    accept="audio/*"
-    onChange={(e) => setFile(e.target.files?.[0] || null)}
-    className="hidden"
-  />
-</label>
-
-          <button
-            onClick={handleUpload}
-            className="bg-gradient-to-r from-purple-500 to-blue-500 px-8 py-4 rounded-xl text-lg font-semibold shadow-[0_0_30px_rgba(139,92,246,0.6)] hover:scale-105 active:scale-95 transition"
-          >
-            Scan my track
-          </button>
-
-          <p className="text-xs text-gray-500 text-center mt-2 opacity-80">
-  Instant feedback • Takes 10 seconds • No signup
-</p>
-
-        </div>
-      )}
+)}
 
       {/* LOADING */}
       {loading && (
