@@ -186,11 +186,17 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
     {/* BUTTON */}
     <button
-      onClick={() => fileInputRef.current?.click()}
-      className="bg-gradient-to-r from-purple-500 to-blue-500 px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition"
-    >
-      Scan my track
-    </button>
+  onClick={() => {
+    if (!file) {
+      fileInputRef.current?.click()
+    } else {
+      handleUpload()
+    }
+  }}
+  className="bg-gradient-to-r from-purple-500 to-blue-500 px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition"
+>
+  {file ? "Scan my track" : "Choose track"}
+</button>
 
     {/* INFO TEXT */}
     <p className="text-xs text-gray-500 text-center mt-2 opacity-80">
