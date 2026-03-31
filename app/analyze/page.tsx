@@ -171,11 +171,12 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
       className="hidden"
       accept="audio/*"
       onChange={(e) => {
-        const selectedFile = e.target.files?.[0]
-        if (selectedFile) {
-          setFile(selectedFile)
-        }
-      }}
+  const selectedFile = e.target.files?.[0]
+  if (selectedFile) {
+    setFile(selectedFile)
+    handleUpload() // 🔥 DETTA ÄR NYCKELN
+  }
+}}
     />
 
     {/* DROP BOX */}
