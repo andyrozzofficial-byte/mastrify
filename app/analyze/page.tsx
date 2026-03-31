@@ -81,49 +81,57 @@ export default function AnalyzePage() {
   const canMaster = result?.mixQuality > 70
 
   const handleUpload = async () => {
-    if (!file) return
+  if (!file) return
 
-    setLoading(true)
+  setLoading(true)
 
-    const formData = new FormData()
-    formData.append("file", file)
-    formData.append("mode", "mix")
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("mode", "mix")
 
-    try {
-      const res = await axios.post("https://mastrify-production.up.railway.app/analyze", formData)
+  try {
 
-      let steps = [
-        "Analyzing your mix...",
-        "Checking low end...",
-        "Analyzing stereo width...",
-        "Scanning dynamics..."
-      ]
+    console.log("SENDING FILE:", file)
 
-      setLoadingStep(steps[0])
-      let i = 1
+    const res = await axios.post(
+      "https://mastrify-backend-production.up.railway.app/analyze",
+      formData
+    )
 
-      const interval = setInterval(() => {
-        setLoadingStep(steps[i])
-        i++
-        if (i >= steps.length) clearInterval(interval)
-      }, 1000)
+    let steps = [
+      "Analyzing your mix...",
+      "Checking low end...",
+      "Analyzing stereo width...",
+      "Scanning dynamics..."
+    ]
 
-      setTimeout(() => {
-        setLoadingStep("Finalizing analysis...")
-      }, 3200)
+    setLoadingStep(steps[0])
+    let i = 1
 
-      setTimeout(() => {
-        console.log("RESULT:", res.data)
-        setResult(res.data)
-        setLoading(false)
-        setLoadingStep("")
-      }, 4200)
+    const interval = setInterval(() => {
+      setLoadingStep(steps[i])
+      i++
+      if (i >= steps.length) clearInterval(interval)
+    }, 1000)
 
-    } catch (err) {
-      console.error(err)
+    setTimeout(() => {
+      setLoadingStep("Finalizing analysis...")
+    }, 3200)
+
+    setTimeout(() => {
+      console.log("RESULT:", res.data)
+      setResult(res.data)
       setLoading(false)
-    }
+      setLoadingStep("")
+    }, 4200)
+
+  } catch (err: any) {
+
+    console.error("UPLOAD ERROR:", err?.response?.data || err.message)
+
+    setLoading(false)
   }
+}
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-start pt-32 px-6">
