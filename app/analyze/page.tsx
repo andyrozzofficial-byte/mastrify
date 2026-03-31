@@ -143,10 +143,11 @@ drop-shadow-[0_0_35px_rgba(139,92,246,0.8)]">
 bg-gradient-to-r from-white via-purple-200 to-blue-400 
 bg-clip-text text-transparent 
 drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
-  Your mix analysis
+  Your mix
+  analysis  
 </h1>
 
-      <p className="text-gray-400 mb-10 text-center max-w-xl">
+      <p className="text-gray-400 mt-4 mb-10 text-center max-w-xl">
         AI shows exactly what’s holding your track back — before you release it.
       </p>
 
@@ -162,7 +163,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
     {/* 🔥 DIN BOX (oförändrad men wrapped) */}
     <div className="relative bg-white/5 border border-white/10 p-4 rounded-xl text-white/60 hover:border-purple-500 transition cursor-pointer text-center">
-      {file ? file.name : "Drop your track here to see what's wrong with your mix"}
+      {file ? file.name : "Drop your track here"}
     </div>
 
   </div>
