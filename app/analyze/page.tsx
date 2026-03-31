@@ -90,7 +90,7 @@ export default function AnalyzePage() {
     formData.append("mode", "mix")
 
     try {
-      const res = await axios.post("http://localhost:3002/analyze", formData)
+      const res = await axios.post("http://192.168.0.106:3002/analyze", formData)
 
       let steps = [
         "Analyzing your mix...",
