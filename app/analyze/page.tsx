@@ -39,6 +39,9 @@ export default function AnalyzePage() {
   const [waitlistLoading, setWaitlistLoading] = useState(false)
   const [waitlistSuccess, setWaitlistSuccess] = useState(false)
   const [waitlistError, setWaitlistError] = useState("")
+  const issues = result?.issues || []
+  const recommendations = result?.recommendations || []
+  const verdict = result?.verdict
 
   const handleWaitlist = async () => {
   setWaitlistError("")
@@ -86,7 +89,7 @@ export default function AnalyzePage() {
   setLoading(true)
 
   const formData = new FormData()
-  formData.append("file", file)
+  formData.append("track", file)
   formData.append("mode", "mix")
 
   try {
@@ -94,9 +97,14 @@ export default function AnalyzePage() {
     console.log("SENDING FILE:", file)
 
     const res = await axios.post(
-      "https://mastrify-backend-production.up.railway.app/analyze",
-      formData
-    )
+  "https://mastrify-backend-production.up.railway.app/upload",
+  formData,
+  {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  }
+)
 
     let steps = [
       "Analyzing your mix...",
@@ -239,11 +247,13 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
   ready for release
 </h2>
 
-<p className="text-green-400 text-sm mt-1">
-  {result.issues.length === 0
-    ? "Strong mix with good dynamics — ready for mastering"
-    : "Good foundation — small improvements needed before mastering"}
-</p>
+
+
+{verdict && (
+  <p className="text-green-400 text-sm mt-2">
+    {verdict}
+  </p>
+)}
 
 
 
@@ -270,12 +280,12 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
           </div>
 
           <p className="text-gray-400 mb-6">
-  {result.issues.length > 0
-    ? `AI found ${result.issues.length} issues in your mix`
+  {issues.length > 0
+    ? `AI found ${issues.length} issue${issues.length > 1 ? "s" : ""} in your mix`
     : "AI verdict: your mix is production-ready"}
 </p>
 
-{result.issues.length > 0 && (
+{issues.length > 0 && (
   <p className="text-xs text-gray-400 mb-3">
     Fix these first for the biggest improvement
   </p>
@@ -285,7 +295,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
           {/* ISSUES */}
           <div className="mb-6">
             {/* ✅ NO ISSUES MESSAGE */}
-{result.issues.length === 0 && (
+{(result.issues?.length || 0) === 0 && (
   <>
     <div className="mb-4 text-green-400 font-medium">
       ✅ Ready for mastering — no critical issues detected
@@ -310,11 +320,11 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
 
 {/* ⚠️ ONLY SHOW ISSUES IF THEY EXIST */}
-{result.issues.length > 0 && (
+{(result.issues?.length || 0) > 0 && (
   <>
     <h3 className="font-semibold mb-2">Issues</h3>
 
-    {result.issues.map((issue: any, i: number) => {
+    {issues.map((issue: any, i: number) => {
 
   const current = Math.round(result.mixQuality)
   const next = Math.min(99, Math.round(current + (issue.realImpact || 0)))
@@ -366,15 +376,15 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
           {/* FIXES */}
 <div className="mb-6">
 
-  {result.issues.length > 0 ? (
+  {issues.length > 0 ? (
     <>
       <h3 className="font-semibold mb-2">
   How to fix your mix
 </h3>
 
-      {result.issues.map((issue: any, i: number) => {
+      {issues.map((issue: any, i: number) => {
         
-        const rec = result.recommendations[i]
+        const rec = recommendations[i]
 
         return (
           <div key={i} className="mb-4">
@@ -394,13 +404,13 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
       })}
 
       {/* PRO ENHANCEMENT SIST */}
-      {result.recommendations?.length > result.issues.length && (
+      {recommendations?.length > issues.length && (
         <div className="mt-4">
           <div className="font-semibold text-purple-300 mb-1">
             Pro enhancement
           </div>
 
-          {result.recommendations[result.recommendations.length - 1]?.steps?.map(
+          {recommendations[recommendations.length - 1]?.steps?.map(
             (step: string, j: number) => (
               <div key={j} className="text-sm text-gray-400 ml-2">
                 • {step}
@@ -417,7 +427,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
         Optional enhancement
       </h3>
 
-      {result.recommendations?.map((rec: any, i: number) => (
+      {recommendations?.map((rec: any, i: number) => (
         <div key={i} className="mb-3">
           <div className="font-semibold text-white">{rec.title}</div>
           {rec.steps?.map((step: string, j: number) => (
