@@ -85,10 +85,11 @@ export default function AnalyzePage() {
 
   const handleUpload = async () => {
   if (!file) return
+
   if (!file.type.startsWith("audio")) {
-  alert("Please upload an audio file")
-  return
-}
+    alert("Please upload an audio file (.wav, .mp3, .m4a)")
+    return
+  }
 
   setLoading(true)
 
