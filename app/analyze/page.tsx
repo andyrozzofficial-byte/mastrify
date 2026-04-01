@@ -177,7 +177,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
       type="file"
       ref={fileInputRef}
       className="hidden"
-      accept="audio/*"
+      accept="audio/*,video/*"
       onChange={(e) => {
   const selectedFile = e.target.files?.[0]
   if (selectedFile) {
