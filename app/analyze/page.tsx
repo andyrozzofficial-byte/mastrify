@@ -83,7 +83,7 @@ function generateIssues(result: any) {
   
   const issues: any[] = []
 
-  if (!result) return issues
+  if (!result) return issues.slice(0, 4)
 
   if (result.lufs < -12) {
     issues.push({
@@ -145,8 +145,28 @@ export default function AnalyzePage() {
   const [waitlistLoading, setWaitlistLoading] = useState(false)
   const [waitlistSuccess, setWaitlistSuccess] = useState(false)
   const [waitlistError, setWaitlistError] = useState("")
-  const issues = generateIssues(result)
-  const displayIssues = issues.slice(0, 6)
+  const issues = generateIssues(result).sort((a: any, b: any) => {
+  const order: any = { high: 0, medium: 1, low: 2 }
+  return order[a.level] - order[b.level]
+})
+  const high = issues.filter(i => i.level === "high")
+const medium = issues.filter(i => i.level === "medium")
+const low = issues.filter(i => i.level === "low")
+
+const fakeHigh = {
+  text: "Hidden critical issue",
+  level: "high",
+  realImpact: 8,
+  insight: "Unlock to see this issue"
+}
+
+const displayIssues = [
+  ...high.slice(0, 2),
+  ...(high.length === 0 ? [fakeHigh, fakeHigh] : high.length === 1 ? [fakeHigh] : []),
+  ...medium.slice(0, 1),
+  ...low.slice(0, 1)
+]
+  
   const recommendations = generateFixes(result)
   const verdict = result?.verdict
   const [showAll, setShowAll] = useState(false)
@@ -434,8 +454,11 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
     <div className="text-xs text-purple-300 text-center mt-1 mb-3 opacity-90">
   AI insight → mastering will enhance loudness, clarity and punch
 </div>
+
   </>
 )}
+
+
 
 
 
@@ -445,7 +468,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
     <h3 className="font-semibold mb-2">Issues</h3>
 
     {displayIssues.map((issue: any, i: number) => {
-      const isLocked = !showAll && i >= 3
+  const isLocked = !showAll && i < 2 && issue.level === "high"
 
   
 
@@ -456,11 +479,9 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
   return (
     <div
   key={i}
-  className={`flex items-start gap-3 mb-3 p-3 rounded-lg ${
-    isLocked ? "blur-sm opacity-50" : ""
-  } ${
-    i === 0 ? "bg-yellow-500/10 border border-yellow-500/30" : ""
-  }`}
+  className={`flex items-start gap-3 mb-3 p-3 rounded-lg relative ${
+  isLocked ? "blur-[8px] opacity-60" : ""
+}`}
 >
       <span className="text-lg">
         {issue.level === "high" && "🔴"}
@@ -470,10 +491,16 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
       <div>
         {i === 0 && (
-          <div className="text-xs text-yellow-400 mb-1 font-semibold">
-            MAIN ISSUE
-          </div>
-        )}
+  <>
+    <div className="text-xs text-red-400 mb-1 font-semibold">
+      MAIN ISSUE
+    </div>
+
+    <div className="text-xs text-gray-400 mb-1">
+      Most mixes fail here
+    </div>
+  </>
+)}
 
         <div className={`${i === 0 ? "font-semibold text-white" : ""}`}>
           {issue.text}
@@ -485,7 +512,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
           {isLocked && (
   <div className="text-xs text-purple-300 mt-1">
-    🔒 Premium insight
+    🔒 Locked insight
   </div>
 )}
 
@@ -501,21 +528,35 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
             </>
           )}
         </div>
+        {isLocked && (
+  <div className="absolute inset-0 flex flex-col items-center justify-center">
+    <div className="text-xs text-white/80 mb-1">
+      This is what's holding your track back
+    </div>
+
+    <div className="bg-black/60 px-4 py-2 rounded-lg text-sm text-purple-300 backdrop-blur-md">
+      🔒 Unlock to see
+    </div>
+  </div>
+)}
       </div>
     </div>
   )
 })}
 
+
+
 <p className="text-xs text-purple-300 text-center mb-2">
-  See exactly what’s holding your track back
+  Unlock full analysis
 </p>
 
-{!showAll && displayIssues.length > 3 && (
+
+{!showAll && displayIssues.length > 2 && (
   <button
     onClick={() => setShowWaitlist(true)}
     className="w-full mt-3 p-3 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/10 transition"
   >
-    🔓 Unlock full mix report
+    🔓 See what’s killing your mix
   </button>
 )}
   </>
@@ -531,16 +572,15 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
         How to improve your mix
       </h3>
 
-      {issues
-  .slice(0, showAll ? issues.length : 3)
-  .map((issue: any, i: number) => {
+      {issues.map((issue: any, i: number) => {
         const rec = recommendations[i]
-        const isLocked = !showAll && i >= 3
+        const FREE_ISSUES = 2
+        const isLocked = !showAll && i >= FREE_ISSUES
 
         return (
           <div
   key={i}
-  className={`mb-4 ${isLocked ? "blur-sm opacity-50" : ""}`}
+  className={`mb-4 ${isLocked ? "blur-[6px] opacity-40" : ""}`}
 >
 
             <div className="font-semibold text-white mb-1">
