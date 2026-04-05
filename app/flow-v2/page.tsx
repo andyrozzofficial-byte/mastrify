@@ -1,305 +1,191 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState } from "react"
 
-export default function FlowV2() {
+export default function FlowPage() {
+  const [analysis, setAnalysis] = useState<any>(null)
 
-  const [file, setFile] = useState<File | null>(null)
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [tab, setTab] = useState<"original" | "mastered">("mastered")
-  const [loading, setLoading] = useState(false)
+  async function handleUpload(e: any) {
+    const file = e.target.files[0]
+    if (!file) return
 
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+    const formData = new FormData()
+    formData.append("file", file)
 
-  const PREVIEW_LIMIT = 20
+    const res = await fetch("http://localhost:3001/analyze", {
+      method: "POST",
+      body: formData,
+    })
 
-  // 🎧 FILE UPLOAD
-  const handleFile = (f: File) => {
-    setFile(f)
-    setAudioUrl(URL.createObjectURL(f))
-
-    // fake AI processing
-    setLoading(true)
-    setTimeout(() => setLoading(false), 1800)
+    const data = await res.json()
+    setAnalysis(data)
   }
-
-  // ▶️ PLAY
-  const togglePlay = () => {
-    if (!audioRef.current) return
-
-    if (audioRef.current.paused) {
-      audioRef.current.currentTime = 0
-      audioRef.current.play()
-      setIsPlaying(true)
-    } else {
-      audioRef.current.pause()
-      setIsPlaying(false)
-    }
-  }
-
-  // 💰 PREVIEW LIMIT
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    const interval = setInterval(() => {
-      if (audio.currentTime >= PREVIEW_LIMIT) {
-        audio.pause()
-        setIsPlaying(false)
-      }
-    }, 200)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  // 🎨 REAL WAVEFORM
-  useEffect(() => {
-    if (!audioUrl) return
-
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    const audio = new Audio(audioUrl)
-    const audioCtx = new AudioContext()
-    const analyser = audioCtx.createAnalyser()
-    const source = audioCtx.createMediaElementSource(audio)
-
-    source.connect(analyser)
-    analyser.connect(audioCtx.destination)
-
-    analyser.fftSize = 256
-    const bufferLength = analyser.frequencyBinCount
-    const dataArray = new Uint8Array(bufferLength)
-
-    const draw = () => {
-      requestAnimationFrame(draw)
-
-      analyser.getByteFrequencyData(dataArray)
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      const barWidth = canvas.width / bufferLength
-
-      for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i] / 2
-
-        const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0)
-
-        if (tab === "original") {
-          gradient.addColorStop(0, "#888")
-          gradient.addColorStop(1, "#aaa")
-        } else {
-          gradient.addColorStop(0, "#a855f7")
-          gradient.addColorStop(1, "#3b82f6")
-        }
-
-        ctx.fillStyle = gradient
-
-        ctx.fillRect(
-          i * barWidth,
-          canvas.height - barHeight,
-          barWidth - 1,
-          barHeight
-        )
-      }
-    }
-
-    draw()
-
-  }, [audioUrl, tab])
 
   return (
-    <main className="min-h-screen bg-black text-white relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-[#05070d] via-[#0b0f1a] to-black text-white flex items-center justify-center">
 
-      {/* 🌌 BACKGROUND */}
-      <div className="absolute inset-0">
+      <div className="w-full max-w-7xl px-6">
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_60%)]" />
-
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-purple-500/10 blur-[180px]" />
-
-        <div className="absolute bottom-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-500/10 blur-[180px]" />
-
-        <div className="absolute inset-0 bg-black/80" />
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-14 grid md:grid-cols-2 gap-12">
-
-        {/* LEFT */}
-        <div className="space-y-6">
-
-          <p className="text-xs tracking-[0.3em] text-white/50">
-            MASTRIFY
-          </p>
-
-          <h1 className="text-5xl font-semibold leading-tight">
-            Make your track sound pro ✨
+        {/* HEADER */}
+        <div className="text-center mb-12">
+          <h1 className="text-2xl tracking-widest bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            MASTRIFY AI ANALYZER
           </h1>
-
-          <p className="text-white/40 text-sm">
-            AI-powered mixing & mastering in seconds
+          <p className="text-white/40 text-sm mt-2">
+            Make your mix release-ready
           </p>
-
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl space-y-4">
-
-            <div className="text-center">
-              <p className="text-sm text-white/70">
-                Upload your track
-              </p>
-              <p className="text-xs text-white/40">
-                Drag & drop your WAV/MP3 file
-              </p>
-            </div>
-
-            <label className="block w-full text-center bg-gradient-to-r from-purple-500 to-blue-500 py-3 rounded-xl cursor-pointer font-medium">
-              Choose file
-              <input
-                type="file"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  if (f) handleFile(f)
-                }}
-              />
-            </label>
-
-            {file && (
-              <div className="bg-white/5 rounded-xl p-3 text-xs flex justify-between">
-                <span>{file.name}</span>
-                <span className="text-green-400">✔</span>
-              </div>
-            )}
-
-            {loading && (
-              <div className="text-xs text-blue-400 text-center">
-                ⚡ Analyzing & mastering...
-              </div>
-            )}
-
-          </div>
-
-          <div className="flex gap-6 text-xs text-white/40">
-            <span>⭐ 4.9/5</span>
-            <span>Instant download</span>
-            <span>No subscription</span>
-          </div>
-
         </div>
 
-        {/* RIGHT */}
-        <div className="space-y-5">
+        {/* 🔥 WAVEFORM */}
+        <div className="relative mb-16">
 
-          {/* PLAYER */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-xl">
+  <div className="h-24 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-400 to-orange-400"></div>
 
-            <div className="flex justify-between mb-3">
+  {/* glow */}
+  <div className="absolute inset-0 blur-2xl opacity-40 bg-gradient-to-r from-blue-600 via-cyan-400 to-orange-400"></div>
 
-              <p className="text-sm text-white/60">
-                Compare your track
-              </p>
+  {/* overlay depth */}
+  <div className="absolute inset-0 bg-black/40 rounded-xl"></div>
 
-              <div className="flex text-xs bg-white/10 rounded-full">
-                <button
-                  onClick={() => setTab("original")}
-                  className={`px-3 py-1 rounded-full ${
-                    tab === "original" ? "bg-white/20" : ""
-                  }`}
-                >
-                  Original
-                </button>
+  {/* subtle scan line */}
+  <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,white/10,transparent)] animate-pulse"></div>
 
-                <button
-                  onClick={() => setTab("mastered")}
-                  className={`px-3 py-1 rounded-full ${
-                    tab === "mastered" ? "bg-blue-500" : ""
-                  }`}
-                >
-                  Mastered
-                </button>
+</div>
+
+        {/* MAIN */}
+        <div className="flex items-center justify-center gap-8">
+
+          {/* LEFT PANEL */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-xl shadow-[0_0_60px_rgba(0,255,255,0.06)]">
+
+            <h2 className="text-white/70 mb-6">Mix Analysis</h2>
+
+            <div className="space-y-6 text-sm">
+
+              <div className="text-red-400">
+                ▲ Your low end is muddy
+                <p className="text-white/40 text-xs mt-1">
+                  Cut below 100 Hz
+                </p>
+              </div>
+
+              <div className="text-yellow-400">
+                ▲ Lacks stereo width
+                <p className="text-white/40 text-xs mt-1">
+                  Add widening
+                </p>
+              </div>
+
+              <div className="text-green-400">
+                ✔ Loudness is OK
               </div>
 
             </div>
 
-            <canvas
-              ref={canvasRef}
-              width={500}
-              height={80}
-              className="w-full h-20 mb-3"
+          </div>
+
+
+          {/* CENTER */}
+          <div className="flex flex-col items-center">
+
+            <input
+              type="file"
+              accept="audio/*"
+              onChange={handleUpload}
+              className="mb-6 text-sm"
             />
 
-            <button
-              onClick={togglePlay}
-              className="w-full bg-white/10 py-2 rounded-lg text-sm"
-            >
-              {isPlaying ? "Pause preview" : "Play preview"}
-            </button>
+            {/* 🔥 RING */}
+            <div className="relative w-56 h-56 flex items-center justify-center">
 
-            <p className="text-xs text-red-400 text-center mt-2">
-              Preview limited to 20 seconds
-            </p>
+  {/* outer glow */}
+  <div className="absolute w-full h-full rounded-full bg-cyan-400/20 blur-3xl"></div>
+
+    <div className="absolute w-full h-full rounded-full bg-cyan-400/20 blur-3xl"></div>
+
+  <svg className="w-full h-full rotate-[-90deg]">
+
+    <defs>
+      <linearGradient id="grad">
+        <stop offset="0%" stopColor="#22d3ee" />
+        <stop offset="50%" stopColor="#3b82f6" />
+        <stop offset="100%" stopColor="#2dd4bf" />
+      </linearGradient>
+    </defs>
+
+    {/* background ring */}
+    <circle
+      cx="112"
+      cy="112"
+      r="100"
+      stroke="rgba(255,255,255,0.06)"
+      strokeWidth="10"
+      fill="none"
+    />
+
+    {/* progress ring */}
+    <circle
+      cx="112"
+      cy="112"
+      r="100"
+      stroke="url(#grad)"
+      strokeWidth="10"
+      fill="none"
+      strokeDasharray={Math.PI * 2 * 100}
+      strokeDashoffset={
+        Math.PI * 2 * 100 -
+        (Math.PI * 2 * 100 * (analysis?.score || 75)) / 100
+      }
+      strokeLinecap="round"
+      style={{ transition: "stroke-dashoffset 0.8s ease" }}
+    />
+  </svg>
+
+  {/* number */}
+  <div className="absolute text-5xl font-bold">
+    {analysis?.score || 75}%
+  </div>
+
+</div>
+
+            <p className="mt-4 text-white/50 text-sm tracking-widest uppercase">
+  Ready for release
+</p>
 
           </div>
 
-          {/* RESULT */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-xl">
 
-            <div className="flex justify-between mb-4">
-              <p className="text-green-400 text-sm font-semibold">
-                🚀 Your master is ready
+          {/* RIGHT PANEL */}
+          <div className="w-80 bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-xl shadow-[0_0_60px_rgba(0,255,255,0.06)]">
+
+            <h2 className="text-white/70 mb-6">Tips</h2>
+
+            <ul className="space-y-3 text-white/60 text-sm">
+              <li>• Reduce low frequencies</li>
+              <li>• Boost vocals 2–5 kHz</li>
+              <li>• Add stereo width</li>
+            </ul>
+
+            <div className="pt-6 border-t border-white/10 mt-6">
+
+              <p className="text-white/40 text-xs">Loudness</p>
+              <p className="text-lg">
+                {analysis?.lufs || "-9.7"} LUFS
               </p>
 
-              <span className="text-xs bg-white/10 px-2 py-1 rounded">
-                73/100
-              </span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 text-xs mb-5">
-
-              <div>
-                <p className="text-white/40 mb-2">Mix</p>
-                <p>✔ Stereo widened</p>
-                <p>✔ Low end crisp</p>
-                <p>✔ Vocals clear</p>
-              </div>
-
-              <div>
-                <p className="text-white/40 mb-2">Fix</p>
-                <p className="text-red-400">+5 dB</p>
-                <p className="text-red-400">Limiter</p>
-                <p className="text-red-400">Widen</p>
-              </div>
-
-              <div>
-                <p className="text-white/40 mb-2">Chain</p>
-                <p>Gain</p>
-                <p>Limiter</p>
-                <p>Stereo</p>
-              </div>
+              <p className="text-white/40 text-xs mt-4">
+                Dynamic Range
+              </p>
+              <p className="text-lg">
+                {analysis?.dynamicRange || "8"}
+              </p>
 
             </div>
-
-            <button className="w-full py-3 rounded-xl bg-gradient-to-r from-green-400 to-emerald-500 text-black font-semibold">
-              Get your pro master – 5€
-            </button>
-
-            <p className="text-xs text-white/40 text-center mt-2">
-              Your mastered track will be ready in seconds
-            </p>
 
           </div>
 
         </div>
-
       </div>
-
-      {/* AUDIO FIX */}
-      {audioUrl && <audio ref={audioRef} src={audioUrl} />}
-
-    </main>
+    </div>
   )
 }

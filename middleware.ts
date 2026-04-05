@@ -22,13 +22,14 @@ export function middleware(request: NextRequest) {
   }
 
   // ✅ Tillåt sidor
-  if (
-    pathname === "/" ||
-    pathname.startsWith("/flow") ||
-    pathname.startsWith("/analyze") ||
-    pathname === "/app" ||
-    pathname === "/landing"
-  ) {
+if (
+  pathname === "/" ||
+  pathname.startsWith("/flow") ||
+  pathname.startsWith("/analyze") ||
+  pathname.startsWith("/pro") ||   // 👈 LÄGG TILL DENNA
+  pathname === "/app" ||
+  pathname === "/landing"
+) {
     return NextResponse.next()
   }
 

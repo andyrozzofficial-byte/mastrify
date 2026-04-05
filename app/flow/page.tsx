@@ -7,6 +7,7 @@ type Step = "upload" | "analyzing" | "done"
 
 export default function FlowPage() {
 
+  const sleep = (ms: number) => new Promise(res => setTimeout(res, ms))
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -19,6 +20,11 @@ export default function FlowPage() {
   const [audioUrl, setAudioUrl] = useState("")
   const [masteredUrl, setMasteredUrl] = useState("")
   const [preview, setPreview] = useState<"mastered" | "original">("mastered")
+  const currentSrc =
+  preview === "mastered" && masteredUrl ? masteredUrl : audioUrl
+
+console.log("CURRENT SRC:", currentSrc)
+
 
   const [isPaid, setIsPaid] = useState(() => {
   if (typeof window !== "undefined") {
@@ -35,15 +41,15 @@ export default function FlowPage() {
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [playProgress, setPlayProgress] = useState(0)
-  const [analysisData, setAnalysisData] = useState<any>(null)
+  
   const [referenceTrack, setReferenceTrack] = useState<File | null>(null)
   const [referenceName, setReferenceName] = useState("")
   const [referenceLoaded, setReferenceLoaded] = useState(false)
-  const [fixes, setFixes] = useState<any[]>([])
+  
   const [displayText, setDisplayText] = useState("")
  
 
-  const PREVIEW_START = 30
+  const PREVIEW_START = 60
   const PREVIEW_LENGTH = 30
 
   // ---------------- FILE ----------------
@@ -54,7 +60,7 @@ export default function FlowPage() {
   setFile(selected)
   setAudioUrl(URL.createObjectURL(selected))
   setMasteredUrl("")
-  setAnalysisData(null) // 🔥 viktigt
+  
   setStep("upload")
   setIsPaid(false)
 }
@@ -63,7 +69,7 @@ export default function FlowPage() {
   setFile(file)
   setAudioUrl(URL.createObjectURL(file))
   setMasteredUrl("")
-  setAnalysisData(null) // 🔥 viktigt
+  
   setStep("upload")
   setIsPaid(false)
 }
@@ -78,183 +84,100 @@ export default function FlowPage() {
 
 }
 
-  // ---------------- ANALYSIS ----------------
-  const runAnalysis = async () => {
+  const runMaster = async () => {
   if (!file) return
 
-  setStep("analyzing")
+  const autoMaster = async (file: File) => {
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
 
+      if (referenceTrack) {
+        formData.append("reference", referenceTrack)
+      }
+
+      const res = await axios.post("http://127.0.0.1:3001/master", formData)
+
+      console.log("SERVER RESPONSE:", res.data)
+console.log("MASTER PATH:", res.data.after)
+
+setMasteredUrl(`http://127.0.0.1:3001${res.data.after}`)
+setPreview("mastered")
+
+    } catch (err) {
+      console.log("Auto master failed", err)
+    }
+  }
+
+  // 🔥 START FAKE AI FLOW
+  setStep("analyzing")
   setDisplayText("")
-  setAiText("Analyzing your mix...")
+
+  setAiText("Initializing AI engine...")
+  await sleep(800)
+
+  setAiText("Analyzing dynamics...")
+  await sleep(1200)
+
+  setAiText("Detecting frequency imbalances...")
+  await sleep(1200)
+
+  setAiText("Optimizing loudness...")
+  await sleep(1200)
+
+  setAiText("Applying final mastering...")
   await sleep(1500)
 
   try {
-    const formData = new FormData()
-    formData.append("track", file)
-
-    // 🎯 ANALYZE
-    const res = await axios.post("http://127.0.0.1:3002/upload", formData)
-    setAnalysisData(res.data)
-
-    // 🎯 FIX
-    setDisplayText("")
-    setAiText("Detecting issues...")
-    await sleep(1500)
-
-    const fixRes = await axios.post("http://127.0.0.1:3002/fix-mix", formData)
-    setFixes(fixRes.data.fixes)
-
-    // 🎯 MASTER
-    setDisplayText("")
-    setAiText("Creating pro master...")
-    
-    await sleep(1500)
-
     await autoMaster(file)
 
+    setAiText("Finalizing...")
+    await sleep(800)
+
     setProgress(100)
-setStep("done")
+    setStep("done")
 
   } catch (err) {
     console.log(err)
-    alert("Analysis failed")
+    alert("Mastering failed")
     setStep("upload")
-  }
-}
-const sleep = (ms: number) => new Promise(res => setTimeout(res, ms))
-const fixMyMix = async () => {
-  console.log("FIX CLICKED")
-
-  if (!file) return
-  setStep("analyzing")
-  setDisplayText("")
-  setAiText("Analyzing your mix...")
-  await sleep(1500)
-
-  try {
-    const formData = new FormData()
-    formData.append("track", file)
-
-    setDisplayText("")
-    setAiText("Detecting issues...")
-    await sleep(1500)   
-
-    const res = await axios.post("http://127.0.0.1:3002/fix-mix", formData)
-
-    setFixes(res.data.fixes)
-
-    setDisplayText("")
-    setAiText("Generating pro mix feedback...")
-    await sleep(1500)
-
-setStep("done")
-
-  } catch (err) {
-    alert("Fix failed")
-  }
-}
-
-const autoMaster = async (file: File) => {
-  try {
-    const formData = new FormData()
-    formData.append("file", file)
-
-    if (referenceTrack) {
-    formData.append("reference", referenceTrack)
-  }
-
-
-
-    const res = await axios.post("http://127.0.0.1:3002/master", formData)
-
-    setMasteredUrl(`http://127.0.0.1:3002${res.data.after}`)
-    setPreview("mastered")
-
-  } catch (err) {
-    console.log("Auto master failed", err)
-  }
-}
-  // ---------------- MASTER ----------------
-  const handleMaster = async () => {
-    if (!file) return
-
-    setLoadingMaster(true)
-
-    const formData = new FormData()
-    formData.append("file", file)
-
-    if (referenceTrack) {
-    formData.append("reference", referenceTrack)
-}
-
-    try {
-      const res = await axios.post("http://127.0.0.1:3002/master", formData)
-      setMasteredUrl(`http://127.0.0.1:3002${res.data.after}`)
-      setPreview("mastered")
-    } catch {
-      alert("Error processing track")
-    }
-
-    setLoadingMaster(false)
-  }
-
-    const togglePlay = () => {
-  if (!audioRef.current) return
-
-  if (audioRef.current.paused) {
-    audioRef.current.play()
-  } else {
-    audioRef.current.pause()
   }
 }
 
   // ---------------- PLAYER ----------------
-  useEffect(() => {
-  const audio = audioRef.current
-  if (!audio) return
-
-  const handlePlay = () => setIsPlaying(true)
-  const handlePause = () => setIsPlaying(false)
-
-  audio.addEventListener("play", handlePlay)
-  audio.addEventListener("pause", handlePause)
-
-  return () => {
-    audio.removeEventListener("play", handlePlay)
-    audio.removeEventListener("pause", handlePause)
-  }
-}, [])
+  
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (!audioRef.current) return
+  const interval = setInterval(() => {
 
-      const current = audioRef.current.currentTime
-      const duration = audioRef.current.duration || 1
+    const audio = audioRef.current
+    if (!audio) return
 
-      setPlayProgress((current / duration) * 100)
+    const current = audio.currentTime
+    const duration = audio.duration || 1
 
-      // 🔥 LIMIT MASTER PLAYBACK
-      if (!isPaid && preview === "mastered") {
+    setPlayProgress((current / duration) * 100)
 
-        const end = PREVIEW_START + PREVIEW_LENGTH
+    // 🔥 LIMIT MASTER PLAYBACK
+    if (!isPaid && preview === "mastered") {
 
-        // Fade out sista 3 sek
-        if (current > end - 3) {
-          audioRef.current.volume = Math.max(0, (end - current) / 3)
-        }
+      const end = PREVIEW_START + PREVIEW_LENGTH
 
-        if (current >= end) {
-          audioRef.current.pause()
-          audioRef.current.volume = 1
-          setIsPlaying(false)
-        }
+      if (current > end - 3) {
+        audio.volume = Math.max(0, (end - current) / 3)
       }
 
-    }, 200)
+      if (current >= end) {
+        audio.pause()
+        audio.volume = 1
+        setIsPlaying(false)
+      }
+    }
 
-    return () => clearInterval(interval)
-  }, [preview, isPaid])
+  }, 200)
+
+  return () => clearInterval(interval)
+}, [preview, isPaid])
 
   useEffect(() => {
   if (!aiText) return
@@ -301,8 +224,22 @@ const handlePayment = () => {
   setShowSuccess(true)
 }
 
-  const currentSrc =
-    preview === "mastered" && masteredUrl ? masteredUrl : audioUrl
+
+  useEffect(() => {
+  if (!masteredUrl) return
+  const audio = audioRef.current
+if (!audio) return
+
+audio.load()
+
+setTimeout(() => {
+  
+  audio.play().catch(() => {})
+  setIsPlaying(true)
+}, 300)
+
+}, [masteredUrl, step])
+  
 
   // ---------------- UI ----------------
 
@@ -410,137 +347,23 @@ hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(139,92,246,0.6)]"
 
 </div>
 
-        {/* PLAYER */}
-        {(audioUrl || masteredUrl) && (
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-sm rounded-xl p-5 space-y-4">
-
-            <p className="text-xs text-purple-300">A/B your master</p>
-
-            <p className="text-xs text-white/40">
-  Original vs Master
-</p>
-
-            {(audioUrl || masteredUrl) && (
-              <div className="flex justify-center">
-  <div className="bg-white/5 p-1 rounded-full flex gap-1 backdrop-blur-md border border-white/10">
-
-    <button
-      onClick={() => {
-  setPreview("original")
-
-  audioRef.current?.pause()
-  audioRef.current?.load()
-
-  setTimeout(() => {
-    audioRef.current?.play()
-    setIsPlaying(true)
-  }, 100)
-}}
-      className={`px-5 py-1.5 rounded-full text-xs font-medium transition-all duration-200
-      ${
-        preview === "original"
-          ? "bg-white text-black shadow"
-          : "text-white/50 hover:text-white"
-      }`}
-    >
-      Original
-    </button>
-
-    <button
-      onClick={() => {
-  setPreview("mastered")
-
-  audioRef.current?.pause()
-  audioRef.current?.load()
-
-  setTimeout(() => {
-    audioRef.current?.play()
-    setIsPlaying(true)
-  }, 100)
-}}
-      className={`px-5 py-1.5 rounded-full text-xs font-medium transition-all duration-200
-      ${
-        preview === "mastered"
-          ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-none"
-          : "text-white/50 hover:text-white"
-      }`}
-    >
-      Mastered
-    </button>
-
-  </div>
-</div>
-            )}
-
-            <button
-  onClick={() => {
-    if (!audioRef.current) return
-
-    if (isPlaying) {
-      audioRef.current.pause()
-      setIsPlaying(false)
-    } else {
-  audioRef.current.currentTime = PREVIEW_START
-  audioRef.current.play()
-  setIsPlaying(true)
-}
-  }}
-  className={`w-full py-3 rounded-xl font-semibold transition-all duration-200
-${isPlaying 
-  ? "bg-white/10 text-white border border-white/20"
-  : "bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:scale-[1.02]"
-}`}
->
-  {isPlaying ? "Pause preview" : "Play preview"}
-</button>
-
-            <button
-  onClick={handleMaster}
-  className="mt-3 text-xs text-white/30 hover:text-white hover:scale-105 hover:tracking-wider transition-all"
->
-  {loadingMaster
-  ? "⚡ Mastering..."
-  : masteredUrl
-  ? "↻ Remaster track"
-  : "⚡ Master track"}
-</button>
-
-            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-  <div
-    className="h-full bg-gradient-to-r from-purple-400 to-blue-400 transition-all duration-200"
-    style={{ width: `${playProgress}%` }}
-  />
-</div>
-
-            {!isPaid && preview === "mastered" && (
-              <p className="text-xs text-red-400">
-                Preview (drop section)
-              </p>
-            )}
-
-            <audio
-  ref={audioRef}
-  src={currentSrc}
-  onEnded={() => setIsPlaying(false)}
-/>
-          </div>
-        )}
-
         
 
     {step !== "done" && (
   <button
-    onClick={runAnalysis}
-    disabled={step === "analyzing"}
-    className="relative px-10 py-5 mt-6 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-xl font-semibold text-white text-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-200 overflow-visible disabled:opacity-50 disabled:cursor-not-allowed"
+  onClick={runMaster}
+  disabled={!file || step === "analyzing"}
+  className="px-12 py-5 mt-6 text-xl font-semibold text-white rounded-xl ...
+bg-gradient-to-r from-purple-500 to-blue-500
+shadow-[0_10px_40px_rgba(139,92,246,0.35)]
+hover:shadow-[0_20px_60px_rgba(139,92,246,0.7)] hover:scale-[1.04]
+active:scale-[0.97]
+transition-all duration-300
+disabled:opacity-40 disabled:cursor-not-allowed"
   >
-    <span className="absolute -inset-2 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 blur-xl opacity-20"></span>
-
-    <span className="relative z-10">
-      {step === "analyzing"
-        ? "Running mastering chain..."
-        : "Master my track"}
-    </span>
+    {step === "analyzing"
+      ? "Running mastering..."
+      : "Master my track"}
   </button>
 )}
 
@@ -560,8 +383,10 @@ ${isPlaying
           </div>
         )}
 
+        
+
         {/* RESULT */}
-        {(fixes.length > 0 || step === "done") && (
+        {step === "done" && (
           <div className="space-y-6">
 
             <div className="bg-white/5 p-6 rounded-xl">
@@ -574,187 +399,130 @@ ${isPlaying
   Industry-level master • Ready for release
 </p>
 
-Release-ready
+{(audioUrl || masteredUrl) && (
+  <div className="mt-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4">
 
+    <p className="text-xs text-purple-300">A/B your master</p>
+    <p className="text-xs text-white/40">Original vs Master</p>
 
+    <div className="flex justify-center">
+  <div className="bg-white/5 p-1 rounded-full flex gap-1 border border-white/10">
 
-{analysisData && (
-  <div className="bg-white/5 p-6 rounded-xl text-left space-y-3 mt-4">
+    {/* ORIGINAL */}
+    <button
+      onClick={() => {
+        const audio = audioRef.current
+        if (!audio) return
 
-    <p className="text-sm text-purple-300 font-semibold">
-      Mix Analysis
-    </p>
+        audio.pause()
 
-   <div className="space-y-3">
+        setPreview("original")
 
-  {/* MIX */}
-  <div>
-    <p className="text-xs text-white/50 mb-1">Mix</p>
+        setTimeout(() => {
+          audio.currentTime = PREVIEW_START
+          audio.load()
+          setIsPlaying(false)
+        }, 100)
+      }}
+      className={`px-5 py-1.5 rounded-full text-xs ${
+        preview === "original"
+          ? "bg-white text-black"
+          : "text-white/50"
+      }`}
+    >
+      Original
+    </button>
+
+    {/* MASTERED */}
+    <button
+      onClick={() => {
+        const audio = audioRef.current
+        if (!audio) return
+
+        audio.pause()
+
+        setPreview("mastered")
+
+        setTimeout(() => {
+          audio.currentTime = PREVIEW_START
+          audio.load()
+          setIsPlaying(false)
+        }, 100)
+      }}
+      className={`px-5 py-1.5 rounded-full text-xs ${
+        preview === "mastered"
+          ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+          : "text-white/50"
+      }`}
+    >
+      Mastered
+    </button>
+
+  </div>
+</div>
+
+    <button
+  onClick={() => {
+    const audio = audioRef.current
+if (!audio) return
+
+if (!audio.paused) {
+  audio.pause()
+  setIsPlaying(false)
+  return
+}
+
+audio.currentTime = PREVIEW_START
+audio.volume = 1
+audio.play().catch(() => {})
+setIsPlaying(true)
+  }}
+  className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+>
+  {isPlaying ? "Pause preview" : "Play preview"}
+</button>
+
     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
       <div
         className="h-full bg-gradient-to-r from-purple-400 to-blue-400"
-        style={{ width: `${Math.round(analysisData?.mixQuality ?? 0)}%` }}
+        style={{ width: `${playProgress}%` }}
       />
     </div>
-    <p className="text-xs text-white/60 mt-1">
-  {Math.round(analysisData?.mixQuality ?? 0)}/100
-</p>
-  </div>
 
-  {/* LOUDNESS */}
-  <div>
-    <p className="text-xs text-white/50 mb-1">Loudness</p>
-    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-      <div
-        className="h-full bg-gradient-to-r from-pink-400 to-red-400"
-        style={{ width: `${Math.round(analysisData?.loudnessScore ?? 0)}%` }}
-      />
-    </div>
-    <p className="text-xs text-white/60 mt-1">
-  {Math.round(analysisData?.loudnessScore ?? 0)}/100
-</p>
-  </div>
 
-  {/* POTENTIAL */}
-  <div className="mt-2">
-    <p className={`text-sm font-semibold ${
-      analysisData?.potentialLabel === "High"
-        ? "text-green-400"
-        : analysisData?.potentialLabel === "Medium"
-        ? "text-yellow-400"
-        : "text-blue-400"
-    }`}>
-      Potential: {analysisData?.potentialLabel}
-    </p>
-
-    <p className="text-xs text-white/50 mt-1">
-  {
-    analysisData?.potentialLabel === "High"
-      ? "Strong improvement potential"
-      : analysisData?.potentialLabel === "Medium"
-      ? "Mastering will enhance clarity and punch"
-      : analysisData?.potentialLabel === "Already mastered"
-      ? "Already close to release quality"
-      : ""
-  }
-</p>
-  </div>
-
-</div>
-
-    {analysisData.mixTips?.map((tip: string, i: number) => (
-      <p key={i} className="text-xs text-white/70">
-        • {tip}
-      </p>
-    ))}
+   <audio
+  key={currentSrc}
+  ref={audioRef}
+  src={currentSrc}
+  onEnded={() => setIsPlaying(false)}
+/>
 
   </div>
 )}
-
-{fixes.length > 0 && (
-  <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-xl text-left space-y-3 mt-4">
-
-    
-    <p className="text-sm text-red-300 font-semibold animate-pulse">
-      Pro Mix Enhancements
-    </p>
-
-    <p className="text-xs text-white/40">
-      Recommended mix improvements
-    </p>
-
-    {fixes.map((fix, i) => (
-      <div
-        key={i}
-        className="mb-3 opacity-0 animate-[fadeIn_0.5s_ease_forwards]"
-        style={{ animationDelay: `${i * 0.2}s` }}
-      >
-        <p className="text-xs text-white/70">
-          • {fix.issue}
-        </p>
-
-        <p className="text-xs text-green-400">
-          → {fix.fix}
-        </p>
-
-        <p className="text-xs text-white/40">
-          {fix.proTip}
-        </p>
-      </div>
-    ))}
-
-  </div>
-)}
-
-{analysisData?.masteringChain && (
-  <div className="bg-white/[0.03] border border-white/5 p-6 rounded-xl text-left space-y-3 mt-4 backdrop-blur-xl">
-
-    <p className="text-sm text-purple-300 font-semibold">
-      Mastering Chain
-    </p>
-
-    {analysisData.masteringChain.map((step: any, i: number) => (
-      <div key={i} className="mb-4 border-b border-white/5 pb-3">
-        <p className={`text-xs ${
-  step.type === "limiter"
-    ? "text-red-400 font-semibold"
-    : "text-green-400"
-}`}>
-
-  <span className="font-semibold">
-    {step.type === "gain" && "🔊 "}
-    {step.type === "eq" && "🎛️ "}
-    {step.type === "stereo" && "🎧 "}
-    {step.type === "compression" && "📦 "}
-    {step.type === "limiter" && "🚀 "}
-
-    {step.type.toUpperCase()}
-  </span>{" "}
-  {step.value}
-
-</p>
-
-        <p className="text-xs text-white/50">
-          {step.reason}
-        </p>
-      </div>
-    ))}
-
-  </div>
-)}
-
-          <p className="text-xs text-white/30 mt-2">
-  Optimized for Spotify, Apple Music & streaming platforms
-</p>
-<p className="text-sm text-white/70 mt-1">
-  Cleaner • Louder • Wider
-</p>
-
-<p className="text-sm text-white/50 mt-1">
-  Your track is now optimized for streaming & release
-</p>
-
-
 
 <div className="mt-4">
 
+
   {/* RESULT TEXT */}
-  <p className="text-xl text-green-400 font-semibold mt-4 mb-2 text-center">
-  Your track is ready for release
-</p>
 
   {/* 🟢 KÖP KNAPP (visas innan betalning) */}
 {!isPaid && (
   <>
+    
+    <p className="text-xs text-green-400/70 mb-2">
+  ✔ Ready for release
+</p>
+    
     <button
   onClick={handlePayment}
-  className="w-full py-5 text-lg rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-black font-bold shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:brightness-110 transition active:scale-[0.98]"
+  className="mt-4 w-full py-5 text-lg rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-black font-bold shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:brightness-110 transition active:scale-[0.98] animate-pulse hover:animate-none"
 >
-      Download full master – €5
+      Download your master
 
-      <p className="text-xs text-white/50 mt-2 text-center">
-        No subscription • Instant download
-      </p>
+
+      <p className="text-xs text-white/40 mt-2 text-center">
+  Ready for release • Instant download
+</p>
     </button>
 
     
@@ -766,33 +534,19 @@ Release-ready
   <a
   href={masteredUrl || "#"}
   onClick={(e) => {
-    if (!masteredUrl) {
-      e.preventDefault()
-      alert("Master not ready yet")
-    }
-  }}
+  if (!masteredUrl) return
+}}
   download
   className="block w-full py-5 mt-4 rounded-xl bg-green-500 text-black font-bold text-lg hover:brightness-110 transition text-center cursor-pointer"
 >
-  Unlock full master 🎧
+  Download master 🎧
 </a>
 )}
 
-<p className="text-xs text-white/40 mt-2">
-  Your master is ready for download
-</p>
-
-<p className="text-xs text-white/40 mt-2">
-  Instant download • Ready in seconds
-</p>
 
 </div>
 
-              <div className="flex justify-center gap-4 text-xs mt-4 flex-wrap">
-  <span className="text-green-400">✓ Loudness optimized</span>
-  <span className="text-green-400">✓ Stereo balanced</span>
-  <span className="text-green-400">✓ Streaming ready</span>
-</div>
+
 
             </div>
 

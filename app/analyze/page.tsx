@@ -27,6 +27,112 @@ function Stat({ label, value, percent = false }: any) {
   )
 }
 
+function generateFixes(result: any) {
+  const fixes: any[] = []
+
+  if (!result) return fixes
+
+  if (result.lufs < -12) {
+    fixes.push({
+      title: "Low output level",
+      steps: [
+        "Increase gain before limiter",
+        "Use limiter to reach -8 to -10 LUFS",
+        "Keep peaks below 0 dB"
+      ]
+    })
+  }
+
+  if (result.dynamicRange > 14) {
+    fixes.push({
+      title: "Too much dynamic range",
+      steps: [
+        "Compress drums and instruments",
+        "Control peaks with limiter",
+        "Aim for tighter loudness"
+      ]
+    })
+  }
+
+  if (result.stereoWidth < 0.2) {
+    fixes.push({
+      title: "Stereo too narrow",
+      steps: [
+        "Widen pads and synths",
+        "Pan elements left/right",
+        "Keep bass mono"
+      ]
+    })
+  }
+
+  if (result.brightness < 0.3) {
+    fixes.push({
+      title: "Lacks brightness",
+      steps: [
+        "Boost highs around 8–12kHz",
+        "Add saturation",
+        "Enhance hats and vocals"
+      ]
+    })
+  }
+
+  return fixes
+}
+
+function generateIssues(result: any) {
+  
+  const issues: any[] = []
+
+  if (!result) return issues
+
+  if (result.lufs < -12) {
+    issues.push({
+      text: "Low output level",
+      level: "high",
+      realImpact: 10,
+      insight: `Your track is at ${result.lufs?.toFixed(1)} LUFS`
+    })
+  }
+
+  if (result.dynamicRange > 14) {
+    issues.push({
+      text: "Too much dynamic range",
+      level: "medium",
+      realImpact: 6,
+      insight: `Dynamic range is ${result.dynamicRange?.toFixed(1)}`
+    })
+  }
+
+  if (result.stereoWidth < 0.2) {
+    issues.push({
+      text: "Stereo too narrow",
+      level: "medium",
+      realImpact: 6,
+      insight: `${Math.round(result.stereoWidth * 100)}% width`
+    })
+  }
+
+  if (result.bassWeight < 0.4) {
+    issues.push({
+      text: "Weak low-end",
+      level: "low",
+      realImpact: 4,
+      insight: `${Math.round(result.bassWeight * 100)}% bass`
+    })
+  }
+
+  if (result.brightness < 0.3) {
+    issues.push({
+      text: "Lacks brightness",
+      level: "low",
+      realImpact: 3,
+      insight: `${Math.round(result.brightness * 100)}% highs`
+    })
+  }
+
+  return issues
+}
+
 export default function AnalyzePage() {
 
   const [showWaitlist, setShowWaitlist] = useState(false)
@@ -39,9 +145,11 @@ export default function AnalyzePage() {
   const [waitlistLoading, setWaitlistLoading] = useState(false)
   const [waitlistSuccess, setWaitlistSuccess] = useState(false)
   const [waitlistError, setWaitlistError] = useState("")
-  const issues = result?.issues || []
-  const recommendations = result?.recommendations || []
+  const issues = generateIssues(result)
+  const displayIssues = issues.slice(0, 6)
+  const recommendations = generateFixes(result)
   const verdict = result?.verdict
+  const [showAll, setShowAll] = useState(false)
 
   const handleWaitlist = async () => {
   setWaitlistError("")
@@ -90,6 +198,10 @@ export default function AnalyzePage() {
     alert("Please upload an audio file (.wav, .mp3, .m4a)")
     return
   }
+
+  
+  
+  
 
   setLoading(true)
 
@@ -146,6 +258,8 @@ export default function AnalyzePage() {
   }
 }
 
+
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-start pt-32 px-6">
 
@@ -178,19 +292,20 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
   <div className="w-full max-w-md flex flex-col gap-4">
 
     {/* hidden input */}
-    <input
-      type="file"
-      ref={fileInputRef}
-      className="hidden"
-      accept="audio/*,video/*"
-      onChange={(e) => {
-  const selectedFile = e.target.files?.[0]
-  if (selectedFile) {
-    setFile(selectedFile)
-    handleUpload() // 🔥 DETTA ÄR NYCKELN
-  }
-}}
-    />
+   <input
+  type="file"
+  ref={fileInputRef}
+  className="hidden"
+  accept="audio/*,video/*"
+  capture
+  onChange={(e) => {
+    const selectedFile = e.target.files?.[0]
+    if (selectedFile) {
+      setFile(selectedFile)
+      handleUpload()
+    }
+  }}
+/>
 
     {/* DROP BOX */}
     <div
@@ -286,7 +401,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
           <p className="text-gray-400 mb-6">
   {issues.length > 0
-    ? `AI found ${issues.length} issue${issues.length > 1 ? "s" : ""} in your mix`
+    ? `AI found ${displayIssues.length} improvements in your mix`
     : "AI verdict: your mix is production-ready"}
 </p>
 
@@ -329,7 +444,10 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
   <>
     <h3 className="font-semibold mb-2">Issues</h3>
 
-    {issues.map((issue: any, i: number) => {
+    {displayIssues.map((issue: any, i: number) => {
+      const isLocked = !showAll && i >= 3
+
+  
 
   const current = Math.round(result.mixQuality)
   const next = Math.min(99, Math.round(current + (issue.realImpact || 0)))
@@ -337,11 +455,13 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
   return (
     <div
-      key={i}
-      className={`flex items-start gap-3 mb-3 p-3 rounded-lg ${
-        i === 0 ? "bg-yellow-500/10 border border-yellow-500/30" : ""
-      }`}
-    >
+  key={i}
+  className={`flex items-start gap-3 mb-3 p-3 rounded-lg ${
+    isLocked ? "blur-sm opacity-50" : ""
+  } ${
+    i === 0 ? "bg-yellow-500/10 border border-yellow-500/30" : ""
+  }`}
+>
       <span className="text-lg">
         {issue.level === "high" && "🔴"}
         {issue.level === "medium" && "🟡"}
@@ -357,6 +477,17 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
         <div className={`${i === 0 ? "font-semibold text-white" : ""}`}>
           {issue.text}
+          {issue.insight && (
+  <div className="text-xs text-gray-400 mt-1">
+    {issue.insight}
+  </div>
+)}
+
+          {isLocked && (
+  <div className="text-xs text-purple-300 mt-1">
+    🔒 Premium insight
+  </div>
+)}
 
           {i === 0 && issue.realImpact !== undefined && (
             <>
@@ -374,6 +505,19 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
     </div>
   )
 })}
+
+<p className="text-xs text-purple-300 text-center mb-2">
+  See exactly what’s holding your track back
+</p>
+
+{!showAll && displayIssues.length > 3 && (
+  <button
+    onClick={() => setShowWaitlist(true)}
+    className="w-full mt-3 p-3 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/10 transition"
+  >
+    🔓 Unlock full mix report
+  </button>
+)}
   </>
 )}
           </div>
@@ -384,25 +528,36 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
   {issues.length > 0 ? (
     <>
       <h3 className="font-semibold mb-2">
-  How to fix your mix
-</h3>
+        How to improve your mix
+      </h3>
 
-      {issues.map((issue: any, i: number) => {
-        
+      {issues
+  .slice(0, showAll ? issues.length : 3)
+  .map((issue: any, i: number) => {
         const rec = recommendations[i]
+        const isLocked = !showAll && i >= 3
 
         return (
-          <div key={i} className="mb-4">
+          <div
+  key={i}
+  className={`mb-4 ${isLocked ? "blur-sm opacity-50" : ""}`}
+>
 
             <div className="font-semibold text-white mb-1">
               {rec?.title || issue.text}
             </div>
 
             {rec?.steps?.map((step: string, j: number) => (
-              <div key={j} className="text-sm text-gray-400 ml-2">
-                • {step}
-              </div>
-            ))}
+  <div key={j} className="text-sm text-gray-400 ml-2">
+    • {step}
+  </div>
+))}
+
+{isLocked && (
+  <div className="text-xs text-purple-300 mt-1">
+    🔒 Premium fix
+  </div>
+)}
 
           </div>
         )
@@ -424,28 +579,11 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
           )}
         </div>
       )}
-
     </>
-  ) : (
-    <>
-      <h3 className="font-semibold mb-2 text-purple-300">
-        Optional enhancement
-      </h3>
-
-      {recommendations?.map((rec: any, i: number) => (
-        <div key={i} className="mb-3">
-          <div className="font-semibold text-white">{rec.title}</div>
-          {rec.steps?.map((step: string, j: number) => (
-            <div key={j} className="text-sm text-gray-400 ml-2">
-              • {step}
-            </div>
-          ))}
-        </div>
-      ))}
-    </>
-  )}
+  ) : null}
 
 </div>
+
 
           {/* CTA */}
           <button

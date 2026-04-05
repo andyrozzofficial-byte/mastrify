@@ -90,3 +90,14 @@ body {
     transform: translate(-50%, 0px);
   }
 }
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 10px 40px rgba(139,92,246,0.35);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 20px 60px rgba(139,92,246,0.7);
+  }
+}
