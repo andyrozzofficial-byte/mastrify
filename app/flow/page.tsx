@@ -97,12 +97,12 @@ console.log("CURRENT SRC:", currentSrc)
   formData.append("reference", referenceTrack)
 }
 
-      const res = await axios.post("http://127.0.0.1:3001/master", formData)
+      const res = await axios.post("https://mastrify-production.up.railway.app/master", formData)
 
       console.log("SERVER RESPONSE:", res.data)
 console.log("MASTER PATH:", res.data.after)
 
-setMasteredUrl(`http://127.0.0.1:3001${res.data.after}`)
+setMasteredUrl(`https://mastrify-production.up.railway.app${res.data.after}`)
 setPreview("mastered")
 
     } catch (err) {

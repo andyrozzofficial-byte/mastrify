@@ -614,10 +614,10 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
     onClick={() => window.location.href = "/flow"}
     disabled={!canMaster}
     className={`w-full py-5 rounded-xl font-bold text-lg transition ${
-  canMaster
-    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-black hover:brightness-110"
-    : "bg-white/10 text-white/40 cursor-not-allowed"
-}`}
+      canMaster
+        ? "bg-gradient-to-r from-green-400 to-emerald-500 text-black hover:brightness-110"
+        : "bg-white/10 text-white/40 cursor-not-allowed"
+    }`}
   >
     🎧 Master your track
   </button>
