@@ -14,7 +14,7 @@ export default function ProPage() {
     const formData = new FormData()
     formData.append("file", file)
 
-    const res = await fetch("http://127.0.0.1:3001/analyze", {
+    const res = await fetch("https://mastrify-production.up.railway.app/analyze", {
       method: "POST",
       body: formData
     })
