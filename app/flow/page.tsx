@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 type Step = "upload" | "analyzing" | "done"
 
 export default function FlowPage() {
+  const SHOW_REFERENCE = false
 
   const sleep = (ms: number) => new Promise(res => setTimeout(res, ms))
   const [mounted, setMounted] = useState(false)
@@ -92,9 +93,9 @@ console.log("CURRENT SRC:", currentSrc)
       const formData = new FormData()
       formData.append("file", file)
 
-      if (referenceTrack) {
-        formData.append("reference", referenceTrack)
-      }
+      if (SHOW_REFERENCE && referenceTrack) {
+  formData.append("reference", referenceTrack)
+}
 
       const res = await axios.post("http://127.0.0.1:3001/master", formData)
 
@@ -156,7 +157,8 @@ setPreview("mastered")
     const current = audio.currentTime
     const duration = audio.duration || 1
 
-    setPlayProgress((current / duration) * 100)
+    const previewProgress = (current - PREVIEW_START) / PREVIEW_LENGTH
+setPlayProgress(Math.max(0, Math.min(1, previewProgress)) * 100)
 
     // 🔥 LIMIT MASTER PLAYBACK
     if (!isPaid && preview === "mastered") {
@@ -228,15 +230,15 @@ const handlePayment = () => {
   useEffect(() => {
   if (!masteredUrl) return
   const audio = audioRef.current
-if (!audio) return
+  if (!audio) return
 
-audio.load()
+  audio.load()
 
-setTimeout(() => {
-  
-  audio.play().catch(() => {})
-  setIsPlaying(true)
-}, 300)
+  setTimeout(() => {
+    audio.currentTime = PREVIEW_START   // ✅ LÄGG TILL DENNA
+    audio.play().catch(() => {})
+    setIsPlaying(true)
+  }, 300)
 
 }, [masteredUrl, step])
   
@@ -299,7 +301,8 @@ hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(139,92,246,0.6)]"
           </p>
         </div>
 
-        <div className="mt-6 pt-4 flex flex-col items-center gap-3">
+        {SHOW_REFERENCE && (
+  <div className="mt-6 pt-4 flex flex-col items-center gap-3">
 
   <input type="file" onChange={handleReference} hidden id="refUpload" />
 
@@ -307,7 +310,7 @@ hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(139,92,246,0.6)]"
     htmlFor="refUpload"
     className="cursor-pointer bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-xs transition"
   >
-    🎧 Add reference track
+    Use reference track (optional)
   </label>
 
   {/* STATUS */}
@@ -345,7 +348,9 @@ hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(139,92,246,0.6)]"
     </div>
   )}
 
-</div>
+  </div>
+)}
+
 
         
 
@@ -390,12 +395,14 @@ disabled:opacity-40 disabled:cursor-not-allowed"
           <div className="space-y-6">
 
             <div className="bg-white/5 p-6 rounded-xl">
-              <p className="text-3xl font-bold text-green-400">
+              <p className="text-3xl font-bold 
+bg-gradient-to-r from-white via-purple-200 to-blue-200 
+bg-clip-text text-transparent 
+drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
   Your master is ready
-          
 </p>
 
-<p className="text-sm text-white/60 mt-1">
+<p className="text-sm text-white/50 mt-1">
   Industry-level master • Ready for release
 </p>
 
@@ -509,15 +516,17 @@ setIsPlaying(true)
 {!isPaid && (
   <>
     
-    <p className="text-xs text-green-400/70 mb-2">
-  ✔ Ready for release
-</p>
-    
     <button
   onClick={handlePayment}
-  className="mt-4 w-full py-5 text-lg rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-black font-bold shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:brightness-110 transition active:scale-[0.98] animate-pulse hover:animate-none"
+  className="mt-4 w-full py-5 text-lg rounded-xl font-bold 
+bg-gradient-to-r from-purple-500 to-blue-500 text-white
+shadow-[0_0_40px_rgba(139,92,246,0.4)]
+hover:shadow-[0_0_60px_rgba(139,92,246,0.8)]
+hover:scale-[1.02]
+active:scale-[0.98]
+transition-all duration-300"
 >
-      Download your master
+      Export master
 
 
       <p className="text-xs text-white/40 mt-2 text-center">
@@ -537,7 +546,12 @@ setIsPlaying(true)
   if (!masteredUrl) return
 }}
   download
-  className="block w-full py-5 mt-4 rounded-xl bg-green-500 text-black font-bold text-lg hover:brightness-110 transition text-center cursor-pointer"
+  className="block w-full py-5 mt-4 rounded-xl text-lg font-bold text-white text-center cursor-pointer
+bg-gradient-to-r from-purple-500 to-blue-500
+shadow-[0_0_40px_rgba(139,92,246,0.35)]
+hover:brightness-110 hover:scale-[1.02]
+active:scale-[0.98]
+transition-all duration-300"
 >
   Download master 🎧
 </a>

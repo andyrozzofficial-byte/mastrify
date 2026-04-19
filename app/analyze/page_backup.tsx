@@ -36,11 +36,9 @@ function generateFixes(result: any) {
     fixes.push({
       title: "Low output level",
       steps: [
-        "Your mix is too quiet compared to commercial tracks",
-        "Increase gain BEFORE limiter, not after",
-        "Control peaks gently",
-        "Increase overall level without distortion",
-        "Make sure kick and bass are hitting strong before pushing loudness"
+        "Increase gain before limiter",
+        "Use limiter to reach -8 to -10 LUFS",
+        "Keep peaks below 0 dB"
       ]
     })
   }
@@ -49,11 +47,9 @@ function generateFixes(result: any) {
     fixes.push({
       title: "Too much dynamic range",
       steps: [
-        "Your mix has too big volume differences between elements",
-        "Use bus compression on drums (2–4 dB reduction)",
-        "Control peaks with a limiter or soft clipper",
-        "Glue instruments together with light compression",
-        "Aim for a tighter and more consistent loudness curve"
+        "Compress drums and instruments",
+        "Control peaks with limiter",
+        "Aim for tighter loudness"
       ]
     })
   }
@@ -62,11 +58,9 @@ function generateFixes(result: any) {
     fixes.push({
       title: "Stereo too narrow",
       steps: [
-        "Your mix feels centered and lacks width",
-        "Widen pads, FX and synth layers (NOT bass)",
-        "Pan percussion slightly left/right",
-        "Use stereo imaging on high frequencies only",
-        "Keep kick and bass fully mono for power"
+        "Widen pads and synths",
+        "Pan elements left/right",
+        "Keep bass mono"
       ]
     })
   }
@@ -75,11 +69,9 @@ function generateFixes(result: any) {
     fixes.push({
       title: "Lacks brightness",
       steps: [
-        "Your mix lacks clarity in the high-end",
-        "Boost around 8–12kHz with a gentle shelf EQ",
-        "Add saturation to bring out harmonics",
-        "Enhance hats, vocals and top layers",
-        "Be careful not to make it harsh — aim for clean shine"
+        "Boost highs around 8–12kHz",
+        "Add saturation",
+        "Enhance hats and vocals"
       ]
     })
   }
@@ -423,7 +415,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
 {issues.length > 0 && (
   <p className="text-xs text-gray-400 mb-3">
-    Biggest opportunities to improve your mix
+    Fix these first for the biggest improvement
   </p>
 )}
 
@@ -493,7 +485,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
     </div>
 
     <div className="text-xs text-gray-400 mb-1">
-      This is why your track doesn’t sound pro
+      Most mixes fail here
     </div>
   </>
 )}
@@ -535,6 +527,14 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 })}
 
 
+{!showAll && displayIssues.length > 2 && (
+  <button
+    onClick={() => setShowWaitlist(true)}
+    className="w-full mt-3 p-3 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/10 transition"
+  >
+    🔓 See what’s killing your mix
+  </button>
+)}
   </>
 )}
           </div>
@@ -545,11 +545,11 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
   {issues.length > 0 ? (
     <>
       <h3 className="font-semibold mb-2">
-        What affects your mix
+        How to improve your mix
       </h3>
 
       {issues.map((issue: any, i: number) => {
-        const rec = recommendations.find(r => r.title === issue.text)
+        const rec = recommendations[i]
         const isLocked = false
 
         return (
@@ -559,17 +559,11 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 >
 
             <div className="font-semibold text-white mb-1">
-              {issue.text}
+              {rec?.title || issue.text}
             </div>
 
-            <div className="text-xs text-gray-400 mb-2">
-  {issue.level === "high" && "High impact"}
-{issue.level === "medium" && "Affects balance"}
-{issue.level === "low" && "Subtle improvement"}
-</div>
-
             {rec?.steps?.map((step: string, j: number) => (
-  <div key={j} className="text-sm text-purple-300 ml-2">
+  <div key={j} className="text-sm text-gray-400 ml-2">
     • {step}
   </div>
 ))}
@@ -607,28 +601,17 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
 
           {/* CTA */}
+          
 
-<div className="mt-6">
-
-  <button
-    onClick={() => window.location.href = "/flow"}
-    disabled={!canMaster}
-    className={`w-full py-5 rounded-xl font-bold text-lg transition ${
-  canMaster
-    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-black hover:brightness-110"
-    : "bg-white/10 text-white/40 cursor-not-allowed"
-}`}
-  >
-    🎧 Master your track
-  </button>
-
-  <p className="text-xs text-gray-400 text-center mt-2">
-    {canMaster
-      ? "Ready for mastering"
-      : "This mix still has issues affecting the final result"}
-  </p>
-
+<div className="text-xs text-gray-400 text-center mt-2">
+  ⚡ Limited early access — join before launch
 </div>
+
+          {!canMaster && (
+            <p className="text-xs text-gray-500 text-center mt-2">
+              Improve your mix to unlock mastering
+            </p>
+          )}
 
         </motion.div>
 )}
