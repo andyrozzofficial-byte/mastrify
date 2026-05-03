@@ -229,13 +229,17 @@ const handlePayment = () => {
 
   useEffect(() => {
   if (!masteredUrl) return
+
   const audio = audioRef.current
   if (!audio) return
+
+  // 🔥 DETTA ÄR FIXEN
+  audio.src = masteredUrl
 
   audio.load()
 
   setTimeout(() => {
-    audio.currentTime = PREVIEW_START   // ✅ LÄGG TILL DENNA
+    audio.currentTime = PREVIEW_START
     audio.play().catch(() => {})
     setIsPlaying(true)
   }, 300)
@@ -423,6 +427,10 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
 
         audio.pause()
 
+          // 🔥 FIX
+
+        audio.src = audioUrl
+
         setPreview("original")
 
         setTimeout(() => {
@@ -447,6 +455,10 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         if (!audio) return
 
         audio.pause()
+
+          // 🔥 FIX
+
+        audio.src = masteredUrl
 
         setPreview("mastered")
 
