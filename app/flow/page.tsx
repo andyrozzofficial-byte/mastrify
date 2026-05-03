@@ -102,7 +102,7 @@ console.log("CURRENT SRC:", currentSrc)
       console.log("SERVER RESPONSE:", res.data)
 console.log("MASTER PATH:", res.data.after)
 
-setMasteredUrl(`https://mastrify-production.up.railway.app${res.data.after}`)
+setMasteredUrl(res.data.fullUrl)
 setPreview("mastered")
 
     } catch (err) {
