@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 type Step = "upload" | "analyzing" | "done"
 
 export default function FlowPage() {
+  const API = "https://mastrify-backend-production.up.railway.app"
   const SHOW_REFERENCE = false
 
   const sleep = (ms: number) => new Promise(res => setTimeout(res, ms))
@@ -91,13 +92,13 @@ console.log("CURRENT SRC:", currentSrc)
   const autoMaster = async (file: File) => {
     try {
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append("track", file)
 
       if (SHOW_REFERENCE && referenceTrack) {
   formData.append("reference", referenceTrack)
 }
 
-      const res = await axios.post("https://mastrify-production.up.railway.app/master", formData)
+      const res = await axios.post(`${API}/master`, formData)
 
       console.log("SERVER RESPONSE:", res.data)
 console.log("MASTER PATH:", res.data.after)
