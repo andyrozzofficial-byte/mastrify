@@ -58,20 +58,19 @@ console.log("CURRENT SRC:", currentSrc)
 
   const switchSource = (
     nextSrc: string,
-    nextPreview: "mastered" | "original",
-    { autoplay }: { autoplay: boolean } = { autoplay: false }
+    nextPreview: "mastered" | "original"
   ) => {
     const audio = audioRef.current
-    if (!audio) return
-    if (!nextSrc) return
+    if (!audio || !nextSrc) return
 
     audio.pause()
     setIsPlaying(false)
 
     setPreview(nextPreview)
 
-    pendingSeekRef.current = true
-    pendingPlayRef.current = autoplay
+    // Toggle should only switch source; seeking/playing is handled by Play button
+    pendingSeekRef.current = false
+    pendingPlayRef.current = false
 
     audio.src = nextSrc
     audio.load()
@@ -290,7 +289,8 @@ const handlePayment = () => {
   const audio = audioRef.current
   if (!audio) return
 
-  switchSource(masteredUrl, "mastered", { autoplay: true })
+  // Auto-switch to mastered source; user can press play afterwards
+  switchSource(masteredUrl, "mastered")
 
 }, [masteredUrl, step])
   
@@ -470,6 +470,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     {/* ORIGINAL */}
     <button
       onClick={() => {
+        if (!audioUrl) return
         switchSource(audioUrl, "original")
       }}
       className={`px-5 py-1.5 rounded-full text-xs ${
@@ -484,6 +485,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     {/* MASTERED */}
     <button
       onClick={() => {
+        if (!masteredUrl) return
         switchSource(masteredUrl, "mastered")
       }}
       className={`px-5 py-1.5 rounded-full text-xs ${
