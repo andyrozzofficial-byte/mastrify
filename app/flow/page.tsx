@@ -24,8 +24,13 @@ export default function FlowPage() {
   const [audioUrl, setAudioUrl] = useState("")
   const [masteredUrl, setMasteredUrl] = useState("")
   const [preview, setPreview] = useState<"mastered" | "original">("mastered")
+  // TEMP: disable A/B switching; always preview mastered once ready
   const currentSrc =
-  preview === "mastered" && masteredUrl ? masteredUrl : audioUrl
+    step === "done" && masteredUrl
+      ? masteredUrl
+      : preview === "mastered" && masteredUrl
+        ? masteredUrl
+        : audioUrl
 
 console.log("CURRENT SRC:", currentSrc)
 
@@ -280,7 +285,8 @@ const handlePayment = () => {
   useEffect(() => {
   if (!masteredUrl) return
 
-  setPreview("mastered")
+  // TEMP: lock preview to mastered when ready
+  if (step === "done") setPreview("mastered")
 
 }, [masteredUrl, step])
   
@@ -460,8 +466,8 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     {/* ORIGINAL */}
     <button
       onClick={() => {
-        if (!audioUrl) return
-        setPreview("original")
+        // TEMP: A/B disabled for stable demo
+        return
       }}
       className={`px-5 py-1.5 rounded-full text-xs ${
         preview === "original"
@@ -475,8 +481,8 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     {/* MASTERED */}
     <button
       onClick={() => {
-        if (!masteredUrl) return
-        setPreview("mastered")
+        // TEMP: A/B disabled for stable demo
+        return
       }}
       className={`px-5 py-1.5 rounded-full text-xs ${
         preview === "mastered"
@@ -494,6 +500,10 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
   onClick={() => {
     const audio = audioRef.current
 if (!audio) return
+
+// TEMP: always play mastered preview once ready
+if (!masteredUrl) return
+if (step === "done" && currentSrc !== masteredUrl) return
 
 if (!audio.paused) {
   audio.pause()
