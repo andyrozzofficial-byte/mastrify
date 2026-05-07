@@ -55,6 +55,13 @@ console.log("OUTPUT:", outputPath)
     throw new Error("Input file not found")
   }
 
+  // TEMP: bypass ffmpeg mastering entirely to ensure /master returns reliably
+  fs.copyFileSync(input, outputPath)
+  if (!fs.existsSync(outputPath)) {
+    throw new Error("Copy failed: output file missing")
+  }
+  return { path: outputPath }
+
   const analysis = await analyzeTrack(input)
 
   let referenceAnalysis = null
