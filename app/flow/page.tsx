@@ -111,9 +111,10 @@ const mastered =
 setMasteredUrl(mastered)
 setPreview("mastered")
 
-    } catch (err) {
-      console.log("Auto master failed", err)
-    }
+} catch (err) {
+  console.log("Auto master failed", err)
+  throw err
+}
   }
 
   // 🔥 START FAKE AI FLOW
