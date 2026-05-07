@@ -126,6 +126,8 @@ const target = referenceAnalysis?.spectral || {
       reject(new Error("Mastering timed out"))
     }, 60_000)
 
+    console.log("🔥 FILTERS USED:", filters)
+
     const command = ffmpeg(input)
       .audioFilters(filters)
       .audioCodec("pcm_s16le")
