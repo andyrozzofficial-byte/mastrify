@@ -161,11 +161,14 @@ filters.push("alimiter=limit=0.92")
 
     ffmpeg(input)
       .audioFilters(filters)
-      .audioCodec("pcm_s24le")
+      .audioCodec("pcm_s16le")
       .audioFrequency(44100)
       .audioChannels(2)
       .format("wav")
       .output(outputPath)
+      .on("start", (cmd) => {
+        console.log("🚀 FFMPEG START:", cmd)
+      })
 
       .on("end", () => {
         console.log("✅ CLEAN MASTER DONE")
