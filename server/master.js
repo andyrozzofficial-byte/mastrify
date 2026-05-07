@@ -83,74 +83,18 @@ const target = referenceAnalysis?.spectral || {
   console.log("🎧 ANALYSIS:", analysis)
   console.log("SPECTRAL:", analysis.spectral)
 
-  let filters = []
-
-/* CLEAN */
-filters.push("highpass=f=30")
-
-/* LOW END (tightare, mindre boom) */
-filters.push("equalizer=f=90:t=q:w=1:g=0.3")
-
-/* REMOVE MUD */
-filters.push("equalizer=f=300:t=q:w=1:g=-1.2")
-
-// 🧠 REFERENCE MATCH CALC
-const spectral = analysis.spectral || {
-  low: 0.2,
-  mid: 0.2,
-  high: 0.2
-}
-
-const diffLow = target.low - spectral.low
-const diffMid = target.mid - spectral.mid
-const diffHigh = target.high - spectral.high
-
-const clamp = (val, min, max) => Math.max(min, Math.min(max, val))
-
-// 🎧 LOW
-if (Math.abs(diffLow) > 0.02) {
-  const gain = clamp(diffLow * 10, -2, 2)
-  filters.push(`equalizer=f=80:t=q:w=1:g=${gain}`)
-}
-
-// 🎧 MID
-if (Math.abs(diffMid) > 0.02) {
-  const gain = clamp(diffMid * 8, -2, 2)
-  filters.push(`equalizer=f=1000:t=q:w=1:g=${gain}`)
-}
-
-// 🎧 HIGH (lite mildare nu)
-if (Math.abs(diffHigh) > 0.02) {
-  const gain = clamp(diffHigh * 6, -1.5, 1.5)
-}
-
-
-// 🎧 LOW TIGHT
-filters.push("equalizer=f=60:t=q:w=1:g=0.3")
-
-// 🎧 PRESENCE
-filters.push("equalizer=f=3000:t=q:w=1:g=0.8")
-
-// 🎧 AIR (MYCKET mildare)
-filters.push("equalizer=f=12000:t=q:w=1:g=0.1")
-filters.push("equalizer=f=14000:t=q:w=1:g=0.15")
-
-// 🔥 NY (RADIO SHINE)
-filters.push("equalizer=f=10000:t=q:w=1:g=1.5")
-
-// NOTE: aexciter not available in Railway ffmpeg build
-
-// 🎧 DE-ESS (fake via EQ)
-filters.push("equalizer=f=7500:t=q:w=1:g=-0.5")
-
-// PRE-LIMITER CONTROL
-filters.push("acompressor=threshold=-12dB:ratio=3:attack=10:release=80")
-
-// DRIVE
-filters.push("volume=6dB")
-
-// LIMITER (ALLTID SIST)
-filters.push("alimiter=limit=0.90")
+  const filters = [
+    // mild low cut / highpass
+    "highpass=f=30",
+    // stronger EQ for testing
+    "equalizer=f=80:t=q:w=1:g=4",
+    "equalizer=f=12000:t=q:w=1:g=3",
+    // stronger compression for testing
+    "acompressor=threshold=-20dB:ratio=4:attack=20:release=200:makeup=6",
+    // level + limiter for testing
+    "volume=6dB",
+    "alimiter=limit=0.95",
+  ]
 
 
 
