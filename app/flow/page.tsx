@@ -17,6 +17,8 @@ export default function FlowPage() {
   }, [])
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const pendingSeekRef = useRef(false)
+  const pendingPlayRef = useRef(false)
 
   const [file, setFile] = useState<File | null>(null)
   const [audioUrl, setAudioUrl] = useState("")
@@ -53,6 +55,27 @@ console.log("CURRENT SRC:", currentSrc)
 
   const PREVIEW_START = 60
   const PREVIEW_LENGTH = 30
+
+  const switchSource = (
+    nextSrc: string,
+    nextPreview: "mastered" | "original",
+    { autoplay }: { autoplay: boolean } = { autoplay: false }
+  ) => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (!nextSrc) return
+
+    audio.pause()
+    setIsPlaying(false)
+
+    setPreview(nextPreview)
+
+    pendingSeekRef.current = true
+    pendingPlayRef.current = autoplay
+
+    audio.src = nextSrc
+    audio.load()
+  }
 
   // ---------------- FILE ----------------
   const handleFile = (e: any) => {
@@ -233,6 +256,33 @@ const handlePayment = () => {
   setShowSuccess(true)
 }
 
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const onLoadedMetadata = () => {
+      if (!pendingSeekRef.current && !pendingPlayRef.current) return
+
+      if (pendingSeekRef.current) {
+        const safeTime = Math.min(
+          PREVIEW_START,
+          Math.max(0, (audio.duration || 0) - 0.1)
+        )
+        audio.currentTime = safeTime
+        pendingSeekRef.current = false
+      }
+
+      if (pendingPlayRef.current) {
+        pendingPlayRef.current = false
+        audio.play().catch(() => {})
+        setIsPlaying(true)
+      }
+    }
+
+    audio.addEventListener("loadedmetadata", onLoadedMetadata)
+    return () => audio.removeEventListener("loadedmetadata", onLoadedMetadata)
+  }, [])
+
 
   useEffect(() => {
   if (!masteredUrl) return
@@ -240,16 +290,7 @@ const handlePayment = () => {
   const audio = audioRef.current
   if (!audio) return
 
-  // 🔥 DETTA ÄR FIXEN
-  audio.src = masteredUrl
-
-  audio.load()
-
-  setTimeout(() => {
-    audio.currentTime = PREVIEW_START
-    audio.play().catch(() => {})
-    setIsPlaying(true)
-  }, 300)
+  switchSource(masteredUrl, "mastered", { autoplay: true })
 
 }, [masteredUrl, step])
   
@@ -429,22 +470,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     {/* ORIGINAL */}
     <button
       onClick={() => {
-        const audio = audioRef.current
-        if (!audio) return
-
-        audio.pause()
-
-          // 🔥 FIX
-
-        audio.src = audioUrl
-
-        setPreview("original")
-
-        setTimeout(() => {
-          audio.currentTime = PREVIEW_START
-          audio.load()
-          setIsPlaying(false)
-        }, 100)
+        switchSource(audioUrl, "original")
       }}
       className={`px-5 py-1.5 rounded-full text-xs ${
         preview === "original"
@@ -458,22 +484,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     {/* MASTERED */}
     <button
       onClick={() => {
-        const audio = audioRef.current
-        if (!audio) return
-
-        audio.pause()
-
-          // 🔥 FIX
-
-        audio.src = masteredUrl
-
-        setPreview("mastered")
-
-        setTimeout(() => {
-          audio.currentTime = PREVIEW_START
-          audio.load()
-          setIsPlaying(false)
-        }, 100)
+        switchSource(masteredUrl, "mastered")
       }}
       className={`px-5 py-1.5 rounded-full text-xs ${
         preview === "mastered"
@@ -498,10 +509,24 @@ if (!audio.paused) {
   return
 }
 
-audio.currentTime = PREVIEW_START
 audio.volume = 1
-audio.play().catch(() => {})
-setIsPlaying(true)
+pendingSeekRef.current = true
+pendingPlayRef.current = true
+
+if (audio.readyState >= 1) {
+  const safeTime = Math.min(
+    PREVIEW_START,
+    Math.max(0, (audio.duration || 0) - 0.1)
+  )
+  audio.currentTime = safeTime
+  pendingSeekRef.current = false
+
+  audio.play().catch(() => {})
+  pendingPlayRef.current = false
+  setIsPlaying(true)
+} else {
+  audio.load()
+}
   }}
   className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white"
 >
@@ -517,7 +542,6 @@ setIsPlaying(true)
 
 
    <audio
-  key={currentSrc}
   ref={audioRef}
   src={currentSrc}
   onEnded={() => setIsPlaying(false)}
