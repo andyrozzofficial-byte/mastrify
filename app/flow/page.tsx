@@ -64,16 +64,22 @@ console.log("CURRENT SRC:", currentSrc)
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
-    if (!currentSrc) return
+
+    const nextSrc =
+      step === "done" && masteredUrl ? masteredUrl : audioUrl
+
+    if (!nextSrc) return
+
+    console.log("SETTING AUDIO SRC:", nextSrc)
 
     audio.pause()
-    audio.src = currentSrc
+    audio.src = nextSrc
     audio.load()
 
     pendingSeekRef.current = false
     pendingPlayRef.current = false
     setIsPlaying(false)
-  }, [currentSrc])
+  }, [step, masteredUrl, audioUrl])
 
   // ---------------- FILE ----------------
   const handleFile = (e: any) => {
