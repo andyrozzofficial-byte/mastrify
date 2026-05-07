@@ -5,6 +5,8 @@ import multer from "multer"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
+import { analyzeTrack } from "./analyze.js"
+import { masterTrack } from "./master.js"
 
 process.on("uncaughtException", (err) => {
   console.error("💥 UNCAUGHT:", err)
@@ -13,9 +15,6 @@ process.on("uncaughtException", (err) => {
 process.on("unhandledRejection", (err) => {
   console.error("💥 PROMISE ERROR:", err)
 })
-
-import { analyzeTrack } from "./analyze.js"
-import { masterTrack } from "./master.js"
 // import { aiMixAssistant } from "./ai.js"
 // import { buildMasteringChain } from "./masteringEngine.js"
 

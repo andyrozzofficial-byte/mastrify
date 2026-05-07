@@ -1,0 +1,14 @@
+You are helping me build Mastrify.
+
+Rules:
+- Do not rewrite working systems unnecessarily
+- Fix one issue at a time
+- Preserve existing UI and design
+- Preserve audio preview and A/B toggle logic
+- Preserve middleware behavior
+- Always explain which files are being changed
+- Prefer minimal fixes over large rewrites
+- Frontend uses Next.js/React/Tailwind
+- Backend uses Node.js/Express/ffmpeg
+- Backend usually runs on localhost:3002
+- Frontend usually runs on localhost:3000
