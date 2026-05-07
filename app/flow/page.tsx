@@ -92,7 +92,7 @@ console.log("CURRENT SRC:", currentSrc)
   const autoMaster = async (file: File) => {
     try {
       const formData = new FormData()
-      formData.append("track", file)
+      formData.append("file", file)
 
       if (SHOW_REFERENCE && referenceTrack) {
   formData.append("reference", referenceTrack)
