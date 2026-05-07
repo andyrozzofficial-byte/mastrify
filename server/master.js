@@ -136,7 +136,7 @@ filters.push("equalizer=f=12000:t=q:w=1:g=0.1")
 filters.push("equalizer=f=14000:t=q:w=1:g=0.15")
 
 // 🔥 NY (RADIO SHINE)
-filters.push("equalizer=f=10000:t=q:w=1:g=0.3")
+filters.push("equalizer=f=10000:t=q:w=1:g=1.5")
 
 // NOTE: aexciter not available in Railway ffmpeg build
 
@@ -144,16 +144,17 @@ filters.push("equalizer=f=10000:t=q:w=1:g=0.3")
 filters.push("equalizer=f=7500:t=q:w=1:g=-0.5")
 
 // PRE-LIMITER CONTROL
-filters.push("acompressor=threshold=-8dB:ratio=2:attack=10:release=80")
+filters.push("acompressor=threshold=-12dB:ratio=3:attack=10:release=80")
 
 // DRIVE
-filters.push("volume=8.5dB")
+filters.push("volume=6dB")
 
 // LIMITER (ALLTID SIST)
-filters.push("alimiter=limit=0.92")
+filters.push("alimiter=limit=0.90")
 
 
 
+  console.log("🔥 REAL MASTERING CHAIN ACTIVE")
   console.log("⚙️ FILTERS:", filters)
 
   return new Promise((resolve, reject) => {
