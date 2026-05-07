@@ -56,25 +56,19 @@ console.log("CURRENT SRC:", currentSrc)
   const PREVIEW_START = 60
   const PREVIEW_LENGTH = 30
 
-  const switchSource = (
-    nextSrc: string,
-    nextPreview: "mastered" | "original"
-  ) => {
+  useEffect(() => {
     const audio = audioRef.current
-    if (!audio || !nextSrc) return
+    if (!audio) return
+    if (!currentSrc) return
 
     audio.pause()
-    setIsPlaying(false)
+    audio.src = currentSrc
+    audio.load()
 
-    setPreview(nextPreview)
-
-    // Toggle should only switch source; seeking/playing is handled by Play button
     pendingSeekRef.current = false
     pendingPlayRef.current = false
-
-    audio.src = nextSrc
-    audio.load()
-  }
+    setIsPlaying(false)
+  }, [currentSrc])
 
   // ---------------- FILE ----------------
   const handleFile = (e: any) => {
@@ -286,11 +280,7 @@ const handlePayment = () => {
   useEffect(() => {
   if (!masteredUrl) return
 
-  const audio = audioRef.current
-  if (!audio) return
-
-  // Auto-switch to mastered source; user can press play afterwards
-  switchSource(masteredUrl, "mastered")
+  setPreview("mastered")
 
 }, [masteredUrl, step])
   
@@ -471,7 +461,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     <button
       onClick={() => {
         if (!audioUrl) return
-        switchSource(audioUrl, "original")
+        setPreview("original")
       }}
       className={`px-5 py-1.5 rounded-full text-xs ${
         preview === "original"
@@ -486,7 +476,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     <button
       onClick={() => {
         if (!masteredUrl) return
-        switchSource(masteredUrl, "mastered")
+        setPreview("mastered")
       }}
       className={`px-5 py-1.5 rounded-full text-xs ${
         preview === "mastered"
