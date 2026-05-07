@@ -890,10 +890,16 @@ app.post("/master",
         output: masterPath
       })
 
+      const baseUrl = `${req.protocol}://${req.get("host")}`
+      const before = `/uploads/${fileName}`
+      const after = `/masters/${masterFileName}`
+
       res.json({
-  before: `/uploads/${fileName}`,
-  after: `/masters/${masterFileName}`,
-  fullUrl: `https://mastrify-production.up.railway.app/masters/${masterFileName}`
+  before,
+  after,
+  afterUrl: `${baseUrl}${after}`,
+  // kept for backwards compatibility with older clients
+  fullUrl: `${baseUrl}${after}`
 })
 
     } catch (err) {

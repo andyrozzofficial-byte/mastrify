@@ -103,7 +103,12 @@ console.log("CURRENT SRC:", currentSrc)
       console.log("SERVER RESPONSE:", res.data)
 console.log("MASTER PATH:", res.data.after)
 
-setMasteredUrl(res.data.fullUrl)
+const mastered =
+  res.data.afterUrl ||
+  res.data.fullUrl ||
+  (res.data.after ? `${API}${res.data.after}` : "")
+
+setMasteredUrl(mastered)
 setPreview("mastered")
 
     } catch (err) {
