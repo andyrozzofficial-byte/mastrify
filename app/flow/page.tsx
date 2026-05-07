@@ -24,17 +24,6 @@ export default function FlowPage() {
   const [audioUrl, setAudioUrl] = useState("")
   const [masteredUrl, setMasteredUrl] = useState("")
   const [preview, setPreview] = useState<"mastered" | "original">("mastered")
-  // TEMP: disable A/B switching; always preview mastered once ready
-  const currentSrc =
-    step === "done" && masteredUrl
-      ? masteredUrl
-      : preview === "mastered" && masteredUrl
-        ? masteredUrl
-        : audioUrl
-
-console.log("CURRENT SRC:", currentSrc)
-
-
   const [isPaid, setIsPaid] = useState(() => {
   if (typeof window !== "undefined") {
     return localStorage.getItem("paid") === "true"
@@ -50,6 +39,16 @@ console.log("CURRENT SRC:", currentSrc)
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [playProgress, setPlayProgress] = useState(0)
+
+  // TEMP: disable A/B switching; always preview mastered once ready
+  const currentSrc =
+    step === "done" && masteredUrl
+      ? masteredUrl
+      : preview === "mastered" && masteredUrl
+        ? masteredUrl
+        : audioUrl
+
+  console.log("CURRENT SRC:", currentSrc)
   
   const [referenceTrack, setReferenceTrack] = useState<File | null>(null)
   const [referenceName, setReferenceName] = useState("")
