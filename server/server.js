@@ -890,11 +890,16 @@ app.post("/master",
         output: masterPath
       })
 
-      const baseUrl = `${req.protocol}://${req.get("host")}`
+      const forwardedProto = req.headers["x-forwarded-proto"]
+      const proto = (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto || req.protocol)
+        .split(",")[0]
+        .trim()
+      const baseUrl = `${proto}://${req.get("host")}`
       const before = `/uploads/${fileName}`
       const after = `/masters/${masterFileName}`
 
       res.json({
+  success: true,
   before,
   after,
   afterUrl: `${baseUrl}${after}`,
