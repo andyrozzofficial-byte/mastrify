@@ -158,8 +158,22 @@ filters.push("alimiter=limit=0.92")
   console.log("⚙️ FILTERS:", filters)
 
   return new Promise((resolve, reject) => {
+    let settled = false
+    let cmdRef = null
 
-    ffmpeg(input)
+    const timeoutId = setTimeout(() => {
+      if (settled) return
+      settled = true
+      console.log("⏱️ FFMPEG TIMEOUT")
+      try {
+        cmdRef?.kill("SIGKILL")
+      } catch (e) {
+        // ignore kill errors
+      }
+      reject(new Error("Mastering timed out"))
+    }, 60_000)
+
+    const command = ffmpeg(input)
       .audioFilters(filters)
       .audioCodec("pcm_s16le")
       .audioFrequency(44100)
@@ -168,10 +182,14 @@ filters.push("alimiter=limit=0.92")
       .output(outputPath)
       .on("start", (cmd) => {
         console.log("🚀 FFMPEG START:", cmd)
+        cmdRef = command
       })
 
       .on("end", () => {
-        console.log("✅ CLEAN MASTER DONE")
+        if (settled) return
+        settled = true
+        clearTimeout(timeoutId)
+        console.log("✅ FFMPEG END")
         if (!fs.existsSync(outputPath)) {
           return reject(new Error("Master completed but output file missing"))
         }
@@ -181,11 +199,15 @@ filters.push("alimiter=limit=0.92")
       })
 
       .on("error", err => {
-        console.log("❌ ERROR:", err)
+        if (settled) return
+        settled = true
+        clearTimeout(timeoutId)
+        console.log("❌ FFMPEG ERROR:", err)
         reject(err)
       })
 
-      .run()
+    cmdRef = command
+    command.run()
 
   })
 
