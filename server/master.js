@@ -1,5 +1,5 @@
-import { exec } from "child_process"
 import ffmpeg from "fluent-ffmpeg"
+import ffmpegStatic from "ffmpeg-static"
 import path from "path"
 import fs from "fs"
 import { fileURLToPath } from "url"
@@ -7,6 +7,11 @@ import { analyzeTrack } from "./analyze.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// Ensure ffmpeg binary exists in deployments (e.g. Railway)
+if (ffmpegStatic) {
+  ffmpeg.setFfmpegPath(ffmpegStatic)
+}
 
 
 const uploadsDir = "/tmp/uploads"
@@ -133,8 +138,7 @@ filters.push("equalizer=f=14000:t=q:w=1:g=0.15")
 // 🔥 NY (RADIO SHINE)
 filters.push("equalizer=f=10000:t=q:w=1:g=0.3")
 
-// 🎧 EXCITER (sänkt)
-filters.push("aexciter=amount=0.4")
+// NOTE: aexciter not available in Railway ffmpeg build
 
 // 🎧 DE-ESS (fake via EQ)
 filters.push("equalizer=f=7500:t=q:w=1:g=-0.5")
@@ -153,28 +157,59 @@ filters.push("alimiter=limit=0.92")
   console.log("⚙️ FILTERS:", filters)
 
   return new Promise((resolve, reject) => {
+    let settled = false
+    let cmdRef = null
 
-    ffmpeg(input)
+    const timeoutId = setTimeout(() => {
+      if (settled) return
+      settled = true
+      console.log("⏱️ FFMPEG TIMEOUT")
+      try {
+        cmdRef?.kill("SIGKILL")
+      } catch (e) {
+        // ignore kill errors
+      }
+      reject(new Error("Mastering timed out"))
+    }, 60_000)
+
+    const command = ffmpeg(input)
       .audioFilters(filters)
-      .audioCodec("pcm_s24le")
+      .audioCodec("pcm_s16le")
       .audioFrequency(44100)
       .audioChannels(2)
       .format("wav")
       .output(outputPath)
+      .on("start", (cmd) => {
+        console.log("🚀 FFMPEG START:", cmd)
+        cmdRef = command
+      })
+      .on("stderr", (line) => {
+        console.log("FFMPEG STDERR:", line)
+      })
 
       .on("end", () => {
-        console.log("✅ CLEAN MASTER DONE")
+        if (settled) return
+        settled = true
+        clearTimeout(timeoutId)
+        console.log("✅ FFMPEG END")
+        if (!fs.existsSync(outputPath)) {
+          return reject(new Error("Master completed but output file missing"))
+        }
         resolve({
   path: outputPath
 })
       })
 
       .on("error", err => {
-        console.log("❌ ERROR:", err)
+        if (settled) return
+        settled = true
+        clearTimeout(timeoutId)
+        console.log("❌ FFMPEG ERROR:", err)
         reject(err)
       })
 
-      .run()
+    cmdRef = command
+    command.run()
 
   })
 
