@@ -863,6 +863,7 @@ MASTER TRACK
 app.post("/master",
   upload.single("file"),
   async (req, res) => {
+  console.log("🔥 LIVE /MASTER ROUTE HIT - NEW CODE ACTIVE")
 
   res.setTimeout(0) // 🔥 LÄGG DEN HÄR
 
