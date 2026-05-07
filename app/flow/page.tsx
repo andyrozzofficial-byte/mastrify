@@ -454,47 +454,8 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
   Industry-level master • Ready for release
 </p>
 
-{(audioUrl || masteredUrl) && (
+  {masteredUrl && (
   <div className="mt-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4">
-
-    <p className="text-xs text-purple-300">A/B your master</p>
-    <p className="text-xs text-white/40">Original vs Master</p>
-
-    <div className="flex justify-center">
-  <div className="bg-white/5 p-1 rounded-full flex gap-1 border border-white/10">
-
-    {/* ORIGINAL */}
-    <button
-      onClick={() => {
-        // TEMP: A/B disabled for stable demo
-        return
-      }}
-      className={`px-5 py-1.5 rounded-full text-xs ${
-        preview === "original"
-          ? "bg-white text-black"
-          : "text-white/50"
-      }`}
-    >
-      Original
-    </button>
-
-    {/* MASTERED */}
-    <button
-      onClick={() => {
-        // TEMP: A/B disabled for stable demo
-        return
-      }}
-      className={`px-5 py-1.5 rounded-full text-xs ${
-        preview === "mastered"
-          ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-          : "text-white/50"
-      }`}
-    >
-      Mastered
-    </button>
-
-  </div>
-</div>
 
     <button
   onClick={() => {
