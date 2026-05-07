@@ -84,16 +84,25 @@ const target = referenceAnalysis?.spectral || {
   console.log("SPECTRAL:", analysis.spectral)
 
   const filters = [
-    // mild low cut / highpass
     "highpass=f=30",
-    // stronger EQ for testing
-    "equalizer=f=80:t=q:w=1:g=4",
-    "equalizer=f=12000:t=q:w=1:g=3",
-    // stronger compression for testing
-    "acompressor=threshold=-20dB:ratio=4:attack=20:release=200:makeup=6",
-    // level + limiter for testing
-    "volume=6dB",
-    "alimiter=limit=0.95",
+
+    // Low end boost
+    "equalizer=f=80:t=q:w=1:g=6",
+
+    // Presence
+    "equalizer=f=3500:t=q:w=1:g=4",
+
+    // Air / brightness
+    "equalizer=f=12000:t=q:w=1:g=5",
+
+    // Strong compression
+    "acompressor=threshold=-24dB:ratio=6:attack=5:release=120:makeup=10",
+
+    // Loudness boost
+    "volume=8dB",
+
+    // Final limiter
+    "alimiter=limit=0.90",
   ]
 
 
