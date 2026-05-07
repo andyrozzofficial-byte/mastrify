@@ -1,5 +1,5 @@
-import { exec } from "child_process"
 import ffmpeg from "fluent-ffmpeg"
+import ffmpegStatic from "ffmpeg-static"
 import path from "path"
 import fs from "fs"
 import { fileURLToPath } from "url"
@@ -7,6 +7,11 @@ import { analyzeTrack } from "./analyze.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// Ensure ffmpeg binary exists in deployments (e.g. Railway)
+if (ffmpegStatic) {
+  ffmpeg.setFfmpegPath(ffmpegStatic)
+}
 
 
 const uploadsDir = "/tmp/uploads"
@@ -164,6 +169,9 @@ filters.push("alimiter=limit=0.92")
 
       .on("end", () => {
         console.log("✅ CLEAN MASTER DONE")
+        if (!fs.existsSync(outputPath)) {
+          return reject(new Error("Master completed but output file missing"))
+        }
         resolve({
   path: outputPath
 })
