@@ -83,32 +83,28 @@ const target = referenceAnalysis?.spectral || {
   console.log("🎧 ANALYSIS:", analysis)
   console.log("SPECTRAL:", analysis.spectral)
 
+  // DEBUG: brutally obvious chain to verify processing
   const filters = [
-    "highpass=f=30",
+    // make it immediately audible that filters apply
+    "highpass=f=200",
 
-    // Low end boost
-    "equalizer=f=80:t=q:w=1:g=6",
+    // extreme EQ swings
+    "equalizer=f=80:t=q:w=1:g=12",
+    "equalizer=f=3500:t=q:w=1:g=10",
+    "equalizer=f=12000:t=q:w=1:g=12",
 
-    // Presence
-    "equalizer=f=3500:t=q:w=1:g=4",
+    // smash dynamics hard
+    "acompressor=threshold=-35dB:ratio=20:attack=1:release=50:makeup=20",
 
-    // Air / brightness
-    "equalizer=f=12000:t=q:w=1:g=5",
-
-    // Strong compression
-    "acompressor=threshold=-24dB:ratio=6:attack=5:release=120:makeup=10",
-
-    // Loudness boost
-    "volume=8dB",
-
-    // Final limiter
-    "alimiter=limit=0.90",
+    // push into limiter
+    "volume=20dB",
+    "alimiter=limit=0.25",
   ]
 
 
 
-  console.log("🔥 REAL MASTERING CHAIN ACTIVE")
-  console.log("⚙️ FILTERS:", filters)
+  console.log("USING TEST MASTER CHAIN")
+  console.log("FILTERS:", filters)
 
   return new Promise((resolve, reject) => {
     let settled = false
