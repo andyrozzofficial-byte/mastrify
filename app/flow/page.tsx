@@ -134,6 +134,8 @@ export default function FlowPage() {
   const mobileSelectedUrl =
     selectedSource === "mastered" ? masteredMobilePreviewUrl : audioUrl
 
+  const MOBILE_MASTERED_DURATION = 30
+
   // ---------------- FILE ----------------
   const handleFile = (e: any) => {
   const selected = e.target.files[0]
@@ -298,17 +300,21 @@ setSelectedSource("mastered")
 
     const onTimeUpdate = () => {
       const t = el.currentTime
-      if (Number.isFinite(t) && t >= PREVIEW_END) {
+      const end = selectedSourceRef.current === "mastered" ? MOBILE_MASTERED_DURATION : PREVIEW_END
+      const start = selectedSourceRef.current === "mastered" ? 0 : PREVIEW_START
+      const duration = selectedSourceRef.current === "mastered" ? MOBILE_MASTERED_DURATION : PREVIEW_DURATION
+
+      if (Number.isFinite(t) && t >= end) {
         el.pause()
         try {
-          el.currentTime = PREVIEW_START
+          el.currentTime = start
         } catch {}
         setIsPlaying(false)
         setPlayProgress(0)
         return
       }
 
-      const p = ((t - PREVIEW_START) / PREVIEW_DURATION) * 100
+      const p = ((t - start) / duration) * 100
       setPlayProgress(Math.max(0, Math.min(100, p)))
     }
 
@@ -431,38 +437,10 @@ const handlePayment = () => {
       el.load()
       await waitForReady(el)
       if (selectedSourceRef.current === "mastered") {
-        console.log("mobile mastered loaded")
-        console.log("mobile mastered currentTime before set", el.currentTime)
-      }
-
-      // iOS Safari can ignore early seeks; for MASTERED we don't play
-      // until the seek to PREVIEW_START has actually stuck.
-      const seekToStartAndVerify = async () => {
-        const attempt = () => {
-          try {
-            el.currentTime = PREVIEW_START
-          } catch {}
-          return el.currentTime
-        }
-
-        // Try a few times across ticks to allow iOS to accept the seek.
-        for (let i = 0; i < 5; i++) {
-          const t = attempt()
-          if (Number.isFinite(t) && Math.abs(t - PREVIEW_START) < 0.25) return true
-          await new Promise<void>((r) => requestAnimationFrame(() => r()))
-        }
-        return false
-      }
-
-      if (selectedSourceRef.current === "mastered") {
-        const ok = await seekToStartAndVerify()
-        console.log("mobile mastered currentTime after set", el.currentTime, "ok=", ok)
-        if (!ok) {
-          // If we can't reliably seek, don't attempt play (prevents starting at 0).
-          setIsPlaying(false)
-          setPlayProgress(0)
-          return
-        }
+        // Mastered mobile preview is pre-cut (60s–90s), so play from 0.
+        try {
+          el.currentTime = 0
+        } catch {}
       } else {
         try {
           el.currentTime = PREVIEW_START
@@ -471,9 +449,6 @@ const handlePayment = () => {
 
       setPlayProgress(0)
       try {
-        if (selectedSourceRef.current === "mastered") {
-          console.log("mobile mastered play")
-        }
         await el.play()
         setIsPlaying(true)
       } catch (e) {
