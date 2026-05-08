@@ -459,10 +459,47 @@ const handlePayment = () => {
     }
 
     // DESKTOP flow (two audio elements already in DOM)
+    // Desktop MASTERED must use the WAV master URL (afterUrl/fullUrl).
+    if (selectedSourceRef.current === "mastered") {
+      console.log("[desktop] selectedSource:", selectedSourceRef.current)
+      console.log("[desktop] mastered desktop URL:", masteredUrl)
+
+      if (!masteredUrl || !/^https:\/\//i.test(masteredUrl)) {
+        console.log("[desktop] invalid masteredUrl:", masteredUrl)
+        setIsPlaying(false)
+        return
+      }
+
+      // Ensure the mastered audio element is actually pointing at the WAV URL.
+      const masteredEl = masteredAudioRef.current
+      if (masteredEl) {
+        console.log("[desktop] audio.src before play:", masteredEl.src)
+        if (masteredEl.src !== masteredUrl) {
+          masteredEl.pause()
+          masteredEl.src = masteredUrl
+        }
+        masteredEl.load()
+        await waitForReady(masteredEl)
+        try {
+          masteredEl.currentTime = PREVIEW_START
+        } catch {}
+        setPlayProgress(0)
+        try {
+          await masteredEl.play()
+          setIsPlaying(true)
+        } catch (e) {
+          console.log("[desktop] play error:", e)
+          setIsPlaying(false)
+        }
+      }
+      return
+    }
+
+    // Desktop ORIGINAL (keep existing behavior)
     selectedEl.load()
     await waitForReady(selectedEl)
     try {
-      selectedEl.currentTime = safePreviewTimeForEl(selectedEl)
+      selectedEl.currentTime = PREVIEW_START
     } catch {}
     setPlayProgress(0)
     try {
