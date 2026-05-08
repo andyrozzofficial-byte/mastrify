@@ -317,7 +317,12 @@ const handlePayment = () => {
     if (next === previewMode) return
 
     // Switching tabs: preserve position, never autoplay.
-    pendingSeekTimeRef.current = Math.max(0, audio.currentTime || 0)
+    const dur = audio.duration
+    const rawT = Math.max(0, audio.currentTime || 0)
+    const t =
+      Number.isFinite(dur) && dur > 0 && rawT >= dur - 0.05 ? 0 : rawT
+
+    pendingSeekTimeRef.current = t
     pendingSeekRef.current = true
     pendingPlayRef.current = false
     setPreviewMode(next)
@@ -340,7 +345,12 @@ const handlePayment = () => {
 
     // If we just switched sources, preserve position; otherwise default to preview start.
     if (pendingSeekTimeRef.current == null) {
-      pendingSeekTimeRef.current = Math.max(0, audio.currentTime || PREVIEW_START)
+      const dur = audio.duration
+      const ended =
+        Number.isFinite(dur) && dur > 0 && (audio.currentTime || 0) >= dur - 0.05
+      pendingSeekTimeRef.current = ended
+        ? 0
+        : Math.max(0, audio.currentTime || PREVIEW_START)
     }
 
     if (audio.readyState >= 1) {
@@ -607,7 +617,19 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
    <audio
   ref={audioRef}
   src={currentSrc}
-  onEnded={() => setIsPlaying(false)}
+  onEnded={() => {
+    const audio = audioRef.current
+    if (audio) {
+      audio.pause()
+      audio.currentTime = 0
+      audio.volume = 1
+    }
+    pendingSeekTimeRef.current = 0
+    pendingSeekRef.current = false
+    pendingPlayRef.current = false
+    setPlayProgress(0)
+    setIsPlaying(false)
+  }}
 />
 
   </div>
