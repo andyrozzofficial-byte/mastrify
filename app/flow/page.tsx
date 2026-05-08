@@ -45,9 +45,6 @@ export default function FlowPage() {
   const currentSrc = previewMode === "after" && masteredUrl ? masteredUrl : audioUrl
 
   console.log("CURRENT SRC:", currentSrc)
-
-  const [waveformEl, setWaveformEl] = useState<HTMLDivElement | null>(null)
-  const waveSurferRef = useRef<any>(null)
   
   const [referenceTrack, setReferenceTrack] = useState<File | null>(null)
   const [referenceName, setReferenceName] = useState("")
@@ -58,88 +55,6 @@ export default function FlowPage() {
 
   const PREVIEW_START = 60
   const PREVIEW_LENGTH = 30
-
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio || !waveformEl) return
-    if (!currentSrc) return
-
-    let cancelled = false
-
-    ;(async () => {
-      const mod = await import("wavesurfer.js")
-      if (cancelled) return
-      const WaveSurfer = mod.default
-
-      // Always destroy any previous instance before re-creating.
-      try {
-        waveSurferRef.current?.destroy?.()
-      } catch {}
-      waveSurferRef.current = null
-
-      const ws = WaveSurfer.create({
-        container: waveformEl,
-        url: currentSrc,
-        height: 44,
-        waveColor: "rgba(255,255,255,0.10)",
-        progressColor:
-          previewMode === "after"
-            ? "rgba(59,130,246,0.55)"
-            : "rgba(139,92,246,0.55)",
-        cursorColor: "rgba(255,255,255,0.22)",
-        barWidth: 2,
-        barGap: 2,
-        barRadius: 2,
-        normalize: true,
-        interact: true,
-      })
-
-      waveSurferRef.current = ws
-
-      const syncToAudio = () => {
-        const dur = audio.duration
-        if (!Number.isFinite(dur) || dur <= 0) return
-        const ratio = audio.currentTime / dur
-        if (typeof ws.seekTo === "function") ws.seekTo(ratio)
-      }
-
-      const onSeek = (ratio: number) => {
-        const dur = audio.duration
-        if (!Number.isFinite(dur) || dur <= 0) return
-        const target = ratio * dur
-        audio.currentTime = Math.min(target, Math.max(0, dur - 0.1))
-      }
-
-      ws.on?.("seek", onSeek)
-      ws.on?.("interaction", syncToAudio)
-      audio.addEventListener("timeupdate", syncToAudio)
-      audio.addEventListener("loadedmetadata", syncToAudio)
-
-      // Initial sync in case metadata is already available.
-      syncToAudio()
-
-      // Cleanup listeners when effect re-runs/unmounts.
-      return () => {
-        audio.removeEventListener("timeupdate", syncToAudio)
-        audio.removeEventListener("loadedmetadata", syncToAudio)
-        try {
-          ws.destroy()
-        } catch {}
-      }
-    })().catch((e) => {
-      console.log("WaveSurfer init failed", e)
-    })
-
-    return () => {
-      cancelled = true
-      try {
-        waveSurferRef.current?.destroy?.()
-      } catch {}
-      waveSurferRef.current = null
-    }
-  }, [waveformEl, currentSrc, previewMode])
-
-  // (waveform colors are configured on create)
 
   // Clamp seeking for unpaid MASTERED preview (prevents seeking outside preview window).
   useEffect(() => {
@@ -656,11 +571,13 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
       </motion.button>
     </div>
 
-    <div className="w-full rounded-lg bg-white/5 border border-white/10 px-2 py-2">
-      <div
-        ref={setWaveformEl}
-        className="w-full h-12"
+    <div className="w-full h-[6px] rounded-full bg-white/10 overflow-hidden">
+      <motion.div
+        className="h-full bg-gradient-to-r from-purple-400/70 to-blue-400/70"
+        animate={{ width: `${playProgress}%` }}
+        transition={{ type: "tween", duration: 0.2, ease: "easeOut" }}
       />
+      <div className="pointer-events-none -mt-[6px] h-[6px] w-full shadow-[0_0_14px_rgba(139,92,246,0.16)]" />
     </div>
 
 
