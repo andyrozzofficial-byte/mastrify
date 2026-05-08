@@ -501,7 +501,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
 </p>
 
   {masteredUrl && (
-  <div className="mt-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4">
+  <div className="mt-6 bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4 shadow-[0_12px_50px_rgba(0,0,0,0.55)]">
 
     <div className="grid grid-cols-2 gap-3">
       <motion.button
@@ -511,8 +511,8 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         whileTap={{ scale: 0.99 }}
         className={
           previewMode === "before"
-            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 via-fuchsia-500 to-blue-500 shadow-[0_0_70px_rgba(139,92,246,0.75)] ring-1 ring-white/15 hover:brightness-110 transition-all duration-300"
-            : "py-3 rounded-xl font-bold text-white/75 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300"
+            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/80 to-blue-600/80 shadow-[0_0_18px_rgba(139,92,246,0.28)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
+            : "py-3 rounded-xl font-bold text-white/75 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15 hover:text-white transition-all duration-300"
         }
       >
         ORIGINAL
@@ -526,8 +526,8 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         whileTap={masteredUrl ? { scale: 0.99 } : undefined}
         className={
           previewMode === "after"
-            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 via-fuchsia-500 to-blue-500 shadow-[0_0_70px_rgba(59,130,246,0.75)] ring-1 ring-white/15 hover:brightness-110 transition-all duration-300"
-            : "py-3 rounded-xl font-bold text-white/75 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/80 to-blue-600/80 shadow-[0_0_18px_rgba(59,130,246,0.26)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
+            : "py-3 rounded-xl font-bold text-white/75 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15 hover:text-white transition-all duration-300 disabled:opacity-35 disabled:cursor-not-allowed"
         }
       >
         MASTERED
@@ -538,10 +538,10 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
       <motion.button
         type="button"
         onClick={togglePlayPause}
-        whileHover={{ scale: 1.05 }}
+        whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         aria-label={isPlaying ? "Pause" : "Play"}
-        className="w-14 h-14 md:w-16 md:h-16 rounded-full grid place-items-center text-white bg-gradient-to-r from-purple-500 via-fuchsia-500 to-blue-500 shadow-[0_0_70px_rgba(139,92,246,0.55)] ring-1 ring-white/15 hover:brightness-110 transition-all duration-300"
+        className="w-14 h-14 md:w-16 md:h-16 rounded-full grid place-items-center text-white bg-gradient-to-r from-purple-600/85 to-blue-600/85 shadow-[0_0_22px_rgba(139,92,246,0.30)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
       >
         <span className="text-xl md:text-2xl font-black leading-none">
           {isPlaying ? "❚❚" : "▶"}
@@ -549,9 +549,9 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
       </motion.button>
     </div>
 
-    <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
       <motion.div
-        className="h-full bg-gradient-to-r from-purple-400 to-blue-400"
+        className="h-full bg-gradient-to-r from-purple-400/80 to-blue-400/80"
         animate={{ width: `${playProgress}%` }}
         transition={{ type: "tween", duration: 0.18, ease: "easeOut" }}
       />
