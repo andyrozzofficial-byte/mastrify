@@ -612,7 +612,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     src={audioUrl}
     playsInline
     preload="auto"
-    style={{ display: "none" }}
+    className="absolute w-0 h-0 opacity-0 pointer-events-none"
     onEnded={() => {
       pauseBoth()
       const el = originalAudioRef.current
@@ -626,7 +626,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     src={masteredUrl}
     playsInline
     preload="auto"
-    style={{ display: "none" }}
+    className="absolute w-0 h-0 opacity-0 pointer-events-none"
     onEnded={() => {
       pauseBoth()
       const el = masteredAudioRef.current
