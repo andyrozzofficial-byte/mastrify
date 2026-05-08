@@ -91,6 +91,8 @@ export default function FlowPage() {
     audio.src = nextSrc
     audio.load()
 
+    // iOS Safari: ensure we seek only after metadata is ready
+    // (pendingSeekRef/pendingSeekTimeRef are handled in loadedmetadata/canplay)
     setIsPlaying(false)
   }, [previewMode, masteredUrl, audioUrl])
 
@@ -277,7 +279,7 @@ const handlePayment = () => {
     const audio = audioRef.current
     if (!audio) return
 
-    const onLoadedMetadata = () => {
+    const onReady = () => {
       if (!pendingSeekRef.current && !pendingPlayRef.current) return
 
       if (pendingSeekRef.current) {
@@ -290,13 +292,22 @@ const handlePayment = () => {
 
       if (pendingPlayRef.current) {
         pendingPlayRef.current = false
-        audio.play().catch(() => {})
-        setIsPlaying(true)
+        audio.play().then(
+          () => setIsPlaying(true),
+          (e) => {
+            console.log("AUDIO PLAY FAILED:", e)
+            setIsPlaying(false)
+          }
+        )
       }
     }
 
-    audio.addEventListener("loadedmetadata", onLoadedMetadata)
-    return () => audio.removeEventListener("loadedmetadata", onLoadedMetadata)
+    audio.addEventListener("loadedmetadata", onReady)
+    audio.addEventListener("canplay", onReady)
+    return () => {
+      audio.removeEventListener("loadedmetadata", onReady)
+      audio.removeEventListener("canplay", onReady)
+    }
   }, [])
 
 
@@ -341,7 +352,7 @@ const handlePayment = () => {
 
     audio.volume = 1
     pendingSeekRef.current = true
-    pendingPlayRef.current = true
+    pendingPlayRef.current = false
 
     // If we just switched sources, preserve position; otherwise default to preview start.
     if (pendingSeekTimeRef.current == null) {
@@ -353,19 +364,36 @@ const handlePayment = () => {
         : Math.max(0, audio.currentTime || PREVIEW_START)
     }
 
+    // iOS Safari: ensure src is set + load() is called before play().
+    if (audio.src !== currentSrc) {
+      audio.pause()
+      audio.src = currentSrc
+      audio.load()
+    } else if (audio.readyState < 1) {
+      audio.load()
+    }
+
+    // Seek immediately if metadata already available; otherwise defer via onReady handler.
     if (audio.readyState >= 1) {
       const desired = pendingSeekTimeRef.current ?? PREVIEW_START
       const safeTime = Math.min(desired, Math.max(0, (audio.duration || 0) - 0.1))
       audio.currentTime = safeTime
       pendingSeekRef.current = false
       pendingSeekTimeRef.current = null
-
-      audio.play().catch(() => {})
-      pendingPlayRef.current = false
-      setIsPlaying(true)
     } else {
-      audio.load()
+      pendingPlayRef.current = true
     }
+
+    // Must be called directly inside the user tap handler for iOS.
+    audio.play().then(
+      () => setIsPlaying(true),
+      (e) => {
+        console.log("AUDIO PLAY FAILED:", e)
+        setIsPlaying(false)
+        // If metadata isn't ready yet, we will retry via onReady (pendingPlayRef).
+        pendingPlayRef.current = true
+      }
+    )
   }
   
 
@@ -617,6 +645,8 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
    <audio
   ref={audioRef}
   src={currentSrc}
+  playsInline
+  preload="auto"
   onEnded={() => {
     const audio = audioRef.current
     if (audio) {
