@@ -23,7 +23,7 @@ export default function FlowPage() {
   const [file, setFile] = useState<File | null>(null)
   const [audioUrl, setAudioUrl] = useState("")
   const [masteredUrl, setMasteredUrl] = useState("")
-  const [preview, setPreview] = useState<"mastered" | "original">("mastered")
+  const [previewMode, setPreviewMode] = useState<"before" | "after">("after")
   const [isPaid, setIsPaid] = useState(() => {
   if (typeof window !== "undefined") {
     return localStorage.getItem("paid") === "true"
@@ -40,13 +40,9 @@ export default function FlowPage() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [playProgress, setPlayProgress] = useState(0)
 
-  // TEMP: disable A/B switching; always preview mastered once ready
-  const currentSrc =
-    step === "done" && masteredUrl
-      ? masteredUrl
-      : preview === "mastered" && masteredUrl
-        ? masteredUrl
-        : audioUrl
+  const pendingSeekTimeRef = useRef<number | null>(null)
+
+  const currentSrc = previewMode === "after" && masteredUrl ? masteredUrl : audioUrl
 
   console.log("CURRENT SRC:", currentSrc)
   
@@ -64,9 +60,7 @@ export default function FlowPage() {
     const audio = audioRef.current
     if (!audio) return
 
-    const nextSrc =
-      step === "done" && masteredUrl ? masteredUrl : audioUrl
-
+    const nextSrc = previewMode === "after" && masteredUrl ? masteredUrl : audioUrl
     if (!nextSrc) return
 
     console.log("SETTING AUDIO SRC:", nextSrc)
@@ -75,10 +69,8 @@ export default function FlowPage() {
     audio.src = nextSrc
     audio.load()
 
-    pendingSeekRef.current = false
-    pendingPlayRef.current = false
     setIsPlaying(false)
-  }, [step, masteredUrl, audioUrl])
+  }, [previewMode, masteredUrl, audioUrl])
 
   // ---------------- FILE ----------------
   const handleFile = (e: any) => {
@@ -135,7 +127,7 @@ const mastered =
   (res.data.after ? `${API}${res.data.after}` : "")
 
 setMasteredUrl(mastered)
-setPreview("mastered")
+setPreviewMode("after")
 
 } catch (err) {
   console.log("Auto master failed", err)
@@ -193,8 +185,8 @@ setPreview("mastered")
     const previewProgress = (current - PREVIEW_START) / PREVIEW_LENGTH
 setPlayProgress(Math.max(0, Math.min(1, previewProgress)) * 100)
 
-    // 🔥 LIMIT MASTER PLAYBACK
-    if (!isPaid && preview === "mastered") {
+    // 🔥 LIMIT AFTER PLAYBACK
+    if (!isPaid && previewMode === "after") {
 
       const end = PREVIEW_START + PREVIEW_LENGTH
 
@@ -212,7 +204,7 @@ setPlayProgress(Math.max(0, Math.min(1, previewProgress)) * 100)
   }, 200)
 
   return () => clearInterval(interval)
-}, [preview, isPaid])
+}, [previewMode, isPaid])
 
   useEffect(() => {
   if (!aiText) return
@@ -267,12 +259,11 @@ const handlePayment = () => {
       if (!pendingSeekRef.current && !pendingPlayRef.current) return
 
       if (pendingSeekRef.current) {
-        const safeTime = Math.min(
-          PREVIEW_START,
-          Math.max(0, (audio.duration || 0) - 0.1)
-        )
+        const desired = pendingSeekTimeRef.current ?? PREVIEW_START
+        const safeTime = Math.min(desired, Math.max(0, (audio.duration || 0) - 0.1))
         audio.currentTime = safeTime
         pendingSeekRef.current = false
+        pendingSeekTimeRef.current = null
       }
 
       if (pendingPlayRef.current) {
@@ -290,10 +281,55 @@ const handlePayment = () => {
   useEffect(() => {
   if (!masteredUrl) return
 
-  // TEMP: lock preview to mastered when ready
-  if (step === "done") setPreview("mastered")
-
+  // Default to AFTER when master becomes available
+  if (step === "done") setPreviewMode("after")
 }, [masteredUrl, step])
+
+  const toggleBeforeAfter = (next: "before" | "after") => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (next === "after" && !masteredUrl) return
+    if (next === "before" && !audioUrl) return
+
+    // If clicking the active tab, treat it as play/pause.
+    if (next === previewMode) {
+      if (!audio.paused) {
+        audio.pause()
+        setIsPlaying(false)
+        return
+      }
+
+      audio.volume = 1
+      pendingSeekTimeRef.current = Math.max(0, audio.currentTime || 0)
+      pendingSeekRef.current = true
+      pendingPlayRef.current = true
+
+      if (audio.readyState >= 1) {
+        const safeTime = Math.min(
+          pendingSeekTimeRef.current,
+          Math.max(0, (audio.duration || 0) - 0.1)
+        )
+        audio.currentTime = safeTime
+        pendingSeekRef.current = false
+        pendingSeekTimeRef.current = null
+
+        audio.play().catch(() => {})
+        pendingPlayRef.current = false
+        setIsPlaying(true)
+      } else {
+        audio.load()
+      }
+
+      return
+    }
+
+    // Switching tabs: preserve position and keep playing state.
+    pendingSeekTimeRef.current = Math.max(0, audio.currentTime || 0)
+    pendingSeekRef.current = true
+    pendingPlayRef.current = !audio.paused
+    setPreviewMode(next)
+  }
   
 
   // ---------------- UI ----------------
@@ -462,44 +498,32 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
   {masteredUrl && (
   <div className="mt-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4">
 
-    <button
-  onClick={() => {
-    const audio = audioRef.current
-if (!audio) return
+    <div className="grid grid-cols-2 gap-3">
+      <button
+        type="button"
+        onClick={() => toggleBeforeAfter("before")}
+        className={
+          previewMode === "before"
+            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_40px_rgba(139,92,246,0.45)] hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
+            : "py-3 rounded-xl font-bold text-white/80 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300"
+        }
+      >
+        BEFORE
+      </button>
 
-// TEMP: always play mastered preview once ready
-if (!masteredUrl) return
-if (step === "done" && currentSrc !== masteredUrl) return
-
-if (!audio.paused) {
-  audio.pause()
-  setIsPlaying(false)
-  return
-}
-
-audio.volume = 1
-pendingSeekRef.current = true
-pendingPlayRef.current = true
-
-if (audio.readyState >= 1) {
-  const safeTime = Math.min(
-    PREVIEW_START,
-    Math.max(0, (audio.duration || 0) - 0.1)
-  )
-  audio.currentTime = safeTime
-  pendingSeekRef.current = false
-
-  audio.play().catch(() => {})
-  pendingPlayRef.current = false
-  setIsPlaying(true)
-} else {
-  audio.load()
-}
-  }}
-  className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white"
->
-  {isPlaying ? "Pause preview" : "Play preview"}
-</button>
+      <button
+        type="button"
+        onClick={() => toggleBeforeAfter("after")}
+        disabled={!masteredUrl}
+        className={
+          previewMode === "after"
+            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.45)] hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
+            : "py-3 rounded-xl font-bold text-white/80 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+        }
+      >
+        AFTER
+      </button>
+    </div>
 
     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
       <div
