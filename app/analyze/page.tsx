@@ -222,7 +222,8 @@ export default function AnalyzePage() {
   setLoading(true)
 
   const formData = new FormData()
-  formData.append("track", file)
+  // Backend expects multer field name: "file"
+  formData.append("file", file)
   formData.append("mode", "mix")
 
   try {
