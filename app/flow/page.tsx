@@ -430,11 +430,50 @@ const handlePayment = () => {
       if (el.src !== nextSrc) el.src = nextSrc
       el.load()
       await waitForReady(el)
-      try {
-        el.currentTime = PREVIEW_START
-      } catch {}
+      if (selectedSourceRef.current === "mastered") {
+        console.log("mobile mastered loaded")
+        console.log("mobile mastered currentTime before set", el.currentTime)
+      }
+
+      // iOS Safari can ignore early seeks; for MASTERED we don't play
+      // until the seek to PREVIEW_START has actually stuck.
+      const seekToStartAndVerify = async () => {
+        const attempt = () => {
+          try {
+            el.currentTime = PREVIEW_START
+          } catch {}
+          return el.currentTime
+        }
+
+        // Try a few times across ticks to allow iOS to accept the seek.
+        for (let i = 0; i < 5; i++) {
+          const t = attempt()
+          if (Number.isFinite(t) && Math.abs(t - PREVIEW_START) < 0.25) return true
+          await new Promise<void>((r) => requestAnimationFrame(() => r()))
+        }
+        return false
+      }
+
+      if (selectedSourceRef.current === "mastered") {
+        const ok = await seekToStartAndVerify()
+        console.log("mobile mastered currentTime after set", el.currentTime, "ok=", ok)
+        if (!ok) {
+          // If we can't reliably seek, don't attempt play (prevents starting at 0).
+          setIsPlaying(false)
+          setPlayProgress(0)
+          return
+        }
+      } else {
+        try {
+          el.currentTime = PREVIEW_START
+        } catch {}
+      }
+
       setPlayProgress(0)
       try {
+        if (selectedSourceRef.current === "mastered") {
+          console.log("mobile mastered play")
+        }
         await el.play()
         setIsPlaying(true)
       } catch (e) {
