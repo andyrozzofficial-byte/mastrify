@@ -204,30 +204,77 @@ setSelectedSource("mastered")
   // ---------------- PLAYER ----------------
   
 
-  // Update progress + enforce preview window based on the selected audio element only.
+  // Preview window enforcement for BOTH audio elements + progress for selected element.
   useEffect(() => {
-    const el = getSelectedAudioEl()
-    if (!el) return
+    const original = originalAudioRef.current
+    const mastered = masteredAudioRef.current
+    if (!original && !mastered) return
 
-    const onTimeUpdate = () => {
-      const current = el.currentTime || 0
-      const p = (current - PREVIEW_START) / PREVIEW_DURATION
-      setPlayProgress(Math.max(0, Math.min(1, p)) * 100)
-
-      if (current >= PREVIEW_END) {
-        pauseBoth()
+    const forceToPreviewStartIfInvalid = (el: HTMLAudioElement | null) => {
+      if (!el) return
+      const t = el.currentTime
+      if (!Number.isFinite(t) || t < PREVIEW_START || t >= PREVIEW_END) {
         const safeT = safePreviewTimeForEl(el, PREVIEW_START)
-        el.currentTime = safeT
+        try {
+          el.currentTime = safeT
+        } catch {
+          // ignore (iOS can block currentTime until ready)
+        }
         desiredPreviewTimeRef.current = safeT
-        setPlayProgress(0)
-      } else {
-        desiredPreviewTimeRef.current = clampToPreviewWindow(current)
       }
     }
 
-    el.addEventListener("timeupdate", onTimeUpdate)
-    return () => el.removeEventListener("timeupdate", onTimeUpdate)
-  }, [selectedSource, masteredUrl, audioUrl])
+    const onReady = (el: HTMLAudioElement | null) => {
+      forceToPreviewStartIfInvalid(el)
+    }
+
+    const onTimeUpdate = (el: HTMLAudioElement | null) => {
+      if (!el) return
+      const t = el.currentTime || 0
+
+      // Update progress using the selected element only.
+      if (el === getSelectedAudioEl()) {
+        const p = ((t - PREVIEW_START) / PREVIEW_DURATION) * 100
+        setPlayProgress(Math.max(0, Math.min(100, p)))
+      }
+
+      // Hard stop/reset at PREVIEW_END for both elements.
+      if (t >= PREVIEW_END) {
+        pauseBoth()
+        const safeT = safePreviewTimeForEl(el, PREVIEW_START)
+        try {
+          el.currentTime = safeT
+        } catch {
+          // ignore
+        }
+        desiredPreviewTimeRef.current = safeT
+        setPlayProgress(0)
+      }
+    }
+
+    const onReadyOriginal = () => onReady(original)
+    const onReadyMastered = () => onReady(mastered)
+    const onTimeUpdateOriginal = () => onTimeUpdate(original)
+    const onTimeUpdateMastered = () => onTimeUpdate(mastered)
+
+    original?.addEventListener("loadedmetadata", onReadyOriginal)
+    original?.addEventListener("canplay", onReadyOriginal)
+    mastered?.addEventListener("loadedmetadata", onReadyMastered)
+    mastered?.addEventListener("canplay", onReadyMastered)
+
+    original?.addEventListener("timeupdate", onTimeUpdateOriginal)
+    mastered?.addEventListener("timeupdate", onTimeUpdateMastered)
+
+    return () => {
+      original?.removeEventListener("loadedmetadata", onReadyOriginal)
+      original?.removeEventListener("canplay", onReadyOriginal)
+      mastered?.removeEventListener("loadedmetadata", onReadyMastered)
+      mastered?.removeEventListener("canplay", onReadyMastered)
+
+      original?.removeEventListener("timeupdate", onTimeUpdateOriginal)
+      mastered?.removeEventListener("timeupdate", onTimeUpdateMastered)
+    }
+  }, [audioUrl, masteredPreviewUrl, selectedSource])
 
   useEffect(() => {
   if (!aiText) return
@@ -274,37 +321,7 @@ const handlePayment = () => {
   setShowSuccess(true)
 }
 
-  // When metadata becomes available, keep both players aligned to the desired preview time.
-  useEffect(() => {
-    const original = originalAudioRef.current
-    const mastered = masteredAudioRef.current
-    const desired = desiredPreviewTimeRef.current
-
-    const syncEl = (el: HTMLAudioElement | null) => {
-      if (!el) return
-      const t = safePreviewTimeForEl(el, desired)
-      try {
-        el.currentTime = t
-      } catch {
-        // ignore (can happen before enough data is loaded on iOS)
-      }
-    }
-
-    const onReadyOriginal = () => syncEl(original)
-    const onReadyMastered = () => syncEl(mastered)
-
-    original?.addEventListener("loadedmetadata", onReadyOriginal)
-    original?.addEventListener("canplay", onReadyOriginal)
-    mastered?.addEventListener("loadedmetadata", onReadyMastered)
-    mastered?.addEventListener("canplay", onReadyMastered)
-
-    return () => {
-      original?.removeEventListener("loadedmetadata", onReadyOriginal)
-      original?.removeEventListener("canplay", onReadyOriginal)
-      mastered?.removeEventListener("loadedmetadata", onReadyMastered)
-      mastered?.removeEventListener("canplay", onReadyMastered)
-    }
-  }, [masteredUrl, audioUrl])
+  // (metadata sync handled in the preview enforcement effect above)
 
 
   useEffect(() => {
@@ -348,8 +365,13 @@ const handlePayment = () => {
     }
 
     const otherEl = getOtherAudioEl()
-    const rawT = Math.max(0, selectedEl.currentTime || desiredPreviewTimeRef.current || PREVIEW_START)
-    const safeT = safePreviewTimeForEl(selectedEl, clampToPreviewWindow(rawT))
+    const t0 = selectedEl.currentTime
+    const needsReset =
+      !Number.isFinite(t0) || t0 < PREVIEW_START || t0 >= PREVIEW_END
+    const safeT = safePreviewTimeForEl(
+      selectedEl,
+      needsReset ? PREVIEW_START : t0
+    )
     desiredPreviewTimeRef.current = safeT
 
     // Before playing selected ref:
