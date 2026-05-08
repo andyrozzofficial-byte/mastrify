@@ -139,6 +139,25 @@ export default function Landing() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(59,130,246,0.25),transparent_60%)]" />
       </div>
 
+      {/* HERO subtle cinematic layer (minimal movement) */}
+      <motion.div
+        aria-hidden="true"
+        className="absolute top-0 left-0 right-0 h-[520px] -z-10 pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <motion.div
+          className="absolute inset-0 bg-[conic-gradient(from_180deg_at_50%_35%,rgba(139,92,246,0.10),rgba(59,130,246,0.08),rgba(139,92,246,0.10))] blur-3xl"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 90, ease: "linear", repeat: Infinity }}
+          style={{ transformOrigin: "50% 35%" }}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.06),transparent_55%)]" />
+        <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.6)_0px,rgba(255,255,255,0.6)_1px,transparent_1px,transparent_3px)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/40 to-black" />
+      </motion.div>
+
       {/* 🔥 MASRIFY LOGO TEXT */}
       <div className="mb-6 text-center">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight 
@@ -190,9 +209,13 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 
   router.push("/analyze")
 }}
-  className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 hover:scale-105 active:scale-95 transition"
+  className="relative px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-blue-500
+hover:scale-[1.04] active:scale-[0.985] transition-all duration-300
+shadow-[0_16px_55px_rgba(0,0,0,0.55)] hover:shadow-[0_22px_75px_rgba(0,0,0,0.62)]"
 >
-  Try it now
+  <span className="absolute inset-0 rounded-full bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+  <span className="absolute -inset-[1px] rounded-full bg-gradient-to-r from-purple-400/40 to-blue-400/40 blur-lg opacity-70" />
+  <span className="relative">Try it now</span>
 </button>
 
           </div>
@@ -211,7 +234,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
       </div>
 
       {/* PLAYER */}
-      <div className="mt-16 md:mt-20 w-full max-w-3xl">
+      <div className="mt-24 md:mt-28 w-full max-w-3xl">
 
         <h2 className="text-center text-2xl mb-6">
           Hear the difference
