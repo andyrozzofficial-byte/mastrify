@@ -22,6 +22,7 @@ export default function FlowPage() {
   const [file, setFile] = useState<File | null>(null)
   const [audioUrl, setAudioUrl] = useState("")
   const [masteredUrl, setMasteredUrl] = useState("")
+  const [masteredPreviewMp3Url, setMasteredPreviewMp3Url] = useState("")
   const [selectedSource, setSelectedSource] = useState<"original" | "mastered">("mastered")
   const [isPaid, setIsPaid] = useState(() => {
   if (typeof window !== "undefined") {
@@ -82,6 +83,19 @@ export default function FlowPage() {
     setIsPlaying(false)
   }
 
+  const isIOSSafari = () => {
+    if (typeof navigator === "undefined") return false
+    const ua = navigator.userAgent || ""
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1)
+    if (!isIOS) return false
+    const isWebKit = /WebKit/i.test(ua)
+    const isCriOS = /CriOS/i.test(ua)
+    const isFxiOS = /FxiOS/i.test(ua)
+    return isWebKit && !isCriOS && !isFxiOS
+  }
+
+  const masteredPreviewUrl = isIOSSafari() && masteredPreviewMp3Url ? masteredPreviewMp3Url : masteredUrl
+
   // ---------------- FILE ----------------
   const handleFile = (e: any) => {
   const selected = e.target.files[0]
@@ -90,6 +104,7 @@ export default function FlowPage() {
   setFile(selected)
   setAudioUrl(URL.createObjectURL(selected))
   setMasteredUrl("")
+  setMasteredPreviewMp3Url("")
   
   setStep("upload")
   setIsPaid(false)
@@ -99,6 +114,7 @@ export default function FlowPage() {
   setFile(file)
   setAudioUrl(URL.createObjectURL(file))
   setMasteredUrl("")
+  setMasteredPreviewMp3Url("")
   
   setStep("upload")
   setIsPaid(false)
@@ -137,6 +153,12 @@ const mastered =
   (res.data.after ? `${API}${res.data.after}` : "")
 
 setMasteredUrl(mastered)
+
+const previewMp3 =
+  res.data.previewAfterMp3Url ||
+  (res.data.previewAfterMp3 ? `${API}${res.data.previewAfterMp3}` : "")
+setMasteredPreviewMp3Url(previewMp3)
+
 setSelectedSource("mastered")
 
 } catch (err) {
@@ -623,7 +645,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
   />
   <audio
     ref={masteredAudioRef}
-    src={masteredUrl}
+    src={masteredPreviewUrl}
     playsInline
     preload="auto"
     className="absolute w-0 h-0 opacity-0 pointer-events-none"
