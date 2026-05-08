@@ -17,13 +17,11 @@ export default function FlowPage() {
   }, [])
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const pendingSeekRef = useRef(false)
-  const pendingPlayRef = useRef(false)
 
   const [file, setFile] = useState<File | null>(null)
   const [audioUrl, setAudioUrl] = useState("")
   const [masteredUrl, setMasteredUrl] = useState("")
-  const [previewMode, setPreviewMode] = useState<"before" | "after">("after")
+  const [selectedSource, setSelectedSource] = useState<"original" | "mastered">("mastered")
   const [isPaid, setIsPaid] = useState(() => {
   if (typeof window !== "undefined") {
     return localStorage.getItem("paid") === "true"
@@ -40,11 +38,13 @@ export default function FlowPage() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [playProgress, setPlayProgress] = useState(0)
 
-  const pendingSeekTimeRef = useRef<number | null>(null)
+  const desiredTimeRef = useRef<number | null>(null)
+  const shouldSeekOnReadyRef = useRef(false)
 
-  const currentSrc = previewMode === "after" && masteredUrl ? masteredUrl : audioUrl
+  const currentAudioUrl =
+    selectedSource === "mastered" && masteredUrl ? masteredUrl : audioUrl
 
-  console.log("CURRENT SRC:", currentSrc)
+  console.log("CURRENT SRC:", currentAudioUrl)
   
   const [referenceTrack, setReferenceTrack] = useState<File | null>(null)
   const [referenceName, setReferenceName] = useState("")
@@ -63,7 +63,7 @@ export default function FlowPage() {
 
     const onSeeking = () => {
       if (isPaid) return
-      if (previewMode !== "after") return
+      if (selectedSource !== "mastered") return
       const dur = audio.duration
       if (!Number.isFinite(dur) || dur <= 0) return
 
@@ -76,25 +76,24 @@ export default function FlowPage() {
 
     audio.addEventListener("seeking", onSeeking)
     return () => audio.removeEventListener("seeking", onSeeking)
-  }, [isPaid, previewMode])
+  }, [isPaid, selectedSource])
 
+  // Robust source switching: pause → src → load → seek after ready (no autoplay).
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
+    if (!currentAudioUrl) return
 
-    const nextSrc = previewMode === "after" && masteredUrl ? masteredUrl : audioUrl
-    if (!nextSrc) return
-
-    console.log("SETTING AUDIO SRC:", nextSrc)
+    console.log("SETTING AUDIO SRC:", currentAudioUrl)
 
     audio.pause()
-    audio.src = nextSrc
+    setIsPlaying(false)
+
+    audio.src = currentAudioUrl
     audio.load()
 
-    // iOS Safari: ensure we seek only after metadata is ready
-    // (pendingSeekRef/pendingSeekTimeRef are handled in loadedmetadata/canplay)
-    setIsPlaying(false)
-  }, [previewMode, masteredUrl, audioUrl])
+    shouldSeekOnReadyRef.current = true
+  }, [currentAudioUrl])
 
   // ---------------- FILE ----------------
   const handleFile = (e: any) => {
@@ -151,7 +150,7 @@ const mastered =
   (res.data.after ? `${API}${res.data.after}` : "")
 
 setMasteredUrl(mastered)
-setPreviewMode("after")
+setSelectedSource("mastered")
 
 } catch (err) {
   console.log("Auto master failed", err)
@@ -209,8 +208,8 @@ setPreviewMode("after")
     const previewProgress = (current - PREVIEW_START) / PREVIEW_LENGTH
 setPlayProgress(Math.max(0, Math.min(1, previewProgress)) * 100)
 
-    // 🔥 LIMIT AFTER PLAYBACK
-    if (!isPaid && previewMode === "after") {
+    // 🔥 LIMIT MASTERED PLAYBACK
+    if (!isPaid && selectedSource === "mastered") {
 
       const end = PREVIEW_START + PREVIEW_LENGTH
 
@@ -228,7 +227,7 @@ setPlayProgress(Math.max(0, Math.min(1, previewProgress)) * 100)
   }, 200)
 
   return () => clearInterval(interval)
-}, [previewMode, isPaid])
+}, [selectedSource, isPaid])
 
   useEffect(() => {
   if (!aiText) return
@@ -280,26 +279,14 @@ const handlePayment = () => {
     if (!audio) return
 
     const onReady = () => {
-      if (!pendingSeekRef.current && !pendingPlayRef.current) return
+      if (!shouldSeekOnReadyRef.current) return
 
-      if (pendingSeekRef.current) {
-        const desired = pendingSeekTimeRef.current ?? PREVIEW_START
-        const safeTime = Math.min(desired, Math.max(0, (audio.duration || 0) - 0.1))
-        audio.currentTime = safeTime
-        pendingSeekRef.current = false
-        pendingSeekTimeRef.current = null
-      }
+      const desired = desiredTimeRef.current ?? 0
+      const safeTime = Math.min(desired, Math.max(0, (audio.duration || 0) - 0.1))
+      audio.currentTime = safeTime
 
-      if (pendingPlayRef.current) {
-        pendingPlayRef.current = false
-        audio.play().then(
-          () => setIsPlaying(true),
-          (e) => {
-            console.log("AUDIO PLAY FAILED:", e)
-            setIsPlaying(false)
-          }
-        )
-      }
+      shouldSeekOnReadyRef.current = false
+      desiredTimeRef.current = null
     }
 
     audio.addEventListener("loadedmetadata", onReady)
@@ -315,34 +302,34 @@ const handlePayment = () => {
   if (!masteredUrl) return
 
   // Default to AFTER when master becomes available
-  if (step === "done") setPreviewMode("after")
+  if (step === "done") setSelectedSource("mastered")
 }, [masteredUrl, step])
 
-  const toggleBeforeAfter = (next: "before" | "after") => {
+  const selectSource = (next: "original" | "mastered") => {
     const audio = audioRef.current
     if (!audio) return
 
-    if (next === "after" && !masteredUrl) return
-    if (next === "before" && !audioUrl) return
+    if (next === "mastered" && !masteredUrl) return
+    if (next === "original" && !audioUrl) return
+    if (next === selectedSource) return
 
-    if (next === previewMode) return
-
-    // Switching tabs: preserve position, never autoplay.
     const dur = audio.duration
     const rawT = Math.max(0, audio.currentTime || 0)
-    const t =
-      Number.isFinite(dur) && dur > 0 && rawT >= dur - 0.05 ? 0 : rawT
+    const ended = Number.isFinite(dur) && dur > 0 && rawT >= dur - 0.05
+    const safeT = ended ? 0 : rawT
 
-    pendingSeekTimeRef.current = t
-    pendingSeekRef.current = true
-    pendingPlayRef.current = false
-    setPreviewMode(next)
+    audio.pause()
+    setIsPlaying(false)
+
+    desiredTimeRef.current = safeT
+    shouldSeekOnReadyRef.current = true
+    setSelectedSource(next)
   }
 
   const togglePlayPause = () => {
     const audio = audioRef.current
     if (!audio) return
-    if (!currentSrc) return
+    if (!currentAudioUrl) return
 
     if (!audio.paused) {
       audio.pause()
@@ -351,37 +338,36 @@ const handlePayment = () => {
     }
 
     audio.volume = 1
-    pendingSeekRef.current = true
-    pendingPlayRef.current = false
 
-    // If we just switched sources, preserve position; otherwise default to preview start.
-    if (pendingSeekTimeRef.current == null) {
-      const dur = audio.duration
-      const ended =
-        Number.isFinite(dur) && dur > 0 && (audio.currentTime || 0) >= dur - 0.05
-      pendingSeekTimeRef.current = ended
-        ? 0
-        : Math.max(0, audio.currentTime || PREVIEW_START)
+    // If ended, restart from 0.
+    const dur = audio.duration
+    if (Number.isFinite(dur) && dur > 0 && (audio.currentTime || 0) >= dur - 0.1) {
+      audio.currentTime = 0
     }
 
-    // iOS Safari: ensure src is set + load() is called before play().
-    if (audio.src !== currentSrc) {
+    // Ensure correct src + load for iOS Safari.
+    if (audio.src !== currentAudioUrl) {
       audio.pause()
-      audio.src = currentSrc
+      audio.src = currentAudioUrl
       audio.load()
+      shouldSeekOnReadyRef.current = true
     } else if (audio.readyState < 1) {
       audio.load()
     }
 
-    // Seek immediately if metadata already available; otherwise defer via onReady handler.
-    if (audio.readyState >= 1) {
-      const desired = pendingSeekTimeRef.current ?? PREVIEW_START
-      const safeTime = Math.min(desired, Math.max(0, (audio.duration || 0) - 0.1))
-      audio.currentTime = safeTime
-      pendingSeekRef.current = false
-      pendingSeekTimeRef.current = null
-    } else {
-      pendingPlayRef.current = true
+    // If we have a desired time pending (source switch), apply it when possible.
+    if (desiredTimeRef.current != null) {
+      if (audio.readyState >= 1) {
+        const safeTime = Math.min(
+          desiredTimeRef.current,
+          Math.max(0, (audio.duration || 0) - 0.1)
+        )
+        audio.currentTime = safeTime
+        desiredTimeRef.current = null
+        shouldSeekOnReadyRef.current = false
+      } else {
+        shouldSeekOnReadyRef.current = true
+      }
     }
 
     // Must be called directly inside the user tap handler for iOS.
@@ -390,8 +376,6 @@ const handlePayment = () => {
       (e) => {
         console.log("AUDIO PLAY FAILED:", e)
         setIsPlaying(false)
-        // If metadata isn't ready yet, we will retry via onReady (pendingPlayRef).
-        pendingPlayRef.current = true
       }
     )
   }
@@ -566,11 +550,11 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     <div className="grid grid-cols-2 gap-3">
       <motion.button
         type="button"
-        onClick={() => toggleBeforeAfter("before")}
+        onClick={() => selectSource("original")}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.99 }}
         className={
-          previewMode === "before"
+          selectedSource === "original"
             ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/80 to-blue-600/80 shadow-[0_0_18px_rgba(139,92,246,0.28)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
             : "py-3 rounded-xl font-bold text-white/75 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15 hover:text-white transition-all duration-300"
         }
@@ -580,12 +564,12 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
 
       <motion.button
         type="button"
-        onClick={() => toggleBeforeAfter("after")}
+        onClick={() => selectSource("mastered")}
         disabled={!masteredUrl}
         whileHover={masteredUrl ? { scale: 1.02 } : undefined}
         whileTap={masteredUrl ? { scale: 0.99 } : undefined}
         className={
-          previewMode === "after"
+          selectedSource === "mastered"
             ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/80 to-blue-600/80 shadow-[0_0_18px_rgba(59,130,246,0.26)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
             : "py-3 rounded-xl font-bold text-white/75 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15 hover:text-white transition-all duration-300 disabled:opacity-35 disabled:cursor-not-allowed"
         }
@@ -642,9 +626,9 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     </div>
 
 
-   <audio
+  <audio
   ref={audioRef}
-  src={currentSrc}
+  src={currentAudioUrl}
   playsInline
   preload="auto"
   onEnded={() => {
@@ -654,9 +638,8 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
       audio.currentTime = 0
       audio.volume = 1
     }
-    pendingSeekTimeRef.current = 0
-    pendingSeekRef.current = false
-    pendingPlayRef.current = false
+    desiredTimeRef.current = 0
+    shouldSeekOnReadyRef.current = false
     setPlayProgress(0)
     setIsPlaying(false)
   }}
