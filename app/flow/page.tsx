@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 type Step = "upload" | "analyzing" | "done"
 
 export default function FlowPage() {
@@ -60,6 +60,15 @@ export default function FlowPage() {
   const PREVIEW_START = 60
   const PREVIEW_DURATION = 30
   const PREVIEW_END = PREVIEW_START + PREVIEW_DURATION
+
+  const AI_STATUS = [
+    "Initializing mastering engine",
+    "Balancing low-end",
+    "Enhancing stereo image",
+    "Optimizing loudness",
+    "Controlling dynamics",
+    "Finalizing master",
+  ]
 
   const clampToPreviewWindow = (t: number) => {
     if (!Number.isFinite(t) || t < PREVIEW_START || t > PREVIEW_END) return PREVIEW_START
@@ -171,26 +180,16 @@ setSelectedSource("mastered")
   setStep("analyzing")
   setDisplayText("")
 
-  setAiText("Initializing AI engine...")
-  await sleep(800)
-
-  setAiText("Analyzing dynamics...")
-  await sleep(1200)
-
-  setAiText("Detecting frequency imbalances...")
-  await sleep(1200)
-
-  setAiText("Optimizing loudness...")
-  await sleep(1200)
-
-  setAiText("Applying final mastering...")
-  await sleep(1500)
+  for (let i = 0; i < AI_STATUS.length; i++) {
+    setAiText(AI_STATUS[i] + "…")
+    await sleep(i === 0 ? 650 : 950)
+  }
 
   try {
     await autoMaster(file)
 
-    setAiText("Finalizing...")
-    await sleep(800)
+    setAiText("Preparing playback…")
+    await sleep(650)
 
     setProgress(100)
     setStep("done")
@@ -395,29 +394,32 @@ const handlePayment = () => {
 <div className="absolute inset-0 z-0 pointer-events-none">
 
   {/* radial glow */}
-  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.35),transparent_65%)]" />
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.20),transparent_62%)]" />
 
   {/* purple blob */}
-<div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-purple-500/25 blur-[220px] rounded-full animate-[floatY_8s_ease-in-out_infinite]" />
+<div className="absolute top-[-220px] left-1/2 -translate-x-1/2 w-[780px] h-[780px] bg-purple-500/16 blur-[240px] rounded-full animate-[floatY_8s_ease-in-out_infinite]" />
 
 {/* blue blob */}
-<div className="absolute bottom-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-500/20 blur-[220px] rounded-full animate-[floatY_10s_ease-in-out_infinite]" />
+<div className="absolute bottom-[-220px] left-1/2 -translate-x-1/2 w-[780px] h-[780px] bg-blue-500/14 blur-[240px] rounded-full animate-[floatY_10s_ease-in-out_infinite]" />
 
   {/* dark overlay */}
-  <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
+  <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 to-black/92" />
 
 </div>
 
       <div className="relative z-50 pointer-events-auto w-full max-w-xl text-center space-y-12">
 
-        <h1 className="text-5xl font-bold mt-6 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+        <h1 className="text-5xl font-semibold tracking-tight mt-6 bg-gradient-to-r from-white via-purple-100 to-blue-100 bg-clip-text text-transparent">
   Drop your track
 </h1>
 
         {/* UPLOAD */}
 
-        <div
-          className="border border-white/10 rounded-2xl p-12 bg-white/5 backdrop-blur-md overflow-visible"
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="border border-white/12 rounded-2xl p-12 bg-white/[0.06] backdrop-blur-xl overflow-visible shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault()
@@ -431,8 +433,9 @@ const handlePayment = () => {
   htmlFor="fileUpload"
   className="cursor-pointer w-full inline-block text-center py-4 text-lg rounded-xl font-semibold transition-all duration-200
 bg-gradient-to-r from-purple-500 to-blue-500 text-white
-shadow-[0_8px_25px_rgba(139,92,246,0.25)]
-hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(139,92,246,0.6)]"
+shadow-[0_10px_30px_rgba(0,0,0,0.45)]
+hover:brightness-110 hover:shadow-[0_14px_46px_rgba(0,0,0,0.55)]
+active:scale-[0.99]"
 >
             Select track
           </label>
@@ -440,7 +443,7 @@ hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(139,92,246,0.6)]"
           <p className="text-xs mt-3 text-white/40">
             {file ? file.name : "No file selected"}
           </p>
-        </div>
+        </motion.div>
 
         {SHOW_REFERENCE && (
   <div className="mt-6 pt-4 flex flex-col items-center gap-3">
@@ -496,50 +499,68 @@ hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(139,92,246,0.6)]"
         
 
     {step !== "done" && (
-  <button
+  <motion.button
   onClick={runMaster}
   disabled={!file || step === "analyzing"}
-  className="px-12 py-5 mt-6 text-xl font-semibold text-white rounded-xl ...
-bg-gradient-to-r from-purple-500 to-blue-500
-shadow-[0_10px_40px_rgba(139,92,246,0.35)]
-hover:shadow-[0_20px_60px_rgba(139,92,246,0.7)] hover:scale-[1.04]
-active:scale-[0.97]
+  whileHover={file && step !== "analyzing" ? { scale: 1.02 } : undefined}
+  whileTap={file && step !== "analyzing" ? { scale: 0.99 } : undefined}
+  className="px-12 py-5 mt-6 text-xl font-semibold text-white rounded-xl bg-gradient-to-r from-purple-500 to-blue-500
+shadow-[0_16px_55px_rgba(0,0,0,0.55)]
+hover:brightness-110 hover:shadow-[0_22px_75px_rgba(0,0,0,0.62)]
 transition-all duration-300
 disabled:opacity-40 disabled:cursor-not-allowed"
   >
     {step === "analyzing"
-      ? "Running mastering..."
+      ? "Mastering…"
       : "Master my track"}
-  </button>
+  </motion.button>
 )}
 
         {/* ANALYZING */}
+        <AnimatePresence mode="wait">
         {step === "analyzing" && (
-          <div className="space-y-4">
-            <p className="text-sm text-purple-300 font-mono">
-  {displayText}<span className="animate-pulse">|</span>
+          <motion.div
+            key="analyzing"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="space-y-4"
+          >
+            <p className="text-sm text-white/75 font-mono tracking-tight">
+  {displayText}<span className="animate-pulse text-purple-200">|</span>
 </p>
 
-            <div className="w-full bg-white/10 h-2 rounded-full">
-              <div
-                className="h-full bg-gradient-to-r from-purple-400 to-blue-400"
-                style={{ width: `${progress}%` }}
+            <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-purple-400/80 to-blue-400/80"
+                animate={{ width: `${progress}%` }}
+                transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
               />
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         
 
         {/* RESULT */}
+        <AnimatePresence mode="wait">
         {step === "done" && (
-          <div className="space-y-6">
+          <motion.div
+            key="done"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.42, ease: "easeOut" }}
+            className="space-y-6"
+          >
 
-            <div className="bg-white/5 p-6 rounded-xl">
+            <div className="bg-white/[0.06] p-6 rounded-xl border border-white/10 shadow-[0_18px_70px_rgba(0,0,0,0.58)]">
               <p className="text-3xl font-bold 
 bg-gradient-to-r from-white via-purple-200 to-blue-200 
 bg-clip-text text-transparent 
-drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
+drop-shadow-[0_0_14px_rgba(139,92,246,0.22)]">
   Your master is ready
 </p>
 
@@ -548,7 +569,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
 </p>
 
   {masteredUrl && (
-  <div className="mt-6 bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4 shadow-[0_12px_50px_rgba(0,0,0,0.55)]">
+  <div className="mt-6 bg-black/50 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4 shadow-[0_18px_70px_rgba(0,0,0,0.62)]">
 
     <div className="grid grid-cols-2 gap-3">
       <motion.button
@@ -558,7 +579,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         whileTap={{ scale: 0.99 }}
         className={
           selectedSource === "original"
-            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/80 to-blue-600/80 shadow-[0_0_18px_rgba(139,92,246,0.28)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
+            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/75 to-blue-600/75 shadow-[0_0_14px_rgba(139,92,246,0.16)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
             : "py-3 rounded-xl font-bold text-white/75 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15 hover:text-white transition-all duration-300"
         }
       >
@@ -573,7 +594,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         whileTap={masteredUrl ? { scale: 0.99 } : undefined}
         className={
           selectedSource === "mastered"
-            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/80 to-blue-600/80 shadow-[0_0_18px_rgba(59,130,246,0.26)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
+            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/75 to-blue-600/75 shadow-[0_0_14px_rgba(59,130,246,0.15)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
             : "py-3 rounded-xl font-bold text-white/75 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15 hover:text-white transition-all duration-300 disabled:opacity-35 disabled:cursor-not-allowed"
         }
       >
@@ -588,7 +609,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         aria-label={isPlaying ? "Pause" : "Play"}
-        className="w-12 h-12 md:w-14 md:h-14 rounded-full grid place-items-center bg-black/45 backdrop-blur-xl border border-white/10 text-white shadow-[inset_0_0_18px_rgba(139,92,246,0.16)] hover:brightness-110 transition-all duration-300"
+        className="w-12 h-12 md:w-14 md:h-14 rounded-full grid place-items-center bg-black/55 backdrop-blur-xl border border-white/10 text-white shadow-[inset_0_0_16px_rgba(139,92,246,0.12)] hover:brightness-110 transition-all duration-300"
       >
         {isPlaying ? (
           <svg
@@ -625,7 +646,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         animate={{ width: `${playProgress}%` }}
         transition={{ type: "tween", duration: 0.2, ease: "easeOut" }}
       />
-      <div className="pointer-events-none -mt-[6px] h-[6px] w-full shadow-[0_0_14px_rgba(139,92,246,0.16)]" />
+      <div className="pointer-events-none -mt-[6px] h-[6px] w-full shadow-[0_0_10px_rgba(139,92,246,0.10)]" />
     </div>
 
   {/* Hidden preloaded audio elements (avoid iOS src swapping issues) */}
@@ -661,7 +682,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
   </div>
 )}
 
-<div className="mt-4">
+            <div className="mt-4">
 
 
   {/* RESULT TEXT */}
@@ -715,8 +736,9 @@ transition-all duration-300"
 
             </div>
 
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
       </div>
 
