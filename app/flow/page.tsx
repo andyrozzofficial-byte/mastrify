@@ -563,11 +563,34 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         aria-label={isPlaying ? "Pause" : "Play"}
-        className="w-13 h-13 md:w-15 md:h-15 rounded-full grid place-items-center text-white bg-gradient-to-r from-purple-600/85 to-blue-600/85 shadow-[0_0_14px_rgba(139,92,246,0.20)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
+        className="w-12 h-12 md:w-14 md:h-14 rounded-full grid place-items-center bg-black/45 backdrop-blur-xl border border-white/10 text-white shadow-[inset_0_0_18px_rgba(139,92,246,0.16)] hover:brightness-110 transition-all duration-300"
       >
-        <span className="text-xl md:text-2xl font-black leading-none">
-          {isPlaying ? "❚❚" : "▶"}
-        </span>
+        {isPlaying ? (
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            aria-hidden="true"
+          >
+            <rect x="4.5" y="4" width="4" height="12" rx="1.2" fill="white" opacity="0.92" />
+            <rect x="11.5" y="4" width="4" height="12" rx="1.2" fill="white" opacity="0.92" />
+          </svg>
+        ) : (
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 20 20"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M7.2 4.8v10.4c0 .8.9 1.3 1.6.9l8.2-5.2c.7-.4.7-1.4 0-1.8L8.8 3.9c-.7-.4-1.6.1-1.6.9Z"
+              fill="white"
+              opacity="0.92"
+            />
+          </svg>
+        )}
       </motion.button>
     </div>
 
