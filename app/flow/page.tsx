@@ -42,10 +42,10 @@ export default function FlowPage() {
 
   const desiredPreviewTimeRef = useRef<number>(60)
   const selectedSourceRef = useRef<"original" | "mastered">("mastered")
+  const initializedPreviewRef = useRef({ original: false, mastered: false })
 
   useEffect(() => {
     selectedSourceRef.current = selectedSource
-    console.log("[PREVIEW] selectedSource:", selectedSource)
   }, [selectedSource])
 
   const getSelectedAudioEl = () => {
@@ -220,23 +220,31 @@ setSelectedSource("mastered")
     const attach = (el: HTMLAudioElement, label: "original" | "mastered") => {
       const isSelected = () => selectedSourceRef.current === label
 
-      const forceStart = () => {
+      const resetToStart = () => {
         const safeT = safePreviewTimeForEl(el, PREVIEW_START)
         try {
           el.currentTime = safeT
         } catch {
           // ignore
         }
-        if (isSelected()) {
-          desiredPreviewTimeRef.current = safeT
-          setPlayProgress(0)
-        }
-        console.log("[PREVIEW] ready", label, "t=", el.currentTime, "dur=", el.duration)
+        desiredPreviewTimeRef.current = safeT
       }
 
       const onReady = () => {
-        // Always set to PREVIEW_START on ready (iOS-safe).
-        forceStart()
+        // Only force PREVIEW_START on initial readiness (canplay can fire repeatedly on desktop).
+        if (!initializedPreviewRef.current[label]) {
+          initializedPreviewRef.current[label] = true
+          resetToStart()
+          if (isSelected()) setPlayProgress(0)
+          return
+        }
+
+        // If browser reports a playhead outside our window, fix it.
+        const t = el.currentTime
+        if (!Number.isFinite(t) || t < PREVIEW_START || t >= PREVIEW_END) {
+          resetToStart()
+          if (isSelected()) setPlayProgress(0)
+        }
       }
 
       const onTimeUpdate = () => {
@@ -247,28 +255,34 @@ setSelectedSource("mastered")
 
         if (isSelected()) {
           setPlayProgress(clamped)
-          console.log("[PREVIEW] tick", label, "t=", t, "dur=", dur, "p=", clamped)
         }
 
         if (Number.isFinite(t) && t >= PREVIEW_END) {
-          console.log("[PREVIEW] PREVIEW_END reached", label, "t=", t, "dur=", dur)
-          el.pause()
-          try {
-            el.currentTime = safePreviewTimeForEl(el, PREVIEW_START)
-          } catch {}
+          // Stop/reset at PREVIEW_END for BOTH audio elements.
+          pauseBoth()
+          resetToStart()
+          const otherEl = label === "original" ? masteredAudioRef.current : originalAudioRef.current
+          if (otherEl && otherEl.readyState >= 1) {
+            try {
+              otherEl.currentTime = safePreviewTimeForEl(otherEl, PREVIEW_START)
+            } catch {}
+          }
           setIsPlaying(false)
-          if (isSelected()) setPlayProgress(0)
+          setPlayProgress(0)
         }
       }
 
       const onEnded = () => {
-        console.log("[PREVIEW] ended", label, "t=", el.currentTime, "dur=", el.duration)
-        el.pause()
-        try {
-          el.currentTime = safePreviewTimeForEl(el, PREVIEW_START)
-        } catch {}
-        setIsPlaying(false)
-        if (isSelected()) setPlayProgress(0)
+        // Treat ended as a reset to preview start.
+        pauseBoth()
+        resetToStart()
+        const otherEl = label === "original" ? masteredAudioRef.current : originalAudioRef.current
+        if (otherEl && otherEl.readyState >= 1) {
+          try {
+            otherEl.currentTime = safePreviewTimeForEl(otherEl, PREVIEW_START)
+          } catch {}
+        }
+        setPlayProgress(0)
       }
 
       el.addEventListener("loadedmetadata", onReady)
@@ -352,24 +366,29 @@ const handlePayment = () => {
     if (next === "original" && !audioUrl) return
     if (next === selectedSource) return
 
-    const currentEl = getSelectedAudioEl()
-    const rawT = Math.max(0, currentEl?.currentTime || 0)
-    const safeT = clampToPreviewWindow(rawT)
-
-    // On source switch: pause both, keep preview position (60–90) or reset to 60, no autoplay.
+    // On every source switch:
+    // - pause both
+    // - reset both to PREVIEW_START
+    // - reset progress
+    // - do not autoplay
     pauseBoth()
-
-    desiredPreviewTimeRef.current = safeT
-
-    // Keep both audio elements aligned to the same preview position (if possible right now).
     const a = originalAudioRef.current
     const b = masteredAudioRef.current
-    if (a && a.readyState >= 1) a.currentTime = safePreviewTimeForEl(a, safeT)
-    if (b && b.readyState >= 1) b.currentTime = safePreviewTimeForEl(b, safeT)
-
-    // Progress should reflect the safe position for the newly selected source.
-    const p = ((safeT - PREVIEW_START) / PREVIEW_DURATION) * 100
-    setPlayProgress(Math.max(0, Math.min(100, p)))
+    if (a) {
+      if (a.readyState < 1) a.load()
+      try {
+        a.currentTime = safePreviewTimeForEl(a, PREVIEW_START)
+      } catch {}
+    }
+    if (b) {
+      // iOS: ensure mastered is ready to play again after switching away/back.
+      if (b.readyState < 1) b.load()
+      try {
+        b.currentTime = safePreviewTimeForEl(b, PREVIEW_START)
+      } catch {}
+    }
+    desiredPreviewTimeRef.current = PREVIEW_START
+    setPlayProgress(0)
 
     setSelectedSource(next)
   }
@@ -402,8 +421,8 @@ const handlePayment = () => {
       }
     }
 
-    // Ensure selected starts inside 60–90 window.
-    if (selectedEl.readyState < 1) selectedEl.load()
+    // Ensure selected starts inside 60–90 window and is load()'d if needed (iOS).
+    if (selectedEl.readyState < 2) selectedEl.load()
     try {
       selectedEl.currentTime = safeT
     } catch {
@@ -411,7 +430,6 @@ const handlePayment = () => {
     }
 
     // Must be called directly inside the user tap handler for iOS.
-    console.log("[PREVIEW] play click", selectedSourceRef.current, "t=", selectedEl.currentTime, "dur=", selectedEl.duration)
     selectedEl.play().then(
       () => setIsPlaying(true),
       (e) => {
