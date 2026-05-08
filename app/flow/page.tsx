@@ -62,6 +62,7 @@ export default function FlowPage() {
   useEffect(() => {
     const audio = audioRef.current
     if (!audio || !waveformEl) return
+    if (!currentSrc) return
 
     let cancelled = false
 
@@ -70,24 +71,60 @@ export default function FlowPage() {
       if (cancelled) return
       const WaveSurfer = mod.default
 
-      if (!waveSurferRef.current) {
-        waveSurferRef.current = WaveSurfer.create({
-          container: waveformEl,
-          media: audio,
-          height: 44,
-          waveColor: "rgba(255,255,255,0.10)",
-          progressColor: "rgba(139,92,246,0.55)",
-          cursorColor: "rgba(255,255,255,0.22)",
-          barWidth: 2,
-          barGap: 2,
-          barRadius: 2,
-          normalize: true,
-          interact: true,
-        })
+      // Always destroy any previous instance before re-creating.
+      try {
+        waveSurferRef.current?.destroy?.()
+      } catch {}
+      waveSurferRef.current = null
+
+      const ws = WaveSurfer.create({
+        container: waveformEl,
+        url: currentSrc,
+        height: 44,
+        waveColor: "rgba(255,255,255,0.10)",
+        progressColor:
+          previewMode === "after"
+            ? "rgba(59,130,246,0.55)"
+            : "rgba(139,92,246,0.55)",
+        cursorColor: "rgba(255,255,255,0.22)",
+        barWidth: 2,
+        barGap: 2,
+        barRadius: 2,
+        normalize: true,
+        interact: true,
+      })
+
+      waveSurferRef.current = ws
+
+      const syncToAudio = () => {
+        const dur = audio.duration
+        if (!Number.isFinite(dur) || dur <= 0) return
+        const ratio = audio.currentTime / dur
+        if (typeof ws.seekTo === "function") ws.seekTo(ratio)
       }
 
-      if (currentSrc) {
-        waveSurferRef.current.load(currentSrc)
+      const onSeek = (ratio: number) => {
+        const dur = audio.duration
+        if (!Number.isFinite(dur) || dur <= 0) return
+        const target = ratio * dur
+        audio.currentTime = Math.min(target, Math.max(0, dur - 0.1))
+      }
+
+      ws.on?.("seek", onSeek)
+      ws.on?.("interaction", syncToAudio)
+      audio.addEventListener("timeupdate", syncToAudio)
+      audio.addEventListener("loadedmetadata", syncToAudio)
+
+      // Initial sync in case metadata is already available.
+      syncToAudio()
+
+      // Cleanup listeners when effect re-runs/unmounts.
+      return () => {
+        audio.removeEventListener("timeupdate", syncToAudio)
+        audio.removeEventListener("loadedmetadata", syncToAudio)
+        try {
+          ws.destroy()
+        } catch {}
       }
     })().catch((e) => {
       console.log("WaveSurfer init failed", e)
@@ -95,17 +132,14 @@ export default function FlowPage() {
 
     return () => {
       cancelled = true
+      try {
+        waveSurferRef.current?.destroy?.()
+      } catch {}
+      waveSurferRef.current = null
     }
-  }, [waveformEl, currentSrc])
+  }, [waveformEl, currentSrc, previewMode])
 
-  useEffect(() => {
-    const ws = waveSurferRef.current
-    if (!ws) return
-    ws.setOptions({
-      waveColor: "rgba(255,255,255,0.10)",
-      progressColor: previewMode === "after" ? "rgba(59,130,246,0.55)" : "rgba(139,92,246,0.55)",
-    })
-  }, [previewMode])
+  // (waveform colors are configured on create)
 
   // Clamp seeking for unpaid MASTERED preview (prevents seeking outside preview window).
   useEffect(() => {
