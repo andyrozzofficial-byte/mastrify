@@ -292,43 +292,48 @@ const handlePayment = () => {
     if (next === "after" && !masteredUrl) return
     if (next === "before" && !audioUrl) return
 
-    // If clicking the active tab, treat it as play/pause.
-    if (next === previewMode) {
-      if (!audio.paused) {
-        audio.pause()
-        setIsPlaying(false)
-        return
-      }
+    if (next === previewMode) return
 
-      audio.volume = 1
-      pendingSeekTimeRef.current = Math.max(0, audio.currentTime || 0)
-      pendingSeekRef.current = true
-      pendingPlayRef.current = true
+    // Switching tabs: preserve position, never autoplay.
+    pendingSeekTimeRef.current = Math.max(0, audio.currentTime || 0)
+    pendingSeekRef.current = true
+    pendingPlayRef.current = false
+    setPreviewMode(next)
+  }
 
-      if (audio.readyState >= 1) {
-        const safeTime = Math.min(
-          pendingSeekTimeRef.current,
-          Math.max(0, (audio.duration || 0) - 0.1)
-        )
-        audio.currentTime = safeTime
-        pendingSeekRef.current = false
-        pendingSeekTimeRef.current = null
+  const togglePlayPause = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (!currentSrc) return
 
-        audio.play().catch(() => {})
-        pendingPlayRef.current = false
-        setIsPlaying(true)
-      } else {
-        audio.load()
-      }
-
+    if (!audio.paused) {
+      audio.pause()
+      setIsPlaying(false)
       return
     }
 
-    // Switching tabs: preserve position and keep playing state.
-    pendingSeekTimeRef.current = Math.max(0, audio.currentTime || 0)
+    audio.volume = 1
     pendingSeekRef.current = true
-    pendingPlayRef.current = !audio.paused
-    setPreviewMode(next)
+    pendingPlayRef.current = true
+
+    // If we just switched sources, preserve position; otherwise default to preview start.
+    if (pendingSeekTimeRef.current == null) {
+      pendingSeekTimeRef.current = Math.max(0, audio.currentTime || PREVIEW_START)
+    }
+
+    if (audio.readyState >= 1) {
+      const desired = pendingSeekTimeRef.current ?? PREVIEW_START
+      const safeTime = Math.min(desired, Math.max(0, (audio.duration || 0) - 0.1))
+      audio.currentTime = safeTime
+      pendingSeekRef.current = false
+      pendingSeekTimeRef.current = null
+
+      audio.play().catch(() => {})
+      pendingPlayRef.current = false
+      setIsPlaying(true)
+    } else {
+      audio.load()
+    }
   }
   
 
@@ -504,7 +509,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         onClick={() => toggleBeforeAfter("before")}
         className={
           previewMode === "before"
-            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_40px_rgba(139,92,246,0.45)] hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
+            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_55px_rgba(139,92,246,0.65)] hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
             : "py-3 rounded-xl font-bold text-white/80 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300"
         }
       >
@@ -517,7 +522,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         disabled={!masteredUrl}
         className={
           previewMode === "after"
-            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.45)] hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
+            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_55px_rgba(59,130,246,0.65)] hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
             : "py-3 rounded-xl font-bold text-white/80 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
         }
       >
@@ -525,10 +530,19 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
       </button>
     </div>
 
+    <button
+      type="button"
+      onClick={togglePlayPause}
+      className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_45px_rgba(139,92,246,0.45)] hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
+    >
+      {isPlaying ? "Pause" : "Play"}
+    </button>
+
     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-      <div
+      <motion.div
         className="h-full bg-gradient-to-r from-purple-400 to-blue-400"
-        style={{ width: `${playProgress}%` }}
+        animate={{ width: `${playProgress}%` }}
+        transition={{ type: "tween", duration: 0.2, ease: "easeOut" }}
       />
     </div>
 
