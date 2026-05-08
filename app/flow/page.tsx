@@ -393,7 +393,21 @@ const handlePayment = () => {
     setSelectedSource(next)
   }
 
-  const togglePlayPause = () => {
+  const waitForReady = (el: HTMLAudioElement) => {
+    // Resolves when metadata is available for currentTime seeks (iOS-safe).
+    if (el.readyState >= 1) return Promise.resolve()
+    return new Promise<void>((resolve) => {
+      const done = () => {
+        el.removeEventListener("loadedmetadata", done)
+        el.removeEventListener("canplay", done)
+        resolve()
+      }
+      el.addEventListener("loadedmetadata", done)
+      el.addEventListener("canplay", done)
+    })
+  }
+
+  const togglePlayPause = async () => {
     const selectedEl = getSelectedAudioEl()
     if (!selectedEl) return
 
@@ -404,30 +418,36 @@ const handlePayment = () => {
     }
 
     const otherEl = getOtherAudioEl()
-    const t0 = selectedEl.currentTime
-    const needsReset = !Number.isFinite(t0) || t0 < PREVIEW_START || t0 >= PREVIEW_END
-    const safeT = safePreviewTimeForEl(selectedEl, needsReset ? PREVIEW_START : t0)
-    desiredPreviewTimeRef.current = safeT
+    desiredPreviewTimeRef.current = PREVIEW_START
 
     // Before playing selected ref:
     // - pause the other ref
-    // - set other ref currentTime to same preview position (if possible)
     otherEl?.pause()
-    if (otherEl && otherEl.readyState >= 1) {
-      try {
-        otherEl.currentTime = safePreviewTimeForEl(otherEl, safeT)
-      } catch {
-        // ignore
-      }
+    setIsPlaying(false)
+
+    // If MASTERED on iOS and not ready, load and wait for metadata.
+    if (selectedSourceRef.current === "mastered" && selectedEl.readyState < 1) {
+      selectedEl.load()
+      await waitForReady(selectedEl)
+    } else if (selectedEl.readyState < 1) {
+      selectedEl.load()
+      await waitForReady(selectedEl)
     }
 
-    // Ensure selected starts inside 60–90 window and is load()'d if needed (iOS).
-    if (selectedEl.readyState < 2) selectedEl.load()
+    // Always restart preview from PREVIEW_START on every Play click.
+    const safeT = safePreviewTimeForEl(selectedEl, PREVIEW_START)
     try {
       selectedEl.currentTime = safeT
     } catch {
-      // If iOS blocks setting currentTime before ready, it will be applied on metadata/canplay.
+      // ignore
     }
+    // iOS can still ignore an early seek, force again immediately before play.
+    try {
+      selectedEl.currentTime = safeT
+    } catch {
+      // ignore
+    }
+    setPlayProgress(0)
 
     // Must be called directly inside the user tap handler for iOS.
     selectedEl.play().then(
