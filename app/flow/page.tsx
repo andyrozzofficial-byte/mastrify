@@ -193,6 +193,7 @@ const mastered =
   (res.data.after ? `${API}${res.data.after}` : "")
 
 setMasteredUrl(mastered)
+console.log("MASTERED URL:", mastered)
 
 const previewMp3 =
   res.data.previewAfterMp3Url ||
@@ -877,6 +878,9 @@ shadow-[0_0_40px_rgba(139,92,246,0.35)]
 hover:brightness-110 hover:scale-[1.02]
 active:scale-[0.98]
 transition-all duration-300"
+  onClick={() => {
+    console.log("EXPORT URL:", masteredUrl ? `${masteredUrl}?download=1` : "")
+  }}
 >
   Download master 🎧
 </a>
