@@ -46,7 +46,7 @@ export default function FlowPage() {
 
   console.log("CURRENT SRC:", currentSrc)
 
-  const waveformContainerRef = useRef<HTMLDivElement | null>(null)
+  const [waveformEl, setWaveformEl] = useState<HTMLDivElement | null>(null)
   const waveSurferRef = useRef<any>(null)
   
   const [referenceTrack, setReferenceTrack] = useState<File | null>(null)
@@ -61,44 +61,51 @@ export default function FlowPage() {
 
   useEffect(() => {
     const audio = audioRef.current
-    const container = waveformContainerRef.current
-    if (!audio || !container) return
+    if (!audio || !waveformEl) return
 
     let cancelled = false
 
     ;(async () => {
-      if (waveSurferRef.current) return
       const mod = await import("wavesurfer.js")
       if (cancelled) return
       const WaveSurfer = mod.default
-      waveSurferRef.current = WaveSurfer.create({
-        container,
-        media: audio,
-        height: 56,
-        waveColor: "rgba(255,255,255,0.18)",
-        progressColor: "rgba(139,92,246,0.75)",
-        cursorColor: "rgba(255,255,255,0.25)",
-        barWidth: 2,
-        barGap: 2,
-        barRadius: 2,
-        normalize: true,
-      })
-    })().catch(() => {})
+
+      if (!waveSurferRef.current) {
+        waveSurferRef.current = WaveSurfer.create({
+          container: waveformEl,
+          media: audio,
+          height: 44,
+          waveColor: "rgba(255,255,255,0.10)",
+          progressColor: "rgba(139,92,246,0.55)",
+          cursorColor: "rgba(255,255,255,0.22)",
+          barWidth: 2,
+          barGap: 2,
+          barRadius: 2,
+          normalize: true,
+          interact: true,
+        })
+      }
+
+      if (currentSrc) {
+        waveSurferRef.current.load(currentSrc)
+      }
+    })().catch((e) => {
+      console.log("WaveSurfer init failed", e)
+    })
 
     return () => {
       cancelled = true
-      waveSurferRef.current?.destroy()
-      waveSurferRef.current = null
     }
-  }, [])
+  }, [waveformEl, currentSrc])
 
-  // Keep waveform in sync with the selected source.
   useEffect(() => {
     const ws = waveSurferRef.current
     if (!ws) return
-    if (!currentSrc) return
-    ws.load(currentSrc)
-  }, [currentSrc])
+    ws.setOptions({
+      waveColor: "rgba(255,255,255,0.10)",
+      progressColor: previewMode === "after" ? "rgba(59,130,246,0.55)" : "rgba(139,92,246,0.55)",
+    })
+  }, [previewMode])
 
   // Clamp seeking for unpaid MASTERED preview (prevents seeking outside preview window).
   useEffect(() => {
@@ -617,8 +624,8 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
 
     <div className="w-full rounded-lg bg-white/5 border border-white/10 px-2 py-2">
       <div
-        ref={waveformContainerRef}
-        className="w-full h-14"
+        ref={setWaveformEl}
+        className="w-full h-12"
       />
     </div>
 
