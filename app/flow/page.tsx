@@ -12,6 +12,7 @@ export default function FlowPage() {
   const sleep = (ms: number) => new Promise(res => setTimeout(res, ms))
   const [mounted, setMounted] = useState(false)
   const [isMobileClient, setIsMobileClient] = useState(false)
+  const [mobileAudioKey, setMobileAudioKey] = useState(0)
 
   useEffect(() => {
     setMounted(true)
@@ -135,6 +136,7 @@ export default function FlowPage() {
     selectedSource === "mastered" ? masteredMobilePreviewUrl : audioUrl
 
   const MOBILE_MASTERED_DURATION = 30
+  const MOBILE_FADE_OUT_SECONDS = 3
 
   // ---------------- FILE ----------------
   const handleFile = (e: any) => {
@@ -294,22 +296,35 @@ setSelectedSource("mastered")
     if (!el) return
 
     const onReady = () => {
+      el.volume = 1
       try {
-        el.currentTime = PREVIEW_START
+        // ORIGINAL: 60–90 window. MASTERED mp3 preview is pre-cut to 30s, start at 0.
+        el.currentTime = selectedSource === "mastered" ? 0 : PREVIEW_START
       } catch {}
     }
 
     const onTimeUpdate = () => {
       const t = el.currentTime
-      const end = selectedSourceRef.current === "mastered" ? MOBILE_MASTERED_DURATION : PREVIEW_END
-      const start = selectedSourceRef.current === "mastered" ? 0 : PREVIEW_START
-      const duration = selectedSourceRef.current === "mastered" ? MOBILE_MASTERED_DURATION : PREVIEW_DURATION
+      const isMastered = selectedSource === "mastered"
+      const end = isMastered ? MOBILE_MASTERED_DURATION : PREVIEW_END
+      const start = isMastered ? 0 : PREVIEW_START
+      const duration = isMastered ? MOBILE_MASTERED_DURATION : PREVIEW_DURATION
+
+      // 30s fade-out (last 3 seconds) — keep behavior consistent
+      if (Number.isFinite(t) && t >= end - MOBILE_FADE_OUT_SECONDS && t < end) {
+        const remaining = end - t
+        const v = Math.max(0, Math.min(1, remaining / MOBILE_FADE_OUT_SECONDS))
+        el.volume = v
+      } else {
+        el.volume = 1
+      }
 
       if (Number.isFinite(t) && t >= end) {
         el.pause()
         try {
           el.currentTime = start
         } catch {}
+        el.volume = 1
         setIsPlaying(false)
         setPlayProgress(0)
         return
@@ -327,7 +342,7 @@ setSelectedSource("mastered")
       el.removeEventListener("canplay", onReady)
       el.removeEventListener("timeupdate", onTimeUpdate)
     }
-  }, [isMobileClient])
+  }, [isMobileClient, selectedSource, mobileAudioKey])
 
   useEffect(() => {
   if (!aiText) return
@@ -391,6 +406,7 @@ const handlePayment = () => {
 
     pauseAll()
     setPlayProgress(0)
+    if (isMobileClient) setMobileAudioKey((k) => k + 1)
 
     setSelectedSource(next)
   }
@@ -437,16 +453,12 @@ const handlePayment = () => {
       if (el.src !== nextSrc) el.src = nextSrc
       el.load()
       await waitForReady(el)
-      if (selectedSourceRef.current === "mastered") {
-        // Mastered mobile preview is pre-cut (60s–90s), so play from 0.
-        try {
-          el.currentTime = 0
-        } catch {}
-      } else {
-        try {
-          el.currentTime = PREVIEW_START
-        } catch {}
-      }
+      // IMPORTANT: do not use selectedSourceRef here (can be stale between taps)
+      const isMastered = selectedSource === "mastered"
+      try {
+        el.currentTime = isMastered ? 0 : PREVIEW_START
+      } catch {}
+      el.volume = 1
 
       setPlayProgress(0)
       try {
@@ -816,6 +828,7 @@ hover:brightness-110 transition-all duration-300"
   {/* Mobile-only preview audio (single element, src swapped on play) */}
   <audio
     ref={mobileAudioRef}
+    key={mobileAudioKey}
     src={isMobileClient ? mobileSelectedUrl : ""}
     playsInline
     preload="auto"
