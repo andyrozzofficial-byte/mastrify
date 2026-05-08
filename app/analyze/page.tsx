@@ -330,10 +330,10 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
       className="relative cursor-pointer"
     >
       {/* glow */}
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-xl rounded-xl" />
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/12 to-blue-500/10 blur-xl rounded-xl" />
 
       {/* box */}
-      <div className="relative bg-white/5 border border-white/10 p-4 rounded-xl text-white/60 hover:border-purple-500 transition text-center">
+      <div className="relative bg-white/5 border border-white/10 p-4 rounded-xl text-white/60 hover:border-purple-500/70 transition text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
         {file ? file.name : "Drop your track here"}
       </div>
     </div>
@@ -372,7 +372,7 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-10 w-full max-w-xl bg-gradient-to-br from-purple-900/40 to-blue-900/40 p-6 rounded-2xl backdrop-blur"
+          className="mt-10 w-full max-w-xl bg-gradient-to-br from-purple-900/35 to-blue-900/30 p-6 rounded-2xl backdrop-blur border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_22px_70px_rgba(0,0,0,0.55)]"
         >
 
           {/* SCORE */}

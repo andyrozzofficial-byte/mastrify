@@ -242,9 +242,9 @@ shadow-[0_16px_55px_rgba(0,0,0,0.55)] hover:shadow-[0_22px_75px_rgba(0,0,0,0.62)
 
         <div className="relative">
 
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-2xl rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/14 to-blue-500/12 blur-2xl rounded-2xl" />
 
-          <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-2xl shadow-[0_0_60px_rgba(139,92,246,0.25)]">
+          <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_22px_70px_rgba(0,0,0,0.55)]">
 
             {/* TOGGLE */}
             <div className="flex justify-center gap-4 mb-6">
@@ -254,7 +254,7 @@ shadow-[0_16px_55px_rgba(0,0,0,0.55)] hover:shadow-[0_22px_75px_rgba(0,0,0,0.62)
                   onClick={() => setMode(m as any)}
                   className={`px-6 py-2 rounded-full transition ${
                     mode === m
-                      ? "bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_15px_rgba(139,92,246,0.6)]"
+                      ? "bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_18px_rgba(139,92,246,0.62)]"
                       : "bg-white/10 text-white/50"
                   }`}
                 >
@@ -278,7 +278,7 @@ shadow-[0_16px_55px_rgba(0,0,0,0.55)] hover:shadow-[0_22px_75px_rgba(0,0,0,0.62)
                 </div>
 
                 <div
-                  className="absolute left-0 h-[2px] bg-gradient-to-r from-purple-400 to-blue-400 shadow-[0_0_20px_rgba(139,92,246,0.8)]"
+                  className="absolute left-0 h-[2px] bg-gradient-to-r from-purple-400 to-blue-400 shadow-[0_0_12px_rgba(139,92,246,0.45)]"
                   style={{ width: `${progress}%` }}
                 />
 
@@ -309,7 +309,7 @@ border border-white/50"
   bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 
   flex items-center justify-center 
   hover:scale-110 active:scale-95 transition 
-  shadow-[0_0_60px_rgba(139,92,246,0.7)]"
+  shadow-[0_0_70px_rgba(139,92,246,0.78)]"
 >
   {playing ? (
   <div className="flex gap-[3px]">
@@ -351,9 +351,9 @@ border border-white/50"
   ].map((item, i) => (
     <div key={i} className="relative">
 
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 blur-xl rounded-xl" />
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/14 to-blue-500/12 blur-xl rounded-xl" />
 
-      <div className="relative h-[120px] flex flex-col justify-center bg-white/[0.04] border border-white/10 rounded-xl p-5 text-center backdrop-blur-xl hover:scale-[1.05] transition shadow-[0_0_25px_rgba(139,92,246,0.25)]">
+      <div className="relative h-[120px] flex flex-col justify-center bg-white/[0.04] border border-white/10 rounded-xl p-5 text-center backdrop-blur-xl hover:scale-[1.05] transition shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_18px_50px_rgba(0,0,0,0.52)]">
         <p className="text-xs text-white/40">{item[0]}</p>
         <p className="text-lg font-semibold mt-2">{item[1]}</p>
         {item[2] && <p className="text-xs text-white/40">{item[2]}</p>}
@@ -373,9 +373,9 @@ border border-white/50"
 
   <div className="relative">
 
-    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 blur-2xl rounded-2xl" />
+    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/14 to-blue-500/12 blur-2xl rounded-2xl" />
 
-    <div className="relative bg-white/[0.04] border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-[0_0_30px_rgba(139,92,246,0.25)]">
+    <div className="relative bg-white/[0.04] border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_20px_65px_rgba(0,0,0,0.55)]">
 
       <ul className="space-y-3 text-white/70">
         <li>• Your drop lacks low-end weight</li>

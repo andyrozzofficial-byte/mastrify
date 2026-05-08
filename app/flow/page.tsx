@@ -419,7 +419,7 @@ const handlePayment = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
-          className="border border-white/12 rounded-2xl p-12 bg-white/[0.06] backdrop-blur-xl overflow-visible shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
+          className="border border-white/12 rounded-2xl p-12 bg-white/[0.06] backdrop-blur-xl overflow-visible shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_22px_70px_rgba(0,0,0,0.55)]"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault()
@@ -556,7 +556,7 @@ disabled:opacity-40 disabled:cursor-not-allowed"
             className="space-y-6"
           >
 
-            <div className="bg-white/[0.06] p-6 rounded-xl border border-white/10 shadow-[0_18px_70px_rgba(0,0,0,0.58)]">
+            <div className="bg-white/[0.06] p-6 rounded-xl border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_22px_70px_rgba(0,0,0,0.58)]">
               <p className="text-3xl font-bold 
 bg-gradient-to-r from-white via-purple-200 to-blue-200 
 bg-clip-text text-transparent 
@@ -569,7 +569,7 @@ drop-shadow-[0_0_14px_rgba(139,92,246,0.22)]">
 </p>
 
   {masteredUrl && (
-  <div className="mt-6 bg-black/50 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4 shadow-[0_18px_70px_rgba(0,0,0,0.62)]">
+  <div className="mt-6 bg-black/50 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] shadow-[0_22px_78px_rgba(0,0,0,0.62)]">
 
     <div className="grid grid-cols-2 gap-3">
       <motion.button
