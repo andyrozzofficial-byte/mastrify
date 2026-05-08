@@ -257,6 +257,37 @@ const handlePayment = () => {
   localStorage.setItem("paid", "true")
   setIsPaid(true)
   setShowSuccess(true)
+
+  if (masteredUrl) {
+    void downloadMaster(masteredUrl)
+  }
+}
+
+const downloadMaster = async (url: string) => {
+  try {
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`Download failed: ${res.status}`)
+    const blob = await res.blob()
+    const objectUrl = URL.createObjectURL(blob)
+
+    const a = document.createElement("a")
+    a.href = objectUrl
+    a.download = url.split("/").pop() || "master.wav"
+    a.style.display = "none"
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(objectUrl)
+  } catch (e) {
+    // fallback: try navigating (may open in browser)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = url.split("/").pop() || "master.wav"
+    a.style.display = "none"
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
 }
 
   useEffect(() => {
@@ -554,7 +585,9 @@ transition-all duration-300"
   <a
   href={masteredUrl || "#"}
   onClick={(e) => {
+  e.preventDefault()
   if (!masteredUrl) return
+  void downloadMaster(masteredUrl)
 }}
   download
   className="block w-full py-5 mt-4 rounded-xl text-lg font-bold text-white text-center cursor-pointer
