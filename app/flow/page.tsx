@@ -648,8 +648,14 @@ drop-shadow-[0_0_14px_rgba(139,92,246,0.22)]">
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         aria-label={isPlaying ? "Pause" : "Play"}
-        className="w-12 h-12 md:w-14 md:h-14 rounded-full grid place-items-center bg-black/55 backdrop-blur-xl border border-white/10 text-white shadow-[inset_0_0_16px_rgba(139,92,246,0.12)] hover:brightness-110 transition-all duration-300"
+        className="relative w-12 h-12 md:w-14 md:h-14 rounded-full grid place-items-center text-white border border-white/10 overflow-hidden
+bg-gradient-to-r from-purple-600/80 to-blue-600/80
+shadow-[0_10px_30px_rgba(0,0,0,0.55)] hover:shadow-[0_14px_44px_rgba(0,0,0,0.62)]
+hover:brightness-110 transition-all duration-300"
       >
+        <span className="pointer-events-none absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+        <span className="pointer-events-none absolute inset-0 shadow-[inset_0_0_18px_rgba(139,92,246,0.14)]" />
+        <span className="pointer-events-none absolute -inset-[2px] rounded-full bg-gradient-to-r from-purple-400/25 to-blue-400/22 blur-lg opacity-60" />
         {isPlaying ? (
           <svg
             width="20"
