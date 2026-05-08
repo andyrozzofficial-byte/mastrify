@@ -54,21 +54,20 @@ export default function FlowPage() {
  
 
   const PREVIEW_START = 60
-  const PREVIEW_LENGTH = 30
+  const PREVIEW_DURATION = 30
+  const PREVIEW_END = PREVIEW_START + PREVIEW_DURATION
 
-  // Clamp seeking for unpaid MASTERED preview (prevents seeking outside preview window).
+  // Clamp seeking to preview window (prevents seeking outside 60–90s window).
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
     const onSeeking = () => {
-      if (isPaid) return
-      if (selectedSource !== "mastered") return
       const dur = audio.duration
       if (!Number.isFinite(dur) || dur <= 0) return
 
       const start = PREVIEW_START
-      const end = PREVIEW_START + PREVIEW_LENGTH
+      const end = PREVIEW_END
       const t = audio.currentTime
       if (t < start) audio.currentTime = Math.min(start, Math.max(0, dur - 0.1))
       if (t > end) audio.currentTime = Math.min(end, Math.max(0, dur - 0.1))
@@ -76,7 +75,7 @@ export default function FlowPage() {
 
     audio.addEventListener("seeking", onSeeking)
     return () => audio.removeEventListener("seeking", onSeeking)
-  }, [isPaid, selectedSource])
+  }, [])
 
   // Robust source switching: pause → src → load → seek after ready (no autoplay).
   useEffect(() => {
@@ -205,29 +204,22 @@ setSelectedSource("mastered")
     const current = audio.currentTime
     const duration = audio.duration || 1
 
-    const previewProgress = (current - PREVIEW_START) / PREVIEW_LENGTH
-setPlayProgress(Math.max(0, Math.min(1, previewProgress)) * 100)
+    const previewProgress = (current - PREVIEW_START) / PREVIEW_DURATION
+    setPlayProgress(Math.max(0, Math.min(1, previewProgress)) * 100)
 
-    // 🔥 LIMIT MASTERED PLAYBACK
-    if (!isPaid && selectedSource === "mastered") {
-
-      const end = PREVIEW_START + PREVIEW_LENGTH
-
-      if (current > end - 3) {
-        audio.volume = Math.max(0, (end - current) / 3)
-      }
-
-      if (current >= end) {
-        audio.pause()
-        audio.volume = 1
-        setIsPlaying(false)
-      }
+    // Enforce 60–90s preview window for both ORIGINAL and MASTERED
+    if (current >= PREVIEW_END) {
+      audio.pause()
+      audio.currentTime = Math.min(PREVIEW_START, Math.max(0, duration - 0.1))
+      audio.volume = 1
+      setIsPlaying(false)
+      setPlayProgress(0)
     }
 
   }, 200)
 
   return () => clearInterval(interval)
-}, [selectedSource, isPaid])
+}, [])
 
   useEffect(() => {
   if (!aiText) return
@@ -281,7 +273,7 @@ const handlePayment = () => {
     const onReady = () => {
       if (!shouldSeekOnReadyRef.current) return
 
-      const desired = desiredTimeRef.current ?? 0
+      const desired = desiredTimeRef.current ?? PREVIEW_START
       const safeTime = Math.min(desired, Math.max(0, (audio.duration || 0) - 0.1))
       audio.currentTime = safeTime
 
@@ -315,8 +307,10 @@ const handlePayment = () => {
 
     const dur = audio.duration
     const rawT = Math.max(0, audio.currentTime || 0)
-    const ended = Number.isFinite(dur) && dur > 0 && rawT >= dur - 0.05
-    const safeT = ended ? 0 : rawT
+    const safeInWindow = rawT >= PREVIEW_START && rawT <= PREVIEW_END ? rawT : PREVIEW_START
+    const safeT = Number.isFinite(dur) && dur > 0
+      ? Math.min(safeInWindow, Math.max(0, dur - 0.1))
+      : safeInWindow
 
     audio.pause()
     setIsPlaying(false)
@@ -339,10 +333,11 @@ const handlePayment = () => {
 
     audio.volume = 1
 
-    // If ended, restart from 0.
+    // Always start within the 60–90s preview window.
     const dur = audio.duration
-    if (Number.isFinite(dur) && dur > 0 && (audio.currentTime || 0) >= dur - 0.1) {
-      audio.currentTime = 0
+    const t = audio.currentTime || 0
+    if (t < PREVIEW_START || t >= PREVIEW_END || (Number.isFinite(dur) && dur > 0 && t >= dur - 0.1)) {
+      audio.currentTime = Math.min(PREVIEW_START, Math.max(0, (dur || 0) - 0.1))
     }
 
     // Ensure correct src + load for iOS Safari.
@@ -635,10 +630,10 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
     const audio = audioRef.current
     if (audio) {
       audio.pause()
-      audio.currentTime = 0
+      audio.currentTime = PREVIEW_START
       audio.volume = 1
     }
-    desiredTimeRef.current = 0
+    desiredTimeRef.current = PREVIEW_START
     shouldSeekOnReadyRef.current = false
     setPlayProgress(0)
     setIsPlaying(false)
