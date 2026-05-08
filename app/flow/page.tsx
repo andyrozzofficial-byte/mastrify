@@ -504,45 +504,56 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
   <div className="mt-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4">
 
     <div className="grid grid-cols-2 gap-3">
-      <button
+      <motion.button
         type="button"
         onClick={() => toggleBeforeAfter("before")}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.99 }}
         className={
           previewMode === "before"
-            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_55px_rgba(139,92,246,0.65)] hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
-            : "py-3 rounded-xl font-bold text-white/80 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300"
+            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 via-fuchsia-500 to-blue-500 shadow-[0_0_70px_rgba(139,92,246,0.75)] ring-1 ring-white/15 hover:brightness-110 transition-all duration-300"
+            : "py-3 rounded-xl font-bold text-white/75 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300"
         }
       >
-        BEFORE
-      </button>
+        ORIGINAL
+      </motion.button>
 
-      <button
+      <motion.button
         type="button"
         onClick={() => toggleBeforeAfter("after")}
         disabled={!masteredUrl}
+        whileHover={masteredUrl ? { scale: 1.02 } : undefined}
+        whileTap={masteredUrl ? { scale: 0.99 } : undefined}
         className={
           previewMode === "after"
-            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_55px_rgba(59,130,246,0.65)] hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
-            : "py-3 rounded-xl font-bold text-white/80 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 via-fuchsia-500 to-blue-500 shadow-[0_0_70px_rgba(59,130,246,0.75)] ring-1 ring-white/15 hover:brightness-110 transition-all duration-300"
+            : "py-3 rounded-xl font-bold text-white/75 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
         }
       >
-        AFTER
-      </button>
+        MASTERED
+      </motion.button>
     </div>
 
-    <button
-      type="button"
-      onClick={togglePlayPause}
-      className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_45px_rgba(139,92,246,0.45)] hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
-    >
-      {isPlaying ? "Pause" : "Play"}
-    </button>
+    <div className="flex items-center justify-center pt-1">
+      <motion.button
+        type="button"
+        onClick={togglePlayPause}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.97 }}
+        aria-label={isPlaying ? "Pause" : "Play"}
+        className="w-14 h-14 md:w-16 md:h-16 rounded-full grid place-items-center text-white bg-gradient-to-r from-purple-500 via-fuchsia-500 to-blue-500 shadow-[0_0_70px_rgba(139,92,246,0.55)] ring-1 ring-white/15 hover:brightness-110 transition-all duration-300"
+      >
+        <span className="text-xl md:text-2xl font-black leading-none">
+          {isPlaying ? "❚❚" : "▶"}
+        </span>
+      </motion.button>
+    </div>
 
-    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+    <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
       <motion.div
         className="h-full bg-gradient-to-r from-purple-400 to-blue-400"
         animate={{ width: `${playProgress}%` }}
-        transition={{ type: "tween", duration: 0.2, ease: "easeOut" }}
+        transition={{ type: "tween", duration: 0.18, ease: "easeOut" }}
       />
     </div>
 
