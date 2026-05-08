@@ -11,13 +11,17 @@ export default function FlowPage() {
 
   const sleep = (ms: number) => new Promise(res => setTimeout(res, ms))
   const [mounted, setMounted] = useState(false)
+  const [isMobileClient, setIsMobileClient] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
+    setIsMobileClient(/iPhone|iPad|iPod|Android|Mobile/i.test(ua))
   }, [])
 
   const originalAudioRef = useRef<HTMLAudioElement | null>(null)
   const masteredAudioRef = useRef<HTMLAudioElement | null>(null)
+  const mobileAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const [file, setFile] = useState<File | null>(null)
   const [audioUrl, setAudioUrl] = useState("")
@@ -47,10 +51,12 @@ export default function FlowPage() {
   }, [selectedSource])
 
   const getSelectedAudioEl = () => {
+    if (isMobileClient) return mobileAudioRef.current
     return selectedSource === "mastered" ? masteredAudioRef.current : originalAudioRef.current
   }
 
   const getOtherAudioEl = () => {
+    if (isMobileClient) return null
     return selectedSource === "mastered" ? originalAudioRef.current : masteredAudioRef.current
   }
   
@@ -105,6 +111,12 @@ export default function FlowPage() {
     setIsPlaying(false)
   }
 
+  const pauseAll = () => {
+    pauseBoth()
+    mobileAudioRef.current?.pause()
+    setIsPlaying(false)
+  }
+
   const isIOSSafari = () => {
     if (typeof navigator === "undefined") return false
     const ua = navigator.userAgent || ""
@@ -117,6 +129,10 @@ export default function FlowPage() {
   }
 
   const masteredPreviewUrl = isIOSSafari() && masteredPreviewMp3Url ? masteredPreviewMp3Url : masteredUrl
+  // MOBILE ONLY: mastered preview must always be MP3 (never WAV)
+  const masteredMobilePreviewUrl = masteredPreviewMp3Url || ""
+  const mobileSelectedUrl =
+    selectedSource === "mastered" ? masteredMobilePreviewUrl : audioUrl
 
   // ---------------- FILE ----------------
   const handleFile = (e: any) => {
@@ -217,9 +233,9 @@ setSelectedSource("mastered")
   // ---------------- PLAYER ----------------
   
 
-  // Deterministic preview window: progress + stop/reset driven by timeupdate.
-  // Listeners are attached to BOTH audio elements; only selected element updates progress.
+  // DESKTOP: deterministic preview window using the two desktop audio elements.
   useEffect(() => {
+    if (isMobileClient) return
     const original = originalAudioRef.current
     const mastered = masteredAudioRef.current
     if (!original || !mastered) return
@@ -228,7 +244,6 @@ setSelectedSource("mastered")
       const isSelected = () => selectedSourceRef.current === label
 
       const onReady = () => {
-        // Mobile Safari: after load/canplay, set to PREVIEW_START.
         try {
           el.currentTime = safePreviewTimeForEl(el)
         } catch {}
@@ -267,7 +282,45 @@ setSelectedSource("mastered")
       detachOriginal()
       detachMastered()
     }
-  }, [audioUrl, masteredPreviewUrl])
+  }, [audioUrl, masteredPreviewUrl, isMobileClient])
+
+  // MOBILE: single preview audio element with src swapping (no competing elements).
+  useEffect(() => {
+    if (!isMobileClient) return
+    const el = mobileAudioRef.current
+    if (!el) return
+
+    const onReady = () => {
+      try {
+        el.currentTime = PREVIEW_START
+      } catch {}
+    }
+
+    const onTimeUpdate = () => {
+      const t = el.currentTime
+      if (Number.isFinite(t) && t >= PREVIEW_END) {
+        el.pause()
+        try {
+          el.currentTime = PREVIEW_START
+        } catch {}
+        setIsPlaying(false)
+        setPlayProgress(0)
+        return
+      }
+
+      const p = ((t - PREVIEW_START) / PREVIEW_DURATION) * 100
+      setPlayProgress(Math.max(0, Math.min(100, p)))
+    }
+
+    el.addEventListener("loadedmetadata", onReady)
+    el.addEventListener("canplay", onReady)
+    el.addEventListener("timeupdate", onTimeUpdate)
+    return () => {
+      el.removeEventListener("loadedmetadata", onReady)
+      el.removeEventListener("canplay", onReady)
+      el.removeEventListener("timeupdate", onTimeUpdate)
+    }
+  }, [isMobileClient])
 
   useEffect(() => {
   if (!aiText) return
@@ -329,7 +382,7 @@ const handlePayment = () => {
     if (next === "original" && !audioUrl) return
     if (next === selectedSource) return
 
-    pauseBoth()
+    pauseAll()
     setPlayProgress(0)
 
     setSelectedSource(next)
@@ -355,7 +408,7 @@ const handlePayment = () => {
 
     // Pause = pause both
     if (!selectedEl.paused) {
-      pauseBoth()
+      pauseAll()
       return
     }
 
@@ -366,25 +419,38 @@ const handlePayment = () => {
     otherEl?.pause()
     setIsPlaying(false)
 
-    // Deterministic on mobile + desktop:
-    // Always ensure we have metadata, then always seek to PREVIEW_START before play.
-    // (Fixes ORIGINAL sometimes starting at 0 on iOS.)
+    if (isMobileClient) {
+      const el = mobileAudioRef.current
+      if (!el) return
+      const nextSrc = mobileSelectedUrl
+      if (!nextSrc) return
+
+      // MOBILE deterministic flow (single audio element)
+      el.pause()
+      if (el.src !== nextSrc) el.src = nextSrc
+      el.load()
+      await waitForReady(el)
+      try {
+        el.currentTime = PREVIEW_START
+      } catch {}
+      setPlayProgress(0)
+      try {
+        await el.play()
+        setIsPlaying(true)
+      } catch (e) {
+        console.log("AUDIO PLAY FAILED:", e)
+        setIsPlaying(false)
+      }
+      return
+    }
+
+    // DESKTOP flow (two audio elements already in DOM)
     selectedEl.load()
     await waitForReady(selectedEl)
     try {
       selectedEl.currentTime = safePreviewTimeForEl(selectedEl)
     } catch {}
-
-    // Deterministic: EVERY Play starts at PREVIEW_START.
-    const safeT = safePreviewTimeForEl(selectedEl)
-    try {
-      selectedEl.currentTime = safeT
-    } catch {
-      // ignore
-    }
     setPlayProgress(0)
-
-    // Must be called directly inside the user tap handler for iOS.
     try {
       await selectedEl.play()
       setIsPlaying(true)
@@ -677,8 +743,7 @@ hover:brightness-110 transition-all duration-300"
     onEnded={() => {
       pauseBoth()
       const el = originalAudioRef.current
-      if (el) el.currentTime = safePreviewTimeForEl(el, PREVIEW_START)
-      desiredPreviewTimeRef.current = PREVIEW_START
+      if (el) el.currentTime = safePreviewTimeForEl(el)
       setPlayProgress(0)
     }}
   />
@@ -691,8 +756,27 @@ hover:brightness-110 transition-all duration-300"
     onEnded={() => {
       pauseBoth()
       const el = masteredAudioRef.current
-      if (el) el.currentTime = safePreviewTimeForEl(el, PREVIEW_START)
-      desiredPreviewTimeRef.current = PREVIEW_START
+      if (el) el.currentTime = safePreviewTimeForEl(el)
+      setPlayProgress(0)
+    }}
+  />
+
+  {/* Mobile-only preview audio (single element, src swapped on play) */}
+  <audio
+    ref={mobileAudioRef}
+    src={isMobileClient ? mobileSelectedUrl : ""}
+    playsInline
+    preload="auto"
+    className="absolute w-0 h-0 opacity-0 pointer-events-none"
+    onEnded={() => {
+      const el = mobileAudioRef.current
+      if (el) {
+        el.pause()
+        try {
+          el.currentTime = PREVIEW_START
+        } catch {}
+      }
+      setIsPlaying(false)
       setPlayProgress(0)
     }}
   />
