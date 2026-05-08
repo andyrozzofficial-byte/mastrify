@@ -41,6 +41,12 @@ export default function FlowPage() {
   const [playProgress, setPlayProgress] = useState(0)
 
   const desiredPreviewTimeRef = useRef<number>(60)
+  const selectedSourceRef = useRef<"original" | "mastered">("mastered")
+
+  useEffect(() => {
+    selectedSourceRef.current = selectedSource
+    console.log("[PREVIEW] selectedSource:", selectedSource)
+  }, [selectedSource])
 
   const getSelectedAudioEl = () => {
     return selectedSource === "mastered" ? masteredAudioRef.current : originalAudioRef.current
@@ -204,77 +210,87 @@ setSelectedSource("mastered")
   // ---------------- PLAYER ----------------
   
 
-  // Preview window enforcement for BOTH audio elements + progress for selected element.
+  // Attach preview enforcement listeners to BOTH audio refs.
+  // Only update progress for the currently selected source.
   useEffect(() => {
     const original = originalAudioRef.current
     const mastered = masteredAudioRef.current
-    if (!original && !mastered) return
+    if (!original || !mastered) return
 
-    const forceToPreviewStartIfInvalid = (el: HTMLAudioElement | null) => {
-      if (!el) return
-      const t = el.currentTime
-      if (!Number.isFinite(t) || t < PREVIEW_START || t >= PREVIEW_END) {
-        const safeT = safePreviewTimeForEl(el, PREVIEW_START)
-        try {
-          el.currentTime = safeT
-        } catch {
-          // ignore (iOS can block currentTime until ready)
-        }
-        desiredPreviewTimeRef.current = safeT
-      }
-    }
+    const attach = (el: HTMLAudioElement, label: "original" | "mastered") => {
+      const isSelected = () => selectedSourceRef.current === label
 
-    const onReady = (el: HTMLAudioElement | null) => {
-      forceToPreviewStartIfInvalid(el)
-    }
-
-    const onTimeUpdate = (el: HTMLAudioElement | null) => {
-      if (!el) return
-      const t = el.currentTime || 0
-
-      // Update progress using the selected element only.
-      if (el === getSelectedAudioEl()) {
-        const p = ((t - PREVIEW_START) / PREVIEW_DURATION) * 100
-        setPlayProgress(Math.max(0, Math.min(100, p)))
-      }
-
-      // Hard stop/reset at PREVIEW_END for both elements.
-      if (t >= PREVIEW_END) {
-        pauseBoth()
+      const forceStart = () => {
         const safeT = safePreviewTimeForEl(el, PREVIEW_START)
         try {
           el.currentTime = safeT
         } catch {
           // ignore
         }
-        desiredPreviewTimeRef.current = safeT
-        setPlayProgress(0)
+        if (isSelected()) {
+          desiredPreviewTimeRef.current = safeT
+          setPlayProgress(0)
+        }
+        console.log("[PREVIEW] ready", label, "t=", el.currentTime, "dur=", el.duration)
+      }
+
+      const onReady = () => {
+        // Always set to PREVIEW_START on ready (iOS-safe).
+        forceStart()
+      }
+
+      const onTimeUpdate = () => {
+        const t = el.currentTime
+        const dur = el.duration
+        const p = ((t - PREVIEW_START) / PREVIEW_DURATION) * 100
+        const clamped = Math.max(0, Math.min(100, p))
+
+        if (isSelected()) {
+          setPlayProgress(clamped)
+          console.log("[PREVIEW] tick", label, "t=", t, "dur=", dur, "p=", clamped)
+        }
+
+        if (Number.isFinite(t) && t >= PREVIEW_END) {
+          console.log("[PREVIEW] PREVIEW_END reached", label, "t=", t, "dur=", dur)
+          el.pause()
+          try {
+            el.currentTime = safePreviewTimeForEl(el, PREVIEW_START)
+          } catch {}
+          setIsPlaying(false)
+          if (isSelected()) setPlayProgress(0)
+        }
+      }
+
+      const onEnded = () => {
+        console.log("[PREVIEW] ended", label, "t=", el.currentTime, "dur=", el.duration)
+        el.pause()
+        try {
+          el.currentTime = safePreviewTimeForEl(el, PREVIEW_START)
+        } catch {}
+        setIsPlaying(false)
+        if (isSelected()) setPlayProgress(0)
+      }
+
+      el.addEventListener("loadedmetadata", onReady)
+      el.addEventListener("canplay", onReady)
+      el.addEventListener("timeupdate", onTimeUpdate)
+      el.addEventListener("ended", onEnded)
+
+      return () => {
+        el.removeEventListener("loadedmetadata", onReady)
+        el.removeEventListener("canplay", onReady)
+        el.removeEventListener("timeupdate", onTimeUpdate)
+        el.removeEventListener("ended", onEnded)
       }
     }
 
-    const onReadyOriginal = () => onReady(original)
-    const onReadyMastered = () => onReady(mastered)
-    const onTimeUpdateOriginal = () => onTimeUpdate(original)
-    const onTimeUpdateMastered = () => onTimeUpdate(mastered)
-
-    original?.addEventListener("loadedmetadata", onReadyOriginal)
-    original?.addEventListener("canplay", onReadyOriginal)
-    mastered?.addEventListener("loadedmetadata", onReadyMastered)
-    mastered?.addEventListener("canplay", onReadyMastered)
-
-    original?.addEventListener("timeupdate", onTimeUpdateOriginal)
-    mastered?.addEventListener("timeupdate", onTimeUpdateMastered)
-
+    const detachOriginal = attach(original, "original")
+    const detachMastered = attach(mastered, "mastered")
     return () => {
-      original?.removeEventListener("loadedmetadata", onReadyOriginal)
-      original?.removeEventListener("canplay", onReadyOriginal)
-      mastered?.removeEventListener("loadedmetadata", onReadyMastered)
-      mastered?.removeEventListener("canplay", onReadyMastered)
-
-      original?.removeEventListener("timeupdate", onTimeUpdateOriginal)
-      mastered?.removeEventListener("timeupdate", onTimeUpdateMastered)
+      detachOriginal()
+      detachMastered()
     }
-  }, [audioUrl, masteredPreviewUrl, selectedSource])
+  }, [audioUrl, masteredPreviewUrl])
 
   useEffect(() => {
   if (!aiText) return
@@ -351,6 +367,10 @@ const handlePayment = () => {
     if (a && a.readyState >= 1) a.currentTime = safePreviewTimeForEl(a, safeT)
     if (b && b.readyState >= 1) b.currentTime = safePreviewTimeForEl(b, safeT)
 
+    // Progress should reflect the safe position for the newly selected source.
+    const p = ((safeT - PREVIEW_START) / PREVIEW_DURATION) * 100
+    setPlayProgress(Math.max(0, Math.min(100, p)))
+
     setSelectedSource(next)
   }
 
@@ -366,12 +386,8 @@ const handlePayment = () => {
 
     const otherEl = getOtherAudioEl()
     const t0 = selectedEl.currentTime
-    const needsReset =
-      !Number.isFinite(t0) || t0 < PREVIEW_START || t0 >= PREVIEW_END
-    const safeT = safePreviewTimeForEl(
-      selectedEl,
-      needsReset ? PREVIEW_START : t0
-    )
+    const needsReset = !Number.isFinite(t0) || t0 < PREVIEW_START || t0 >= PREVIEW_END
+    const safeT = safePreviewTimeForEl(selectedEl, needsReset ? PREVIEW_START : t0)
     desiredPreviewTimeRef.current = safeT
 
     // Before playing selected ref:
@@ -395,6 +411,7 @@ const handlePayment = () => {
     }
 
     // Must be called directly inside the user tap handler for iOS.
+    console.log("[PREVIEW] play click", selectedSourceRef.current, "t=", selectedEl.currentTime, "dur=", selectedEl.duration)
     selectedEl.play().then(
       () => setIsPlaying(true),
       (e) => {
