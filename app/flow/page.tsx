@@ -40,9 +40,7 @@ export default function FlowPage() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [playProgress, setPlayProgress] = useState(0)
 
-  const desiredPreviewTimeRef = useRef<number>(60)
   const selectedSourceRef = useRef<"original" | "mastered">("mastered")
-  const initializedPreviewRef = useRef({ original: false, mastered: false })
 
   useEffect(() => {
     selectedSourceRef.current = selectedSource
@@ -76,18 +74,27 @@ export default function FlowPage() {
     "Finalizing master",
   ]
 
-  const clampToPreviewWindow = (t: number) => {
-    if (!Number.isFinite(t) || t < PREVIEW_START || t > PREVIEW_END) return PREVIEW_START
-    return t
-  }
-
-  const safePreviewTimeForEl = (el: HTMLAudioElement | null, preferred: number) => {
-    const base = clampToPreviewWindow(preferred)
+  const safePreviewTimeForEl = (el: HTMLAudioElement | null) => {
     const dur = el?.duration
     if (el && Number.isFinite(dur) && (dur as number) > 0) {
-      return Math.min(base, Math.max(0, (dur as number) - 0.1))
+      return Math.min(PREVIEW_START, Math.max(0, (dur as number) - 0.1))
     }
-    return base
+    return PREVIEW_START
+  }
+
+  const resetBothToPreviewStart = () => {
+    const a = originalAudioRef.current
+    const b = masteredAudioRef.current
+    if (a) {
+      try {
+        a.currentTime = safePreviewTimeForEl(a)
+      } catch {}
+    }
+    if (b) {
+      try {
+        b.currentTime = safePreviewTimeForEl(b)
+      } catch {}
+    }
   }
 
   const pauseBoth = () => {
@@ -210,8 +217,8 @@ setSelectedSource("mastered")
   // ---------------- PLAYER ----------------
   
 
-  // Attach preview enforcement listeners to BOTH audio refs.
-  // Only update progress for the currently selected source.
+  // Deterministic preview window: progress + stop/reset driven by timeupdate.
+  // Listeners are attached to BOTH audio elements; only selected element updates progress.
   useEffect(() => {
     const original = originalAudioRef.current
     const mastered = masteredAudioRef.current
@@ -220,81 +227,37 @@ setSelectedSource("mastered")
     const attach = (el: HTMLAudioElement, label: "original" | "mastered") => {
       const isSelected = () => selectedSourceRef.current === label
 
-      const resetToStart = () => {
-        const safeT = safePreviewTimeForEl(el, PREVIEW_START)
-        try {
-          el.currentTime = safeT
-        } catch {
-          // ignore
-        }
-        desiredPreviewTimeRef.current = safeT
-      }
-
       const onReady = () => {
-        // Only force PREVIEW_START on initial readiness (canplay can fire repeatedly on desktop).
-        if (!initializedPreviewRef.current[label]) {
-          initializedPreviewRef.current[label] = true
-          resetToStart()
-          if (isSelected()) setPlayProgress(0)
-          return
-        }
-
-        // If browser reports a playhead outside our window, fix it.
-        const t = el.currentTime
-        if (!Number.isFinite(t) || t < PREVIEW_START || t >= PREVIEW_END) {
-          resetToStart()
-          if (isSelected()) setPlayProgress(0)
-        }
+        // Mobile Safari: after load/canplay, set to PREVIEW_START.
+        try {
+          el.currentTime = safePreviewTimeForEl(el)
+        } catch {}
       }
 
       const onTimeUpdate = () => {
+        if (!isSelected()) return
+
         const t = el.currentTime
-        const dur = el.duration
-        const p = ((t - PREVIEW_START) / PREVIEW_DURATION) * 100
-        const clamped = Math.max(0, Math.min(100, p))
-
-        if (isSelected()) {
-          setPlayProgress(clamped)
-        }
-
         if (Number.isFinite(t) && t >= PREVIEW_END) {
-          // Stop/reset at PREVIEW_END for BOTH audio elements.
           pauseBoth()
-          resetToStart()
-          const otherEl = label === "original" ? masteredAudioRef.current : originalAudioRef.current
-          if (otherEl && otherEl.readyState >= 1) {
-            try {
-              otherEl.currentTime = safePreviewTimeForEl(otherEl, PREVIEW_START)
-            } catch {}
-          }
+          resetBothToPreviewStart()
           setIsPlaying(false)
           setPlayProgress(0)
+          return
         }
-      }
 
-      const onEnded = () => {
-        // Treat ended as a reset to preview start.
-        pauseBoth()
-        resetToStart()
-        const otherEl = label === "original" ? masteredAudioRef.current : originalAudioRef.current
-        if (otherEl && otherEl.readyState >= 1) {
-          try {
-            otherEl.currentTime = safePreviewTimeForEl(otherEl, PREVIEW_START)
-          } catch {}
-        }
-        setPlayProgress(0)
+        const p = ((t - PREVIEW_START) / PREVIEW_DURATION) * 100
+        setPlayProgress(Math.max(0, Math.min(100, p)))
       }
 
       el.addEventListener("loadedmetadata", onReady)
       el.addEventListener("canplay", onReady)
       el.addEventListener("timeupdate", onTimeUpdate)
-      el.addEventListener("ended", onEnded)
 
       return () => {
         el.removeEventListener("loadedmetadata", onReady)
         el.removeEventListener("canplay", onReady)
         el.removeEventListener("timeupdate", onTimeUpdate)
-        el.removeEventListener("ended", onEnded)
       }
     }
 
@@ -366,28 +329,7 @@ const handlePayment = () => {
     if (next === "original" && !audioUrl) return
     if (next === selectedSource) return
 
-    // On every source switch:
-    // - pause both
-    // - reset both to PREVIEW_START
-    // - reset progress
-    // - do not autoplay
     pauseBoth()
-    const a = originalAudioRef.current
-    const b = masteredAudioRef.current
-    if (a) {
-      if (a.readyState < 1) a.load()
-      try {
-        a.currentTime = safePreviewTimeForEl(a, PREVIEW_START)
-      } catch {}
-    }
-    if (b) {
-      // iOS: ensure mastered is ready to play again after switching away/back.
-      if (b.readyState < 1) b.load()
-      try {
-        b.currentTime = safePreviewTimeForEl(b, PREVIEW_START)
-      } catch {}
-    }
-    desiredPreviewTimeRef.current = PREVIEW_START
     setPlayProgress(0)
 
     setSelectedSource(next)
@@ -418,30 +360,23 @@ const handlePayment = () => {
     }
 
     const otherEl = getOtherAudioEl()
-    desiredPreviewTimeRef.current = PREVIEW_START
 
     // Before playing selected ref:
     // - pause the other ref
     otherEl?.pause()
     setIsPlaying(false)
 
-    // If MASTERED on iOS and not ready, load and wait for metadata.
-    if (selectedSourceRef.current === "mastered" && selectedEl.readyState < 1) {
-      selectedEl.load()
-      await waitForReady(selectedEl)
-    } else if (selectedEl.readyState < 1) {
-      selectedEl.load()
-      await waitForReady(selectedEl)
-    }
-
-    // Always restart preview from PREVIEW_START on every Play click.
-    const safeT = safePreviewTimeForEl(selectedEl, PREVIEW_START)
+    // Deterministic on mobile + desktop:
+    // Always ensure we have metadata, then always seek to PREVIEW_START before play.
+    // (Fixes ORIGINAL sometimes starting at 0 on iOS.)
+    selectedEl.load()
+    await waitForReady(selectedEl)
     try {
-      selectedEl.currentTime = safeT
-    } catch {
-      // ignore
-    }
-    // iOS can still ignore an early seek, force again immediately before play.
+      selectedEl.currentTime = safePreviewTimeForEl(selectedEl)
+    } catch {}
+
+    // Deterministic: EVERY Play starts at PREVIEW_START.
+    const safeT = safePreviewTimeForEl(selectedEl)
     try {
       selectedEl.currentTime = safeT
     } catch {
@@ -450,13 +385,13 @@ const handlePayment = () => {
     setPlayProgress(0)
 
     // Must be called directly inside the user tap handler for iOS.
-    selectedEl.play().then(
-      () => setIsPlaying(true),
-      (e) => {
-        console.log("AUDIO PLAY FAILED:", e)
-        setIsPlaying(false)
-      }
-    )
+    try {
+      await selectedEl.play()
+      setIsPlaying(true)
+    } catch (e) {
+      console.log("AUDIO PLAY FAILED:", e)
+      setIsPlaying(false)
+    }
   }
   
 
