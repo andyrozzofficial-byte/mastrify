@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useMemo } from "react"
+import { useState, useRef, useEffect } from "react"
 import axios from "axios"
 import { motion } from "framer-motion"
 type Step = "upload" | "analyzing" | "done"
@@ -42,66 +42,12 @@ export default function FlowPage() {
 
   const pendingSeekTimeRef = useRef<number | null>(null)
 
-  const [wavePhase, setWavePhase] = useState(0)
-  useEffect(() => {
-    if (!isPlaying) return
-    let raf = 0
-    const tick = () => {
-      setWavePhase((p) => (p + 0.015) % (Math.PI * 2))
-      raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [isPlaying])
-
-  const hashString = (s: string) => {
-    let h = 2166136261
-    for (let i = 0; i < s.length; i++) {
-      h ^= s.charCodeAt(i)
-      h = Math.imul(h, 16777619)
-    }
-    return h >>> 0
-  }
-
-  const waveformPeaks = useMemo(() => {
-    const seed = hashString(currentSrc || "silence")
-    const bars = 72
-    const peaks: number[] = []
-    let x = seed || 1
-    for (let i = 0; i < bars; i++) {
-      // xorshift32
-      x ^= x << 13
-      x ^= x >>> 17
-      x ^= x << 5
-      const r = ((x >>> 0) % 1000) / 1000
-      // keep it subtle and "audio-like" (avoid extreme spikes)
-      const shaped = 0.18 + Math.pow(r, 1.8) * 0.82
-      peaks.push(shaped)
-    }
-    return peaks
-  }, [currentSrc])
-
-  const seekToRatio = (ratio: number) => {
-    const audio = audioRef.current
-    if (!audio) return
-    const dur = audio.duration
-    if (!Number.isFinite(dur) || dur <= 0) return
-
-    const clamped = Math.max(0, Math.min(1, ratio))
-
-    // Respect the paid preview limiter: seeking maps to preview window for AFTER when unpaid.
-    if (!isPaid && previewMode === "after") {
-      const t = PREVIEW_START + clamped * PREVIEW_LENGTH
-      audio.currentTime = Math.min(t, Math.max(0, dur - 0.1))
-      return
-    }
-
-    audio.currentTime = Math.min(clamped * dur, Math.max(0, dur - 0.1))
-  }
-
   const currentSrc = previewMode === "after" && masteredUrl ? masteredUrl : audioUrl
 
   console.log("CURRENT SRC:", currentSrc)
+
+  const waveformContainerRef = useRef<HTMLDivElement | null>(null)
+  const waveSurferRef = useRef<any>(null)
   
   const [referenceTrack, setReferenceTrack] = useState<File | null>(null)
   const [referenceName, setReferenceName] = useState("")
@@ -112,6 +58,69 @@ export default function FlowPage() {
 
   const PREVIEW_START = 60
   const PREVIEW_LENGTH = 30
+
+  useEffect(() => {
+    const audio = audioRef.current
+    const container = waveformContainerRef.current
+    if (!audio || !container) return
+
+    let cancelled = false
+
+    ;(async () => {
+      if (waveSurferRef.current) return
+      const mod = await import("wavesurfer.js")
+      if (cancelled) return
+      const WaveSurfer = mod.default
+      waveSurferRef.current = WaveSurfer.create({
+        container,
+        media: audio,
+        height: 56,
+        waveColor: "rgba(255,255,255,0.18)",
+        progressColor: "rgba(139,92,246,0.75)",
+        cursorColor: "rgba(255,255,255,0.25)",
+        barWidth: 2,
+        barGap: 2,
+        barRadius: 2,
+        normalize: true,
+      })
+    })().catch(() => {})
+
+    return () => {
+      cancelled = true
+      waveSurferRef.current?.destroy()
+      waveSurferRef.current = null
+    }
+  }, [])
+
+  // Keep waveform in sync with the selected source.
+  useEffect(() => {
+    const ws = waveSurferRef.current
+    if (!ws) return
+    if (!currentSrc) return
+    ws.load(currentSrc)
+  }, [currentSrc])
+
+  // Clamp seeking for unpaid MASTERED preview (prevents seeking outside preview window).
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const onSeeking = () => {
+      if (isPaid) return
+      if (previewMode !== "after") return
+      const dur = audio.duration
+      if (!Number.isFinite(dur) || dur <= 0) return
+
+      const start = PREVIEW_START
+      const end = PREVIEW_START + PREVIEW_LENGTH
+      const t = audio.currentTime
+      if (t < start) audio.currentTime = Math.min(start, Math.max(0, dur - 0.1))
+      if (t > end) audio.currentTime = Math.min(end, Math.max(0, dur - 0.1))
+    }
+
+    audio.addEventListener("seeking", onSeeking)
+    return () => audio.removeEventListener("seeking", onSeeking)
+  }, [isPaid, previewMode])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -598,7 +607,7 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         aria-label={isPlaying ? "Pause" : "Play"}
-        className="w-13 h-13 md:w-15 md:h-15 rounded-full grid place-items-center text-white bg-gradient-to-r from-purple-600/85 to-blue-600/85 shadow-[0_0_20px_rgba(139,92,246,0.28)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
+        className="w-13 h-13 md:w-15 md:h-15 rounded-full grid place-items-center text-white bg-gradient-to-r from-purple-600/85 to-blue-600/85 shadow-[0_0_14px_rgba(139,92,246,0.20)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
       >
         <span className="text-xl md:text-2xl font-black leading-none">
           {isPlaying ? "❚❚" : "▶"}
@@ -606,46 +615,11 @@ drop-shadow-[0_0_25px_rgba(139,92,246,0.6)]">
       </motion.button>
     </div>
 
-    <div
-      role="slider"
-      aria-label="Waveform seek"
-      className="w-full rounded-lg bg-white/5 border border-white/10 px-2 py-2 select-none cursor-pointer"
-      onClick={(e) => {
-        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
-        const ratio = (e.clientX - rect.left) / rect.width
-        seekToRatio(ratio)
-      }}
-    >
-      <div className="relative h-10">
-        <div className="absolute inset-0 flex items-center gap-[3px]">
-          {waveformPeaks.map((p, i) => {
-            const barProgress = (i + 1) / waveformPeaks.length
-            const active = (playProgress / 100) >= barProgress
-            const wobble = isPlaying ? (Math.sin(wavePhase + i * 0.35) * 0.04) : 0
-            const heightPct = Math.max(0.14, Math.min(1, p + wobble))
-            return (
-              <div
-                key={i}
-                className={
-                  "flex-1 rounded-full transition-colors duration-200 " +
-                  (active
-                    ? "bg-gradient-to-t from-purple-400/70 to-blue-400/70"
-                    : "bg-white/12")
-                }
-                style={{ height: `${Math.round(heightPct * 100)}%` }}
-              />
-            )
-          })}
-        </div>
-
-        {/* playhead */}
-        <motion.div
-          className="absolute top-0 bottom-0 w-[2px] bg-white/35"
-          animate={{ left: `${playProgress}%` }}
-          transition={{ type: "tween", duration: 0.18, ease: "easeOut" }}
-          style={{ transform: "translateX(-1px)" }}
-        />
-      </div>
+    <div className="w-full rounded-lg bg-white/5 border border-white/10 px-2 py-2">
+      <div
+        ref={waveformContainerRef}
+        className="w-full h-14"
+      />
     </div>
 
 
