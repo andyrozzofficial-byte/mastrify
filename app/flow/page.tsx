@@ -46,6 +46,8 @@ export default function FlowPage() {
   const [playProgress, setPlayProgress] = useState(0)
 
   const selectedSourceRef = useRef<"original" | "mastered">("mastered")
+  /** Desktop only: ignore stacked Play taps until the current play() settles */
+  const isStartingPlaybackRef = useRef(false)
 
   useEffect(() => {
     selectedSourceRef.current = selectedSource
@@ -249,6 +251,8 @@ setSelectedSource("mastered")
       const isSelected = () => selectedSourceRef.current === label
 
       const onReady = () => {
+        // Avoid seeking the actively playing track on repeated canplay events (breaks play()/causes AbortError)
+        if (isSelected() && !el.paused) return
         try {
           el.currentTime = safePreviewTimeForEl(el)
         } catch {}
@@ -411,6 +415,12 @@ const handlePayment = () => {
     setSelectedSource(next)
   }
 
+  const isAbortError = (e: unknown) =>
+    (typeof DOMException !== "undefined" &&
+      e instanceof DOMException &&
+      e.name === "AbortError") ||
+    (e instanceof Error && e.name === "AbortError")
+
   const waitForReady = (el: HTMLAudioElement) => {
     // Resolves when metadata is available for currentTime seeks (iOS-safe).
     if (el.readyState >= 1) return Promise.resolve()
@@ -437,12 +447,11 @@ const handlePayment = () => {
 
     const otherEl = getOtherAudioEl()
 
-    // Before playing selected ref:
-    // - pause the other ref
+    // Before playing selected ref: pause only the other desktop element (never the one we're about to play).
     otherEl?.pause()
-    setIsPlaying(false)
 
     if (isMobileClient) {
+      setIsPlaying(false)
       const el = mobileAudioRef.current
       if (!el) return
       const nextSrc = mobileSelectedUrl
@@ -465,62 +474,71 @@ const handlePayment = () => {
         await el.play()
         setIsPlaying(true)
       } catch (e) {
-        console.log("AUDIO PLAY FAILED:", e)
+        if (!isAbortError(e)) console.log("AUDIO PLAY FAILED:", e)
         setIsPlaying(false)
       }
       return
     }
 
-    // DESKTOP flow (two audio elements already in DOM)
-    // Desktop MASTERED must use the WAV master URL (afterUrl/fullUrl).
-    if (selectedSourceRef.current === "mastered") {
-      console.log("[desktop] selectedSource:", selectedSourceRef.current)
-      console.log("[desktop] mastered desktop URL:", masteredUrl)
+    if (isStartingPlaybackRef.current) return
+    isStartingPlaybackRef.current = true
 
-      if (!masteredUrl || !/^https:\/\//i.test(masteredUrl)) {
-        console.log("[desktop] invalid masteredUrl:", masteredUrl)
-        setIsPlaying(false)
+    try {
+      // DESKTOP flow (two audio elements already in DOM)
+      // Desktop MASTERED must use the WAV master URL (afterUrl/fullUrl).
+      if (selectedSourceRef.current === "mastered") {
+        console.log("[desktop] selectedSource:", selectedSourceRef.current)
+        console.log("[desktop] mastered desktop URL:", masteredUrl)
+
+        if (!masteredUrl || !/^https:\/\//i.test(masteredUrl)) {
+          console.log("[desktop] invalid masteredUrl:", masteredUrl)
+          setIsPlaying(false)
+          return
+        }
+
+        const originalEl = originalAudioRef.current
+        originalEl?.pause()
+
+        const masteredEl = masteredAudioRef.current
+        if (masteredEl) {
+          console.log("[desktop] audio.src before play:", masteredEl.src)
+          if (masteredEl.src !== masteredUrl) {
+            masteredEl.src = masteredUrl
+            masteredEl.load()
+          }
+          await waitForReady(masteredEl)
+          try {
+            masteredEl.currentTime = safePreviewTimeForEl(masteredEl)
+          } catch {}
+          setPlayProgress(0)
+          try {
+            await masteredEl.play()
+            setIsPlaying(true)
+          } catch (e) {
+            if (!isAbortError(e)) console.log("[desktop] play error:", e)
+            setIsPlaying(false)
+          }
+        }
         return
       }
 
-      // Ensure the mastered audio element is actually pointing at the WAV URL.
-      const masteredEl = masteredAudioRef.current
-      if (masteredEl) {
-        console.log("[desktop] audio.src before play:", masteredEl.src)
-        if (masteredEl.src !== masteredUrl) {
-          masteredEl.pause()
-          masteredEl.src = masteredUrl
-        }
-        masteredEl.load()
-        await waitForReady(masteredEl)
-        try {
-          masteredEl.currentTime = PREVIEW_START
-        } catch {}
-        setPlayProgress(0)
-        try {
-          await masteredEl.play()
-          setIsPlaying(true)
-        } catch (e) {
-          console.log("[desktop] play error:", e)
-          setIsPlaying(false)
-        }
+      // Desktop ORIGINAL
+      masteredAudioRef.current?.pause()
+      selectedEl.load()
+      await waitForReady(selectedEl)
+      try {
+        selectedEl.currentTime = safePreviewTimeForEl(selectedEl)
+      } catch {}
+      setPlayProgress(0)
+      try {
+        await selectedEl.play()
+        setIsPlaying(true)
+      } catch (e) {
+        if (!isAbortError(e)) console.log("AUDIO PLAY FAILED:", e)
+        setIsPlaying(false)
       }
-      return
-    }
-
-    // Desktop ORIGINAL (keep existing behavior)
-    selectedEl.load()
-    await waitForReady(selectedEl)
-    try {
-      selectedEl.currentTime = PREVIEW_START
-    } catch {}
-    setPlayProgress(0)
-    try {
-      await selectedEl.play()
-      setIsPlaying(true)
-    } catch (e) {
-      console.log("AUDIO PLAY FAILED:", e)
-      setIsPlaying(false)
+    } finally {
+      isStartingPlaybackRef.current = false
     }
   }
   
