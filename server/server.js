@@ -39,6 +39,7 @@ app.get("/", (req, res) => {
   res.send("Mastrify backend is live 🚀")
 })
 
+// GET /debug-version — Railway deploy probe (must stay directly under GET /).
 app.get("/debug-version", (req, res) => {
   res.json({
     debugVersion: "NEW_MASTER_RESPONSE_V2"
