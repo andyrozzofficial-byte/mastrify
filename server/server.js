@@ -913,6 +913,8 @@ app.post("/master",
 
       res.json({
         success: true,
+        // Temporary: proves Railway is serving this server.js POST /master handler (remove after deploy verified)
+        debugVersion: "NEW_MASTER_RESPONSE_V2",
         before,
         after,
         afterUrl: `${baseUrl}${after}`,
