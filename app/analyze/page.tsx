@@ -7,10 +7,10 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import BrandLogo from "../components/BrandLogo"
 import CinematicBackground from "../components/CinematicBackground"
+import ScoreRing from "../components/ScoreRing"
 import { appendHistory } from "../../lib/history"
 
-// 🔥 STAT COMPONENT (fixar alla 0 / "-" buggar)
-function Stat({ label, value, percent = false }: any) {
+function Stat({ label, value, percent = false, hint }: any) {
   let display = "-"
 
   if (typeof value === "number") {
@@ -24,9 +24,10 @@ function Stat({ label, value, percent = false }: any) {
   }
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-black/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm">
-      <div className="text-[11px] font-medium uppercase tracking-wider text-white/40">{label}</div>
-      <div className="mt-1.5 text-lg font-semibold tabular-nums text-white/95">{display}</div>
+    <div className="rounded-2xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-black/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-md">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">{label}</div>
+      <div className="mt-2 text-xl font-bold tabular-nums text-white md:text-2xl">{display}</div>
+      {hint ? <div className="mt-2 text-[11px] font-medium text-white/50">{hint}</div> : null}
     </div>
   )
 }
@@ -290,28 +291,43 @@ export default function AnalyzePage() {
   return (
     <div className="relative min-h-screen text-white">
       <CinematicBackground />
-      <div className="relative mx-auto flex max-w-3xl flex-col items-center px-6 pb-24 pt-16 md:pt-24">
-        <BrandLogo subtitle="ANALYSIS" />
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-5 pb-28 pt-14 md:max-w-7xl md:px-10 md:pt-20">
+        <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.28em] text-purple-200/90 shadow-[0_0_24px_rgba(139,92,246,0.2)]">
+          Free analysis
+        </span>
+        <BrandLogo subtitle="ANALYSIS" className="mt-5" />
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 max-w-2xl text-center text-4xl font-extrabold leading-[1.1] tracking-tight text-transparent md:text-6xl bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text"
+          className="mt-4 max-w-3xl text-center text-4xl font-extrabold leading-[1.08] tracking-tight text-transparent md:text-6xl lg:text-7xl bg-gradient-to-r from-white via-purple-100 to-cyan-200/90 bg-clip-text"
         >
           Your mix analysis
         </motion.h1>
-        <p className="mt-5 max-w-lg text-center text-sm leading-relaxed text-white/50 md:text-base">
-          Free AI read on loudness, dynamics, stereo, and balance — know what to fix before you master.
+        <p className="mt-6 max-w-xl text-center text-base leading-relaxed text-white/50 md:text-lg">
+          Instant read on loudness, dynamics, stereo, and balance — fix the mix before you commit to a master.
         </p>
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-2 text-[11px] text-white/35">
-          <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1">1 · Upload</span>
-          <span className="text-white/20">→</span>
-          <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1">2 · Scan</span>
-          <span className="text-white/20">→</span>
-          <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1">3 · Results</span>
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-4 md:gap-8">
+          {["Upload", "Analyze", "Results"].map((label, i) => (
+            <div key={label} className="flex items-center gap-3">
+              <span
+                className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
+                  i === 0
+                    ? "bg-gradient-to-br from-purple-500 to-cyan-500 text-white shadow-[0_0_24px_rgba(139,92,246,0.4)]"
+                    : "border border-white/15 bg-white/[0.05] text-white/45"
+                }`}
+              >
+                {i + 1}
+              </span>
+              <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${i === 0 ? "text-white" : "text-white/40"}`}>
+                {label}
+              </span>
+              {i < 2 && <span className="hidden text-lg text-white/15 md:inline">→</span>}
+            </div>
+          ))}
         </div>
 
       {!result && (
-        <div className="mt-14 w-full max-w-lg">
+        <div className="mt-16 w-full max-w-2xl">
           <input
             type="file"
             ref={fileInputRef}
@@ -330,7 +346,7 @@ export default function AnalyzePage() {
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl"
+            className="relative overflow-hidden rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.07] to-black/50 p-12 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_28px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:p-16"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault()
@@ -341,11 +357,19 @@ export default function AnalyzePage() {
               }
             }}
           >
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-cyan-500/10" />
-            <div className="relative flex flex-col items-center gap-5 text-center">
-              <div className="rounded-2xl border border-dashed border-white/15 bg-black/30 px-6 py-10">
-                <p className="text-sm font-medium text-white/80">Drop your track</p>
-                <p className="mt-2 text-xs text-white/40">100% free · No signup · Private in your browser session</p>
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-cyan-500/15 blur-3xl" />
+            <div className="relative flex flex-col items-center gap-8 text-center">
+              <div className="rounded-3xl border border-dashed border-white/20 bg-black/40 px-8 py-14 md:px-14 md:py-16">
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/40 to-cyan-500/25 ring-1 ring-white/15">
+                  <svg className="h-9 w-9 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <p className="text-lg font-semibold tracking-tight text-white md:text-xl">Drop your track here</p>
+                <p className="mx-auto mt-3 max-w-sm text-sm text-white/45">
+                  WAV, MP3, or M4A · On-device session · Results in seconds
+                </p>
               </div>
               <button
                 type="button"
@@ -356,11 +380,22 @@ export default function AnalyzePage() {
                     handleUpload()
                   }
                 }}
-                className="w-full rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 py-4 text-sm font-semibold text-white shadow-[0_16px_50px_rgba(0,0,0,0.45)] transition hover:brightness-110"
+                className="w-full max-w-md rounded-2xl bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 py-4 text-base font-semibold text-white shadow-[0_20px_60px_rgba(139,92,246,0.35)] transition hover:brightness-110"
               >
-                {file ? "Scan my track" : "Choose track"}
+                {file ? "Scan my track" : "Choose file"}
               </button>
-              {file && <p className="truncate text-xs text-cyan-300/80">{file.name}</p>}
+              {file && <p className="max-w-md truncate text-sm text-cyan-300/85">{file.name}</p>}
+              <div className="grid w-full max-w-lg grid-cols-1 gap-4 border-t border-white/10 pt-8 text-xs text-white/45 sm:grid-cols-3">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-cyan-400/90">✓</span> 100% free
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-purple-400/90">✓</span> Private &amp; secure
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-white/60">✓</span> Instant results
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -381,57 +416,54 @@ export default function AnalyzePage() {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-14 w-full max-w-3xl space-y-8 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl md:p-10"
+          className="mt-16 w-full space-y-12 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-black/40 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_32px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:p-12 lg:p-14"
         >
-          <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-            <div className="md:max-w-md">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">Release readiness</p>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+          <div className="flex flex-col items-center gap-10 border-b border-white/10 pb-12 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-xl flex-1 text-center lg:text-left">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/40">Release readiness</p>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-5xl">
                 Your mix is{" "}
-                <span className="text-transparent bg-gradient-to-r from-purple-300 to-cyan-300 bg-clip-text">
+                <span className="text-transparent bg-gradient-to-r from-purple-300 via-white to-cyan-300 bg-clip-text">
                   {result.mixQuality != null ? Math.round(result.mixQuality) : 0}%
                 </span>{" "}
-                ready
+                ready for release
               </h2>
-              {verdict && <p className="mt-3 text-sm text-emerald-400/90">{verdict}</p>}
-              <div className="mt-5 space-y-1.5 text-xs text-white/45">
+              {verdict && <p className="mt-4 text-sm text-emerald-400/95">{verdict}</p>}
+              <div className="mt-6 space-y-2 text-sm text-white/50">
                 <div>
-                  • Stereo width {result.stereoWidth > 0.25 ? "good" : "needs improvement"} (
-                  {Math.round(result.stereoWidth * 100)}%)
+                  Stereo width {result.stereoWidth > 0.25 ? "good" : "needs work"} ·{" "}
+                  {Math.round(result.stereoWidth * 100)}%
                 </div>
-                <div>• Dynamic range is healthy ({Math.round(result.dynamicRange)})</div>
-                <div>• Frequency balance is stable</div>
+                <div>Dynamic range {Math.round(result.dynamicRange)} · Frequency balance stable</div>
               </div>
             </div>
-            <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl border border-white/10 bg-black/40 px-10 py-8 md:px-12">
-              <p className="text-[10px] uppercase tracking-widest text-white/40">Score</p>
-              <p className="mt-2 text-5xl font-bold tabular-nums text-transparent bg-gradient-to-b from-white to-purple-300/80 bg-clip-text">
-                {result.mixQuality != null ? Math.round(result.mixQuality) : 0}
-              </p>
-              <p className="mt-1 text-xs text-white/35">/ 100</p>
-            </div>
+            <ScoreRing value={result.mixQuality != null ? result.mixQuality : 0} size={176} />
           </div>
 
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">Spectrum</h3>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <Stat label="LUFS" value={result.lufs} />
-              <Stat label="Dynamic Range" value={result.dynamicRange} />
-              <Stat label="Stereo Width" value={result.stereoWidth} percent />
-              <Stat label="Low End" value={result.bassWeight} percent />
-              <Stat label="Brightness" value={result.brightness} percent />
-              <Stat label="Energy" value={result.energy} />
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.25em] text-white/40">Mix metrics</h3>
+            <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <Stat label="LUFS" value={result.lufs} hint={typeof result.lufs === "number" && result.lufs < -12 ? "Below target" : "Level check"} />
+              <Stat
+                label="Dynamic range"
+                value={result.dynamicRange}
+                hint={typeof result.dynamicRange === "number" && result.dynamicRange > 14 ? "Wide dynamics" : "Healthy"}
+              />
+              <Stat label="Stereo width" value={result.stereoWidth} percent hint={(result.stereoWidth ?? 0) < 0.2 ? "Narrow" : "OK"} />
+              <Stat label="Low end" value={result.bassWeight} percent hint={(result.bassWeight ?? 0) < 0.4 ? "Light" : "Weight"} />
+              <Stat label="Brightness" value={result.brightness} percent hint={(result.brightness ?? 0) < 0.3 ? "Dark" : "Air"} />
+              <Stat label="Energy" value={result.energy} hint="Average level" />
             </div>
           </div>
 
-          <p className="text-sm text-white/50">
+          <p className="text-center text-sm text-white/55 md:text-base">
             {issues.length > 0
               ? `AI found ${displayIssues.length} improvements in your mix`
               : "AI verdict: your mix is production-ready"}
           </p>
 
           {issues.length > 0 && (
-            <p className="text-xs font-medium uppercase tracking-wider text-white/35">Opportunities</p>
+            <h3 className="text-center text-[11px] font-bold uppercase tracking-[0.25em] text-white/40">Issues &amp; opportunities</h3>
           )}
 
 
@@ -468,7 +500,7 @@ export default function AnalyzePage() {
 {/* ⚠️ ONLY SHOW ISSUES IF THEY EXIST */}
 {(result.issues?.length || 0) > 0 && (
   <>
-    <h3 className="font-semibold mb-2">Issues</h3>
+    <h3 className="mb-4 text-sm font-bold text-white/90">Issues</h3>
 
     {displayIssues.map((issue: any, i: number) => {
   const isLocked = false
@@ -482,7 +514,7 @@ export default function AnalyzePage() {
   return (
     <div
   key={i}
-  className={`flex items-start gap-3 mb-3 p-3 rounded-lg relative ${
+  className={`relative mb-4 flex items-start gap-4 rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-black/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${
   isLocked ? "blur-[8px] opacity-60" : ""
 }`}
 >
@@ -613,34 +645,39 @@ export default function AnalyzePage() {
 </div>
 
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <button
-              type="button"
-              onClick={() => {
-                window.location.href = "/flow"
-              }}
-              disabled={!canMaster}
-              className={`flex-1 rounded-xl py-4 text-sm font-bold transition md:text-base ${
-                canMaster
-                  ? "bg-gradient-to-r from-emerald-400 to-cyan-500 text-black shadow-[0_12px_40px_rgba(52,211,153,0.25)] hover:brightness-110"
-                  : "cursor-not-allowed bg-white/10 text-white/40"
-              }`}
-            >
-              Master (quick flow)
-            </button>
-            <Link
-              href="/master"
-              className="flex-1 rounded-xl border border-white/15 bg-white/[0.04] py-4 text-center text-sm font-semibold text-white/90 transition hover:border-cyan-400/30 hover:bg-white/[0.07] md:text-base"
-            >
-              AI mastering wizard
-            </Link>
+          <div className="rounded-3xl border border-purple-500/25 bg-gradient-to-r from-purple-950/50 via-black/60 to-cyan-950/40 p-8 shadow-[0_0_60px_rgba(139,92,246,0.15)] md:p-10">
+            <p className="text-center text-lg font-semibold text-white md:text-xl">Ready for a pro master?</p>
+            <p className="mx-auto mt-2 max-w-lg text-center text-sm text-white/50">
+              Take this mix to our AI mastering flow — quick path or guided wizard.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = "/flow"
+                }}
+                disabled={!canMaster}
+                className={`rounded-2xl px-8 py-4 text-sm font-bold transition md:text-base ${
+                  canMaster
+                    ? "bg-gradient-to-r from-emerald-400 to-cyan-500 text-black shadow-[0_12px_40px_rgba(52,211,153,0.3)] hover:brightness-110"
+                    : "cursor-not-allowed bg-white/10 text-white/40"
+                }`}
+              >
+                Master my track
+              </button>
+              <Link
+                href="/master"
+                className="rounded-2xl border border-white/20 bg-white/[0.06] px-8 py-4 text-center text-sm font-semibold text-white/90 transition hover:border-cyan-400/35 hover:bg-white/[0.1] md:text-base"
+              >
+                AI mastering wizard
+              </Link>
+            </div>
+            <p className="mt-4 text-center text-xs text-white/40">
+              {canMaster
+                ? "Both options use the same engine — pick the experience you prefer."
+                : "Address critical mix issues first for the best master."}
+            </p>
           </div>
-
-          <p className="mt-3 text-center text-xs text-white/40">
-            {canMaster
-              ? "Ready for mastering — pick quick one-page or guided wizard."
-              : "This mix still has issues affecting the final result"}
-          </p>
 
         </motion.div>
 )}

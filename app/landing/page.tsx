@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState, useEffect, useRef } from "react"
 import { supabase } from "../../lib/supabase"
 import CinematicBackground from "../components/CinematicBackground"
+import ScoreRing from "../components/ScoreRing"
 
 export default function Landing() {
 
@@ -148,56 +149,84 @@ export default function Landing() {
         />
       </motion.div>
 
-      <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-transparent md:text-5xl bg-gradient-to-r from-white via-purple-300 to-cyan-300/90 bg-clip-text drop-shadow-[0_0_35px_rgba(139,92,246,0.45)]">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-20 pt-8 md:px-10 md:pt-12">
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight text-transparent md:text-5xl lg:text-6xl bg-gradient-to-r from-white via-purple-300 to-cyan-300/90 bg-clip-text drop-shadow-[0_0_40px_rgba(139,92,246,0.4)]">
             Mastrify
           </h1>
         </div>
 
-        <div className="max-w-3xl text-center">
-          <h2 className="text-4xl font-extrabold leading-[1.08] tracking-tight text-transparent md:text-6xl lg:text-7xl bg-gradient-to-r from-white via-purple-100 to-cyan-200/85 bg-clip-text">
-            Fix your mix before <br className="hidden sm:block" />
-            you master it.
-          </h2>
-          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/55 md:text-lg">
-            AI shows exactly what is holding your track back — then optional mastering when you are ready.
-          </p>
-
-          <div className="mt-10 flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <Link
-              href="/analyze"
-              className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 px-6 py-4 text-sm font-semibold text-white shadow-[0_16px_50px_rgba(139,92,246,0.35)] transition hover:brightness-110"
-            >
-              Free analysis
-            </Link>
-            <Link
-              href="/master"
-              className="inline-flex flex-1 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-6 py-4 text-sm font-semibold text-white/90 backdrop-blur-sm transition hover:border-cyan-400/35 hover:bg-white/[0.07]"
-            >
-              AI mastering
-            </Link>
+        <div className="mt-14 grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
+          <div className="text-center lg:text-left">
+            <h2 className="text-4xl font-extrabold leading-[1.05] tracking-tight text-transparent sm:text-5xl lg:text-6xl xl:text-7xl bg-gradient-to-r from-white via-purple-50 to-cyan-200/90 bg-clip-text">
+              Fix your mix{" "}
+              <span className="bg-gradient-to-r from-cyan-300 to-purple-400 bg-clip-text text-transparent">before</span>
+              <br />
+              you master it.
+            </h2>
+            <p className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-white/55 lg:mx-0 lg:max-w-lg">
+              AI pinpoints loudness, balance, and stereo issues — then optional mastering when your mix is ready.
+            </p>
+            <div className="mt-10 flex w-full max-w-md flex-col gap-4 sm:max-w-none sm:flex-row lg:justify-start">
+              <Link
+                href="/analyze"
+                className="inline-flex flex-1 items-center justify-center rounded-2xl bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 px-8 py-4 text-base font-semibold text-white shadow-[0_22px_60px_rgba(139,92,246,0.4)] transition hover:brightness-110"
+              >
+                Analyze my mix — it&apos;s free
+              </Link>
+              <Link
+                href="/master"
+                className="inline-flex flex-1 items-center justify-center rounded-2xl border border-white/20 bg-white/[0.05] px-8 py-4 text-base font-semibold text-white/90 backdrop-blur-md transition hover:border-cyan-400/40 hover:bg-white/[0.09] hover:shadow-[0_0_30px_rgba(34,211,238,0.12)]"
+              >
+                Try mastering
+              </Link>
+            </div>
+            <p className="mt-5 text-sm text-white/35">No signup for analysis · Premium mastering flow</p>
           </div>
 
-          <p className="mt-4 text-xs text-white/35">No signup for analysis · Premium flow for masters</p>
+          <div className="relative mx-auto w-full max-w-md lg:mx-0 lg:max-w-none">
+            <div className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-purple-500/25 via-transparent to-cyan-500/20 blur-2xl" />
+            <div className="relative overflow-hidden rounded-3xl border border-white/[0.12] bg-gradient-to-b from-white/[0.08] to-black/60 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_32px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:p-10">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-white/45">Analysis preview</span>
+                <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300/90 ring-1 ring-emerald-400/30">
+                  Demo
+                </span>
+              </div>
+              <div className="mt-8 flex flex-col items-center gap-10 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+                <ScoreRing value={44} size={148} />
+                <div className="w-full flex-1 space-y-4">
+                  {[
+                    ["Low output level", "text-rose-400"],
+                    ["Harsh highs", "text-amber-300"],
+                    ["Stereo OK", "text-emerald-400"],
+                  ].map(([label, col], idx) => (
+                    <div key={idx} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-black/30 px-4 py-3">
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_10px_currentColor] ${col}`} />
+                      <span className="text-sm text-white/80">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Waitlist */}
-        <div className="relative mt-14 w-full max-w-lg">
+        <div className="relative mx-auto mt-16 w-full max-w-xl">
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/25 to-cyan-500/20 blur-2xl" />
-          <div className="relative flex flex-col gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2 backdrop-blur-xl sm:flex-row sm:items-center">
+          <div className="relative flex flex-col gap-2 rounded-2xl border border-white/[0.1] bg-white/[0.05] p-2 backdrop-blur-xl sm:flex-row sm:items-center">
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               placeholder="Email for product updates"
-              className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-white/35"
+              className="min-w-0 flex-1 bg-transparent px-4 py-3.5 text-sm outline-none placeholder:text-white/35"
             />
             <button
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
+              className="rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
             >
               {loading ? "…" : "Join waitlist"}
             </button>
@@ -212,7 +241,7 @@ export default function Landing() {
         </div>
 
       {/* PLAYER */}
-      <div className="mt-24 md:mt-28 w-full max-w-3xl">
+      <div className="mt-24 w-full max-w-5xl md:mt-32">
 
         <h2 className="text-center text-2xl mb-6">
           Hear the difference
@@ -222,7 +251,7 @@ export default function Landing() {
 
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/14 to-blue-500/12 blur-2xl rounded-2xl" />
 
-          <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_22px_70px_rgba(0,0,0,0.55)]">
+      <div className="relative bg-white/[0.05] border border-white/12 rounded-2xl p-8 backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_28px_80px_rgba(0,0,0,0.5)] md:p-10">
 
             {/* TOGGLE */}
             <div className="flex justify-center gap-4 mb-6">
@@ -319,7 +348,7 @@ border border-white/50"
       {/* ANALYSIS + FEEDBACK (oförändrat) */}
 
 {/* ANALYSIS */}
-<div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl w-full">
+<div className="mt-20 grid w-full max-w-5xl grid-cols-2 gap-5 md:grid-cols-4 md:gap-6">
 
   {[
     ["LUFS", "-17", "target -9"],

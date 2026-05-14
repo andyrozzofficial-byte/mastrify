@@ -22,21 +22,28 @@ export function middleware(request: NextRequest) {
   }
 
   // ✅ Tillåt sidor
-if (
-  pathname === "/" ||
-  pathname.startsWith("/flow") ||
-  pathname.startsWith("/analyze") ||
-  pathname.startsWith("/pro") ||   // 👈 LÄGG TILL DENNA
-  pathname === "/app" ||
-  pathname === "/landing"
-) {
+  if (
+    pathname === "/" ||
+    pathname.startsWith("/flow") ||
+    pathname.startsWith("/analyze") ||
+    pathname.startsWith("/master") ||
+    pathname.startsWith("/history") ||
+    pathname.startsWith("/pro") ||
+    pathname === "/app" ||
+    pathname === "/landing" ||
+    pathname.startsWith("/about") ||
+    pathname.startsWith("/pricing") ||
+    pathname.startsWith("/how-it-works")
+  ) {
     return NextResponse.next()
   }
 
-  // ✅ Static assets
   if (
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon")
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/icon") ||
+    pathname.startsWith("/audio") ||
+    pathname.startsWith("/og-image")
   ) {
     return NextResponse.next()
   }

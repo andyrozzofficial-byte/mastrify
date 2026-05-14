@@ -352,11 +352,11 @@ export default function MasterResultClient() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-6 pb-24 pt-8">
+    <div className="mx-auto max-w-4xl px-5 pb-24 pt-10 md:px-8">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl md:p-8"
+        className="rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-black/45 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_32px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:p-10"
       >
         <p className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-cyan-400/70">Complete</p>
         <h1 className="mt-3 text-center text-2xl font-bold tracking-tight text-transparent bg-gradient-to-r from-white via-purple-100 to-cyan-100 bg-clip-text md:text-3xl">
@@ -364,23 +364,23 @@ export default function MasterResultClient() {
         </h1>
         <p className="mt-2 text-center text-sm text-white/45">{file?.name ?? "Track"}</p>
 
-        <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
-          <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-            <p className="text-[10px] uppercase tracking-wider text-white/40">Before</p>
-            <p className="mt-1 font-medium text-white/80">Upload</p>
-            <p className="mt-2 text-xs text-white/45">Preview window 60s–90s</p>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-2xl border border-white/12 bg-black/35 p-5 shadow-inner">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Before</p>
+            <p className="mt-2 text-lg font-semibold text-white/90">Upload</p>
+            <p className="mt-2 text-sm text-white/45">Preview 60s–90s window</p>
           </div>
-          <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/[0.06] p-4">
-            <p className="text-[10px] uppercase tracking-wider text-cyan-300/70">After</p>
-            <p className="mt-1 font-medium text-white">Mastered</p>
-            <p className="mt-2 text-xs text-white/50">
-              Target {targetLufs} LUFS • {stylePreset}
+          <div className="rounded-2xl border border-cyan-400/25 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 p-5 shadow-[0_0_30px_rgba(34,211,238,0.08)]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/80">After</p>
+            <p className="mt-2 text-lg font-semibold text-white">Mastered</p>
+            <p className="mt-2 text-sm text-white/55">
+              {targetLufs} LUFS target · {stylePreset}
             </p>
           </div>
         </div>
 
-        <div className="mt-8 rounded-xl border border-white/10 bg-black/40 p-5">
-          <p className="text-center text-xs text-white/40">Preview</p>
+        <div className="mt-10 rounded-2xl border border-white/10 bg-black/45 p-6 md:p-8">
+          <p className="text-center text-[11px] font-bold uppercase tracking-[0.2em] text-white/40">Waveform preview</p>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -443,12 +443,12 @@ export default function MasterResultClient() {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row">
           {!isPaid ? (
             <button
               type="button"
               onClick={handlePayment}
-              className="flex-1 rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 py-4 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(139,92,246,0.35)]"
+              className="flex-1 rounded-2xl bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 py-4 text-base font-bold text-white shadow-[0_20px_50px_rgba(139,92,246,0.35)] transition hover:brightness-110"
             >
               Unlock download
             </button>
@@ -456,7 +456,7 @@ export default function MasterResultClient() {
             <a
               href={masteredUrl ? `${masteredUrl}?download=1` : "#"}
               download="master.wav"
-              className="flex-1 rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 py-4 text-center text-sm font-semibold text-white"
+              className="flex-1 rounded-2xl bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 py-4 text-center text-base font-bold text-white shadow-[0_20px_50px_rgba(139,92,246,0.35)] transition hover:brightness-110"
             >
               Download master
             </a>
@@ -464,7 +464,7 @@ export default function MasterResultClient() {
           <button
             type="button"
             onClick={handleShare}
-            className="rounded-xl border border-white/15 bg-white/[0.04] py-4 text-sm font-medium text-white/85 hover:bg-white/[0.08]"
+            className="rounded-2xl border border-white/18 bg-white/[0.06] px-6 py-4 text-base font-semibold text-white/90 transition hover:border-cyan-400/35 hover:bg-white/[0.1]"
           >
             {shareLabel}
           </button>

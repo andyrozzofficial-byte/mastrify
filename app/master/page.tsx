@@ -16,8 +16,16 @@ export default function MasterUploadPage() {
   return (
     <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
       <CinematicBackground intensity="strong" />
-      <div className="relative mx-auto flex max-w-lg flex-col items-center px-6 pb-24 pt-16 md:pt-24">
-        <BrandLogo subtitle="AI MASTERING" />
+      <div className="relative mx-auto flex w-full max-w-4xl flex-col items-center px-5 pb-28 pt-14 md:px-8 md:pt-20">
+        <BrandLogo subtitle="AI MASTERING" className="mt-2" />
+
+        <div className="mt-10 flex flex-wrap justify-center gap-6 text-xs font-semibold uppercase tracking-[0.2em] text-white/35">
+          <span className="text-white">1 · Upload</span>
+          <span>→</span>
+          <span>2 · Settings</span>
+          <span>→</span>
+          <span>3 · Master</span>
+        </div>
 
         <motion.p
           initial={{ opacity: 0, y: 8 }}
@@ -35,7 +43,7 @@ export default function MasterUploadPage() {
           className="mt-12 w-full"
         >
           <div
-            className="group relative cursor-pointer rounded-2xl border border-white/[0.08] bg-white/[0.03] p-10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl transition hover:border-cyan-400/20 hover:bg-white/[0.05]"
+            className="group relative w-full cursor-pointer overflow-hidden rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.07] to-black/50 p-12 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_32px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl transition hover:border-cyan-400/25 md:p-16"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault()

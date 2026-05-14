@@ -70,13 +70,29 @@ export default function MasterSettingsPage() {
     if (!file) router.replace("/master")
   }, [file, router])
 
-  if (!file) return null
+  if (!file) {
+    return (
+      <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
+        <CinematicBackground />
+        <div className="relative flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
+          <p className="text-sm text-white/50">Preparing session…</p>
+          <Link href="/master" className="text-xs text-purple-300 hover:underline">
+            Return to upload
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
       <CinematicBackground />
-      <div className="relative mx-auto max-w-xl px-6 pb-24 pt-14 md:pt-20">
-        <BrandLogo subtitle="AI MASTERING" />
+      <div className="relative mx-auto w-full max-w-4xl px-5 pb-28 pt-14 md:px-10 md:pt-20">
+        <span className="mx-auto block w-fit rounded-full border border-cyan-500/25 bg-cyan-500/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-200/90">
+          Premium
+        </span>
+        <BrandLogo subtitle="AI MASTERING" className="mt-4" />
 
         <p className="mx-auto mt-4 max-w-md text-center text-sm text-white/50">
           Tune how your master should feel. These choices are saved for this session.
@@ -85,7 +101,7 @@ export default function MasterSettingsPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-10 space-y-8 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl md:p-8"
+          className="mt-10 space-y-10 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-black/45 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_28px_80px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:space-y-12 md:p-10"
         >
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">Style</h3>
