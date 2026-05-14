@@ -129,6 +129,39 @@ function compressorForStyle(style) {
   return { threshold: -18, ratio: 1.52, attack: 30, release: 240 }
 }
 
+/** Softer bus compression for hotter integrated targets so loudnorm can reach I=… */
+function compressorForStyleAndTarget(style, integratedTarget) {
+  const base = compressorForStyle(style)
+  const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
+  if (t >= -10.5) {
+    return {
+      threshold: base.threshold + 2.8,
+      ratio: Math.max(1.1, base.ratio - 0.38),
+      attack: base.attack + 5,
+      release: Math.min(380, base.release + 55),
+    }
+  }
+  if (t >= -12.5) {
+    return {
+      threshold: base.threshold + 1.5,
+      ratio: Math.max(1.15, base.ratio - 0.22),
+      attack: base.attack + 3,
+      release: Math.min(340, base.release + 35),
+    }
+  }
+  return base
+}
+
+/** True-peak ceiling (dBFS TP) — slightly looser for louder masters so I= can be met. */
+function truePeakForLoudnormTarget(integratedTarget) {
+  const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
+  if (t >= -9.5) return -0.5
+  if (t >= -10.5) return -0.7
+  if (t >= -11.5) return -1
+  if (t >= -13.5) return -1.5
+  return -2
+}
+
 function lraForStyle(style) {
   if (style === "WARM") return 12
   if (style === "LOUD") return 8.5
@@ -277,6 +310,79 @@ async function waitForMasterOutputReady(filePath) {
   return fs.existsSync(filePath) ? fs.statSync(filePath).size : 0
 }
 
+/** Parse loudnorm `print_format=json` object from ffmpeg stderr. */
+function extractLoudnormJsonFromStderr(stderr) {
+  if (!stderr || typeof stderr !== "string") return null
+  const marker = '"input_i"'
+  const pos = stderr.indexOf(marker)
+  if (pos < 0) return null
+  let start = pos
+  while (start >= 0 && stderr[start] !== "{") start--
+  if (stderr[start] !== "{") return null
+  let depth = 0
+  for (let i = start; i < stderr.length; i++) {
+    const c = stderr[i]
+    if (c === "{") depth++
+    else if (c === "}") {
+      depth--
+      if (depth === 0) {
+        try {
+          return JSON.parse(stderr.slice(start, i + 1))
+        } catch {
+          return null
+        }
+      }
+    }
+  }
+  return null
+}
+
+function loudnormMeasuredToOpts(j) {
+  if (!j || j.input_i == null) return null
+  const qn = (v) => {
+    const n = parseFloat(String(v).replace(/"/g, "").trim())
+    return Number.isFinite(n) ? n.toFixed(4) : "0.0000"
+  }
+  return {
+    measured_I: qn(j.input_i),
+    measured_LRA: qn(j.input_lra),
+    measured_TP: qn(j.input_tp),
+    measured_thresh: qn(j.input_thresh),
+    offset: qn(j.target_offset),
+  }
+}
+
+async function runFfmpegCapture(args, label) {
+  try {
+    fs.chmodSync(ffmpegPath, 0o755)
+  } catch {
+    /* ignore */
+  }
+  return new Promise((resolve, reject) => {
+    const ff = spawn(ffmpegPath, args, { shell: false })
+    let stderr = ""
+    ff.stderr?.on("data", (d) => {
+      stderr += d.toString()
+    })
+    const timeoutId = setTimeout(() => {
+      try {
+        ff.kill("SIGKILL")
+      } catch {
+        /* ignore */
+      }
+      reject(new Error(`${label} timed out`))
+    }, 120_000)
+    ff.once("error", (err) => {
+      clearTimeout(timeoutId)
+      reject(err)
+    })
+    ff.once("close", (code) => {
+      clearTimeout(timeoutId)
+      resolve({ code: code ?? -1, stderr })
+    })
+  })
+}
+
 /**
  * @param {object} opts
  * @param {string} opts.file - input wav path
@@ -317,9 +423,9 @@ export async function masterTrack({
 
   const styleDefaultLufs = {
     STREAM: -14,
-    CLUB: -11,
-    LOUD: -10,
     WARM: -13,
+    LOUD: -11,
+    CLUB: -9,
     FESTIVAL: -9,
   }
 
@@ -361,28 +467,45 @@ export async function masterTrack({
     throw new Error(`ffprobe failed: ${probeResult.err.message || probeResult.err}`)
   }
 
-  let stagingDb = 0
-  let preAnalysis = null
-  try {
-    preAnalysis = await analyzeTrack(input)
-    const raw = typeof preAnalysis.lufs === "number" ? preAnalysis.lufs : -18
-    const stagingTarget = -15
-    stagingDb = stagingTarget - raw
-    stagingDb = Math.max(-12, Math.min(6, stagingDb))
-  } catch {
-    /* staging optional */
-  }
-
   /** Cap loudest integrated target (streaming-safe ceiling). */
   const safeIntegratedLufs = Math.min(targetLufs, -9)
   const lra = lraForStyle(style)
 
+  let preAnalysis = null
+  try {
+    preAnalysis = await analyzeTrack(input)
+  } catch {
+    /* optional */
+  }
+
+  const ebuInputIntegrated = await measureIntegratedLufsEbur128(input)
+
+  let stagingDb = 0
+  let autoPreGainDb = 0
+  if (ebuInputIntegrated != null && Number.isFinite(ebuInputIntegrated)) {
+    const gap = safeIntegratedLufs - ebuInputIntegrated
+    if (gap > 0.65) {
+      autoPreGainDb = Math.min(9, gap * 0.72)
+    }
+  } else if (preAnalysis) {
+    try {
+      const raw = typeof preAnalysis.lufs === "number" ? preAnalysis.lufs : -18
+      const stagingTarget = -15
+      stagingDb = stagingTarget - raw
+      stagingDb = Math.max(-12, Math.min(6, stagingDb))
+    } catch {
+      /* ignore */
+    }
+  }
+
   let tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
-  const comp = compressorForStyle(style)
+  const comp = compressorForStyleAndTarget(style, safeIntegratedLufs)
   const stereoStage = buildStereoStage(stereoEnhance, style)
   const styleTail = styleCharacterFilters(style)
+  const tp = truePeakForLoudnormTarget(safeIntegratedLufs)
 
   const volumeStaging = stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
+  const autoPreVol = autoPreGainDb > 0 ? `volume=${autoPreGainDb.toFixed(2)}dB,` : ""
 
   const mud = tone.mudGain.toFixed(3)
   const mudW = tone.mudWideGain.toFixed(3)
@@ -392,7 +515,7 @@ export async function masterTrack({
   const hi9 = tone.highShelf9k.toFixed(3)
   const pr = tone.presenceDb.toFixed(3)
 
-  const audioFilter =
+  const colorBase =
     `highpass=f=25,` +
     volumeStaging +
     stereoStage +
@@ -405,87 +528,96 @@ export async function masterTrack({
     `equalizer=f=${tone.airHz}:t=q:w=1.15:g=${airG},` +
     `equalizer=f=${tone.dipAboveAirHz}:t=q:w=1:g=${dipG},` +
     styleTail +
-    `loudnorm=I=${safeIntegratedLufs}:LRA=${lra}:TP=-1:linear=true`
+    autoPreVol
 
-  if (MASTER_DEBUG) {
-    console.log("[master] incoming", {
+  const loudnormStem = `I=${safeIntegratedLufs}:LRA=${lra}:TP=${tp}`
+
+  let loudnormPass1Json = null
+  let usedTwoPass = false
+  let audioFilterFinal = ""
+
+  const pass1Af = `${colorBase}loudnorm=${loudnormStem}:linear=true:print_format=json`
+  const pass1Args = ["-hide_banner", "-nostats", "-i", file, "-vn", "-ar", "44100", "-ac", "2", "-af", pass1Af, "-f", "null", "-"]
+
+  try {
+    const r1 = await runFfmpegCapture(pass1Args, "loudnorm-pass1")
+    if (r1.code === 0) {
+      loudnormPass1Json = extractLoudnormJsonFromStderr(r1.stderr)
+    }
+    const measured = loudnormMeasuredToOpts(loudnormPass1Json)
+    if (measured) {
+      audioFilterFinal =
+        `${colorBase}loudnorm=${loudnormStem}:measured_I=${measured.measured_I}:measured_LRA=${measured.measured_LRA}:measured_TP=${measured.measured_TP}:measured_thresh=${measured.measured_thresh}:offset=${measured.offset}:linear=true`
+      usedTwoPass = true
+    }
+  } catch (e) {
+    if (MASTER_DEBUG || PIPELINE_DEBUG) {
+      console.warn("[master] loudnorm pass1 error:", e?.message || e)
+    }
+  }
+
+  if (!audioFilterFinal) {
+    audioFilterFinal = `${colorBase}loudnorm=${loudnormStem}:linear=true`
+    usedTwoPass = false
+  }
+
+  if (MASTER_DEBUG || PIPELINE_DEBUG) {
+    console.log("[master] loudnorm plan", {
       style,
       targetLufsClient: Number.isFinite(parsedClient) ? parsedClient : null,
       targetLufsResolved: targetLufs,
       loudnormI: safeIntegratedLufs,
       loudnormLRA: lra,
-      stereoEnhance,
-      lowEndControl,
-      clarityPresence,
-      reference: Boolean(reference),
+      loudnormTP: tp,
+      loudnormTwoPass: usedTwoPass,
+      ebuInputIntegrated,
+      gainStagingDb: stagingDb,
+      autoPreGainBeforeLoudnormDb: autoPreGainDb,
+      pass1_input_i: loudnormPass1Json?.input_i,
+      pass1_output_i: loudnormPass1Json?.output_i,
+      pass1_input_tp: loudnormPass1Json?.input_tp,
     })
-    console.log("[master] ffmpeg -af", audioFilter)
+    console.log("[master] ffmpeg -af", audioFilterFinal)
   }
 
-  await new Promise((resolve, reject) => {
-    let settled = false
-    let cmdRef = null
+  const encodeArgs = [
+    "-y",
+    "-i",
+    file,
+    "-vn",
+    "-ar",
+    "44100",
+    "-ac",
+    "2",
+    "-c:a",
+    "pcm_s16le",
+    "-f",
+    "wav",
+    "-af",
+    audioFilterFinal,
+    outputPath,
+  ]
 
-    const timeoutId = setTimeout(() => {
-      if (settled) return
-      settled = true
-      try {
-        cmdRef?.kill("SIGKILL")
-      } catch {
-        /* ignore */
-      }
-      reject(new Error("Mastering timed out"))
-    }, 60_000)
-
-    try {
-      fs.chmodSync(ffmpegPath, 0o755)
-    } catch {
-      /* ignore */
-    }
-
-    const args = [
-      "-y",
-      "-i",
-      file,
-      "-vn",
-      "-ar",
-      "44100",
-      "-ac",
-      "2",
-      "-c:a",
-      "pcm_s16le",
-      "-f",
-      "wav",
-      "-af",
-      audioFilter,
-      outputPath,
-    ]
-
-    const ff = spawn(ffmpegPath, args, { shell: false })
-    cmdRef = ff
-
-    ff.on("close", (code) => {
-      if (settled) return
-      settled = true
-      clearTimeout(timeoutId)
-
-      if (code === 0) {
-        resolve()
-      } else {
-        reject(new Error("ffmpeg failed"))
-      }
-    })
-
-    ff.on("error", (err) => {
-      if (settled) return
-      settled = true
-      clearTimeout(timeoutId)
-      console.error("[master] ffmpeg spawn error:", err?.message || err)
-      reject(err)
-    })
-  })
+  const enc = await runFfmpegCapture(encodeArgs, "master-encode")
+  if (enc.code !== 0) {
+    throw new Error("ffmpeg master encode failed")
+  }
 
   await waitForMasterOutputReady(outputPath)
+
+  if (MASTER_DEBUG || PIPELINE_DEBUG) {
+    const ebuPost = await measureIntegratedLufsEbur128(outputPath)
+    console.log("[master] loudness after render", {
+      targetLufsIntegrated: safeIntegratedLufs,
+      measuredEbuIntegrated: ebuPost,
+      loudnormTwoPass: usedTwoPass,
+      truePeakCeiling_TP: tp,
+      pass1_predicted_output_i: loudnormPass1Json?.output_i,
+      pass1_input_tp: loudnormPass1Json?.input_tp,
+      gainStagingDb: stagingDb,
+      autoPreGainBeforeLoudnormDb: autoPreGainDb,
+    })
+  }
 
   let analysisBefore = preAnalysis
   if (!analysisBefore) {
@@ -557,9 +689,16 @@ export async function masterTrack({
   }
   if (MASTER_DEBUG) {
     out.debugInfo = {
-      audioFilter,
+      audioFilter: audioFilterFinal,
       loudnormI: safeIntegratedLufs,
       loudnormLRA: lra,
+      loudnormTP: tp,
+      loudnormTwoPass: usedTwoPass,
+      loudnormPass1: loudnormPass1Json,
+      gainStagingDb: stagingDb,
+      autoPreGainBeforeLoudnormDb: autoPreGainDb,
+      ebuInputIntegrated,
+      measuredEbuAfter: analysisAfter?.lufs ?? null,
       style,
       stereoEnhance,
       lowEndControl,
