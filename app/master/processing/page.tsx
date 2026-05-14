@@ -46,8 +46,19 @@ function AudioWaveIcon({ className }: { className?: string }) {
 
 export default function MasterProcessingPage() {
   const router = useRouter()
-  const { file, sessionHydrated, setMasteredUrl, setMasteredPreviewMp3Url, setAnalysisBefore, setAnalysisAfter } =
-    useMasterSession()
+  const {
+    file,
+    sessionHydrated,
+    setMasteredUrl,
+    setMasteredPreviewMp3Url,
+    setAnalysisBefore,
+    setAnalysisAfter,
+    stylePreset,
+    targetLufs,
+    stereoEnhance,
+    lowEndControl,
+    clarityPresence,
+  } = useMasterSession()
   /** Index of the step currently in progress (0–4). */
   const [activeStep, setActiveStep] = useState(0)
 
@@ -72,6 +83,11 @@ export default function MasterProcessingPage() {
       try {
         const formData = new FormData()
         formData.append("file", file)
+        formData.append("stylePreset", stylePreset)
+        formData.append("targetLufs", String(targetLufs))
+        formData.append("stereoEnhance", String(stereoEnhance))
+        formData.append("lowEndControl", String(lowEndControl))
+        formData.append("clarityPresence", String(clarityPresence))
 
         const masterUrl = `${API}/master`
         const res = await axios.post(masterUrl, formData, { signal: ac.signal })
@@ -112,7 +128,20 @@ export default function MasterProcessingPage() {
       cancelled = true
       ac.abort()
     }
-  }, [sessionHydrated, file, router, setMasteredUrl, setMasteredPreviewMp3Url, setAnalysisBefore, setAnalysisAfter])
+  }, [
+    sessionHydrated,
+    file,
+    router,
+    setMasteredUrl,
+    setMasteredPreviewMp3Url,
+    setAnalysisBefore,
+    setAnalysisAfter,
+    stylePreset,
+    targetLufs,
+    stereoEnhance,
+    lowEndControl,
+    clarityPresence,
+  ])
 
   return (
     <div className="relative flex w-full flex-col items-center overflow-hidden px-5 py-8 text-white md:px-8 md:py-10">

@@ -17,6 +17,127 @@ if (!fs.existsSync(mastersDir)) {
   fs.mkdirSync(mastersDir, { recursive: true })
 }
 
+const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
+
+function clamp(n, lo, hi) {
+  return Math.min(hi, Math.max(lo, n))
+}
+
+/** 0–100 slider from multipart / JSON */
+function parseIntSlider(v, fallback = 50) {
+  const n = parseInt(String(v ?? ""), 10)
+  if (!Number.isFinite(n)) return fallback
+  return clamp(n, 0, 100)
+}
+
+function parseStyle(style) {
+  const s = String(style || "STREAM").toUpperCase()
+  return VALID_STYLES.has(s) ? s : "STREAM"
+}
+
+/** Subtle stereo width: `extrastereo` m near 1.0 is transparent; default filter constant is much higher. */
+function buildStereoStage(stereoEnhance, style) {
+  let se = clamp(parseIntSlider(stereoEnhance, 50), 0, 100)
+  if (style === "FESTIVAL") se = Math.min(100, se + 6)
+  if (style === "WARM") se = Math.max(0, se - 4)
+
+  if (se >= 49 && se <= 51) return ""
+
+  if (se > 51) {
+    const t = (se - 51) / 49
+    const m = 1 + t * 0.1
+    return `extrastereo=m=${m.toFixed(4)},`
+  }
+  const t = (49 - se) / 49
+  const m = 1 - t * 0.06
+  return `extrastereo=m=${m.toFixed(4)},`
+}
+
+function compressorForStyle(style) {
+  if (style === "LOUD") {
+    return { threshold: -19, ratio: 1.68, attack: 26, release: 210 }
+  }
+  if (style === "CLUB") {
+    return { threshold: -19.2, ratio: 1.64, attack: 28, release: 218 }
+  }
+  if (style === "WARM") {
+    return { threshold: -18.2, ratio: 1.38, attack: 36, release: 285 }
+  }
+  if (style === "FESTIVAL") {
+    return { threshold: -18.4, ratio: 1.52, attack: 30, release: 228 }
+  }
+  return { threshold: -18, ratio: 1.55, attack: 30, release: 240 }
+}
+
+function baseTone(style) {
+  if (style === "WARM") {
+    return {
+      lowHz: 72,
+      lowGain: 1.12,
+      mudGain: -1.15,
+      mudWideGain: -0.45,
+      airHz: 12500,
+      airGain: 0.14,
+      dipAboveAirHz: 15500,
+      dipAboveAirGain: -0.32,
+      highShelf9k: 0.28,
+    }
+  }
+  if (style === "LOUD" || style === "FESTIVAL") {
+    return {
+      lowHz: 82,
+      lowGain: 1.04,
+      mudGain: -1.22,
+      mudWideGain: -0.48,
+      airHz: 13200,
+      airGain: style === "FESTIVAL" ? 0.22 : 0.19,
+      dipAboveAirHz: 15500,
+      dipAboveAirGain: -0.42,
+      highShelf9k: 0.34,
+    }
+  }
+  if (style === "CLUB") {
+    return {
+      lowHz: 80,
+      lowGain: 1.1,
+      mudGain: -1.18,
+      mudWideGain: -0.44,
+      airHz: 12800,
+      airGain: 0.17,
+      dipAboveAirHz: 15500,
+      dipAboveAirGain: -0.4,
+      highShelf9k: 0.32,
+    }
+  }
+  return {
+    lowHz: 78,
+    lowGain: 1.06,
+    mudGain: -1.12,
+    mudWideGain: -0.4,
+    airHz: 13000,
+    airGain: 0.19,
+    dipAboveAirHz: 15500,
+    dipAboveAirGain: -0.38,
+    highShelf9k: 0.32,
+  }
+}
+
+/** Slider deltas: subtle, musical */
+function applyToneSliders(tone, lowEndControl, clarityPresence) {
+  const lc = (parseIntSlider(lowEndControl, 50) - 50) / 50
+  const cp = (parseIntSlider(clarityPresence, 50) - 50) / 50
+  return {
+    ...tone,
+    lowGain: tone.lowGain + lc * 0.16,
+    mudGain: tone.mudGain - lc * 0.05 - cp * 0.06,
+    mudWideGain: tone.mudWideGain - cp * 0.04,
+    airGain: tone.airGain + cp * 0.14,
+    dipAboveAirGain: tone.dipAboveAirGain - Math.max(0, cp) * 0.05,
+    highShelf9k: tone.highShelf9k + cp * 0.08,
+    presenceDb: cp * 0.55,
+  }
+}
+
 /** Wait until the mastered file exists, is non-empty, and size is stable (ffmpeg flush). */
 async function waitForMasterOutputReady(filePath) {
   let stable = 0
@@ -48,18 +169,37 @@ async function waitForMasterOutputReady(filePath) {
   return fs.existsSync(filePath) ? fs.statSync(filePath).size : 0
 }
 
+/**
+ * @param {object} opts
+ * @param {string} opts.file - input wav path
+ * @param {string} opts.output - output wav path
+ * @param {string} [opts.reference] - optional reference path
+ * @param {string} [opts.style] - STREAM | WARM | LOUD | CLUB | FESTIVAL
+ * @param {number|string} [opts.targetLufs] - integrated target for loudnorm (when no reference match)
+ * @param {string} [opts.mode]
+ * @param {number|string} [opts.stereoEnhance] - 0–100
+ * @param {number|string} [opts.lowEndControl] - 0–100
+ * @param {number|string} [opts.clarityPresence] - 0–100
+ */
 export async function masterTrack({
   file,
   output,
   reference,
-  style,
-  targetLufs,
+  style: styleIn,
+  targetLufs: targetLufsIn,
   mode,
+  stereoEnhance: stereoEnhanceIn,
+  lowEndControl: lowEndControlIn,
+  clarityPresence: clarityPresenceIn,
 }) {
   if (!file) throw new Error("File missing")
 
-  if (!style) style = "STREAM"
+  const style = parseStyle(styleIn)
   if (!mode) mode = "normal"
+
+  const stereoEnhance = parseIntSlider(stereoEnhanceIn, 50)
+  const lowEndControl = parseIntSlider(lowEndControlIn, 50)
+  const clarityPresence = parseIntSlider(clarityPresenceIn, 50)
 
   let referenceAnalysis = null
   if (reference) {
@@ -67,19 +207,30 @@ export async function masterTrack({
     referenceAnalysis = await analyzeTrack(refPath)
   }
 
-  if (!reference) {
-    if (style === "STREAM") targetLufs = -14
-    if (style === "CLUB") targetLufs = -11
-    if (style === "LOUD") targetLufs = -10
-    if (style === "WARM") targetLufs = -13
-    if (style === "FESTIVAL") targetLufs = -9
+  const styleDefaultLufs = {
+    STREAM: -14,
+    CLUB: -11,
+    LOUD: -10,
+    WARM: -13,
+    FESTIVAL: -9,
   }
 
-  if (referenceAnalysis?.lufs) {
+  let parsedClient = parseFloat(String(targetLufsIn ?? "").trim())
+  if (!Number.isFinite(parsedClient)) parsedClient = NaN
+
+  let targetLufs
+  if (referenceAnalysis?.lufs != null && Number.isFinite(referenceAnalysis.lufs)) {
     targetLufs = referenceAnalysis.lufs
+  } else if (Number.isFinite(parsedClient)) {
+    targetLufs = clamp(parsedClient, -16, -9)
+  } else if (!reference) {
+    targetLufs = styleDefaultLufs[style] ?? -14
+  } else {
+    targetLufs = -14
   }
 
-  targetLufs = parseFloat(targetLufs || -14)
+  targetLufs = parseFloat(targetLufs)
+  if (!Number.isFinite(targetLufs)) targetLufs = -14
 
   const input = file
   const outputPath = output
@@ -116,53 +267,32 @@ export async function masterTrack({
 
   const safeIntegratedLufs = Math.min(targetLufs, -9)
 
-  const tone =
-    style === "WARM"
-      ? {
-          lowHz: 72,
-          lowGain: 1.12,
-          mudGain: -1.15,
-          mudWideGain: -0.45,
-          airHz: 12500,
-          airGain: 0.16,
-          dipAboveAirHz: 15500,
-          dipAboveAirGain: -0.35,
-        }
-      : style === "LOUD" || style === "FESTIVAL"
-        ? {
-            lowHz: 82,
-            lowGain: 1.02,
-            mudGain: -1.25,
-            mudWideGain: -0.5,
-            airHz: 13000,
-            airGain: 0.18,
-            dipAboveAirHz: 15500,
-            dipAboveAirGain: -0.45,
-          }
-        : {
-            lowHz: 78,
-            lowGain: 1.06,
-            mudGain: -1.12,
-            mudWideGain: -0.4,
-            airHz: 13000,
-            airGain: 0.2,
-            dipAboveAirHz: 15500,
-            dipAboveAirGain: -0.38,
-          }
+  let tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
+  const comp = compressorForStyle(style)
+  const stereoStage = buildStereoStage(stereoEnhance, style)
 
-  const volumeStaging =
-    stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
+  const volumeStaging = stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
+
+  const mud = tone.mudGain.toFixed(3)
+  const mudW = tone.mudWideGain.toFixed(3)
+  const lowG = tone.lowGain.toFixed(3)
+  const airG = tone.airGain.toFixed(3)
+  const dipG = tone.dipAboveAirGain.toFixed(3)
+  const hi9 = tone.highShelf9k.toFixed(3)
+  const pr = tone.presenceDb.toFixed(3)
 
   const audioFilter =
     `highpass=f=25,` +
     volumeStaging +
-    `equalizer=f=200:t=q:w=1:g=${tone.mudGain},` +
-    `equalizer=f=320:t=q:w=1:g=${tone.mudWideGain},` +
-    `equalizer=f=${tone.lowHz}:t=q:w=0.92:g=${tone.lowGain},` +
-    `equalizer=f=9800:t=q:w=1:g=0.32,` +
-    `acompressor=threshold=-18dB:ratio=1.55:attack=30:release=240,` +
-    `equalizer=f=${tone.airHz}:t=q:w=1.15:g=${tone.airGain},` +
-    `equalizer=f=${tone.dipAboveAirHz}:t=q:w=1:g=${tone.dipAboveAirGain},` +
+    stereoStage +
+    `equalizer=f=200:t=q:w=1:g=${mud},` +
+    `equalizer=f=320:t=q:w=1:g=${mudW},` +
+    `equalizer=f=${tone.lowHz}:t=q:w=0.92:g=${lowG},` +
+    `equalizer=f=9800:t=q:w=1:g=${hi9},` +
+    `equalizer=f=4200:t=q:w=0.92:g=${pr},` +
+    `acompressor=threshold=${comp.threshold}dB:ratio=${comp.ratio}:attack=${comp.attack}:release=${comp.release},` +
+    `equalizer=f=${tone.airHz}:t=q:w=1.15:g=${airG},` +
+    `equalizer=f=${tone.dipAboveAirHz}:t=q:w=1:g=${dipG},` +
     `loudnorm=I=${safeIntegratedLufs}:LRA=10:TP=-1:linear=true`
 
   await new Promise((resolve, reject) => {

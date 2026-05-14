@@ -874,9 +874,21 @@ app.post("/master",
       const masterFileName = Date.now() + "-master.wav"
       const masterPath = path.join(mastersDir, masterFileName)
 
+      const body = req.body || {}
+      const stylePreset = body.stylePreset || body.style
+      const targetLufs = body.targetLufs
+      const stereoEnhance = body.stereoEnhance
+      const lowEndControl = body.lowEndControl
+      const clarityPresence = body.clarityPresence
+
       const masterResult = await masterTrack({
         file: newPath,
         output: masterPath,
+        style: stylePreset,
+        targetLufs,
+        stereoEnhance,
+        lowEndControl,
+        clarityPresence,
       })
 
       const forwardedProto = req.headers["x-forwarded-proto"]
