@@ -917,9 +917,32 @@ app.post("/master",
       const before = `/uploads/${fileName}`
       const after = `/masters/${masterFileName}`
 
-      const analysisBefore = serializeMasterAnalysisForJson(masterResult?.analysisBefore, "before")
-      const analysisAfter = serializeMasterAnalysisForJson(masterResult?.analysisAfter, "after")
-      logMasterMetricFiveStagesServer(metricTraceId, masterResult?.analysisAfter, analysisAfter)
+      let rawBefore = masterResult?.analysisBefore ?? null
+      let rawAfter = masterResult?.analysisAfter ?? null
+
+      if (rawBefore == null && fs.existsSync(newPath)) {
+        try {
+          rawBefore = await analyzeTrack(newPath)
+        } catch (e) {
+          console.log("[POST /master] fallback analyzeTrack(before) failed:", e?.message || e)
+        }
+      }
+
+      if (rawAfter == null && fs.existsSync(masterPath)) {
+        for (const delayMs of [0, 250, 600, 1200]) {
+          if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs))
+          try {
+            rawAfter = await analyzeTrack(masterPath)
+            if (rawAfter != null) break
+          } catch (e) {
+            console.log("[POST /master] fallback analyzeTrack(after) failed:", e?.message || e)
+          }
+        }
+      }
+
+      const analysisBefore = serializeMasterAnalysisForJson(rawBefore, "before")
+      const analysisAfter = serializeMasterAnalysisForJson(rawAfter, "after")
+      logMasterMetricFiveStagesServer(metricTraceId, rawAfter, analysisAfter)
 
       res.json({
         success: true,
