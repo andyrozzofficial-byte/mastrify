@@ -7,6 +7,11 @@ import path from "path"
 import { fileURLToPath } from "url"
 import { analyzeTrack } from "./analyze.js"
 import { masterTrack } from "./master.js"
+import {
+  logFullMasterAnalysis,
+  logMasterComparisonMetricsSummary,
+  serializeMasterAnalysisForJson,
+} from "./masterAnalysisPayload.js"
 
 process.on("uncaughtException", (err) => {
   console.error("💥 UNCAUGHT:", err)
@@ -899,6 +904,13 @@ app.post("/master",
       const before = `/uploads/${fileName}`
       const after = `/masters/${masterFileName}`
 
+      logFullMasterAnalysis("analysisBefore_raw", masterResult?.analysisBefore)
+      logFullMasterAnalysis("analysisAfter_raw", masterResult?.analysisAfter)
+
+      const analysisBefore = serializeMasterAnalysisForJson(masterResult?.analysisBefore, "before")
+      const analysisAfter = serializeMasterAnalysisForJson(masterResult?.analysisAfter, "after")
+      logMasterComparisonMetricsSummary(analysisBefore, analysisAfter)
+
       res.json({
         success: true,
         before,
@@ -906,8 +918,8 @@ app.post("/master",
         afterUrl: `${baseUrl}${after}`,
         // kept for backwards compatibility with older clients
         fullUrl: `${baseUrl}${after}`,
-        analysisBefore: masterResult?.analysisBefore ?? null,
-        analysisAfter: masterResult?.analysisAfter ?? null,
+        analysisBefore,
+        analysisAfter,
       })
 
     } catch (err) {

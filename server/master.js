@@ -20,6 +20,37 @@ if (!fs.existsSync(mastersDir)) {
   fs.mkdirSync(mastersDir, { recursive: true })
 }
 
+/** Wait until the mastered file exists, is non-empty, and size is stable (ffmpeg flush). */
+async function waitForMasterOutputReady(filePath) {
+  let stable = 0
+  let lastSize = -1
+  for (let i = 0; i < 120; i++) {
+    if (!fs.existsSync(filePath)) {
+      await new Promise((r) => setTimeout(r, 25))
+      continue
+    }
+    const sz = fs.statSync(filePath).size
+    if (sz <= 0) {
+      await new Promise((r) => setTimeout(r, 25))
+      continue
+    }
+    if (sz === lastSize) {
+      stable++
+      if (stable >= 2) {
+        await new Promise((r) => setTimeout(r, 90))
+        const sz2 = fs.statSync(filePath).size
+        if (sz2 === sz) return sz2
+        stable = 0
+      }
+    } else {
+      stable = 0
+    }
+    lastSize = sz
+    await new Promise((r) => setTimeout(r, 20))
+  }
+  return fs.existsSync(filePath) ? fs.statSync(filePath).size : 0
+}
+
 export async function masterTrack({ file, output, reference, style, targetLufs, mode }) {
 
   console.log("REFERENCE IN MASTER:", reference)
@@ -147,13 +178,16 @@ const target = referenceAnalysis?.spectral || {
         if (!fs.existsSync(outputPath)) {
           return reject(new Error("Master completed but output file missing"))
         }
+        const outBytes = await waitForMasterOutputReady(outputPath)
+        console.log("POST-MASTER OUTPUT BYTES (stable):", outBytes)
         let analysisAfter = null
-        for (let attempt = 0; attempt < 2 && !analysisAfter; attempt++) {
+        const delays = [0, 200, 450]
+        for (let attempt = 0; attempt < delays.length && !analysisAfter; attempt++) {
           try {
-            if (attempt > 0) await new Promise((r) => setTimeout(r, 150))
+            if (delays[attempt] > 0) await new Promise((r) => setTimeout(r, delays[attempt]))
             analysisAfter = await analyzeTrack(outputPath)
           } catch (e) {
-            console.log("POST-MASTER ANALYZE FAILED:", e)
+            console.log("POST-MASTER ANALYZE FAILED (attempt " + (attempt + 1) + "):", e)
           }
         }
         resolve({

@@ -13,6 +13,10 @@ const right = audioData.numberOfChannels > 1
   ? audioData.getChannelData(1)
   : left
 
+if (!left?.length) {
+  throw new Error("analyzeTrack: empty or missing channel data")
+}
+
 
 // ================= BPM =================
 
@@ -75,18 +79,34 @@ let dynamicRange = (peak > 0 && rms > 0)
 
 
 // ================= FFT =================
-
-const slice = left.slice(0, 2048)
-const spectrum = fft(slice).map(x => Math.abs(x[0]))
-
+// fft-js Cooley-Tukey requires power-of-2 length; non–power-of-2 slices can throw or yield NaNs,
+// which JSON.stringify turns into null in API responses (breaking comparison metrics).
 let low = 0
 let mid = 0
 let high = 0
-
-for(let i=0;i<spectrum.length;i++){
-  if(i < spectrum.length*0.2) low += spectrum[i]
-  else if(i < spectrum.length*0.6) mid += spectrum[i]
-  else high += spectrum[i]
+const maxSamples = 2048
+const rawLen = Math.min(maxSamples, left.length)
+if (rawLen >= 2) {
+  const fftLen = 2 ** Math.floor(Math.log2(rawLen))
+  const buf = new Float32Array(fftLen)
+  buf.set(left.subarray(0, Math.min(fftLen, left.length)))
+  const slice = Array.from(buf)
+  let spectrum = []
+  try {
+    spectrum = fft(slice).map((x) => {
+      const re = Array.isArray(x) ? x[0] : x
+      const m = Math.abs(Number(re))
+      return Number.isFinite(m) ? m : 0
+    })
+  } catch (e) {
+    console.warn("[analyzeTrack] FFT failed:", e?.message || e)
+    spectrum = []
+  }
+  for (let i = 0; i < spectrum.length; i++) {
+    if (i < spectrum.length * 0.2) low += spectrum[i]
+    else if (i < spectrum.length * 0.6) mid += spectrum[i]
+    else high += spectrum[i]
+  }
 }
 
 const totalSpec = low + mid + high || 1
@@ -322,17 +342,22 @@ else if (peakDb < -6) headroomStatus = "Too low"
 
 // ================= RETURN =================
 
-const maxImprovement = 100 - mixQuality
+const safeMixQ = Number.isFinite(mixQuality) ? mixQuality : 0
+const maxImprovement = Math.max(0, 100 - safeMixQ)
+
+const safeBpm = Number.isFinite(bpm) ? bpm : 120
+const safePeakDb = Number.isFinite(peakDb) ? peakDb : -60
+const safeLufsAdj = Number.isFinite(lufsAdjustment) ? lufsAdjustment : 0
 
 return {
-  bpm,
+  bpm: safeBpm,
   energy: energyLevel,
   lufs: Number.isFinite(lufs) ? lufs : -60,
 
   // 🔥 NYTT
   targetLufs,
-  lufsAdjustment,
-  peakDb,
+  lufsAdjustment: safeLufsAdj,
+  peakDb: safePeakDb,
   headroomStatus,
 
   dynamicRange: Number.isFinite(dynamicRange) ? dynamicRange : 0,
@@ -342,7 +367,10 @@ return {
   mixQuality: Number.isFinite(mixQuality) ? mixQuality : 0,
   issues: issues.map(issue => ({
   ...issue,
-  realImpact: Math.min(issue.impact || 0, maxImprovement)
+  realImpact: (() => {
+    const v = Math.min(issue.impact || 0, maxImprovement)
+    return Number.isFinite(v) ? Math.round(v) : 0
+  })()
 })),
   recommendations
 }
