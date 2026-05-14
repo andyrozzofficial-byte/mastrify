@@ -291,36 +291,36 @@ export default function AnalyzePage() {
     <div className="relative min-h-screen text-white">
       <CinematicBackground />
       <div
-        className={`relative mx-auto flex w-full flex-col items-center px-4 pb-16 pt-5 sm:px-5 md:pb-20 md:pt-6 ${
-          result ? "max-w-6xl md:max-w-7xl md:px-8" : "max-w-[500px] md:max-w-[528px] md:px-4"
+        className={`relative mx-auto flex w-full flex-col items-center px-5 pb-20 pt-6 sm:px-5 md:pb-24 md:pt-8 ${
+          result ? "max-w-6xl md:max-w-7xl md:px-8" : "max-w-[500px] md:max-w-[528px]"
         }`}
       >
         {!result && (
           <div className="relative w-full">
             {/* Ambient glow — full hero column (softer, less cyan wash) */}
             <div
-              className="pointer-events-none absolute left-1/2 top-[2%] z-0 h-[min(52vh,520px)] w-[min(92vw,30rem)] -translate-x-1/2 rounded-[3rem] bg-[radial-gradient(ellipse_58%_44%_at_50%_20%,rgba(109,40,217,0.12),rgba(217,70,239,0.04)_48%,transparent_68%)] blur-2xl"
+              className="pointer-events-none absolute left-1/2 top-[2%] z-0 h-[min(52vh,520px)] w-[min(92vw,30rem)] -translate-x-1/2 rounded-[3rem] bg-[radial-gradient(ellipse_58%_44%_at_50%_20%,rgba(109,40,217,0.09),rgba(217,70,239,0.03)_48%,transparent_68%)] blur-2xl"
               aria-hidden
             />
 
-            <div className="relative z-10 w-full">
-            <span className="rounded-full border border-purple-500/40 bg-purple-500/[0.07] px-3.5 py-1 text-[9px] font-bold uppercase tracking-[0.26em] text-purple-200/95 shadow-[0_0_20px_rgba(139,92,246,0.25)]">
+            <div className="relative z-10 flex w-full flex-col items-center">
+            <span className="rounded-full border border-purple-500/40 bg-purple-500/[0.07] px-3.5 py-1 text-[9px] font-bold uppercase tracking-[0.26em] text-purple-200/95 shadow-[0_0_16px_rgba(139,92,246,0.2)]">
               Free analysis
             </span>
             <motion.h1
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3.5 text-center text-[1.9rem] font-extrabold leading-[1.08] tracking-tight sm:text-[2.05rem] md:text-[2.3rem]"
+              className="mt-4 w-full text-center text-[1.9rem] font-extrabold leading-[1.08] tracking-tight sm:text-[2.05rem] md:text-[2.3rem]"
             >
               <span className="text-white">Your mix </span>
               <span className="bg-gradient-to-r from-purple-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">analysis</span>
             </motion.h1>
-            <p className="mt-2 max-w-[26rem] text-center text-[13px] leading-snug text-white/32 md:text-[13px]">
+            <p className="mt-3 w-full max-w-[26rem] text-center text-[13px] leading-snug text-white/32 md:text-[13px]">
               AI shows exactly what&apos;s holding your track back — before you release it.
             </p>
 
             {/* Step indicator — thin connectors */}
-            <div className="mt-6 flex w-full max-w-[min(100%,360px)] items-center justify-center md:max-w-[380px]">
+            <div className="mx-auto mt-9 flex w-full max-w-[min(100%,360px)] items-center justify-center md:mt-10 md:max-w-[380px]">
               {(["Upload", "Analyze", "Results"] as const).map((label, i) => (
                 <div key={label} className="contents">
                   {i > 0 ? (
@@ -351,7 +351,7 @@ export default function AnalyzePage() {
               ))}
             </div>
 
-        <div className="mt-6 w-full">
+        <div className="mt-9 w-full md:mt-11">
           <input
             type="file"
             ref={fileInputRef}
@@ -367,17 +367,17 @@ export default function AnalyzePage() {
             }}
           />
 
-          <div className="relative w-full overflow-visible pt-1">
-            {/* Radial glow behind card — tighter, edge-focused, purple/fuchsia */}
+          <div className="relative w-full overflow-visible">
+            {/* Radial glow behind card — subtle, edge-focused */}
             <div
-              className="pointer-events-none absolute left-1/2 top-[40%] z-0 h-[min(280px,62vw)] w-[min(420px,78%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_42%_36%_at_50%_50%,rgba(147,51,234,0.22),rgba(192,38,211,0.08)_52%,transparent_62%)] blur-2xl"
+              className="pointer-events-none absolute left-1/2 top-[40%] z-0 h-[min(260px,58vw)] w-[min(400px,76%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_40%_34%_at_50%_50%,rgba(147,51,234,0.15),rgba(192,38,211,0.05)_52%,transparent_62%)] blur-2xl"
               aria-hidden
             />
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative z-10 origin-top scale-[1.13] overflow-hidden rounded-[1.45rem] border border-white/[0.14] bg-gradient-to-b from-black/[0.52] to-black/[0.91] p-7 shadow-[0_0_0_1px_rgba(167,139,250,0.18),0_0_28px_rgba(88,28,135,0.2),0_20px_48px_rgba(0,0,0,0.58)] ring-1 ring-fuchsia-500/12 backdrop-blur-2xl sm:p-8 md:p-9"
+              className="relative z-10 mx-auto w-full max-w-[min(100%,28rem)] origin-top scale-[1.13] overflow-hidden rounded-[1.45rem] border border-white/[0.16] bg-gradient-to-b from-black/[0.54] to-black/[0.92] p-8 shadow-[0_0_0_1px_rgba(167,139,250,0.14),0_0_18px_rgba(88,28,135,0.14),0_22px_52px_rgba(0,0,0,0.55)] ring-1 ring-fuchsia-500/10 backdrop-blur-2xl sm:p-9 md:p-10"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault()
@@ -388,12 +388,12 @@ export default function AnalyzePage() {
                 }
               }}
             >
-              <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-purple-600/18 blur-2xl" />
+              <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-purple-600/12 blur-2xl" />
 
-              <div className="relative flex flex-col items-center text-center">
-                <div className="w-full rounded-[1.1rem] border border-dashed border-white/[0.08] bg-black/58 px-9 py-14 sm:px-11 sm:py-16 md:px-12 md:py-[4.25rem]">
-                  <div className="mx-auto mb-3 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/40 to-purple-900/25 ring-1 ring-white/[0.11] shadow-[0_0_20px_rgba(168,85,247,0.32)]">
-                    <svg className="h-10 w-10 drop-shadow-[0_0_6px_rgba(216,180,254,0.55)]" viewBox="0 0 24 24" aria-hidden>
+              <div className="relative flex w-full flex-col items-center text-center">
+                <div className="mx-1 w-full rounded-[1.1rem] border border-dashed border-white/[0.1] bg-black/[0.62] px-8 py-16 sm:mx-1.5 sm:px-10 sm:py-[4.5rem] md:px-11 md:py-[5rem]">
+                  <div className="mx-auto mb-4 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/40 to-purple-900/25 ring-1 ring-white/[0.12] shadow-[0_0_16px_rgba(168,85,247,0.26)]">
+                    <svg className="h-10 w-10 drop-shadow-[0_0_5px_rgba(216,180,254,0.45)]" viewBox="0 0 24 24" aria-hidden>
                       <defs>
                         <linearGradient id="analyzeUploadIcon" x1="0%" y1="0%" x2="100%" y2="100%">
                           <stop offset="0%" stopColor="#e9d5ff" />
@@ -412,35 +412,37 @@ export default function AnalyzePage() {
                     </svg>
                   </div>
                   <p className="text-[1.08rem] font-semibold tracking-tight text-white sm:text-[1.14rem]">Drop your track here</p>
-                  <p className="mx-auto mt-2.5 max-w-[19rem] text-[12px] leading-relaxed text-white/28 sm:text-[13px]">
+                  <p className="mx-auto mt-3 max-w-[19rem] text-[12px] leading-relaxed text-white/28 sm:text-[13px]">
                     WAV, AIFF, FLAC, MP3 up to 500MB
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!file) {
-                      fileInputRef.current?.click()
-                    } else {
-                      handleUpload()
-                    }
-                  }}
-                  className="mt-7 w-full max-w-[300px] rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_40px_rgba(91,33,182,0.55),0_0_28px_rgba(14,116,144,0.35),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 transition hover:brightness-110 sm:py-4 sm:text-[15px]"
-                >
-                  {file ? "Scan my track" : "Choose file"}
-                </button>
-                <p className="mt-2 text-[11px] text-white/24">or drag and drop</p>
-                {file && <p className="mt-3 max-w-full truncate px-2 text-xs text-cyan-300/85">{file.name}</p>}
-                {loading && (
-                  <p className="mt-4 font-mono text-[11px] text-purple-200/90 sm:text-xs">{loadingStep || "Analyzing your mix…"}</p>
-                )}
+                <div className="mt-9 flex w-full max-w-[min(100%,22rem)] flex-col items-center gap-2.5 sm:mt-10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!file) {
+                        fileInputRef.current?.click()
+                      } else {
+                        handleUpload()
+                      }
+                    }}
+                    className="w-full rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_32px_rgba(91,33,182,0.42),0_0_20px_rgba(14,116,144,0.25),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 transition hover:brightness-110 sm:py-4 sm:text-[15px]"
+                  >
+                    {file ? "Scan my track" : "Choose file"}
+                  </button>
+                  <p className="text-[11px] text-white/24">or drag and drop</p>
+                  {file && <p className="max-w-full truncate px-2 text-xs text-cyan-300/85">{file.name}</p>}
+                  {loading && (
+                    <p className="font-mono text-[11px] text-purple-200/90 sm:text-xs">{loadingStep || "Analyzing your mix…"}</p>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>
 
           {/* Feature cards */}
-          <div className="mt-2.5 grid w-full grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-1.5 md:gap-2">
+          <div className="mx-auto mt-7 grid w-full max-w-[min(100%,28rem)] grid-cols-1 gap-3.5 sm:grid-cols-3 sm:gap-3 md:gap-4">
             {[
               {
                 title: "100% free",
@@ -472,7 +474,7 @@ export default function AnalyzePage() {
             ].map((card) => (
               <div
                 key={card.title}
-                className="flex min-h-[5.25rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-white/[0.09] bg-black/[0.5] px-1.5 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:min-h-[5.5rem] sm:px-2 sm:py-2"
+                className="flex min-h-[5.25rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-white/[0.1] bg-black/[0.52] px-2 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:min-h-[5.5rem] sm:py-3.5"
               >
                 <div className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/[0.05] ring-1 ring-white/[0.07] sm:h-10 sm:w-10">
                   {card.icon}
@@ -483,7 +485,7 @@ export default function AnalyzePage() {
             ))}
           </div>
 
-          <p className="mt-3.5 text-center text-[11px] text-white/28 sm:text-xs">
+          <p className="mx-auto mt-7 w-full max-w-[min(100%,28rem)] text-center text-[11px] text-white/28 sm:mt-8 sm:text-xs">
             Need help?{" "}
             <Link href="/how-it-works" className="text-purple-300/80 underline-offset-2 transition hover:text-cyan-200/85 hover:underline">
               Supported formats &amp; tips
