@@ -367,7 +367,7 @@ export default function AnalyzePage() {
             }}
           />
 
-          <div className="relative w-full overflow-visible">
+          <div className="relative w-full overflow-visible pb-6 md:pb-8">
             {/* Radial glow behind card — subtle, edge-focused */}
             <div
               className="pointer-events-none absolute left-1/2 top-[40%] z-0 h-[min(260px,58vw)] w-[min(400px,76%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_40%_34%_at_50%_50%,rgba(147,51,234,0.09),rgba(192,38,211,0.028)_52%,transparent_62%)] blur-2xl"
@@ -412,12 +412,12 @@ export default function AnalyzePage() {
                     </svg>
                   </div>
                   <p className="text-[1.08rem] font-semibold tracking-tight text-white sm:text-[1.14rem]">Drop your track here</p>
-                  <p className="mx-auto mt-3 max-w-[19rem] text-[12px] leading-relaxed text-white/28 sm:text-[13px]">
+                  <p className="mx-auto mt-3.5 max-w-[19rem] text-[12px] leading-relaxed text-white/28 sm:text-[13px]">
                     WAV, AIFF, FLAC, MP3 up to 500MB
                   </p>
                 </div>
 
-                <div className="mt-9 flex w-full max-w-[min(100%,22rem)] flex-col items-center gap-2.5 sm:mt-10">
+                <div className="mt-10 flex w-full max-w-[min(100%,22rem)] flex-col items-center gap-4 sm:mt-11">
                   <button
                     type="button"
                     onClick={() => {
@@ -441,14 +441,14 @@ export default function AnalyzePage() {
             </motion.div>
           </div>
 
-          {/* Feature cards */}
-          <div className="mx-auto mt-7 grid w-full max-w-[min(100%,28rem)] grid-cols-1 gap-3.5 sm:grid-cols-3 sm:gap-3 md:gap-4">
+          {/* Feature cards — clear separation from upload card */}
+          <div className="mx-auto mt-16 grid w-full max-w-[min(100%,26rem)] grid-cols-1 gap-4 sm:mt-20 sm:grid-cols-3 sm:gap-3 md:mt-24 md:max-w-[min(100%,28rem)] md:gap-3.5">
             {[
               {
                 title: "100% free",
                 sub: "No credit card",
                 icon: (
-                  <svg className="h-6 w-6 text-purple-300/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  <svg className="h-5 w-5 text-purple-300/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 ),
@@ -457,7 +457,7 @@ export default function AnalyzePage() {
                 title: "Private & secure",
                 sub: "Your files are safe",
                 icon: (
-                  <svg className="h-6 w-6 text-cyan-300/85" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  <svg className="h-5 w-5 text-cyan-300/85" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 ),
@@ -466,7 +466,7 @@ export default function AnalyzePage() {
                 title: "Instant results",
                 sub: "Takes ~30 seconds",
                 icon: (
-                  <svg className="h-6 w-6 text-white/45" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  <svg className="h-5 w-5 text-white/45" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                   </svg>
                 ),
@@ -474,18 +474,18 @@ export default function AnalyzePage() {
             ].map((card) => (
               <div
                 key={card.title}
-                className="flex min-h-[5.25rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-white/[0.1] bg-black/[0.52] px-2 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:min-h-[5.5rem] sm:py-3.5"
+                className="flex min-h-[4.25rem] flex-col items-center justify-center gap-0.5 rounded-md border border-white/[0.055] bg-black/[0.48] px-1.5 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md sm:min-h-[4.5rem] sm:py-2.5"
               >
-                <div className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/[0.05] ring-1 ring-white/[0.07] sm:h-10 sm:w-10">
+                <div className="mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/[0.04] ring-1 ring-white/[0.05] sm:h-8 sm:w-8">
                   {card.icon}
                 </div>
-                <p className="text-[11.5px] font-semibold leading-tight text-white/92 sm:text-[12.5px]">{card.title}</p>
-                <p className="max-w-[9.5rem] text-[9.5px] leading-snug text-white/28 sm:max-w-none sm:text-[10px]">{card.sub}</p>
+                <p className="text-[11px] font-semibold leading-tight text-white/90 sm:text-[11.5px]">{card.title}</p>
+                <p className="max-w-[9rem] text-[9px] leading-snug text-white/26 sm:max-w-none sm:text-[9.5px]">{card.sub}</p>
               </div>
             ))}
           </div>
 
-          <p className="mx-auto mt-7 w-full max-w-[min(100%,28rem)] text-center text-[11px] text-white/28 sm:mt-8 sm:text-xs">
+          <p className="mx-auto mt-10 w-full max-w-[min(100%,28rem)] text-center text-[11px] text-white/28 sm:mt-12 sm:text-xs">
             Need help?{" "}
             <Link href="/how-it-works" className="text-purple-300/80 underline-offset-2 transition hover:text-cyan-200/85 hover:underline">
               Supported formats &amp; tips
