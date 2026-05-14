@@ -291,8 +291,8 @@ export default function AnalyzePage() {
     <div className="relative min-h-screen text-white">
       <CinematicBackground />
       <div
-        className={`relative mx-auto flex w-full flex-col items-center px-5 pb-20 pt-8 md:px-6 md:pb-24 md:pt-10 ${
-          result ? "max-w-6xl md:max-w-7xl" : "max-w-[520px]"
+        className={`relative mx-auto flex w-full flex-col items-center px-4 pb-20 pt-8 sm:px-5 md:pb-24 md:pt-10 ${
+          result ? "max-w-6xl md:max-w-7xl md:px-8" : "max-w-[580px] md:max-w-[600px] md:px-5"
         }`}
       >
         {!result && (
@@ -303,38 +303,38 @@ export default function AnalyzePage() {
             <motion.h1
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-5 text-center text-[1.65rem] font-extrabold leading-[1.12] tracking-tight sm:text-[1.85rem] md:text-[2rem]"
+              className="mt-5 text-center text-[1.8rem] font-extrabold leading-[1.1] tracking-tight sm:text-[1.95rem] md:text-[2.15rem]"
             >
               <span className="text-white">Your mix </span>
               <span className="bg-gradient-to-r from-purple-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">analysis</span>
             </motion.h1>
-            <p className="mt-4 max-w-[26rem] text-center text-[14px] leading-relaxed text-white/45 md:text-[15px]">
+            <p className="mt-2.5 max-w-[26rem] text-center text-[13px] leading-snug text-white/40 md:text-[13px]">
               AI shows exactly what&apos;s holding your track back — before you release it.
             </p>
 
-            {/* Step indicator — thin connectors, purple active */}
-            <div className="mt-8 flex w-full max-w-[min(100%,380px)] items-center justify-center">
+            {/* Step indicator — thin connectors */}
+            <div className="mt-7 flex w-full max-w-[min(100%,360px)] items-center justify-center md:max-w-[380px]">
               {(["Upload", "Analyze", "Results"] as const).map((label, i) => (
                 <div key={label} className="contents">
                   {i > 0 ? (
                     <div
-                      className="mx-1 h-px min-w-[1.5rem] flex-1 max-w-[3.5rem] bg-white/[0.12] sm:mx-2 sm:max-w-[4.5rem]"
+                      className="mx-0.5 h-[0.5px] min-w-[1.25rem] flex-1 max-w-[3.25rem] bg-gradient-to-r from-transparent via-white/14 to-transparent sm:mx-1 sm:max-w-[4rem]"
                       aria-hidden
                     />
                   ) : null}
-                  <div className="flex w-[4.5rem] shrink-0 flex-col items-center sm:w-[5rem]">
+                  <div className="flex w-[4rem] shrink-0 flex-col items-center sm:w-[4.25rem]">
                     <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-bold leading-none shadow-lg sm:h-10 sm:w-10 sm:text-sm ${
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold leading-none sm:h-[2.125rem] sm:w-[2.125rem] sm:text-xs ${
                         i === 0
-                          ? "bg-gradient-to-br from-purple-600 to-violet-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.55)] ring-2 ring-purple-400/35"
-                          : "border border-white/[0.12] bg-black/50 text-white/35"
+                          ? "bg-gradient-to-br from-purple-600 to-violet-600 text-white shadow-[0_0_16px_rgba(147,51,234,0.5)] ring-1 ring-purple-400/40"
+                          : "border border-white/[0.1] bg-black/55 text-white/30"
                       }`}
                     >
                       {i + 1}
                     </span>
                     <span
-                      className={`mt-2 text-center text-[9px] font-semibold uppercase tracking-[0.18em] sm:text-[10px] ${
-                        i === 0 ? "text-purple-300/95" : "text-white/32"
+                      className={`mt-1.5 text-center text-[8px] font-semibold uppercase tracking-[0.2em] sm:text-[9px] ${
+                        i === 0 ? "text-purple-300/95" : "text-white/28"
                       }`}
                     >
                       {label}
@@ -347,7 +347,7 @@ export default function AnalyzePage() {
         )}
 
       {!result && (
-        <div className="mt-9 w-full">
+        <div className="mt-7 w-full">
           <input
             type="file"
             ref={fileInputRef}
@@ -363,72 +363,81 @@ export default function AnalyzePage() {
             }}
           />
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-b from-black/55 to-black/75 p-5 shadow-[0_0_0_1px_rgba(139,92,246,0.12),0_0_48px_rgba(88,28,135,0.2),0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:p-6"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault()
-              const f = e.dataTransfer.files[0]
-              if (f && f.type.startsWith("audio")) {
-                setFile(f)
-                handleUpload()
-              }
-            }}
-          >
-            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-purple-600/25 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-cyan-500/15 blur-3xl" />
+          <div className="relative w-full">
+            {/* Radial glow behind card */}
+            <div
+              className="pointer-events-none absolute left-1/2 top-[42%] z-0 h-[min(420px,95vw)] w-[min(640px,118%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_55%_45%_at_50%_50%,rgba(124,58,237,0.26),rgba(34,211,238,0.08)_45%,transparent_72%)] blur-3xl"
+              aria-hidden
+            />
 
-            <div className="relative flex flex-col items-center text-center">
-              <div className="w-full rounded-xl border border-dashed border-white/[0.14] bg-black/45 px-6 py-10 sm:px-8 sm:py-11">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/35 to-cyan-500/25 ring-1 ring-white/10">
-                  <svg className="h-8 w-8" viewBox="0 0 24 24" aria-hidden>
-                    <defs>
-                      <linearGradient id="analyzeUploadIcon" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#c084fc" />
-                        <stop offset="100%" stopColor="#22d3ee" />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      fill="none"
-                      stroke="url(#analyzeUploadIcon)"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative z-10 overflow-hidden rounded-[1.35rem] border border-purple-500/28 bg-gradient-to-b from-black/50 to-black/[0.82] p-6 shadow-[0_0_0_1px_rgba(139,92,246,0.18),0_0_64px_rgba(88,28,135,0.28),0_0_100px_rgba(34,211,238,0.08),0_28px_70px_rgba(0,0,0,0.6)] backdrop-blur-2xl sm:p-7 md:p-8"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault()
+                const f = e.dataTransfer.files[0]
+                if (f && f.type.startsWith("audio")) {
+                  setFile(f)
+                  handleUpload()
+                }
+              }}
+            >
+              <div className="pointer-events-none absolute -right-12 -top-12 h-52 w-52 rounded-full bg-purple-600/30 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-10 -left-10 h-44 w-44 rounded-full bg-cyan-500/18 blur-3xl" />
+
+              <div className="relative flex flex-col items-center text-center">
+                <div className="w-full rounded-[1.05rem] border border-dashed border-white/[0.09] bg-black/50 px-8 py-12 sm:px-10 sm:py-14 md:px-11 md:py-[3.75rem]">
+                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/45 to-cyan-500/28 ring-1 ring-white/12 shadow-[0_0_36px_rgba(168,85,247,0.45),0_0_24px_rgba(34,211,238,0.2)]">
+                    <svg className="h-9 w-9 drop-shadow-[0_0_12px_rgba(192,132,252,0.65)]" viewBox="0 0 24 24" aria-hidden>
+                      <defs>
+                        <linearGradient id="analyzeUploadIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#d8b4fe" />
+                          <stop offset="55%" stopColor="#a78bfa" />
+                          <stop offset="100%" stopColor="#22d3ee" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        fill="none"
+                        stroke="url(#analyzeUploadIcon)"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-[1.05rem] font-semibold tracking-tight text-white sm:text-[1.1rem]">Drop your track here</p>
+                  <p className="mx-auto mt-2.5 max-w-[19rem] text-[12px] leading-relaxed text-white/36 sm:text-[13px]">
+                    WAV, AIFF, FLAC, MP3 up to 500MB
+                  </p>
                 </div>
-                <p className="text-base font-semibold tracking-tight text-white sm:text-[1.05rem]">Drop your track here</p>
-                <p className="mx-auto mt-2 max-w-[18rem] text-[12px] leading-relaxed text-white/38 sm:text-[13px]">
-                  WAV, AIFF, FLAC, MP3 up to 500MB
-                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!file) {
+                      fileInputRef.current?.click()
+                    } else {
+                      handleUpload()
+                    }
+                  }}
+                  className="mt-7 w-full max-w-[300px] rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_40px_rgba(91,33,182,0.55),0_0_28px_rgba(14,116,144,0.35),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 transition hover:brightness-110 sm:py-4 sm:text-[15px]"
+                >
+                  {file ? "Scan my track" : "Choose file"}
+                </button>
+                <p className="mt-2 text-[11px] text-white/30">or drag and drop</p>
+                {file && <p className="mt-3 max-w-full truncate px-2 text-xs text-cyan-300/85">{file.name}</p>}
+                {loading && (
+                  <p className="mt-4 font-mono text-[11px] text-purple-200/90 sm:text-xs">{loadingStep || "Analyzing your mix…"}</p>
+                )}
               </div>
+            </motion.div>
+          </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  if (!file) {
-                    fileInputRef.current?.click()
-                  } else {
-                    handleUpload()
-                  }
-                }}
-                className="mt-6 w-full max-w-[280px] rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#06b6d4] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_32px_rgba(99,102,241,0.45),0_12px_36px_rgba(0,0,0,0.35)] transition hover:brightness-110 sm:py-4 sm:text-[15px]"
-              >
-                {file ? "Scan my track" : "Choose file"}
-              </button>
-              <p className="mt-2.5 text-[11px] text-white/32">or drag and drop</p>
-              {file && <p className="mt-3 max-w-full truncate px-2 text-xs text-cyan-300/85">{file.name}</p>}
-              {loading && (
-                <p className="mt-4 font-mono text-[11px] text-purple-200/90 sm:text-xs">{loadingStep || "Analyzing your mix…"}</p>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Feature cards — equal width, below main card */}
-          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-3">
+          {/* Feature cards */}
+          <div className="mt-3.5 grid w-full grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-2 md:gap-2.5">
             {[
               {
                 title: "100% free",
@@ -460,18 +469,18 @@ export default function AnalyzePage() {
             ].map((card) => (
               <div
                 key={card.title}
-                className="flex flex-col items-center rounded-xl border border-white/[0.06] bg-black/40 px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm sm:py-3.5"
+                className="flex min-h-[5.5rem] flex-col items-center justify-center rounded-lg border border-white/[0.08] bg-black/[0.48] px-2 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:min-h-[5.75rem] sm:py-2.5 md:px-2.5"
               >
-                <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04] ring-1 ring-white/[0.06]">
+                <div className="mb-1.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/[0.05] ring-1 ring-white/[0.07] sm:mb-2 sm:h-9 sm:w-9">
                   {card.icon}
                 </div>
-                <p className="text-[12px] font-semibold text-white/90 sm:text-[13px]">{card.title}</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-white/35 sm:text-[11px]">{card.sub}</p>
+                <p className="text-[11.5px] font-semibold leading-tight text-white/92 sm:text-[12.5px]">{card.title}</p>
+                <p className="mt-0.5 max-w-[9.5rem] text-[9.5px] leading-snug text-white/34 sm:max-w-none sm:text-[10px]">{card.sub}</p>
               </div>
             ))}
           </div>
 
-          <p className="mt-8 text-center text-[11px] text-white/35 sm:text-xs">
+          <p className="mt-6 text-center text-[11px] text-white/35 sm:text-xs">
             Need help?{" "}
             <Link href="/how-it-works" className="text-purple-300/90 underline-offset-2 transition hover:text-cyan-200/90 hover:underline">
               Supported formats &amp; tips
