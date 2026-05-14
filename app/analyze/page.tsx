@@ -5,7 +5,6 @@ import { useState, useRef } from "react"
 import axios from "axios"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import BrandLogo from "../components/BrandLogo"
 import CinematicBackground from "../components/CinematicBackground"
 import ScoreRing from "../components/ScoreRing"
 import { appendHistory } from "../../lib/history"
@@ -291,43 +290,64 @@ export default function AnalyzePage() {
   return (
     <div className="relative min-h-screen text-white">
       <CinematicBackground />
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-5 pb-28 pt-14 md:max-w-7xl md:px-10 md:pt-20">
-        <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.28em] text-purple-200/90 shadow-[0_0_24px_rgba(139,92,246,0.2)]">
-          Free analysis
-        </span>
-        <BrandLogo subtitle="ANALYSIS" className="mt-5" />
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-4 max-w-3xl text-center text-4xl font-extrabold leading-[1.08] tracking-tight text-transparent md:text-6xl lg:text-7xl bg-gradient-to-r from-white via-purple-100 to-cyan-200/90 bg-clip-text"
-        >
-          Your mix analysis
-        </motion.h1>
-        <p className="mt-6 max-w-xl text-center text-base leading-relaxed text-white/50 md:text-lg">
-          Instant read on loudness, dynamics, stereo, and balance — fix the mix before you commit to a master.
-        </p>
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-4 md:gap-8">
-          {["Upload", "Analyze", "Results"].map((label, i) => (
-            <div key={label} className="flex items-center gap-3">
-              <span
-                className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
-                  i === 0
-                    ? "bg-gradient-to-br from-purple-500 to-cyan-500 text-white shadow-[0_0_24px_rgba(139,92,246,0.4)]"
-                    : "border border-white/15 bg-white/[0.05] text-white/45"
-                }`}
-              >
-                {i + 1}
-              </span>
-              <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${i === 0 ? "text-white" : "text-white/40"}`}>
-                {label}
-              </span>
-              {i < 2 && <span className="hidden text-lg text-white/15 md:inline">→</span>}
+      <div
+        className={`relative mx-auto flex w-full flex-col items-center px-5 pb-20 pt-8 md:px-6 md:pb-24 md:pt-10 ${
+          result ? "max-w-6xl md:max-w-7xl" : "max-w-[520px]"
+        }`}
+      >
+        {!result && (
+          <>
+            <span className="rounded-full border border-purple-500/40 bg-purple-500/[0.07] px-3.5 py-1 text-[9px] font-bold uppercase tracking-[0.26em] text-purple-200/95 shadow-[0_0_20px_rgba(139,92,246,0.25)]">
+              Free analysis
+            </span>
+            <motion.h1
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-5 text-center text-[1.65rem] font-extrabold leading-[1.12] tracking-tight sm:text-[1.85rem] md:text-[2rem]"
+            >
+              <span className="text-white">Your mix </span>
+              <span className="bg-gradient-to-r from-purple-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">analysis</span>
+            </motion.h1>
+            <p className="mt-4 max-w-[26rem] text-center text-[14px] leading-relaxed text-white/45 md:text-[15px]">
+              AI shows exactly what&apos;s holding your track back — before you release it.
+            </p>
+
+            {/* Step indicator — thin connectors, purple active */}
+            <div className="mt-8 flex w-full max-w-[min(100%,380px)] items-center justify-center">
+              {(["Upload", "Analyze", "Results"] as const).map((label, i) => (
+                <div key={label} className="contents">
+                  {i > 0 ? (
+                    <div
+                      className="mx-1 h-px min-w-[1.5rem] flex-1 max-w-[3.5rem] bg-white/[0.12] sm:mx-2 sm:max-w-[4.5rem]"
+                      aria-hidden
+                    />
+                  ) : null}
+                  <div className="flex w-[4.5rem] shrink-0 flex-col items-center sm:w-[5rem]">
+                    <span
+                      className={`flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-bold leading-none shadow-lg sm:h-10 sm:w-10 sm:text-sm ${
+                        i === 0
+                          ? "bg-gradient-to-br from-purple-600 to-violet-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.55)] ring-2 ring-purple-400/35"
+                          : "border border-white/[0.12] bg-black/50 text-white/35"
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                    <span
+                      className={`mt-2 text-center text-[9px] font-semibold uppercase tracking-[0.18em] sm:text-[10px] ${
+                        i === 0 ? "text-purple-300/95" : "text-white/32"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
 
       {!result && (
-        <div className="mt-16 w-full max-w-2xl">
+        <div className="mt-9 w-full">
           <input
             type="file"
             ref={fileInputRef}
@@ -344,9 +364,9 @@ export default function AnalyzePage() {
           />
 
           <motion.div
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.07] to-black/50 p-12 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_28px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:p-16"
+            className="relative overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-b from-black/55 to-black/75 p-5 shadow-[0_0_0_1px_rgba(139,92,246,0.12),0_0_48px_rgba(88,28,135,0.2),0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:p-6"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault()
@@ -357,20 +377,35 @@ export default function AnalyzePage() {
               }
             }}
           >
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-cyan-500/15 blur-3xl" />
-            <div className="relative flex flex-col items-center gap-8 text-center">
-              <div className="rounded-3xl border border-dashed border-white/20 bg-black/40 px-8 py-14 md:px-14 md:py-16">
-                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/40 to-cyan-500/25 ring-1 ring-white/15">
-                  <svg className="h-9 w-9 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-purple-600/25 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-cyan-500/15 blur-3xl" />
+
+            <div className="relative flex flex-col items-center text-center">
+              <div className="w-full rounded-xl border border-dashed border-white/[0.14] bg-black/45 px-6 py-10 sm:px-8 sm:py-11">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/35 to-cyan-500/25 ring-1 ring-white/10">
+                  <svg className="h-8 w-8" viewBox="0 0 24 24" aria-hidden>
+                    <defs>
+                      <linearGradient id="analyzeUploadIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#c084fc" />
+                        <stop offset="100%" stopColor="#22d3ee" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      fill="none"
+                      stroke="url(#analyzeUploadIcon)"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
                   </svg>
                 </div>
-                <p className="text-lg font-semibold tracking-tight text-white md:text-xl">Drop your track here</p>
-                <p className="mx-auto mt-3 max-w-sm text-sm text-white/45">
-                  WAV, MP3, or M4A · On-device session · Results in seconds
+                <p className="text-base font-semibold tracking-tight text-white sm:text-[1.05rem]">Drop your track here</p>
+                <p className="mx-auto mt-2 max-w-[18rem] text-[12px] leading-relaxed text-white/38 sm:text-[13px]">
+                  WAV, AIFF, FLAC, MP3 up to 500MB
                 </p>
               </div>
+
               <button
                 type="button"
                 onClick={() => {
@@ -380,43 +415,78 @@ export default function AnalyzePage() {
                     handleUpload()
                   }
                 }}
-                className="w-full max-w-md rounded-2xl bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 py-4 text-base font-semibold text-white shadow-[0_20px_60px_rgba(139,92,246,0.35)] transition hover:brightness-110"
+                className="mt-6 w-full max-w-[280px] rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#06b6d4] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_32px_rgba(99,102,241,0.45),0_12px_36px_rgba(0,0,0,0.35)] transition hover:brightness-110 sm:py-4 sm:text-[15px]"
               >
                 {file ? "Scan my track" : "Choose file"}
               </button>
-              {file && <p className="max-w-md truncate text-sm text-cyan-300/85">{file.name}</p>}
-              <div className="grid w-full max-w-lg grid-cols-1 gap-4 border-t border-white/10 pt-8 text-xs text-white/45 sm:grid-cols-3">
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-cyan-400/90">✓</span> 100% free
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-purple-400/90">✓</span> Private &amp; secure
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-white/60">✓</span> Instant results
-                </div>
-              </div>
+              <p className="mt-2.5 text-[11px] text-white/32">or drag and drop</p>
+              {file && <p className="mt-3 max-w-full truncate px-2 text-xs text-cyan-300/85">{file.name}</p>}
+              {loading && (
+                <p className="mt-4 font-mono text-[11px] text-purple-200/90 sm:text-xs">{loadingStep || "Analyzing your mix…"}</p>
+              )}
             </div>
           </motion.div>
+
+          {/* Feature cards — equal width, below main card */}
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-3">
+            {[
+              {
+                title: "100% free",
+                sub: "No credit card",
+                icon: (
+                  <svg className="h-5 w-5 text-purple-300/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+              },
+              {
+                title: "Private & secure",
+                sub: "Your files are safe",
+                icon: (
+                  <svg className="h-5 w-5 text-cyan-300/85" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                ),
+              },
+              {
+                title: "Instant results",
+                sub: "Takes ~30 seconds",
+                icon: (
+                  <svg className="h-5 w-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                  </svg>
+                ),
+              },
+            ].map((card) => (
+              <div
+                key={card.title}
+                className="flex flex-col items-center rounded-xl border border-white/[0.06] bg-black/40 px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm sm:py-3.5"
+              >
+                <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04] ring-1 ring-white/[0.06]">
+                  {card.icon}
+                </div>
+                <p className="text-[12px] font-semibold text-white/90 sm:text-[13px]">{card.title}</p>
+                <p className="mt-0.5 text-[10px] leading-snug text-white/35 sm:text-[11px]">{card.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-8 text-center text-[11px] text-white/35 sm:text-xs">
+            Need help?{" "}
+            <Link href="/how-it-works" className="text-purple-300/90 underline-offset-2 transition hover:text-cyan-200/90 hover:underline">
+              Supported formats &amp; tips
+            </Link>
+          </p>
         </div>
       )}
 
-      {loading && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-10 text-center font-mono text-sm text-purple-200/90"
-        >
-          {loadingStep || "Analyzing your mix…"}
-        </motion.p>
-      )}
 
       {/* RESULT */}
       {result && (
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-16 w-full space-y-12 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-black/40 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_32px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:p-12 lg:p-14"
+          className="mt-8 w-full space-y-12 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-black/40 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_32px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:mt-10 md:p-12 lg:p-14"
         >
           <div className="flex flex-col items-center gap-10 border-b border-white/10 pb-12 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-xl flex-1 text-center lg:text-left">
