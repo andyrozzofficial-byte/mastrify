@@ -4,6 +4,10 @@ import { supabase } from "../../lib/supabase"
 import { useState, useRef } from "react"
 import axios from "axios"
 import { motion } from "framer-motion"
+import Link from "next/link"
+import BrandLogo from "../components/BrandLogo"
+import CinematicBackground from "../components/CinematicBackground"
+import { appendHistory } from "../../lib/history"
 
 // 🔥 STAT COMPONENT (fixar alla 0 / "-" buggar)
 function Stat({ label, value, percent = false }: any) {
@@ -20,9 +24,9 @@ function Stat({ label, value, percent = false }: any) {
   }
 
   return (
-    <div className="bg-white/5 p-3 rounded-lg">
-      <div className="text-gray-400">{label}</div>
-      <div className="font-semibold">{display}</div>
+    <div className="rounded-xl border border-white/[0.08] bg-black/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm">
+      <div className="text-[11px] font-medium uppercase tracking-wider text-white/40">{label}</div>
+      <div className="mt-1.5 text-lg font-semibold tabular-nums text-white/95">{display}</div>
     </div>
   )
 }
@@ -263,6 +267,12 @@ export default function AnalyzePage() {
     setTimeout(() => {
       console.log("RESULT:", res.data)
       setResult(res.data)
+      appendHistory({
+        kind: "analysis",
+        name: file?.name || "Audio",
+        mixQuality: typeof res.data.mixQuality === "number" ? res.data.mixQuality : undefined,
+        lufs: typeof res.data.lufs === "number" ? res.data.lufs : undefined,
+      })
       setLoading(false)
       setLoadingStep("")
     }, 4200)
@@ -278,93 +288,92 @@ export default function AnalyzePage() {
 
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-start pt-32 px-6">
-
-      {/* HEADER */}
-      <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-2
-bg-gradient-to-r from-white via-purple-300 to-purple-500 
-bg-clip-text text-transparent 
-drop-shadow-[0_0_35px_rgba(139,92,246,0.8)]">
-  Mastrify
-</h2>
-
-      <p className="text-purple-400 text-xs tracking-widest mb-6">
-        ANALYSIS
-      </p>
-
-      <h1 className="text-5xl md:text-7xl font-extrabold leading-tight text-center 
-bg-gradient-to-r from-white via-purple-200 to-blue-400 
-bg-clip-text text-transparent 
-drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
-  Your mix
-  analysis  
-</h1>
-
-      <p className="text-gray-400 mt-4 mb-10 text-center max-w-xl">
-        AI shows exactly what’s holding your track back — before you release it.
-      </p>
-
-      {/* UPLOAD */}
-{!result && (
-  <div className="w-full max-w-md flex flex-col gap-4">
-
-    {/* hidden input */}
-   <input
-  type="file"
-  ref={fileInputRef}
-  className="hidden"
-  accept="audio/*,video/*"
-  capture
-  onChange={(e) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      setFile(selectedFile)
-      handleUpload()
-    }
-  }}
-/>
-
-    {/* DROP BOX */}
-    <div
-      onClick={() => fileInputRef.current?.click()}
-      className="relative cursor-pointer"
-    >
-      {/* glow */}
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/12 to-blue-500/10 blur-xl rounded-xl" />
-
-      {/* box */}
-      <div className="relative bg-white/5 border border-white/10 p-4 rounded-xl text-white/60 hover:border-purple-500/70 transition text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-        {file ? file.name : "Drop your track here"}
-      </div>
-    </div>
-
-    {/* BUTTON */}
-    <button
-  onClick={() => {
-    if (!file) {
-      fileInputRef.current?.click()
-    } else {
-      handleUpload()
-    }
-  }}
-  className="bg-gradient-to-r from-purple-500 to-blue-500 px-8 py-4 rounded-xl text-lg font-semibold hover:opacity-90 transition"
->
-  {file ? "Scan my track" : "Choose track"}
-</button>
-
-    {/* INFO TEXT */}
-    <p className="text-xs text-gray-500 text-center mt-2 opacity-80">
-      Instant feedback • Takes 10 seconds • No signup
-    </p>
-
-  </div>
-)}
-
-      {/* LOADING */}
-      {loading && (
-        <p className="mt-4 text-purple-300 text-sm animate-pulse">
-          {loadingStep || "Analyzing your mix..."}
+    <div className="relative min-h-screen text-white">
+      <CinematicBackground />
+      <div className="relative mx-auto flex max-w-3xl flex-col items-center px-6 pb-24 pt-16 md:pt-24">
+        <BrandLogo subtitle="ANALYSIS" />
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 max-w-2xl text-center text-4xl font-extrabold leading-[1.1] tracking-tight text-transparent md:text-6xl bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text"
+        >
+          Your mix analysis
+        </motion.h1>
+        <p className="mt-5 max-w-lg text-center text-sm leading-relaxed text-white/50 md:text-base">
+          Free AI read on loudness, dynamics, stereo, and balance — know what to fix before you master.
         </p>
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-2 text-[11px] text-white/35">
+          <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1">1 · Upload</span>
+          <span className="text-white/20">→</span>
+          <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1">2 · Scan</span>
+          <span className="text-white/20">→</span>
+          <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1">3 · Results</span>
+        </div>
+
+      {!result && (
+        <div className="mt-14 w-full max-w-lg">
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="audio/*,video/*"
+            capture
+            onChange={(e) => {
+              const selectedFile = e.target.files?.[0]
+              if (selectedFile) {
+                setFile(selectedFile)
+                handleUpload()
+              }
+            }}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault()
+              const f = e.dataTransfer.files[0]
+              if (f && f.type.startsWith("audio")) {
+                setFile(f)
+                handleUpload()
+              }
+            }}
+          >
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-cyan-500/10" />
+            <div className="relative flex flex-col items-center gap-5 text-center">
+              <div className="rounded-2xl border border-dashed border-white/15 bg-black/30 px-6 py-10">
+                <p className="text-sm font-medium text-white/80">Drop your track</p>
+                <p className="mt-2 text-xs text-white/40">100% free · No signup · Private in your browser session</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!file) {
+                    fileInputRef.current?.click()
+                  } else {
+                    handleUpload()
+                  }
+                }}
+                className="w-full rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 py-4 text-sm font-semibold text-white shadow-[0_16px_50px_rgba(0,0,0,0.45)] transition hover:brightness-110"
+              >
+                {file ? "Scan my track" : "Choose track"}
+              </button>
+              {file && <p className="truncate text-xs text-cyan-300/80">{file.name}</p>}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {loading && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-10 text-center font-mono text-sm text-purple-200/90"
+        >
+          {loadingStep || "Analyzing your mix…"}
+        </motion.p>
       )}
 
       {/* RESULT */}
@@ -372,61 +381,58 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-10 w-full max-w-xl bg-gradient-to-br from-purple-900/35 to-blue-900/30 p-6 rounded-2xl backdrop-blur border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_22px_70px_rgba(0,0,0,0.55)]"
+          className="mt-14 w-full max-w-3xl space-y-8 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl md:p-10"
         >
-
-          {/* SCORE */}
-          <h2 className="text-2xl font-bold">
-  Your mix is
-  <span className="text-purple-400 ml-2">
-    {result.mixQuality != null ? Math.round(result.mixQuality) : 0}%
-  </span>
-  ready for release
-</h2>
-
-
-
-{verdict && (
-  <p className="text-green-400 text-sm mt-2">
-    {verdict}
-  </p>
-)}
-
-
-
-        <div className="text-xs text-gray-400 mb-4 space-y-1">
-  <div>
-  • Stereo width {result.stereoWidth > 0.25 ? "good" : "needs improvement"} ({Math.round(result.stereoWidth * 100)}%)
-</div>
-  <div>• Dynamic range is healthy ({Math.round(result.dynamicRange)})</div>
-  <div>• Frequency balance is stable</div>
-</div>
-
-          {/* STATS */}
-          <div className="grid grid-cols-2 gap-4 mt-6 mb-6 text-sm">
-
-            <Stat label="LUFS" value={result.lufs} />
-            <Stat label="Dynamic Range" value={result.dynamicRange} />
-
-            <Stat label="Stereo Width" value={result.stereoWidth} percent />
-            <Stat label="Low End" value={result.bassWeight} percent />
-
-            <Stat label="Brightness" value={result.brightness} percent />
-            <Stat label="Energy" value={result.energy} />
-
+          <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+            <div className="md:max-w-md">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">Release readiness</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+                Your mix is{" "}
+                <span className="text-transparent bg-gradient-to-r from-purple-300 to-cyan-300 bg-clip-text">
+                  {result.mixQuality != null ? Math.round(result.mixQuality) : 0}%
+                </span>{" "}
+                ready
+              </h2>
+              {verdict && <p className="mt-3 text-sm text-emerald-400/90">{verdict}</p>}
+              <div className="mt-5 space-y-1.5 text-xs text-white/45">
+                <div>
+                  • Stereo width {result.stereoWidth > 0.25 ? "good" : "needs improvement"} (
+                  {Math.round(result.stereoWidth * 100)}%)
+                </div>
+                <div>• Dynamic range is healthy ({Math.round(result.dynamicRange)})</div>
+                <div>• Frequency balance is stable</div>
+              </div>
+            </div>
+            <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl border border-white/10 bg-black/40 px-10 py-8 md:px-12">
+              <p className="text-[10px] uppercase tracking-widest text-white/40">Score</p>
+              <p className="mt-2 text-5xl font-bold tabular-nums text-transparent bg-gradient-to-b from-white to-purple-300/80 bg-clip-text">
+                {result.mixQuality != null ? Math.round(result.mixQuality) : 0}
+              </p>
+              <p className="mt-1 text-xs text-white/35">/ 100</p>
+            </div>
           </div>
 
-          <p className="text-gray-400 mb-6">
-  {issues.length > 0
-    ? `AI found ${displayIssues.length} improvements in your mix`
-    : "AI verdict: your mix is production-ready"}
-</p>
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">Spectrum</h3>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <Stat label="LUFS" value={result.lufs} />
+              <Stat label="Dynamic Range" value={result.dynamicRange} />
+              <Stat label="Stereo Width" value={result.stereoWidth} percent />
+              <Stat label="Low End" value={result.bassWeight} percent />
+              <Stat label="Brightness" value={result.brightness} percent />
+              <Stat label="Energy" value={result.energy} />
+            </div>
+          </div>
 
-{issues.length > 0 && (
-  <p className="text-xs text-gray-400 mb-3">
-    Biggest opportunities to improve your mix
-  </p>
-)}
+          <p className="text-sm text-white/50">
+            {issues.length > 0
+              ? `AI found ${displayIssues.length} improvements in your mix`
+              : "AI verdict: your mix is production-ready"}
+          </p>
+
+          {issues.length > 0 && (
+            <p className="text-xs font-medium uppercase tracking-wider text-white/35">Opportunities</p>
+          )}
 
 
           {/* ISSUES */}
@@ -607,32 +613,39 @@ drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
 </div>
 
 
-          {/* CTA */}
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = "/flow"
+              }}
+              disabled={!canMaster}
+              className={`flex-1 rounded-xl py-4 text-sm font-bold transition md:text-base ${
+                canMaster
+                  ? "bg-gradient-to-r from-emerald-400 to-cyan-500 text-black shadow-[0_12px_40px_rgba(52,211,153,0.25)] hover:brightness-110"
+                  : "cursor-not-allowed bg-white/10 text-white/40"
+              }`}
+            >
+              Master (quick flow)
+            </button>
+            <Link
+              href="/master"
+              className="flex-1 rounded-xl border border-white/15 bg-white/[0.04] py-4 text-center text-sm font-semibold text-white/90 transition hover:border-cyan-400/30 hover:bg-white/[0.07] md:text-base"
+            >
+              AI mastering wizard
+            </Link>
+          </div>
 
-<div className="mt-6">
-
-  <button
-    onClick={() => window.location.href = "/flow"}
-    disabled={!canMaster}
-    className={`w-full py-5 rounded-xl font-bold text-lg transition ${
-      canMaster
-        ? "bg-gradient-to-r from-green-400 to-emerald-500 text-black hover:brightness-110"
-        : "bg-white/10 text-white/40 cursor-not-allowed"
-    }`}
-  >
-    🎧 Master your track
-  </button>
-
-  <p className="text-xs text-gray-400 text-center mt-2">
-    {canMaster
-      ? "Ready for mastering"
-      : "This mix still has issues affecting the final result"}
-  </p>
-
-</div>
+          <p className="mt-3 text-center text-xs text-white/40">
+            {canMaster
+              ? "Ready for mastering — pick quick one-page or guided wizard."
+              : "This mix still has issues affecting the final result"}
+          </p>
 
         </motion.div>
 )}
+
+      </div>
 
 {/* 🔥 WAITLIST POPUP */}
 {showWaitlist && (

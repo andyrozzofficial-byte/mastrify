@@ -1,11 +1,11 @@
 "use client"
 import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useState, useEffect, useRef } from "react"
 import { supabase } from "../../lib/supabase"
+import CinematicBackground from "../components/CinematicBackground"
 
 export default function Landing() {
-  const router = useRouter()
 
   const [email, setEmail] = useState("")
   const [submitted, setSubmitted] = useState(false)
@@ -120,118 +120,96 @@ export default function Landing() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-20 relative overflow-hidden">
+    <main className="relative min-h-screen overflow-hidden bg-black px-6 py-16 text-white md:py-24">
+      <CinematicBackground intensity="strong" />
 
       <audio
-  ref={audioRef}
-  src={src}
-  playsInline
-  
-  preload="auto"
-  controls={false}
-  controlsList="nodownload nofullscreen noremoteplayback"
-  style={{ display: "none" }}
-/>
+        ref={audioRef}
+        src={src}
+        playsInline
+        preload="auto"
+        controls={false}
+        controlsList="nodownload nofullscreen noremoteplayback"
+        style={{ display: "none" }}
+      />
 
-      {/* BACKGROUND */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.35),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(59,130,246,0.25),transparent_60%)]" />
-      </div>
-
-      {/* HERO subtle cinematic layer (minimal movement) */}
       <motion.div
         aria-hidden="true"
-        className="absolute top-0 left-0 right-0 h-[520px] -z-10 pointer-events-none"
+        className="pointer-events-none absolute top-0 left-0 right-0 h-[480px]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <motion.div
-          className="absolute inset-0 bg-[conic-gradient(from_180deg_at_50%_35%,rgba(139,92,246,0.10),rgba(59,130,246,0.08),rgba(139,92,246,0.10))] blur-3xl"
+          className="absolute inset-0 bg-[conic-gradient(from_180deg_at_50%_30%,rgba(139,92,246,0.12),rgba(34,211,238,0.08),rgba(139,92,246,0.12))] blur-3xl"
           animate={{ rotate: 360 }}
-          transition={{ duration: 90, ease: "linear", repeat: Infinity }}
-          style={{ transformOrigin: "50% 35%" }}
+          transition={{ duration: 100, ease: "linear", repeat: Infinity }}
+          style={{ transformOrigin: "50% 30%" }}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.06),transparent_55%)]" />
-        <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.6)_0px,rgba(255,255,255,0.6)_1px,transparent_1px,transparent_3px)]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/40 to-black" />
       </motion.div>
 
-      {/* 🔥 MASRIFY LOGO TEXT */}
-      <div className="mb-6 text-center">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight 
-bg-gradient-to-r from-white via-purple-300 to-purple-500 
-bg-clip-text text-transparent 
-drop-shadow-[0_0_35px_rgba(139,92,246,0.8)]">
-          Mastrify
-        </h1>
-        
-      </div>
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight text-transparent md:text-5xl bg-gradient-to-r from-white via-purple-300 to-cyan-300/90 bg-clip-text drop-shadow-[0_0_35px_rgba(139,92,246,0.45)]">
+            Mastrify
+          </h1>
+        </div>
 
-      {/* 🔥 HEADLINE */}
-      <div className="text-center max-w-2xl">
+        <div className="max-w-3xl text-center">
+          <h2 className="text-4xl font-extrabold leading-[1.08] tracking-tight text-transparent md:text-6xl lg:text-7xl bg-gradient-to-r from-white via-purple-100 to-cyan-200/85 bg-clip-text">
+            Fix your mix before <br className="hidden sm:block" />
+            you master it.
+          </h2>
+          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/55 md:text-lg">
+            AI shows exactly what is holding your track back — then optional mastering when you are ready.
+          </p>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold leading-tight 
-bg-gradient-to-r from-white via-purple-200 to-blue-400 
-bg-clip-text text-transparent 
-drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
-  Fix your mix before <br /> you master it.
-</h1>
+          <div className="mt-10 flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+            <Link
+              href="/analyze"
+              className="inline-flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 px-6 py-4 text-sm font-semibold text-white shadow-[0_16px_50px_rgba(139,92,246,0.35)] transition hover:brightness-110"
+            >
+              Free analysis
+            </Link>
+            <Link
+              href="/master"
+              className="inline-flex flex-1 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-6 py-4 text-sm font-semibold text-white/90 backdrop-blur-sm transition hover:border-cyan-400/35 hover:bg-white/[0.07]"
+            >
+              AI mastering
+            </Link>
+          </div>
 
-        <p className="mt-6 text-white/70 text-lg">
-          AI shows exactly what's wrong with your track — before you release it.
-        </p>
+          <p className="mt-4 text-xs text-white/35">No signup for analysis · Premium flow for masters</p>
+        </div>
 
-        {/* INPUT */}
-        <div className="mt-10 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 blur-xl rounded-full" />
-
-          <div className="relative flex items-center bg-white/[0.05] border border-white/10 rounded-full p-2 backdrop-blur-xl">
-
+        {/* Waitlist */}
+        <div className="relative mt-14 w-full max-w-lg">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/25 to-cyan-500/20 blur-2xl" />
+          <div className="relative flex flex-col gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2 backdrop-blur-xl sm:flex-row sm:items-center">
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              placeholder="Enter your email"
-              className="bg-transparent px-4 py-2 flex-1 outline-none"
+              placeholder="Email for product updates"
+              className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-white/35"
             />
-
             <button
-  onClick={async () => {
-  try {
-    if (email && email.includes("@")) {
-      await supabase.from("waitlist").insert([{ email }])
-    }
-  } catch (err) {
-    console.log("waitlist error", err)
-  }
-
-  router.push("/analyze")
-}}
-  className="relative px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-blue-500
-hover:scale-[1.04] active:scale-[0.985] transition-all duration-300
-shadow-[0_16px_55px_rgba(0,0,0,0.55)] hover:shadow-[0_22px_75px_rgba(0,0,0,0.62)]"
->
-  <span className="absolute inset-0 rounded-full bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
-  <span className="absolute -inset-[1px] rounded-full bg-gradient-to-r from-purple-400/40 to-blue-400/40 blur-lg opacity-70" />
-  <span className="relative">Try it now</span>
-</button>
-
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
+            >
+              {loading ? "…" : "Join waitlist"}
+            </button>
           </div>
+          {errorMsg && <p className="mt-2 text-center text-xs text-rose-400">{errorMsg}</p>}
+          {submitted && <p className="mt-2 text-center text-xs text-emerald-400">You are on the list.</p>}
+          {count > 0 ? (
+            <p className="mt-3 text-center text-xs text-white/30">Join {count}+ producers exploring Mastrify</p>
+          ) : (
+            <p className="mt-3 text-center text-xs text-white/25">Ship cleaner mixes, faster</p>
+          )}
         </div>
-
-        {count > 0 ? (
-  <p className="text-xs text-white/30 mt-3">
-    Join {count}+ producers already testing Mastrify
-  </p>
-) : (
-  <p className="text-xs text-white/20 mt-3">
-    Fix your mix in seconds
-  </p>
-)}
-
-      </div>
 
       {/* PLAYER */}
       <div className="mt-24 md:mt-28 w-full max-w-3xl">
@@ -386,6 +364,8 @@ border border-white/50"
     </div>
 
   </div>
+
+    </div>
 
 </div>
 
