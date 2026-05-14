@@ -1,19 +1,37 @@
 "use client"
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 
+/** @deprecated use MASTER_SESSION_STORAGE_KEY — kept for one-time migration from older builds */
 export const MASTER_RESULT_STORAGE_KEY = "mastrify:master-result-v1"
 
-type MasterResultSnapshot = {
-  v: 1
-  masteredUrl: string
-  masteredPreviewMp3Url: string
-  analysisBefore: Record<string, unknown> | null
-  analysisAfter: Record<string, unknown> | null
-  targetLufs: number
-}
+export const MASTER_SESSION_STORAGE_KEY = "mastrify:master-session-v2"
 
 export type MasterStylePreset = "STREAM" | "CLUB" | "LOUD" | "WARM" | "FESTIVAL"
+
+type MasterSessionSnapshotV2 = {
+  v: 2
+  analysisBefore: Record<string, unknown> | null
+  analysisAfter: Record<string, unknown> | null
+  stylePreset: MasterStylePreset
+  targetLufs: number
+  stereoEnhance: number
+  lowEndControl: number
+  clarityPresence: number
+  masteredUrl: string
+  masteredPreviewMp3Url: string
+  fileName: string
+}
 
 type MasterSession = {
   file: File | null
@@ -39,9 +57,42 @@ type MasterSession = {
   clarityPresence: number
   setClarityPresence: (n: number) => void
   resetSession: () => void
+  /** True after first client storage hydrate attempt (for /master/settings gating). */
+  sessionHydrated: boolean
+  /** Analyze → Master: same file + analysis snapshot as “before master” metrics. */
+  seedAnalyzeIntoMasterFlow: (f: File, analysis: Record<string, unknown> | null) => void
+  /** After refresh: attach a new File without clearing analysisBefore from storage. */
+  reconnectSourceFile: (f: File) => void
 }
 
 const MasterSessionContext = createContext<MasterSession | null>(null)
+
+function clearMasterStorageKeys() {
+  try {
+    if (typeof sessionStorage === "undefined") return
+    sessionStorage.removeItem(MASTER_SESSION_STORAGE_KEY)
+    sessionStorage.removeItem(MASTER_RESULT_STORAGE_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
+function cloneAnalysis(a: Record<string, unknown> | null): Record<string, unknown> | null {
+  if (!a) return null
+  try {
+    return structuredClone(a) as Record<string, unknown>
+  } catch {
+    try {
+      return JSON.parse(JSON.stringify(a)) as Record<string, unknown>
+    } catch {
+      return null
+    }
+  }
+}
+
+function isPreset(x: unknown): x is MasterStylePreset {
+  return x === "STREAM" || x === "CLUB" || x === "LOUD" || x === "WARM" || x === "FESTIVAL"
+}
 
 export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const [file, setFileState] = useState<File | null>(null)
@@ -55,6 +106,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const [stereoEnhance, setStereoEnhance] = useState(50)
   const [lowEndControl, setLowEndControl] = useState(50)
   const [clarityPresence, setClarityPresence] = useState(50)
+  const [sessionHydrated, setSessionHydrated] = useState(false)
+  const hydrateRan = useRef(false)
 
   const setFile = useCallback((f: File | null) => {
     setFileState(f)
@@ -66,11 +119,27 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setMasteredPreviewMp3Url("")
     setAnalysisBefore(null)
     setAnalysisAfter(null)
-    try {
-      if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(MASTER_RESULT_STORAGE_KEY)
-    } catch {
-      /* ignore quota / private mode */
-    }
+    clearMasterStorageKeys()
+  }, [])
+
+  const reconnectSourceFile = useCallback((f: File) => {
+    setFileState(f)
+    setAudioUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return URL.createObjectURL(f)
+    })
+  }, [])
+
+  const seedAnalyzeIntoMasterFlow = useCallback((f: File, analysis: Record<string, unknown> | null) => {
+    setFileState(f)
+    setAudioUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return URL.createObjectURL(f)
+    })
+    setAnalysisBefore(cloneAnalysis(analysis))
+    setAnalysisAfter(null)
+    setMasteredUrl("")
+    setMasteredPreviewMp3Url("")
   }, [])
 
   const resetSession = useCallback(() => {
@@ -88,30 +157,101 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setStereoEnhance(50)
     setLowEndControl(50)
     setClarityPresence(50)
+    clearMasterStorageKeys()
+  }, [])
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined" || hydrateRan.current) return
+    hydrateRan.current = true
     try {
-      if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(MASTER_RESULT_STORAGE_KEY)
+      let raw = sessionStorage.getItem(MASTER_SESSION_STORAGE_KEY)
+      if (!raw) raw = sessionStorage.getItem(MASTER_RESULT_STORAGE_KEY)
+      if (!raw) {
+        setSessionHydrated(true)
+        return
+      }
+      const snap = JSON.parse(raw) as Record<string, unknown>
+      if (snap.v === 2) {
+        const s = snap as unknown as MasterSessionSnapshotV2
+        if (s.analysisBefore) setAnalysisBefore(cloneAnalysis(s.analysisBefore))
+        else setAnalysisBefore(null)
+        setAnalysisAfter(s.analysisAfter ? cloneAnalysis(s.analysisAfter as Record<string, unknown>) : null)
+        if (isPreset(s.stylePreset)) setStylePreset(s.stylePreset)
+        if (typeof s.targetLufs === "number" && Number.isFinite(s.targetLufs)) setTargetLufs(s.targetLufs)
+        if (typeof s.stereoEnhance === "number" && Number.isFinite(s.stereoEnhance)) setStereoEnhance(s.stereoEnhance)
+        if (typeof s.lowEndControl === "number" && Number.isFinite(s.lowEndControl)) setLowEndControl(s.lowEndControl)
+        if (typeof s.clarityPresence === "number" && Number.isFinite(s.clarityPresence)) setClarityPresence(s.clarityPresence)
+        if (typeof s.masteredUrl === "string") setMasteredUrl(s.masteredUrl)
+        if (typeof s.masteredPreviewMp3Url === "string") setMasteredPreviewMp3Url(s.masteredPreviewMp3Url)
+      } else if (snap.v === 1) {
+        const mastered = typeof snap.masteredUrl === "string" ? snap.masteredUrl : ""
+        if (mastered) setMasteredUrl(mastered)
+        if (typeof snap.masteredPreviewMp3Url === "string") setMasteredPreviewMp3Url(snap.masteredPreviewMp3Url)
+        if (snap.analysisBefore && typeof snap.analysisBefore === "object") {
+          setAnalysisBefore(cloneAnalysis(snap.analysisBefore as Record<string, unknown>))
+        }
+        if (snap.analysisAfter && typeof snap.analysisAfter === "object") {
+          setAnalysisAfter(cloneAnalysis(snap.analysisAfter as Record<string, unknown>))
+        }
+        if (typeof snap.targetLufs === "number" && Number.isFinite(snap.targetLufs)) setTargetLufs(snap.targetLufs)
+      }
     } catch {
-      /* ignore */
+      /* ignore corrupt storage */
     }
+    setSessionHydrated(true)
   }, [])
 
   useEffect(() => {
-    if (typeof window === "undefined") return
-    if (!masteredUrl) return
-    const payload: MasterResultSnapshot = {
-      v: 1,
-      masteredUrl,
-      masteredPreviewMp3Url,
+    if (typeof window === "undefined" || !sessionHydrated) return
+    const payload: MasterSessionSnapshotV2 = {
+      v: 2,
       analysisBefore,
       analysisAfter,
+      stylePreset,
       targetLufs,
+      stereoEnhance,
+      lowEndControl,
+      clarityPresence,
+      masteredUrl,
+      masteredPreviewMp3Url,
+      fileName: file?.name ?? "",
+    }
+    const hasPayload =
+      !!masteredUrl ||
+      !!analysisBefore ||
+      !!analysisAfter ||
+      !!file ||
+      stylePreset !== "STREAM" ||
+      targetLufs !== -14 ||
+      stereoEnhance !== 50 ||
+      lowEndControl !== 50 ||
+      clarityPresence !== 50
+    if (!hasPayload) {
+      try {
+        sessionStorage.removeItem(MASTER_SESSION_STORAGE_KEY)
+      } catch {
+        /* ignore */
+      }
+      return
     }
     try {
-      sessionStorage.setItem(MASTER_RESULT_STORAGE_KEY, JSON.stringify(payload))
+      sessionStorage.setItem(MASTER_SESSION_STORAGE_KEY, JSON.stringify(payload))
     } catch {
-      /* ignore */
+      /* ignore quota */
     }
-  }, [masteredUrl, masteredPreviewMp3Url, analysisBefore, analysisAfter, targetLufs])
+  }, [
+    sessionHydrated,
+    analysisBefore,
+    analysisAfter,
+    stylePreset,
+    targetLufs,
+    stereoEnhance,
+    lowEndControl,
+    clarityPresence,
+    masteredUrl,
+    masteredPreviewMp3Url,
+    file,
+  ])
 
   const value = useMemo(
     () => ({
@@ -138,11 +278,15 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       clarityPresence,
       setClarityPresence,
       resetSession,
+      sessionHydrated,
+      seedAnalyzeIntoMasterFlow,
+      reconnectSourceFile,
     }),
     [
       file,
       setFile,
       audioUrl,
+      setAudioUrl,
       masteredUrl,
       masteredPreviewMp3Url,
       analysisBefore,
@@ -153,6 +297,9 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       lowEndControl,
       clarityPresence,
       resetSession,
+      sessionHydrated,
+      seedAnalyzeIntoMasterFlow,
+      reconnectSourceFile,
     ]
   )
 

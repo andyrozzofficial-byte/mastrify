@@ -3,7 +3,7 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
 import { useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
@@ -97,8 +97,12 @@ function ThinSlider({
 
 export default function MasterSettingsPage() {
   const router = useRouter()
+  const reconnectInputRef = useRef<HTMLInputElement>(null)
   const {
     file,
+    analysisBefore,
+    sessionHydrated,
+    reconnectSourceFile,
     stylePreset,
     setStylePreset,
     targetLufs,
@@ -112,8 +116,58 @@ export default function MasterSettingsPage() {
   } = useMasterSession()
 
   useEffect(() => {
-    if (!file) router.replace("/master")
-  }, [file, router])
+    if (!sessionHydrated) return
+    if (!file && !analysisBefore) {
+      router.replace("/master")
+    }
+  }, [file, analysisBefore, sessionHydrated, router])
+
+  if (!sessionHydrated) {
+    return (
+      <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
+        <CinematicBackground />
+        <div className="relative flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
+          <p className="text-sm text-white/50">Restoring session…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!file && analysisBefore) {
+    return (
+      <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
+        <CinematicBackground />
+        <div className="relative mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
+          <input
+            ref={reconnectInputRef}
+            type="file"
+            className="hidden"
+            accept="audio/*"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) reconnectSourceFile(f)
+              e.target.value = ""
+            }}
+          />
+          <p className="text-sm leading-relaxed text-white/55">
+            Your mastering preferences and analysis were restored. Select the same audio file again to continue — this
+            does not clear your saved analysis snapshot.
+          </p>
+          <button
+            type="button"
+            onClick={() => reconnectInputRef.current?.click()}
+            className="rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-lg ring-1 ring-white/10 transition hover:brightness-110"
+          >
+            Choose audio file
+          </button>
+          <Link href="/master" className="text-xs text-purple-300 hover:underline">
+            Start over from upload
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   if (!file) {
     return (

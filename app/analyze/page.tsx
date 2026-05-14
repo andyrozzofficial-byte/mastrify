@@ -5,9 +5,11 @@ import { useState, useRef } from "react"
 import axios from "axios"
 import { motion } from "framer-motion"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import CinematicBackground from "../components/CinematicBackground"
 import ScoreRing from "../components/ScoreRing"
 import { appendHistory } from "../../lib/history"
+import { useMasterSession } from "../master/MasterSessionProvider"
 
 /** Small metric cell — real values only; `hint` is derived copy, not fake data */
 function MetricTile({
@@ -191,6 +193,8 @@ function generateIssues(result: any) {
 }
 
 export default function AnalyzePage() {
+  const router = useRouter()
+  const { seedAnalyzeIntoMasterFlow } = useMasterSession()
 
   const [showWaitlist, setShowWaitlist] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -838,12 +842,20 @@ export default function AnalyzePage() {
               Let AI fix these issues and make your track sound release-ready.
             </p>
             <div className="mx-auto mt-8 flex max-w-lg flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
-              <Link
-                href="/master"
+              <button
+                type="button"
+                onClick={() => {
+                  if (file && result) {
+                    seedAnalyzeIntoMasterFlow(file, result as Record<string, unknown>)
+                    router.push("/master/settings")
+                  } else {
+                    router.push("/master")
+                  }
+                }}
                 className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-gradient-to-r from-[#6d28d9] via-[#4f46e5] to-[#2563eb] px-8 text-[14px] font-semibold text-white shadow-[0_0_22px_rgba(99,102,241,0.22),0_12px_32px_rgba(0,0,0,0.4)] ring-1 ring-white/10 transition hover:brightness-110"
               >
                 Master my track
-              </Link>
+              </button>
               <button
                 type="button"
                 onClick={() => {

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import SiteHeader from "./components/SiteHeader"
+import { MasterSessionRootProvider } from "./MasterSessionRootProvider"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,7 +51,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-black text-white antialiased`}
       >
         <SiteHeader />
-        <main className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)]">{children}</main>
+        <MasterSessionRootProvider>
+          <main className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)]">{children}</main>
+        </MasterSessionRootProvider>
       </body>
     </html>
   )

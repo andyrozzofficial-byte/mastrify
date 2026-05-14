@@ -1,13 +1,9 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import {
-  MASTER_RESULT_STORAGE_KEY,
-  useMasterSession,
-  type MasterStylePreset,
-} from "../MasterSessionProvider"
+import { useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
 
 const PREVIEW_START = 60
 const PREVIEW_DURATION = 30
@@ -102,50 +98,13 @@ export default function MasterResultClient() {
     file,
     audioUrl,
     masteredUrl,
-    setMasteredUrl,
     masteredPreviewMp3Url,
-    setMasteredPreviewMp3Url,
     targetLufs,
-    setTargetLufs,
     stylePreset,
     resetSession,
     analysisBefore,
-    setAnalysisBefore,
     analysisAfter,
-    setAnalysisAfter,
   } = useMasterSession()
-
-  useLayoutEffect(() => {
-    if (typeof window === "undefined") return
-    if (masteredUrl) return
-    try {
-      const raw = sessionStorage.getItem(MASTER_RESULT_STORAGE_KEY)
-      if (!raw) return
-      const snap = JSON.parse(raw) as {
-        v?: number
-        masteredUrl?: string
-        masteredPreviewMp3Url?: string
-        analysisBefore?: Record<string, unknown> | null
-        analysisAfter?: Record<string, unknown> | null
-        targetLufs?: number
-      }
-      if (snap.v !== 1 || typeof snap.masteredUrl !== "string" || !snap.masteredUrl) return
-      setMasteredUrl(snap.masteredUrl)
-      setMasteredPreviewMp3Url(typeof snap.masteredPreviewMp3Url === "string" ? snap.masteredPreviewMp3Url : "")
-      setAnalysisBefore(snap.analysisBefore ?? null)
-      setAnalysisAfter(snap.analysisAfter ?? null)
-      if (typeof snap.targetLufs === "number" && Number.isFinite(snap.targetLufs)) setTargetLufs(snap.targetLufs)
-    } catch {
-      /* ignore corrupt storage */
-    }
-  }, [
-    masteredUrl,
-    setMasteredUrl,
-    setMasteredPreviewMp3Url,
-    setAnalysisBefore,
-    setAnalysisAfter,
-    setTargetLufs,
-  ])
 
   const [mounted, setMounted] = useState(false)
   const [isMobileClient, setIsMobileClient] = useState(false)
