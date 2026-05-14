@@ -31,6 +31,9 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+// Entry: Railway with Root Directory "server" runs `npm start` → `node server.js` (this file).
+// Not used for deploy: server/server_backup.js, AI-Mastering_copy/server/server.js
+
 // ✅ LÄGG TILL DENNA
 app.get("/", (req, res) => {
   res.send("Mastrify backend is live 🚀")
