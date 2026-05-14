@@ -32,7 +32,7 @@ app.use(cors())
 app.use(express.json())
 
 // Entry: Railway with Root Directory "server" runs `npm start` → `node server.js` (this file).
-// Not used for deploy: server/server_backup.js, AI-Mastering_copy/server/server.js
+// Not used for deploy: AI-Mastering_copy submodule server/ (legacy copy; use this server/ only).
 
 // ✅ LÄGG TILL DENNA
 app.get("/", (req, res) => {

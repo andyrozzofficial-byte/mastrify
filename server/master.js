@@ -1,112 +1,182 @@
 import ffmpeg from "fluent-ffmpeg"
-import ffmpegStatic from "ffmpeg-static"
-import path from "path"
+import ffmpegPath from "ffmpeg-static"
+import ffprobePath from "ffprobe-static"
 import fs from "fs"
-import { fileURLToPath } from "url"
+import { spawn } from "child_process"
 import { analyzeTrack } from "./analyze.js"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-// Ensure ffmpeg binary exists in deployments (e.g. Railway)
-if (ffmpegStatic) {
-  ffmpeg.setFfmpegPath(ffmpegStatic)
+if (ffmpegPath) {
+  ffmpeg.setFfmpegPath(ffmpegPath)
+}
+if (ffprobePath?.path) {
+  ffmpeg.setFfprobePath(ffprobePath.path)
 }
 
-
-const uploadsDir = "/tmp/uploads"
 const mastersDir = "/tmp/masters"
 if (!fs.existsSync(mastersDir)) {
   fs.mkdirSync(mastersDir, { recursive: true })
 }
 
-export async function masterTrack({ file, output, reference, style, targetLufs, mode }) {
+/** Wait until the mastered file exists, is non-empty, and size is stable (ffmpeg flush). */
+async function waitForMasterOutputReady(filePath) {
+  let stable = 0
+  let lastSize = -1
+  for (let i = 0; i < 120; i++) {
+    if (!fs.existsSync(filePath)) {
+      await new Promise((r) => setTimeout(r, 25))
+      continue
+    }
+    const sz = fs.statSync(filePath).size
+    if (sz <= 0) {
+      await new Promise((r) => setTimeout(r, 25))
+      continue
+    }
+    if (sz === lastSize) {
+      stable++
+      if (stable >= 2) {
+        await new Promise((r) => setTimeout(r, 90))
+        const sz2 = fs.statSync(filePath).size
+        if (sz2 === sz) return sz2
+        stable = 0
+      }
+    } else {
+      stable = 0
+    }
+    lastSize = sz
+    await new Promise((r) => setTimeout(r, 20))
+  }
+  return fs.existsSync(filePath) ? fs.statSync(filePath).size : 0
+}
 
+export async function masterTrack({
+  file,
+  output,
+  reference,
+  style,
+  targetLufs,
+  mode,
+  metricTraceId,
+}) {
   console.log("REFERENCE IN MASTER:", reference)
+  if (metricTraceId) console.log("METRIC TRACE:", metricTraceId)
 
   if (!file) throw new Error("File missing")
 
   if (!style) style = "STREAM"
   if (!mode) mode = "normal"
-  
-// 🎯 TARGET LUFS (only if no reference loaded)
-if (!reference) {
-  if (style === "STREAM") targetLufs = -14
-  if (style === "CLUB") targetLufs = -11
-  if (style === "LOUD") targetLufs = -10
-  if (style === "WARM") targetLufs = -13
-  if (style === "FESTIVAL") targetLufs = -9
-}
+
+  let referenceAnalysis = null
+  if (reference) {
+    const refPath = reference
+    referenceAnalysis = await analyzeTrack(refPath)
+  }
+
+  if (!reference) {
+    if (style === "STREAM") targetLufs = -14
+    if (style === "CLUB") targetLufs = -11
+    if (style === "LOUD") targetLufs = -10
+    if (style === "WARM") targetLufs = -13
+    if (style === "FESTIVAL") targetLufs = -9
+  }
+
+  if (referenceAnalysis?.lufs) {
+    targetLufs = referenceAnalysis.lufs
+  }
 
   targetLufs = parseFloat(targetLufs || -14)
 
   const input = file
-const outputPath = output
+  const outputPath = output
 
-// 🔥 DEBUG + SKYDD
-if (!outputPath) {
-  throw new Error("❌ Output path missing")
-}
-
-console.log("INPUT:", input)
-console.log("OUTPUT:", outputPath)
+  if (!outputPath) {
+    throw new Error("❌ Output path missing")
+  }
 
   if (!fs.existsSync(input)) {
     throw new Error("Input file not found")
   }
 
-  const analysis = await analyzeTrack(input)
+  console.log("INPUT PATH:", file)
+  console.log("INPUT SIZE:", fs.statSync(file).size)
+  console.log("INPUT:", input)
+  console.log("OUTPUT:", outputPath)
 
-  let referenceAnalysis = null
+  const probeResult = await new Promise((resolve) => {
+    ffmpeg.ffprobe(file, (err, data) => {
+      if (err) console.log("FFPROBE ERROR:", err)
+      resolve({ err, data })
+    })
+  })
 
-if (reference) {
-  const refPath = reference
-  referenceAnalysis = await analyzeTrack(refPath)
-}
+  if (probeResult?.err) {
+    throw new Error(`ffprobe failed: ${probeResult.err.message || probeResult.err}`)
+  }
 
-// 🎯 MATCH LOUDNESS TO REFERENCE
-if (referenceAnalysis?.lufs) {
-  targetLufs = referenceAnalysis.lufs
-}
+  let stagingDb = 0
+  let preAnalysis = null
+  try {
+    preAnalysis = await analyzeTrack(input)
+    const raw = typeof preAnalysis.lufs === "number" ? preAnalysis.lufs : -18
+    const stagingTarget = -15
+    stagingDb = stagingTarget - raw
+    stagingDb = Math.max(-12, Math.min(6, stagingDb))
+    console.log("INPUT STAGING:", { rawLevelDb: raw, stagingDb })
+  } catch (e) {
+    console.log("PRE-ANALYSIS STAGING SKIP:", e?.message || e)
+  }
 
-// 🎯 DEBUG
-console.log("TARGET LUFS:", targetLufs)
-console.log("REFERENCE LUFS:", referenceAnalysis?.lufs)
+  const safeIntegratedLufs = Math.min(targetLufs, -9)
 
-const target = referenceAnalysis?.spectral || {
-  low: 0.22,
-  mid: 0.18,
-  high: 0.20
-}
+  const tone =
+    style === "WARM"
+      ? {
+          lowHz: 72,
+          lowGain: 1.12,
+          mudGain: -1.15,
+          mudWideGain: -0.45,
+          airHz: 12500,
+          airGain: 0.16,
+          dipAboveAirHz: 15500,
+          dipAboveAirGain: -0.35,
+        }
+      : style === "LOUD" || style === "FESTIVAL"
+        ? {
+            lowHz: 82,
+            lowGain: 1.02,
+            mudGain: -1.25,
+            mudWideGain: -0.5,
+            airHz: 13000,
+            airGain: 0.18,
+            dipAboveAirHz: 15500,
+            dipAboveAirGain: -0.45,
+          }
+        : {
+            lowHz: 78,
+            lowGain: 1.06,
+            mudGain: -1.12,
+            mudWideGain: -0.4,
+            airHz: 13000,
+            airGain: 0.2,
+            dipAboveAirHz: 15500,
+            dipAboveAirGain: -0.38,
+          }
 
-  console.log("🔥 USING FFMPEG MASTER")
-  console.log("🎧 ANALYSIS:", analysis)
-  console.log("SPECTRAL:", analysis.spectral)
+  const volumeStaging =
+    stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
 
-  // DEBUG: brutally obvious chain to verify processing
-  const filters = [
-    // make it immediately audible that filters apply
-    "highpass=f=200",
+  const audioFilter =
+    `highpass=f=25,` +
+    volumeStaging +
+    `equalizer=f=200:t=q:w=1:g=${tone.mudGain},` +
+    `equalizer=f=320:t=q:w=1:g=${tone.mudWideGain},` +
+    `equalizer=f=${tone.lowHz}:t=q:w=0.92:g=${tone.lowGain},` +
+    `equalizer=f=9800:t=q:w=1:g=0.32,` +
+    `acompressor=threshold=-18dB:ratio=1.55:attack=30:release=240,` +
+    `equalizer=f=${tone.airHz}:t=q:w=1.15:g=${tone.airGain},` +
+    `equalizer=f=${tone.dipAboveAirHz}:t=q:w=1:g=${tone.dipAboveAirGain},` +
+    `loudnorm=I=${safeIntegratedLufs}:LRA=10:TP=-1:linear=true`
 
-    // extreme EQ swings
-    "equalizer=f=80:t=q:w=1:g=12",
-    "equalizer=f=3500:t=q:w=1:g=10",
-    "equalizer=f=12000:t=q:w=1:g=12",
-
-    // smash dynamics hard
-    "acompressor=threshold=-35dB:ratio=20:attack=1:release=50:makeup=20",
-
-    // push into limiter
-    "volume=20dB",
-    "alimiter=limit=0.25",
-  ]
-
-
-
-  console.log("USING TEST MASTER CHAIN")
-  console.log("FILTERS:", filters)
-
-  return new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     let settled = false
     let cmdRef = null
 
@@ -117,52 +187,112 @@ const target = referenceAnalysis?.spectral || {
       try {
         cmdRef?.kill("SIGKILL")
       } catch (e) {
-        // ignore kill errors
+        // ignore
       }
       reject(new Error("Mastering timed out"))
     }, 60_000)
 
-    console.log("🔥 FILTERS USED:", filters)
+    console.log("INPUT EXISTS:", fs.existsSync(file))
+    console.log("OUTPUT DIR EXISTS:", fs.existsSync("/tmp/masters"))
+    console.log("FFMPEG PATH:", ffmpegPath)
+    const ffStat = fs.statSync(ffmpegPath)
+    console.log("MODE:", ffStat.mode.toString(8))
+    try {
+      fs.chmodSync(ffmpegPath, 0o755)
+    } catch (e) {
+      console.log("CHMOD ERROR:", e?.message || e)
+    }
 
-    const command = ffmpeg(input)
-      .audioFilters(filters)
-      .audioCodec("pcm_s16le")
-      .audioFrequency(44100)
-      .audioChannels(2)
-      .format("wav")
-      .output(outputPath)
-      .on("start", (cmd) => {
-        console.log("🚀 FFMPEG START:", cmd)
-        cmdRef = command
-      })
-      .on("stderr", (line) => {
-        console.log("FFMPEG STDERR:", line)
-      })
+    const args = [
+      "-y",
+      "-i",
+      file,
+      "-vn",
+      "-ar",
+      "44100",
+      "-ac",
+      "2",
+      "-c:a",
+      "pcm_s16le",
+      "-f",
+      "wav",
+      "-af",
+      audioFilter,
+      outputPath,
+    ]
 
-      .on("end", () => {
-        if (settled) return
-        settled = true
-        clearTimeout(timeoutId)
-        console.log("✅ FFMPEG END")
-        if (!fs.existsSync(outputPath)) {
-          return reject(new Error("Master completed but output file missing"))
-        }
-        resolve({
-  path: outputPath
-})
-      })
+    console.log("SPAWN FFMPEG:", ffmpegPath, args)
 
-      .on("error", err => {
-        if (settled) return
-        settled = true
-        clearTimeout(timeoutId)
-        console.log("❌ FFMPEG ERROR:", err)
-        reject(err)
-      })
+    const ff = spawn(ffmpegPath, args, { shell: false })
+    cmdRef = ff
 
-    cmdRef = command
-    command.run()
+    ff.stderr.on("data", (d) => {
+      console.log("FFMPEG STDERR:", d.toString())
+    })
 
+    ff.stdout.on("data", (d) => {
+      console.log("FFMPEG STDOUT:", d.toString())
+    })
+
+    ff.on("close", (code) => {
+      console.log("FFMPEG EXIT CODE:", code)
+      if (settled) return
+      settled = true
+      clearTimeout(timeoutId)
+
+      if (code === 0) {
+        resolve()
+      } else {
+        reject(new Error("ffmpeg failed"))
+      }
+    })
+
+    ff.on("error", (err) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeoutId)
+      console.error("SPAWN ERROR:", err)
+      reject(err)
+    })
   })
 
+  const outBytes = await waitForMasterOutputReady(outputPath)
+  console.log("POST-MASTER OUTPUT BYTES (stable):", outBytes)
+
+  let analysisBefore = preAnalysis
+  if (!analysisBefore) {
+    try {
+      analysisBefore = await analyzeTrack(input)
+    } catch (e) {
+      console.log("analysisBefore fallback failed:", e?.message || e)
+      analysisBefore = null
+    }
+  }
+
+  let analysisAfter = null
+  const delays = [0, 200, 450]
+  for (let attempt = 0; attempt < delays.length && !analysisAfter; attempt++) {
+    try {
+      if (delays[attempt] > 0) await new Promise((r) => setTimeout(r, delays[attempt]))
+      analysisAfter = await analyzeTrack(outputPath)
+    } catch (e) {
+      console.log("POST-MASTER ANALYZE FAILED (attempt " + (attempt + 1) + "):", e)
+    }
+  }
+  if (!analysisAfter) {
+    console.log("[POST_MASTER] analysisAfter is null after all attempts; metricTraceId:", metricTraceId ?? "(none)")
+  }
+
+  console.log("TARGET LUFS:", targetLufs)
+  console.log("SAFE INTEGRATED LUFS (loudnorm):", safeIntegratedLufs)
+  console.log("REFERENCE LUFS:", referenceAnalysis?.lufs)
+  console.log("🔥 USING FFMPEG MASTER (spawn chain)")
+  console.log("🎧 ANALYSIS BEFORE:", analysisBefore)
+  console.log("🎧 ANALYSIS AFTER:", analysisAfter)
+
+  return {
+    path: outputPath,
+    analysisBefore,
+    analysisAfter,
+  }
 }
