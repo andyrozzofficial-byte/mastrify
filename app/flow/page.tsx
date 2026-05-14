@@ -3,10 +3,12 @@
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
 import { AnimatePresence, motion } from "framer-motion"
+import { PUBLIC_BACKEND_API_BASE } from "../../lib/publicBackendUrl"
+
 type Step = "upload" | "analyzing" | "done"
 
 export default function FlowPage() {
-  const API = "https://mastrify-backend-production.up.railway.app"
+  const API = PUBLIC_BACKEND_API_BASE
   const SHOW_REFERENCE = false
 
   const sleep = (ms: number) => new Promise(res => setTimeout(res, ms))
@@ -186,7 +188,9 @@ export default function FlowPage() {
   formData.append("reference", referenceTrack)
 }
 
-      const res = await axios.post(`${API}/master`, formData)
+      const masterUrl = `${API}/master`
+      console.log("[MASTRIFY_API] POST", masterUrl)
+      const res = await axios.post(masterUrl, formData)
 
       console.log("SERVER RESPONSE:", res.data)
 console.log("MASTER PATH:", res.data.after)

@@ -6,9 +6,10 @@ import axios from "axios"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
 import { appendHistory } from "../../../lib/history"
+import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { useMasterSession } from "../MasterSessionProvider"
 
-const API = "https://mastrify-backend-production.up.railway.app"
+const API = PUBLIC_BACKEND_API_BASE
 
 /** Display steps — must stay in sync with timed progression before the API call */
 const UI_STEPS = [
@@ -72,7 +73,9 @@ export default function MasterProcessingPage() {
         const formData = new FormData()
         formData.append("file", file)
 
-        const res = await axios.post(`${API}/master`, formData, { signal: ac.signal })
+        const masterUrl = `${API}/master`
+        console.log("[MASTRIFY_API] POST", masterUrl)
+        const res = await axios.post(masterUrl, formData, { signal: ac.signal })
         if (cancelled) return
 
         console.log("MASTER RESPONSE", res.data)

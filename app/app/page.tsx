@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
+import { PUBLIC_BACKEND_API_BASE } from "../../lib/publicBackendUrl"
 
 
 
@@ -235,10 +236,9 @@ const aiInterval = setInterval(() => {
     formData.append("targetLufs", "-10")
 
     try {
-      const resPromise = axios.post(
-  "http://127.0.0.1:3002/master",
-  formData,
-  {
+      const masterUrl = `${PUBLIC_BACKEND_API_BASE}/master`
+      console.log("[MASTRIFY_API] POST", masterUrl)
+      const resPromise = axios.post(masterUrl, formData, {
     headers: {
       "Content-Type": "multipart/form-data"
     }
@@ -253,8 +253,8 @@ const res = await resPromise
       clearInterval(interval)
       setProgress(100)
 
-      setResult(`http://127.0.0.1:3002${res.data.after}`)
-      setBeforeUrl(`http://127.0.0.1:3002${res.data.before}`)
+      setResult(`${PUBLIC_BACKEND_API_BASE}${res.data.after}`)
+      setBeforeUrl(`${PUBLIC_BACKEND_API_BASE}${res.data.before}`)
       setAnalysis(res.data.analysis)
 
     } catch (err) {
@@ -272,7 +272,9 @@ const res = await resPromise
     if (!email) return
 
     try {
-      await axios.post("http://127.0.0.1:3002/waitlist", { email })
+      const waitlistUrl = `${PUBLIC_BACKEND_API_BASE}/waitlist`
+      console.log("[MASTRIFY_API] POST", waitlistUrl)
+      await axios.post(waitlistUrl, { email })
       setSubmitted(true)
     } catch (err) {
       console.log(err)

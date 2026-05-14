@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { publicBackendUrl } from "../../lib/publicBackendUrl"
 
 export default function FlowPage() {
   const [analysis, setAnalysis] = useState<any>(null)
@@ -12,7 +13,9 @@ export default function FlowPage() {
     const formData = new FormData()
     formData.append("file", file)
 
-    const res = await fetch("https://mastrify-production.up.railway.app/analyze", {
+    const analyzeUrl = publicBackendUrl("/analyze")
+    console.log("[MASTRIFY_API] POST", analyzeUrl)
+    const res = await fetch(analyzeUrl, {
       method: "POST",
       body: formData,
     })

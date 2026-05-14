@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import CinematicBackground from "../components/CinematicBackground"
 import ScoreRing from "../components/ScoreRing"
 import { appendHistory } from "../../lib/history"
+import { publicBackendUrl } from "../../lib/publicBackendUrl"
 import { useMasterSession } from "../master/MasterSessionProvider"
 
 /** Small metric cell — real values only; `hint` is derived copy, not fake data */
@@ -288,17 +289,15 @@ export default function AnalyzePage() {
 
   try {
 
+    const uploadUrl = publicBackendUrl("/upload")
+    console.log("[MASTRIFY_API] POST", uploadUrl)
     console.log("SENDING FILE:", file)
 
-    const res = await axios.post(
-  "https://mastrify-backend-production.up.railway.app/upload",
-  formData,
-  {
-    headers: {
-      "Content-Type": "multipart/form-data"
-    }
-  }
-)
+    const res = await axios.post(uploadUrl, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
 
     let steps = [
       "Analyzing your mix...",
