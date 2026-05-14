@@ -344,7 +344,7 @@ export default function AnalyzePage() {
       <CinematicBackground />
       <div
         className={`relative mx-auto flex w-full flex-col items-center px-5 pb-20 pt-6 sm:px-5 md:pb-24 md:pt-8 ${
-          result ? "max-w-6xl md:max-w-7xl md:px-8" : "max-w-[500px] md:max-w-[528px]"
+          result ? "max-w-6xl md:max-w-7xl md:px-8" : "max-w-[520px] md:max-w-[568px]"
         }`}
       >
         {!result && (
@@ -362,17 +362,17 @@ export default function AnalyzePage() {
             <motion.h1
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-4 w-full text-center text-[1.9rem] font-extrabold leading-[1.08] tracking-tight sm:text-[2.05rem] md:text-[2.3rem]"
+              className="mt-4 w-full text-center text-[2rem] font-extrabold leading-[1.06] tracking-tight sm:text-[2.15rem] md:text-[2.45rem]"
             >
               <span className="text-white">Your mix </span>
               <span className="bg-gradient-to-r from-purple-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">analysis</span>
             </motion.h1>
-            <p className="mt-3 w-full max-w-[26rem] text-center text-[13px] leading-snug text-white/32 md:text-[13px]">
+            <p className="mt-3 w-full max-w-[28rem] text-center text-[13px] leading-snug text-white/32 sm:text-[14px] md:mt-3.5">
               AI shows exactly what&apos;s holding your track back — before you release it.
             </p>
 
             {/* Step indicator — thin connectors */}
-            <div className="mx-auto mt-9 flex w-full max-w-[min(100%,360px)] items-center justify-center md:mt-10 md:max-w-[380px]">
+            <div className="mx-auto mt-8 flex w-full max-w-[min(100%,380px)] items-center justify-center md:mt-9 md:max-w-[400px]">
               {(["Upload", "Analyze", "Results"] as const).map((label, i) => (
                 <div key={label} className="contents">
                   {i > 0 ? (
@@ -403,7 +403,7 @@ export default function AnalyzePage() {
               ))}
             </div>
 
-        <div className="mt-9 w-full md:mt-11">
+        <div className="mt-8 w-full md:mt-9">
           <input
             type="file"
             ref={fileInputRef}
@@ -419,17 +419,21 @@ export default function AnalyzePage() {
             }}
           />
 
-          <div className="relative w-full overflow-visible pb-6 md:pb-8">
-            {/* Radial glow behind card — subtle, edge-focused */}
+          <div className="relative w-full overflow-visible pb-4 md:pb-6">
+            {/* Radial glow behind card — aligned with master upload depth */}
             <div
-              className="pointer-events-none absolute left-1/2 top-[40%] z-0 h-[min(260px,58vw)] w-[min(400px,76%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_40%_34%_at_50%_50%,rgba(147,51,234,0.09),rgba(192,38,211,0.028)_52%,transparent_62%)] blur-2xl"
+              className="pointer-events-none absolute left-1/2 top-[42%] z-0 h-[min(320px,68vw)] w-[min(460px,92%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_42%_36%_at_50%_50%,rgba(147,51,234,0.14),rgba(192,38,211,0.045)_52%,transparent_64%)] blur-2xl"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute left-1/2 top-[48%] z-0 h-[min(180px,48vw)] w-[min(340px,85%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_50%_40%_at_50%_50%,rgba(34,211,238,0.06),transparent_55%)] blur-3xl"
               aria-hidden
             />
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative z-10 mx-auto w-full max-w-[min(100%,28rem)] origin-top scale-[1.13] overflow-hidden rounded-[1.45rem] border border-white/[0.16] bg-gradient-to-b from-black/[0.54] to-black/[0.92] p-8 shadow-[0_0_0_1px_rgba(167,139,250,0.1),0_0_12px_rgba(88,28,135,0.08),0_26px_58px_rgba(0,0,0,0.62)] ring-1 ring-fuchsia-500/8 backdrop-blur-2xl sm:p-9 md:p-10"
+              className="relative z-10 mx-auto w-full max-w-[min(100%,29.5rem)] origin-top scale-[1.17] overflow-hidden rounded-[1.45rem] border border-white/[0.18] bg-gradient-to-b from-black/[0.52] to-black/[0.94] p-8 shadow-[0_0_0_1px_rgba(167,139,250,0.14),0_0_24px_rgba(88,28,135,0.12),0_0_56px_rgba(88,28,135,0.1),0_28px_64px_rgba(0,0,0,0.68)] ring-1 ring-fuchsia-500/12 backdrop-blur-2xl sm:p-9 md:scale-[1.2] md:p-10"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault()
@@ -440,10 +444,10 @@ export default function AnalyzePage() {
                 }
               }}
             >
-              <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-purple-600/7 blur-2xl" />
+              <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-purple-600/10 blur-2xl" />
 
               <div className="relative flex w-full flex-col items-center text-center">
-                <div className="mx-1 w-full rounded-[1.1rem] border border-dashed border-white/[0.1] bg-black/[0.62] px-8 py-16 sm:mx-1.5 sm:px-10 sm:py-[4.5rem] md:px-11 md:py-[5rem]">
+                <div className="mx-1 w-full rounded-[1.1rem] border border-dashed border-white/[0.11] bg-black/[0.64] px-8 py-12 sm:mx-1.5 sm:px-10 sm:py-14 md:px-11 md:py-16">
                   <div className="mx-auto mb-4 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/40 to-purple-900/25 ring-1 ring-white/[0.12] shadow-[0_0_12px_rgba(168,85,247,0.14)]">
                     <svg className="h-10 w-10 drop-shadow-[0_0_4px_rgba(216,180,254,0.28)]" viewBox="0 0 24 24" aria-hidden>
                       <defs>
@@ -463,13 +467,13 @@ export default function AnalyzePage() {
                       />
                     </svg>
                   </div>
-                  <p className="text-[1.08rem] font-semibold tracking-tight text-white sm:text-[1.14rem]">Drop your track here</p>
+                  <p className="text-[1.14rem] font-semibold tracking-tight text-white sm:text-[1.22rem] md:text-[1.3rem]">Drop your track here</p>
                   <p className="mx-auto mt-3.5 max-w-[19rem] text-[12px] leading-relaxed text-white/28 sm:text-[13px]">
                     WAV, AIFF, FLAC, MP3 up to 500MB
                   </p>
                 </div>
 
-                <div className="mt-10 flex w-full max-w-[min(100%,22rem)] flex-col items-center gap-4 sm:mt-11">
+                <div className="mt-7 flex w-full max-w-[min(100%,22rem)] flex-col items-center gap-3.5 sm:mt-8 md:mt-9">
                   <button
                     type="button"
                     onClick={() => {
@@ -479,7 +483,7 @@ export default function AnalyzePage() {
                         handleUpload()
                       }
                     }}
-                    className="w-full rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_22px_rgba(91,33,182,0.28),0_0_14px_rgba(14,116,144,0.14),inset_0_1px_0_rgba(255,255,255,0.12),0_12px_32px_rgba(0,0,0,0.45)] ring-1 ring-white/10 transition hover:brightness-110 sm:py-4 sm:text-[15px]"
+                    className="w-full rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_22px_rgba(91,33,182,0.28),0_0_14px_rgba(14,116,144,0.14),inset_0_1px_0_rgba(255,255,255,0.12),0_12px_32px_rgba(0,0,0,0.45)] ring-1 ring-white/10 transition hover:brightness-110 sm:py-4 sm:text-[16px]"
                   >
                     {file ? "Scan my track" : "Choose file"}
                   </button>
@@ -494,7 +498,7 @@ export default function AnalyzePage() {
           </div>
 
           {/* Feature cards — clear separation from upload card */}
-          <div className="mx-auto mt-16 grid w-full max-w-[min(100%,26rem)] grid-cols-1 gap-4 sm:mt-20 sm:grid-cols-3 sm:gap-3 md:mt-24 md:max-w-[min(100%,28rem)] md:gap-3.5">
+          <div className="mx-auto mt-12 grid w-full max-w-[min(100%,26rem)] grid-cols-1 gap-3 sm:mt-14 sm:grid-cols-3 sm:gap-3 md:mt-16 md:max-w-[min(100%,28rem)] md:gap-3">
             {[
               {
                 title: "100% free",
@@ -526,7 +530,7 @@ export default function AnalyzePage() {
             ].map((card) => (
               <div
                 key={card.title}
-                className="flex min-h-[4.25rem] flex-col items-center justify-center gap-0.5 rounded-md border border-white/[0.055] bg-black/[0.48] px-1.5 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md sm:min-h-[4.5rem] sm:py-2.5"
+                className="flex min-h-[4.5rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-white/[0.06] bg-black/[0.5] px-2.5 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_10px_28px_rgba(0,0,0,0.35)] backdrop-blur-md sm:min-h-[4.75rem] sm:py-3"
               >
                 <div className="mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/[0.04] ring-1 ring-white/[0.05] sm:h-8 sm:w-8">
                   {card.icon}
@@ -537,7 +541,7 @@ export default function AnalyzePage() {
             ))}
           </div>
 
-          <p className="mx-auto mt-10 w-full max-w-[min(100%,28rem)] text-center text-[11px] text-white/28 sm:mt-12 sm:text-xs">
+          <p className="mx-auto mt-8 w-full max-w-[min(100%,28rem)] text-center text-[11px] text-white/28 sm:mt-9 sm:text-xs">
             Need help?{" "}
             <Link href="/how-it-works" className="text-purple-300/80 underline-offset-2 transition hover:text-cyan-200/85 hover:underline">
               Supported formats &amp; tips
