@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
+import SiteFooter from "./components/SiteFooter"
 import SiteHeader from "./components/SiteHeader"
 import { MasterSessionRootProvider } from "./MasterSessionRootProvider"
 
@@ -48,12 +49,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-black text-white antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col bg-black text-white antialiased`}
       >
         <SiteHeader />
         <MasterSessionRootProvider>
-          <main className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)]">{children}</main>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <main className="flex-1">{children}</main>
+          </div>
         </MasterSessionRootProvider>
+        <SiteFooter />
       </body>
     </html>
   )
