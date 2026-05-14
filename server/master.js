@@ -12,6 +12,8 @@ if (ffprobePath?.path) {
   ffmpeg.setFfprobePath(ffprobePath.path)
 }
 
+// ffmpeg/ffprobe paths: same packages as server.js [FFMPEG_BOOT] logs (ffmpeg-static / ffprobe-static).
+
 const mastersDir = "/tmp/masters"
 if (!fs.existsSync(mastersDir)) {
   fs.mkdirSync(mastersDir, { recursive: true })

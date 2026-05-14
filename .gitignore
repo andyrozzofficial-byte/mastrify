@@ -2,6 +2,11 @@
 
 # dependencies
 /node_modules
+
+# server: never commit platform-specific ffmpeg/ffprobe binaries (install via npm on Linux/macOS)
+server/node_modules/ffmpeg-static/ffmpeg
+server/node_modules/ffmpeg-static/ffmpeg.exe
+server/node_modules/ffprobe-static/bin/darwin/
 /.pnp
 .pnp.*
 .yarn/*

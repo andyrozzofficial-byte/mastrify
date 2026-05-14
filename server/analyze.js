@@ -3,6 +3,7 @@ import decodeAudio from "audio-decode"
 import MusicTempo from "music-tempo"
 import { fft } from "fft-js"
 
+// analyzeTrack uses audio-decode only (no ffmpeg). Mastering uses ffmpeg-static/ffprobe-static in master.js.
 export async function analyzeTrack(file){
 
 const buffer = fs.readFileSync(file)

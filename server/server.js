@@ -1,4 +1,4 @@
-import { exec } from "child_process"
+import { exec, spawn } from "child_process"
 import express from "express"
 import cors from "cors"
 import multer from "multer"
@@ -12,6 +12,8 @@ import {
   logMasterMetricFiveStagesServer,
   serializeMasterAnalysisForJson,
 } from "./masterAnalysisPayload.js"
+import ffmpegPath from "ffmpeg-static"
+import ffprobeStatic from "ffprobe-static"
 
 process.on("uncaughtException", (err) => {
   console.error("💥 UNCAUGHT:", err)
@@ -987,7 +989,68 @@ app.get("/health", (req, res) => {
   res.status(200).send("OK")
 })
 
-// 🔥 STARTA SERVER DIREKT
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("🔥 Server running on port", PORT)
-})
+async function logFfmpegRuntimeAndProbe() {
+  const bin =
+    typeof ffmpegPath === "string" ? ffmpegPath : ffmpegPath != null ? String(ffmpegPath) : ""
+  const ffprobeBin = ffprobeStatic?.path ?? ""
+
+  console.log("[FFMPEG_BOOT] process.platform", process.platform, "arch", process.arch)
+  console.log("[FFMPEG_BOOT] ffmpeg path", bin || "(empty)")
+  console.log("[FFMPEG_BOOT] ffmpeg exists", bin ? fs.existsSync(bin) : false)
+  if (bin && fs.existsSync(bin)) {
+    try {
+      console.log("[FFMPEG_BOOT] ffmpeg mode", fs.statSync(bin).mode.toString(8))
+      fs.chmodSync(bin, 0o755)
+    } catch (e) {
+      console.log("[FFMPEG_BOOT] chmod/stat ffmpeg:", e?.message || e)
+    }
+  }
+
+  console.log("[FFMPEG_BOOT] ffprobe path", ffprobeBin || "(empty)")
+  console.log(
+    "[FFMPEG_BOOT] ffprobe exists",
+    ffprobeBin ? fs.existsSync(ffprobeBin) : false
+  )
+  if (ffprobeBin && fs.existsSync(ffprobeBin)) {
+    try {
+      console.log("[FFMPEG_BOOT] ffprobe mode", fs.statSync(ffprobeBin).mode.toString(8))
+      fs.chmodSync(ffprobeBin, 0o755)
+    } catch (e) {
+      console.log("[FFMPEG_BOOT] chmod/stat ffprobe:", e?.message || e)
+    }
+  }
+
+  if (!bin || !fs.existsSync(bin)) {
+    console.error("[FFMPEG_BOOT] SKIP ffmpeg -version (missing binary); run npm install in server/")
+    return
+  }
+
+  await new Promise((resolve) => {
+    const p = spawn(bin, ["-hide_banner", "-version"], { stdio: ["ignore", "pipe", "pipe"] })
+    let combined = ""
+    p.stdout?.on("data", (d) => {
+      combined += d.toString()
+    })
+    p.stderr?.on("data", (d) => {
+      combined += d.toString()
+    })
+    p.on("close", (code) => {
+      const first = combined.split("\n").find((l) => l.trim()) || ""
+      console.log("[FFMPEG_BOOT] ffmpeg -version exit", code, "firstLine:", first)
+      resolve()
+    })
+    p.on("error", (err) => {
+      console.error("[FFMPEG_BOOT] ffmpeg -version spawn error:", err?.message || err)
+      resolve()
+    })
+  })
+}
+
+// 🔥 STARTA SERVER (after ffmpeg probe so Railway logs show binary health)
+logFfmpegRuntimeAndProbe()
+  .catch((e) => console.error("[FFMPEG_BOOT] probe failed:", e?.message || e))
+  .finally(() => {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log("🔥 Server running on port", PORT)
+    })
+  })
