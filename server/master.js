@@ -20,6 +20,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 const MASTER_DEBUG = process.env.MASTRIFY_MASTER_DEBUG === "1"
+const PIPELINE_DEBUG = process.env.MASTRIFY_PIPELINE_DEBUG === "1"
 
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n))
@@ -37,43 +38,60 @@ function parseStyle(style) {
   return VALID_STYLES.has(s) ? s : "STREAM"
 }
 
-/** Integrated loudness (LUFS) via EBU R128 — aligns “After” metrics with the real WAV. */
-export function measureIntegratedLufsEbur128(filePath) {
-  return new Promise((resolve) => {
-    if (!ffmpegPath || !fs.existsSync(filePath)) {
-      resolve(null)
-      return
+function parseEbur128Integrated(stderr) {
+  if (!stderr || typeof stderr !== "string") return null
+  const patterns = [
+    /\bI:\s*([-0-9.]+)\s*LUFS/i,
+    /Integrated loudness:\s*\r?\n\s*I:\s*([-0-9.]+)\s*LUFS/im,
+    /Integrated loudness I:\s*([-0-9.]+)/i,
+    /lavfi\.ebur128\.\d+\.I=\s*([-0-9.]+)/,
+  ]
+  for (const re of patterns) {
+    const m = stderr.match(re)
+    if (m) {
+      const v = parseFloat(m[1])
+      if (Number.isFinite(v)) return v
     }
-    const args = [
-      "-hide_banner",
-      "-nostats",
-      "-i",
-      filePath,
-      "-af",
-      "ebur128=framelog=quiet:metadata=0",
-      "-f",
-      "null",
-      "-",
-    ]
-    const ff = spawn(ffmpegPath, args, { shell: false })
-    let stderr = ""
-    ff.stderr?.on("data", (d) => {
-      stderr += d.toString()
-    })
-    ff.on("close", () => {
-      const m =
-        stderr.match(/\bI:\s*([-0-9.]+)\s*LUFS/i) ||
-        stderr.match(/Integrated loudness I:\s*([-0-9.]+)/i) ||
-        stderr.match(/lavfi\.ebur128\.\d+\.I=\s*([-0-9.]+)/)
-      if (m) {
-        const v = parseFloat(m[1])
-        resolve(Number.isFinite(v) ? v : null)
-      } else {
-        resolve(null)
-      }
-    })
-    ff.on("error", () => resolve(null))
+  }
+  return null
+}
+
+/**
+ * Integrated loudness (LUFS) via EBU R128 — aligns “After” metrics with the real WAV.
+ * Waits for process exit so stderr contains the final Summary block.
+ */
+export async function measureIntegratedLufsEbur128(filePath) {
+  if (!ffmpegPath || !fs.existsSync(filePath)) return null
+  const args = [
+    "-hide_banner",
+    "-nostats",
+    "-i",
+    filePath,
+    "-af",
+    "ebur128=framelog=quiet:metadata=0",
+    "-f",
+    "null",
+    "-",
+  ]
+  const ff = spawn(ffmpegPath, args, { shell: false })
+  let stderr = ""
+  ff.stderr?.on("data", (d) => {
+    stderr += d.toString()
   })
+  try {
+    await new Promise((resolve, reject) => {
+      ff.once("error", reject)
+      ff.once("close", resolve)
+    })
+  } catch {
+    return null
+  }
+  const v = parseEbur128Integrated(stderr)
+  if (v == null && (MASTER_DEBUG || PIPELINE_DEBUG)) {
+    const tail = stderr.slice(-1400).replace(/\r/g, "\n")
+    console.warn("[master] EBU parse miss; stderr tail:\n", tail)
+  }
+  return v
 }
 
 /** Stereo width — `extrastereo` m≈1 is neutral; wider >1, narrower <1. */
@@ -490,7 +508,11 @@ export async function masterTrack({
   }
 
   if (analysisAfter) {
-    const ebu = await measureIntegratedLufsEbur128(outputPath)
+    let ebu = await measureIntegratedLufsEbur128(outputPath)
+    if (ebu == null) {
+      await new Promise((r) => setTimeout(r, 220))
+      ebu = await measureIntegratedLufsEbur128(outputPath)
+    }
     const rmsProxy = analysisAfter.lufs
     if (ebu != null && Number.isFinite(ebu)) {
       analysisAfter = {
@@ -506,6 +528,20 @@ export async function masterTrack({
       console.log("[master] after metrics", {
         lufs: analysisAfter.lufs,
         targetLufsApplied: analysisAfter.targetLufsApplied ?? safeIntegratedLufs,
+        stereoWidth: analysisAfter.stereoWidth,
+        bassWeight: analysisAfter.bassWeight,
+        brightness: analysisAfter.brightness,
+        dynamicRange: analysisAfter.dynamicRange,
+      })
+    }
+    if (PIPELINE_DEBUG) {
+      const sz = fs.existsSync(outputPath) ? fs.statSync(outputPath).size : 0
+      console.log("[pipeline] masterTrack analyzed file", {
+        analyzedPath: outputPath,
+        bytes: sz,
+        loudnormI: safeIntegratedLufs,
+        integratedLufs: analysisAfter.lufs,
+        lufsRmsProxy: analysisAfter.lufsRmsProxy ?? null,
         stereoWidth: analysisAfter.stereoWidth,
         bassWeight: analysisAfter.bassWeight,
         brightness: analysisAfter.brightness,

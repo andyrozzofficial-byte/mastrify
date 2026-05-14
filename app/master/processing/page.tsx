@@ -10,6 +10,7 @@ import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { useMasterSession } from "../MasterSessionProvider"
 
 const API = PUBLIC_BACKEND_API_BASE
+const PIPELINE_DEBUG = process.env.NEXT_PUBLIC_MASTRIFY_PIPELINE_DEBUG === "1"
 
 /** Display steps — must stay in sync with timed progression before the API call */
 const UI_STEPS = [
@@ -92,6 +93,18 @@ export default function MasterProcessingPage() {
         const masterUrl = `${API}/master`
         const res = await axios.post(masterUrl, formData, { signal: ac.signal })
         if (cancelled) return
+
+        if (PIPELINE_DEBUG) {
+          console.log("[pipeline] client POST /master response", {
+            afterUrl: res.data.afterUrl,
+            fullUrl: res.data.fullUrl,
+            after: res.data.after,
+            analysisAfter: res.data.analysisAfter,
+            analysisBefore: res.data.analysisBefore,
+            masterDebug: res.data.masterDebug,
+            pipelineDebug: res.data.pipelineDebug,
+          })
+        }
 
         setAnalysisBefore((res.data.analysisBefore ?? null) as Record<string, unknown> | null)
         setAnalysisAfter((res.data.analysisAfter ?? null) as Record<string, unknown> | null)

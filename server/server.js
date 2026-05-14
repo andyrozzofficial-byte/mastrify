@@ -25,6 +25,8 @@ const __dirname = path.dirname(__filename)
 
 const app = express()
 
+const PIPELINE_DEBUG = process.env.MASTRIFY_PIPELINE_DEBUG === "1"
+
 app.use(cors())
 app.use(express.json())
 
@@ -923,15 +925,49 @@ app.post("/master",
       }
 
       if (rawAfter && rawAfter.lufsRmsProxy == null && fs.existsSync(masterPath)) {
-        const ebu = await measureIntegratedLufsEbur128(masterPath)
+        let ebu = await measureIntegratedLufsEbur128(masterPath)
+        if (ebu == null) {
+          await new Promise((r) => setTimeout(r, 220))
+          ebu = await measureIntegratedLufsEbur128(masterPath)
+        }
         if (ebu != null && Number.isFinite(ebu)) {
           const prev = rawAfter.lufs
-          rawAfter = { ...rawAfter, lufs: ebu, lufsRmsProxy: prev }
+          const parsedT = parseFloat(String(targetLufs ?? "").trim())
+          const applied = Number.isFinite(parsedT) ? Math.min(-9, Math.max(-16, parsedT)) : null
+          rawAfter = {
+            ...rawAfter,
+            lufs: ebu,
+            lufsRmsProxy: prev,
+            ...(applied != null ? { targetLufsApplied: applied } : {}),
+          }
         }
       }
 
       const analysisBefore = serializeMasterAnalysisForJson(rawBefore, "before")
       const analysisAfter = serializeMasterAnalysisForJson(rawAfter, "after")
+
+      if (PIPELINE_DEBUG) {
+        const absMaster = path.resolve(masterPath)
+        const absUpload = fs.existsSync(newPath) ? path.resolve(newPath) : null
+        console.log("[pipeline] POST /master", {
+          analyzedMasterPath: absMaster,
+          uploadPath: absUpload,
+          masterBytes: fs.existsSync(masterPath) ? fs.statSync(masterPath).size : 0,
+          body: { stylePreset, targetLufs, stereoEnhance, lowEndControl, clarityPresence },
+          rawAfter: rawAfter
+            ? {
+                lufs: rawAfter.lufs,
+                lufsRmsProxy: rawAfter.lufsRmsProxy,
+                targetLufsApplied: rawAfter.targetLufsApplied,
+                stereoWidth: rawAfter.stereoWidth,
+                bassWeight: rawAfter.bassWeight,
+                brightness: rawAfter.brightness,
+                dynamicRange: rawAfter.dynamicRange,
+              }
+            : null,
+          analysisAfter,
+        })
+      }
 
       const resPayload = {
         success: true,
@@ -945,6 +981,14 @@ app.post("/master",
       }
       if (masterResult?.debugInfo) {
         resPayload.masterDebug = masterResult.debugInfo
+      }
+      if (PIPELINE_DEBUG) {
+        resPayload.pipelineDebug = {
+          masterFileName,
+          analysisAfter,
+          hasLufsRmsProxy: Boolean(rawAfter && rawAfter.lufsRmsProxy != null),
+          masterBytes: fs.existsSync(masterPath) ? fs.statSync(masterPath).size : 0,
+        }
       }
       res.json(resPayload)
 

@@ -119,6 +119,23 @@ export default function MasterResultClient() {
   }, [selectedSource])
 
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_MASTRIFY_PIPELINE_DEBUG !== "1") return
+    console.log("[pipeline] MasterResultClient state", {
+      masteredUrl,
+      stylePreset,
+      targetLufs,
+      analysisAfter,
+      display: {
+        lufsAfter: toFiniteNumber(analysisAfter?.lufs),
+        dynamicRange: toFiniteNumber(analysisAfter?.dynamicRange),
+        stereoWidth: toFiniteNumber(analysisAfter?.stereoWidth),
+        bassWeight: toFiniteNumber(analysisAfter?.bassWeight),
+        brightness: toFiniteNumber(analysisAfter?.brightness),
+      },
+    })
+  }, [masteredUrl, analysisAfter, stylePreset, targetLufs])
+
+  useEffect(() => {
     setMounted(true)
     const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
     setIsMobileClient(/iPhone|iPad|iPod|Android|Mobile/i.test(ua))
