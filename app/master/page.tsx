@@ -18,87 +18,80 @@ export default function MasterUploadPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const { file, setFile } = useMasterSession()
 
+  const openFilePicker = () => inputRef.current?.click()
+
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
+    <div className="relative min-h-screen text-white">
       <CinematicBackground intensity="strong" />
-      <div className="relative mx-auto flex w-full max-w-[min(100%,28rem)] flex-col items-center px-5 pb-28 pt-12 sm:max-w-xl md:px-6 md:pb-32 md:pt-16 lg:max-w-[30rem]">
-        {/* Badge */}
-        <span className="rounded-full border border-purple-500/20 bg-purple-500/[0.06] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-purple-200/90 shadow-[0_0_18px_rgba(124,58,237,0.12)]">
-          AI mastering
-        </span>
+      <div className="relative mx-auto flex w-full max-w-[500px] flex-col items-center px-5 pb-24 pt-7 sm:px-5 md:max-w-[528px] md:pb-28 md:pt-10">
+        {/* Ambient glow — aligned with analyze hero column */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-[2%] z-0 h-[min(52vh,520px)] w-[min(92vw,30rem)] -translate-x-1/2 rounded-[3rem] bg-[radial-gradient(ellipse_58%_44%_at_50%_20%,rgba(109,40,217,0.055),rgba(217,70,239,0.018)_48%,transparent_68%)] blur-2xl"
+          aria-hidden
+        />
 
-        {/* Headline */}
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
-          className="mt-7 text-center text-[1.65rem] font-bold leading-[1.12] tracking-[-0.02em] text-white sm:text-[1.85rem] md:mt-8 md:text-[2rem]"
-        >
-          Master{" "}
-          <span className="bg-gradient-to-r from-purple-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
-            your track
+        <div className="relative z-10 flex w-full flex-col items-center">
+          <span className="rounded-full border border-purple-500/40 bg-purple-500/[0.07] px-3.5 py-1 text-[9px] font-bold uppercase tracking-[0.26em] text-purple-200/95 shadow-[0_0_12px_rgba(139,92,246,0.12)]">
+            AI mastering
           </span>
-        </motion.h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.05, ease: "easeOut" }}
-          className="mt-4 max-w-[22rem] text-center text-[13px] leading-relaxed text-white/48 md:mt-5 md:max-w-md md:text-[14px] md:leading-relaxed"
-        >
-          Upload your mix and let AI create a professional master ready for release.
-        </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            className="mt-5 w-full text-center text-[1.9rem] font-extrabold leading-[1.08] tracking-tight text-white sm:text-[2.05rem] md:mt-6 md:text-[2.3rem]"
+          >
+            <span className="text-white">Master </span>
+            <span className="bg-gradient-to-r from-purple-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
+              your track
+            </span>
+          </motion.h1>
 
-        {/* Step indicator */}
-        <nav className="relative mt-10 w-full max-w-[17.5rem] sm:max-w-xs md:mt-12" aria-label="Progress">
-          <div
-            className="pointer-events-none absolute left-[14%] right-[14%] top-[0.65rem] z-0 h-px bg-gradient-to-r from-transparent via-white/[0.09] to-transparent"
-            aria-hidden
-          />
-          <ol className="relative z-10 flex justify-between">
-            {STEPS.map((step) => {
-              const active = step.n === 1
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.05, ease: "easeOut" }}
+            className="mt-3.5 w-full max-w-[26rem] text-center text-[13px] leading-snug text-white/32 md:mt-4 md:text-[13px]"
+          >
+            Upload your mix and let AI create a professional master ready for release.
+          </motion.p>
+
+          {/* Step indicator — same rail system as analyze */}
+          <div className="mx-auto mt-10 flex w-full max-w-[min(100%,360px)] items-center justify-center md:mt-12 md:max-w-[380px]" role="group" aria-label="Progress">
+            {STEPS.map((step, i) => {
+              const active = i === 0
               return (
-              <li key={step.n} className="flex flex-col items-center" style={{ width: "33.33%" }}>
-                <div
-                  className={`flex h-[1.35rem] w-[1.35rem] shrink-0 items-center justify-center rounded-full text-[10px] font-bold tabular-nums transition-colors duration-300 md:h-7 md:w-7 md:text-[11px] ${
-                    active
-                      ? "bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-[0_0_14px_rgba(139,92,246,0.31),0_0_6px_rgba(99,102,241,0.12)] ring-1 ring-white/15"
-                      : "border border-white/[0.12] bg-black/50 text-white/38 ring-0"
-                  }`}
-                >
-                  {step.n}
+                <div key={step.n} className="contents">
+                  {i > 0 ? (
+                    <div
+                      className="mx-0.5 h-[0.5px] min-w-[1.25rem] flex-1 max-w-[3.25rem] bg-gradient-to-r from-transparent via-white/14 to-transparent sm:mx-1 sm:max-w-[4rem]"
+                      aria-hidden
+                    />
+                  ) : null}
+                  <div className="flex w-[4rem] shrink-0 flex-col items-center sm:w-[4.25rem]">
+                    <span
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold leading-none sm:h-[2.125rem] sm:w-[2.125rem] sm:text-xs ${
+                        active
+                          ? "bg-gradient-to-br from-purple-600 to-violet-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.32)] ring-1 ring-purple-400/40"
+                          : "border border-white/[0.1] bg-black/55 text-white/30"
+                      }`}
+                    >
+                      {step.n}
+                    </span>
+                    <span
+                      className={`mt-1.5 text-center text-[8px] font-semibold uppercase tracking-[0.2em] sm:text-[9px] ${
+                        active ? "text-purple-300/95" : "text-white/34"
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
                 </div>
-                <span
-                  className={`mt-2 text-center text-[9px] font-semibold uppercase tracking-[0.2em] md:text-[10px] md:tracking-[0.22em] ${
-                    active ? "text-white/92" : "text-white/32"
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </li>
               )
             })}
-          </ol>
-        </nav>
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08, duration: 0.5, ease: "easeOut" }}
-          className="mt-10 w-full md:mt-12"
-        >
-          <div
-            className="group relative mx-auto w-full max-w-md cursor-pointer overflow-hidden rounded-2xl border border-white/[0.085] bg-gradient-to-b from-white/[0.055] to-black/[0.52] p-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.085),0_28px_78px_rgba(0,0,0,0.51),0_0_0_1px_rgba(139,92,246,0.05)] backdrop-blur-2xl transition-all duration-300 ease-out hover:border-purple-400/16 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.095),0_30px_84px_rgba(0,0,0,0.54),0_0_28px_rgba(88,28,135,0.11)] md:rounded-3xl md:p-11"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault()
-              const f = e.dataTransfer.files[0]
-              if (f) setFile(f)
-            }}
-            onClick={() => inputRef.current?.click()}
-          >
-            <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/[0.085] via-transparent to-cyan-500/[0.055] opacity-0 transition-opacity duration-300 group-hover:opacity-[0.85] md:rounded-3xl" />
+          <div className="mt-10 w-full md:mt-12">
             <input
               ref={inputRef}
               type="file"
@@ -109,80 +102,117 @@ export default function MasterUploadPage() {
                 if (f) setFile(f)
               }}
             />
-            <div className="relative flex flex-col items-center gap-5 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/28 to-cyan-500/18 ring-1 ring-white/[0.085] md:h-16 md:w-16">
-                <svg className="h-7 w-7 text-white/90 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-base font-semibold tracking-tight text-white md:text-lg">Drop your track here</p>
-                <p className="text-[12px] leading-snug text-white/42 md:text-[13px]">
-                  WAV, AIFF, FLAC, MP3 up to 500MB
-                </p>
-              </div>
-              <span className="rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 px-7 py-2.5 text-sm font-semibold text-white shadow-[0_8px_26px_rgba(139,92,246,0.19),0_3px_12px_rgba(0,0,0,0.3)] transition duration-300 group-hover:brightness-[1.06] md:px-8">
-                Choose file
-              </span>
-              <p className="text-[11px] text-white/32">or drag and drop</p>
+
+            <div className="relative w-full overflow-visible pb-2 md:pb-3">
+              <div
+                className="pointer-events-none absolute left-1/2 top-[40%] z-0 h-[min(260px,58vw)] w-[min(400px,76%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_40%_34%_at_50%_50%,rgba(147,51,234,0.09),rgba(192,38,211,0.028)_52%,transparent_62%)] blur-2xl"
+                aria-hidden
+              />
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08, duration: 0.5, ease: "easeOut" }}
+                className="relative z-10 mx-auto w-full max-w-[min(100%,28rem)] origin-top scale-[1.06] cursor-pointer overflow-hidden rounded-[1.45rem] border border-white/[0.16] bg-gradient-to-b from-black/[0.54] to-black/[0.92] p-8 shadow-[0_0_0_1px_rgba(167,139,250,0.1),0_0_12px_rgba(88,28,135,0.08),0_26px_58px_rgba(0,0,0,0.62)] ring-1 ring-fuchsia-500/8 backdrop-blur-2xl transition-[transform,box-shadow,border-color] duration-300 ease-out hover:border-white/[0.2] hover:shadow-[0_0_0_1px_rgba(167,139,250,0.14),0_0_20px_rgba(88,28,135,0.12),0_28px_64px_rgba(0,0,0,0.66)] sm:p-9 md:scale-[1.08] md:p-10"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  const f = e.dataTransfer.files[0]
+                  if (f) setFile(f)
+                }}
+                onClick={openFilePicker}
+              >
+                <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-purple-600/7 blur-2xl" />
+
+                <div className="relative flex w-full flex-col items-center text-center">
+                  <div className="mx-1 w-full rounded-[1.1rem] border border-dashed border-white/[0.1] bg-black/[0.62] px-8 py-14 sm:mx-1.5 sm:px-10 sm:py-[4.25rem] md:px-11 md:py-[4.75rem]">
+                    <div className="mx-auto mb-5 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/40 to-purple-900/25 ring-1 ring-white/[0.12] shadow-[0_0_12px_rgba(168,85,247,0.14)] md:mb-6">
+                      <svg
+                        className="h-10 w-10 drop-shadow-[0_0_4px_rgba(216,180,254,0.28)]"
+                        viewBox="0 0 24 24"
+                        aria-hidden
+                      >
+                        <defs>
+                          <linearGradient id="masterUploadIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#e9d5ff" />
+                            <stop offset="50%" stopColor="#c4b5fd" />
+                            <stop offset="100%" stopColor="#a5b4fc" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          fill="none"
+                          stroke="url(#masterUploadIconGrad)"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-[1.08rem] font-semibold tracking-tight text-white sm:text-[1.14rem] md:text-[1.2rem]">
+                      Drop your track here
+                    </p>
+                    <p className="mx-auto mt-3.5 max-w-[19rem] text-[12px] leading-relaxed text-white/28 sm:text-[13px] md:mt-4">
+                      WAV, AIFF, FLAC, MP3 up to 500MB
+                    </p>
+                  </div>
+
+                  <div className="mt-9 flex w-full max-w-[min(100%,22rem)] flex-col items-center gap-3.5 sm:mt-10 md:mt-11">
+                    <span
+                      role="presentation"
+                      className="flex w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_22px_rgba(91,33,182,0.28),0_0_14px_rgba(14,116,144,0.14),inset_0_1px_0_rgba(255,255,255,0.12),0_12px_32px_rgba(0,0,0,0.45)] ring-1 ring-white/10 transition duration-300 hover:brightness-110 sm:py-4 sm:text-[15px]"
+                    >
+                      Choose file
+                    </span>
+                    <p className="text-[11px] text-white/24">or drag and drop</p>
+                    {file ? (
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="max-w-full truncate px-2 text-[13px] text-cyan-300/85 md:text-sm"
+                      >
+                        {file.name}
+                      </motion.p>
+                    ) : null}
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </div>
 
-          {file && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-4 truncate text-center text-[11px] text-cyan-300/75 md:mt-5"
-            >
-              {file.name}
-            </motion.p>
-          )}
-
-          {/* Feature row — compact, clearer hierarchy */}
-          <ul className="mt-9 grid gap-6 text-center sm:mt-10 sm:grid-cols-3 sm:gap-5 sm:text-left">
-            <li className="flex flex-col items-center gap-2 sm:items-start">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.03] text-purple-300/80">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+          {/* Feature row — slightly tighter to card than analyze, still same grid rhythm */}
+          <ul className="mx-auto mt-8 grid w-full max-w-[min(100%,26rem)] grid-cols-1 gap-4 text-center sm:mt-9 sm:grid-cols-3 sm:gap-3 md:max-w-[min(100%,28rem)] md:gap-3.5">
+            <li className="flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-md border border-white/[0.055] bg-black/[0.48] px-2 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md sm:min-h-[4.5rem] sm:py-2.5">
+              <span className="flex h-9 w-9 items-center justify-center text-purple-300/90">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
               </span>
-              <div className="min-w-0 space-y-0.5">
-                <p className="text-[12px] font-semibold leading-tight text-white/90 md:text-[13px]">AI mastering</p>
-                <p className="text-[11px] leading-snug text-white/38 md:text-[12px] md:leading-snug">Industry-standard quality</p>
-              </div>
+              <p className="text-[11px] font-semibold leading-tight text-white/88 sm:text-xs">AI mastering</p>
+              <p className="text-[10px] leading-snug text-white/36 sm:text-[11px]">Industry-standard quality</p>
             </li>
-            <li className="flex flex-col items-center gap-2 sm:items-start">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.03] text-purple-300/80">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+            <li className="flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-md border border-white/[0.055] bg-black/[0.48] px-2 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md sm:min-h-[4.5rem] sm:py-2.5">
+              <span className="flex h-9 w-9 items-center justify-center text-cyan-300/85">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
               </span>
-              <div className="min-w-0 space-y-0.5">
-                <p className="text-[12px] font-semibold leading-tight text-white/90 md:text-[13px]">Multiple styles</p>
-                <p className="text-[11px] leading-snug text-white/38 md:text-[12px] md:leading-snug">Choose your vibe</p>
-              </div>
+              <p className="text-[11px] font-semibold leading-tight text-white/88 sm:text-xs">Multiple styles</p>
+              <p className="text-[10px] leading-snug text-white/36 sm:text-[11px]">Choose your vibe</p>
             </li>
-            <li className="flex flex-col items-center gap-2 sm:items-start">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.03] text-purple-300/80">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+            <li className="flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-md border border-white/[0.055] bg-black/[0.48] px-2 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md sm:min-h-[4.5rem] sm:py-2.5">
+              <span className="flex h-9 w-9 items-center justify-center text-white/45">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                 </svg>
               </span>
-              <div className="min-w-0 space-y-0.5">
-                <p className="text-[12px] font-semibold leading-tight text-white/90 md:text-[13px]">Secure & private</p>
-                <p className="text-[11px] leading-snug text-white/38 md:text-[12px] md:leading-snug">Your files are safe</p>
-              </div>
+              <p className="text-[11px] font-semibold leading-tight text-white/88 sm:text-xs">Secure & private</p>
+              <p className="text-[10px] leading-snug text-white/36 sm:text-[11px]">Your files are safe</p>
             </li>
           </ul>
 
-          {/* Light reassurance — not a pricing upsell */}
-          <div className="mt-8 flex flex-col items-center gap-1.5 pt-1 sm:mt-9 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-2 sm:gap-y-1 sm:pt-0">
-            <p className="max-w-[20rem] text-center text-[11px] leading-relaxed text-white/34 md:max-w-none md:text-[12px]">
+          <div className="mt-9 flex w-full max-w-[min(100%,22rem)] flex-col items-center gap-2 sm:mt-10 md:mt-11">
+            <p className="text-center text-[11px] leading-relaxed text-white/34 md:text-[12px]">
               Professional AI mastering in seconds.{" "}
               <span className="text-white/28">Pay only for the masters you export.</span>
             </p>
@@ -194,12 +224,12 @@ export default function MasterUploadPage() {
             </Link>
           </div>
 
-          <div className="mt-8 flex flex-col gap-2.5 sm:mt-9">
+          <div className="mt-10 flex w-full max-w-[min(100%,22rem)] flex-col gap-3 sm:mt-11 md:mt-12">
             <button
               type="button"
               disabled={!file}
               onClick={() => router.push("/master/settings")}
-              className="w-full rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(0,0,0,0.4)] transition duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-35 md:py-4"
+              className="w-full rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_22px_rgba(91,33,182,0.28),0_0_14px_rgba(14,116,144,0.14),inset_0_1px_0_rgba(255,255,255,0.12),0_12px_32px_rgba(0,0,0,0.45)] ring-1 ring-white/10 transition duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-35 sm:py-4 sm:text-[15px]"
             >
               Continue to settings
             </button>
@@ -210,7 +240,7 @@ export default function MasterUploadPage() {
               </Link>
             </p>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   )
