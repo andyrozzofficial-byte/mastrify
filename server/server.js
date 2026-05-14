@@ -8,6 +8,8 @@ import { fileURLToPath } from "url"
 import { analyzeTrack } from "./analyze.js"
 import { masterTrack } from "./master.js"
 import {
+  logAnalysisAfterSerializationPipeline,
+  logFinalMasterJsonPayload,
   logFullMasterAnalysis,
   logMasterComparisonMetricsSummary,
   serializeMasterAnalysisForJson,
@@ -910,6 +912,8 @@ app.post("/master",
       const analysisBefore = serializeMasterAnalysisForJson(masterResult?.analysisBefore, "before")
       const analysisAfter = serializeMasterAnalysisForJson(masterResult?.analysisAfter, "after")
       logMasterComparisonMetricsSummary(analysisBefore, analysisAfter)
+      logAnalysisAfterSerializationPipeline(masterResult?.analysisAfter, analysisAfter)
+      logFinalMasterJsonPayload(analysisAfter)
 
       res.json({
         success: true,

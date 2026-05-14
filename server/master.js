@@ -4,6 +4,7 @@ import path from "path"
 import fs from "fs"
 import { fileURLToPath } from "url"
 import { analyzeTrack } from "./analyze.js"
+import { logRawPostMasterAnalyzeTrack } from "./masterAnalysisPayload.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -189,6 +190,11 @@ const target = referenceAnalysis?.spectral || {
           } catch (e) {
             console.log("POST-MASTER ANALYZE FAILED (attempt " + (attempt + 1) + "):", e)
           }
+        }
+        if (analysisAfter) {
+          logRawPostMasterAnalyzeTrack(outputPath, analysisAfter)
+        } else {
+          console.log("[POST_MASTER] analyzeTrack(outputPath) never returned — analysisAfter is null")
         }
         resolve({
           path: outputPath,

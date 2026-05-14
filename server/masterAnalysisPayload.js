@@ -7,6 +7,98 @@
 
 const METRIC_KEYS = ["lufs", "dynamicRange", "stereoWidth", "bassWeight", "brightness", "mixQuality"]
 
+/** UI comparison keys (MasterResultClient) — logged alongside raw analyzer output */
+export const UI_COMPARISON_METRIC_KEYS = ["lufs", "dynamicRange", "stereoWidth", "bassWeight", "brightness"]
+
+/**
+ * Log raw return value from analyzeTrack(outputPath) before any serialization.
+ * Surfaces null/undefined, wrong types, and non-finite numbers that become JSON null.
+ */
+export function logRawPostMasterAnalyzeTrack(outputPath, raw) {
+  console.log("[POST_MASTER] analyzeTrack(outputPath) path:", outputPath)
+  if (raw == null || typeof raw !== "object") {
+    console.log("[POST_MASTER] analyzeTrack(outputPath) raw:", raw === null ? "<null>" : typeof raw)
+    return
+  }
+  const diag = {}
+  for (const k of UI_COMPARISON_METRIC_KEYS) {
+    const v = raw[k]
+    diag[k] = {
+      value: v,
+      typeof: typeof v,
+      isFiniteNumber: typeof v === "number" && Number.isFinite(v),
+      isNullJsonRisk: typeof v === "number" && !Number.isFinite(v),
+    }
+  }
+  console.log("[POST_MASTER] analyzeTrack(outputPath) raw UI-metric diag:", JSON.stringify(diag))
+  try {
+    const probe = JSON.stringify(raw, (_key, v) => {
+      if (typeof v === "number" && !Number.isFinite(v)) return `__nonfinite__:${String(v)}`
+      return v
+    })
+    console.log("[POST_MASTER] analyzeTrack(outputPath) full object JSON (nonfinite tagged):", probe)
+  } catch (e) {
+    console.error("[POST_MASTER] analyzeTrack(outputPath) JSON.stringify failed:", e?.message || e)
+  }
+}
+
+/**
+ * Log raw vs serialized analysisAfter + what survives JSON.stringify (as sent to client).
+ */
+export function logAnalysisAfterSerializationPipeline(raw, serialized) {
+  console.log("[POST_MASTER] serializeMasterAnalysisForJson('after') INPUT (UI keys only):")
+  console.log(
+    JSON.stringify(
+      Object.fromEntries(UI_COMPARISON_METRIC_KEYS.map((k) => [k, raw == null ? null : raw[k]]))
+    )
+  )
+  console.log("[POST_MASTER] serializeMasterAnalysisForJson('after') OUTPUT (UI keys only):")
+  console.log(
+    JSON.stringify(
+      Object.fromEntries(UI_COMPARISON_METRIC_KEYS.map((k) => [k, serialized == null ? null : serialized[k]]))
+    )
+  )
+  try {
+    const wire = JSON.stringify({ analysisAfter: serialized })
+    const back = JSON.parse(wire).analysisAfter
+    const afterRoundTrip = Object.fromEntries(
+      UI_COMPARISON_METRIC_KEYS.map((k) => [k, back == null ? undefined : back[k]])
+    )
+    console.log("[POST_MASTER] analysisAfter after JSON.stringify→parse (wire-level, as axios sees):")
+    console.log(JSON.stringify(afterRoundTrip))
+  } catch (e) {
+    console.error("[POST_MASTER] analysisAfter wire round-trip failed:", e?.message || e)
+  }
+}
+
+/**
+ * Log the exact analysisAfter object attached to res.json (post-serialize).
+ */
+export function logFinalMasterJsonPayload(analysisAfterSerialized) {
+  const slice =
+    analysisAfterSerialized && typeof analysisAfterSerialized === "object"
+      ? {
+          lufs: analysisAfterSerialized.lufs,
+          dynamicRange: analysisAfterSerialized.dynamicRange,
+          stereoWidth: analysisAfterSerialized.stereoWidth,
+          bassWeight: analysisAfterSerialized.bassWeight,
+          brightness: analysisAfterSerialized.brightness,
+          mixQuality: analysisAfterSerialized.mixQuality,
+          issuesCount: Array.isArray(analysisAfterSerialized.issues) ? analysisAfterSerialized.issues.length : 0,
+        }
+      : null
+  console.log("[POST /master] final res.json analysisAfter metric slice:", JSON.stringify(slice))
+  try {
+    const full = JSON.stringify({
+      success: true,
+      analysisAfter: analysisAfterSerialized,
+    })
+    console.log("[POST /master] final JSON byte length (success + analysisAfter only):", full.length)
+  } catch (e) {
+    console.error("[POST /master] final JSON stringify check failed:", e?.message || e)
+  }
+}
+
 function finiteNum(v, fallback, key, label) {
   if (typeof v === "number" && Number.isFinite(v)) return v
   if (typeof v === "string") {
