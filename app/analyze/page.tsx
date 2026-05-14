@@ -297,9 +297,9 @@ export default function AnalyzePage() {
       >
         {!result && (
           <div className="relative w-full">
-            {/* Ambient glow — full hero column */}
+            {/* Ambient glow — full hero column (softer, less cyan wash) */}
             <div
-              className="pointer-events-none absolute left-1/2 top-[2%] z-0 h-[min(78vh,680px)] w-[min(104vw,36rem)] -translate-x-1/2 rounded-[3rem] bg-[radial-gradient(ellipse_62%_48%_at_50%_22%,rgba(109,40,217,0.16),rgba(34,211,238,0.05)_42%,transparent_70%)] blur-3xl"
+              className="pointer-events-none absolute left-1/2 top-[2%] z-0 h-[min(52vh,520px)] w-[min(92vw,30rem)] -translate-x-1/2 rounded-[3rem] bg-[radial-gradient(ellipse_58%_44%_at_50%_20%,rgba(109,40,217,0.12),rgba(217,70,239,0.04)_48%,transparent_68%)] blur-2xl"
               aria-hidden
             />
 
@@ -341,7 +341,7 @@ export default function AnalyzePage() {
                     </span>
                     <span
                       className={`mt-1.5 text-center text-[8px] font-semibold uppercase tracking-[0.2em] sm:text-[9px] ${
-                        i === 0 ? "text-purple-300/95" : "text-white/22"
+                        i === 0 ? "text-purple-300/95" : "text-white/34"
                       }`}
                     >
                       {label}
@@ -368,16 +368,16 @@ export default function AnalyzePage() {
           />
 
           <div className="relative w-full overflow-visible pt-1">
-            {/* Radial glow behind card — stronger */}
+            {/* Radial glow behind card — tighter, edge-focused, purple/fuchsia */}
             <div
-              className="pointer-events-none absolute left-1/2 top-[40%] z-0 h-[min(460px,100vw)] w-[min(680px,125%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_52%_42%_at_50%_50%,rgba(124,58,237,0.36),rgba(34,211,238,0.12)_48%,transparent_74%)] blur-3xl"
+              className="pointer-events-none absolute left-1/2 top-[40%] z-0 h-[min(280px,62vw)] w-[min(420px,78%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_42%_36%_at_50%_50%,rgba(147,51,234,0.22),rgba(192,38,211,0.08)_52%,transparent_62%)] blur-2xl"
               aria-hidden
             />
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative z-10 origin-top scale-[1.13] overflow-hidden rounded-[1.45rem] border border-white/[0.1] bg-gradient-to-b from-black/48 to-black/[0.84] p-7 shadow-[0_0_0_1px_rgba(139,92,246,0.12),0_0_72px_rgba(88,28,135,0.38),0_0_120px_rgba(34,211,238,0.12),0_32px_80px_rgba(0,0,0,0.62)] ring-1 ring-purple-500/15 backdrop-blur-2xl sm:p-8 md:p-9"
+              className="relative z-10 origin-top scale-[1.13] overflow-hidden rounded-[1.45rem] border border-white/[0.14] bg-gradient-to-b from-black/[0.52] to-black/[0.91] p-7 shadow-[0_0_0_1px_rgba(167,139,250,0.18),0_0_28px_rgba(88,28,135,0.2),0_20px_48px_rgba(0,0,0,0.58)] ring-1 ring-fuchsia-500/12 backdrop-blur-2xl sm:p-8 md:p-9"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault()
@@ -388,18 +388,17 @@ export default function AnalyzePage() {
                 }
               }}
             >
-              <div className="pointer-events-none absolute -right-12 -top-12 h-56 w-56 rounded-full bg-purple-600/35 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-10 -left-10 h-48 w-48 rounded-full bg-cyan-500/22 blur-3xl" />
+              <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-purple-600/18 blur-2xl" />
 
               <div className="relative flex flex-col items-center text-center">
-                <div className="w-full rounded-[1.1rem] border border-dashed border-white/[0.07] bg-black/52 px-9 py-14 sm:px-11 sm:py-16 md:px-12 md:py-[4.25rem]">
-                  <div className="mx-auto mb-5 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/45 to-cyan-500/28 ring-1 ring-white/12 shadow-[0_0_40px_rgba(168,85,247,0.5),0_0_28px_rgba(34,211,238,0.22)]">
-                    <svg className="h-10 w-10 drop-shadow-[0_0_14px_rgba(192,132,252,0.7)]" viewBox="0 0 24 24" aria-hidden>
+                <div className="w-full rounded-[1.1rem] border border-dashed border-white/[0.08] bg-black/58 px-9 py-14 sm:px-11 sm:py-16 md:px-12 md:py-[4.25rem]">
+                  <div className="mx-auto mb-3 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/40 to-purple-900/25 ring-1 ring-white/[0.11] shadow-[0_0_20px_rgba(168,85,247,0.32)]">
+                    <svg className="h-10 w-10 drop-shadow-[0_0_6px_rgba(216,180,254,0.55)]" viewBox="0 0 24 24" aria-hidden>
                       <defs>
                         <linearGradient id="analyzeUploadIcon" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#d8b4fe" />
-                          <stop offset="55%" stopColor="#a78bfa" />
-                          <stop offset="100%" stopColor="#22d3ee" />
+                          <stop offset="0%" stopColor="#e9d5ff" />
+                          <stop offset="50%" stopColor="#c4b5fd" />
+                          <stop offset="100%" stopColor="#a5b4fc" />
                         </linearGradient>
                       </defs>
                       <path
