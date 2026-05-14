@@ -17,9 +17,6 @@ export const MASTER_RESULT_STORAGE_KEY = "mastrify:master-result-v1"
 
 export const MASTER_SESSION_STORAGE_KEY = "mastrify:master-session-v2"
 
-/** Latest POST /master axios analysisAfter snapshot for dev metric-stage logs */
-export const MASTER_METRIC_STAGE5_STORAGE_KEY = "mastrify:master-metric-stage5"
-
 export type MasterStylePreset = "STREAM" | "CLUB" | "LOUD" | "WARM" | "FESTIVAL"
 
 type MasterSessionSnapshotV2 = {
@@ -75,7 +72,6 @@ function clearMasterStorageKeys() {
     if (typeof sessionStorage === "undefined") return
     sessionStorage.removeItem(MASTER_SESSION_STORAGE_KEY)
     sessionStorage.removeItem(MASTER_RESULT_STORAGE_KEY)
-    sessionStorage.removeItem(MASTER_METRIC_STAGE5_STORAGE_KEY)
   } catch {
     /* ignore */
   }
