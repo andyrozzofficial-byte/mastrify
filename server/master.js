@@ -139,7 +139,7 @@ const target = referenceAnalysis?.spectral || {
         console.log("FFMPEG STDERR:", line)
       })
 
-      .on("end", () => {
+      .on("end", async () => {
         if (settled) return
         settled = true
         clearTimeout(timeoutId)
@@ -147,9 +147,17 @@ const target = referenceAnalysis?.spectral || {
         if (!fs.existsSync(outputPath)) {
           return reject(new Error("Master completed but output file missing"))
         }
+        let analysisAfter = null
+        try {
+          analysisAfter = await analyzeTrack(outputPath)
+        } catch (e) {
+          console.log("POST-MASTER ANALYZE FAILED:", e)
+        }
         resolve({
-  path: outputPath
-})
+          path: outputPath,
+          analysisBefore: analysis,
+          analysisAfter,
+        })
       })
 
       .on("error", err => {

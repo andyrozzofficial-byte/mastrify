@@ -886,7 +886,7 @@ app.post("/master",
       console.log("INPUT:", newPath)
       console.log("OUTPUT:", masterPath)
 
-      await masterTrack({
+      const masterResult = await masterTrack({
         file: newPath,
         output: masterPath
       })
@@ -900,13 +900,15 @@ app.post("/master",
       const after = `/masters/${masterFileName}`
 
       res.json({
-  success: true,
-  before,
-  after,
-  afterUrl: `${baseUrl}${after}`,
-  // kept for backwards compatibility with older clients
-  fullUrl: `${baseUrl}${after}`
-})
+        success: true,
+        before,
+        after,
+        afterUrl: `${baseUrl}${after}`,
+        // kept for backwards compatibility with older clients
+        fullUrl: `${baseUrl}${after}`,
+        analysisBefore: masterResult?.analysisBefore ?? null,
+        analysisAfter: masterResult?.analysisAfter ?? null,
+      })
 
     } catch (err) {
       console.log(err)

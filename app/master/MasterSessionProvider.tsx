@@ -13,6 +13,10 @@ type MasterSession = {
   setMasteredUrl: (u: string) => void
   masteredPreviewMp3Url: string
   setMasteredPreviewMp3Url: (u: string) => void
+  analysisBefore: Record<string, unknown> | null
+  setAnalysisBefore: (a: Record<string, unknown> | null) => void
+  analysisAfter: Record<string, unknown> | null
+  setAnalysisAfter: (a: Record<string, unknown> | null) => void
   stylePreset: MasterStylePreset
   setStylePreset: (s: MasterStylePreset) => void
   targetLufs: number
@@ -33,6 +37,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const [audioUrl, setAudioUrl] = useState("")
   const [masteredUrl, setMasteredUrl] = useState("")
   const [masteredPreviewMp3Url, setMasteredPreviewMp3Url] = useState("")
+  const [analysisBefore, setAnalysisBefore] = useState<Record<string, unknown> | null>(null)
+  const [analysisAfter, setAnalysisAfter] = useState<Record<string, unknown> | null>(null)
   const [stylePreset, setStylePreset] = useState<MasterStylePreset>("STREAM")
   const [targetLufs, setTargetLufs] = useState(-14)
   const [stereoEnhance, setStereoEnhance] = useState(50)
@@ -47,6 +53,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     })
     setMasteredUrl("")
     setMasteredPreviewMp3Url("")
+    setAnalysisBefore(null)
+    setAnalysisAfter(null)
   }, [])
 
   const resetSession = useCallback(() => {
@@ -57,6 +65,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setFileState(null)
     setMasteredUrl("")
     setMasteredPreviewMp3Url("")
+    setAnalysisBefore(null)
+    setAnalysisAfter(null)
     setStylePreset("STREAM")
     setTargetLufs(-14)
     setStereoEnhance(50)
@@ -74,6 +84,10 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       setMasteredUrl,
       masteredPreviewMp3Url,
       setMasteredPreviewMp3Url,
+      analysisBefore,
+      setAnalysisBefore,
+      analysisAfter,
+      setAnalysisAfter,
       stylePreset,
       setStylePreset,
       targetLufs,
@@ -92,6 +106,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       audioUrl,
       masteredUrl,
       masteredPreviewMp3Url,
+      analysisBefore,
+      analysisAfter,
       stylePreset,
       targetLufs,
       stereoEnhance,

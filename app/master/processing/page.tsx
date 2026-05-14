@@ -45,7 +45,7 @@ function AudioWaveIcon({ className }: { className?: string }) {
 
 export default function MasterProcessingPage() {
   const router = useRouter()
-  const { file, setMasteredUrl, setMasteredPreviewMp3Url } = useMasterSession()
+    const { file, setMasteredUrl, setMasteredPreviewMp3Url, setAnalysisBefore, setAnalysisAfter } = useMasterSession()
   /** Index of the step currently in progress (0–4). */
   const [activeStep, setActiveStep] = useState(0)
 
@@ -81,6 +81,8 @@ export default function MasterProcessingPage() {
 
         setMasteredUrl(mastered)
         setMasteredPreviewMp3Url(previewMp3)
+        setAnalysisBefore((res.data.analysisBefore as Record<string, unknown> | null) ?? null)
+        setAnalysisAfter((res.data.analysisAfter as Record<string, unknown> | null) ?? null)
 
         appendHistory({
           kind: "master",
@@ -105,7 +107,7 @@ export default function MasterProcessingPage() {
       cancelled = true
       ac.abort()
     }
-  }, [file, router, setMasteredUrl, setMasteredPreviewMp3Url])
+  }, [file, router, setMasteredUrl, setMasteredPreviewMp3Url, setAnalysisBefore, setAnalysisAfter])
 
   return (
     <div className="relative flex min-h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-center overflow-hidden px-5 py-14 text-white md:min-h-[calc(100vh-4rem)] md:px-8 md:py-16">
