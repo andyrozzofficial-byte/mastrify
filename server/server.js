@@ -5,8 +5,13 @@ import multer from "multer"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
+import { randomUUID } from "crypto"
 import { analyzeTrack } from "./analyze.js"
 import { masterTrack } from "./master.js"
+import {
+  logMasterMetricFiveStagesServer,
+  serializeMasterAnalysisForJson,
+} from "./masterAnalysisPayload.js"
 
 process.on("uncaughtException", (err) => {
   console.error("💥 UNCAUGHT:", err)
@@ -886,9 +891,12 @@ app.post("/master",
       console.log("INPUT:", newPath)
       console.log("OUTPUT:", masterPath)
 
-      await masterTrack({
+      const metricTraceId = randomUUID()
+
+      const masterResult = await masterTrack({
         file: newPath,
-        output: masterPath
+        output: masterPath,
+        metricTraceId,
       })
 
       const forwardedProto = req.headers["x-forwarded-proto"]
@@ -899,14 +907,23 @@ app.post("/master",
       const before = `/uploads/${fileName}`
       const after = `/masters/${masterFileName}`
 
+      const analysisBefore = serializeMasterAnalysisForJson(masterResult?.analysisBefore, "before")
+      const analysisAfter = serializeMasterAnalysisForJson(masterResult?.analysisAfter, "after")
+      logMasterMetricFiveStagesServer(metricTraceId, masterResult?.analysisAfter, analysisAfter)
+
       res.json({
-  success: true,
-  before,
-  after,
-  afterUrl: `${baseUrl}${after}`,
-  // kept for backwards compatibility with older clients
-  fullUrl: `${baseUrl}${after}`
-})
+        success: true,
+        // Temporary: proves Railway is serving this server.js POST /master handler (remove after deploy verified)
+        debugVersion: "NEW_MASTER_RESPONSE_V2",
+        before,
+        after,
+        afterUrl: `${baseUrl}${after}`,
+        // kept for backwards compatibility with older clients
+        fullUrl: `${baseUrl}${after}`,
+        analysisBefore,
+        analysisAfter,
+        masterMetricTraceId: metricTraceId,
+      })
 
     } catch (err) {
       console.log(err)
