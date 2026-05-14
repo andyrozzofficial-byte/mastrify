@@ -435,45 +435,62 @@ export default function MasterResultClient() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-5 pb-28 pt-12 md:px-8 md:pb-32 md:pt-16 lg:max-w-6xl">
+    <div className="mx-auto w-full max-w-[1080px] px-5 pb-24 pt-8 sm:px-6 md:px-10 md:pb-28 md:pt-10 lg:px-12">
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
         className="text-center"
       >
-        <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-white sm:text-[2rem] md:text-[2.25rem]">
-          Your master is ready! 🎉
+        <h1 className="text-[1.7rem] font-semibold leading-[1.12] tracking-[-0.02em] text-white sm:text-[1.95rem] md:text-[2.1rem]">
+          Your master is ready!{" "}
+          <span className="inline-block translate-y-px" aria-hidden>
+            🎉
+          </span>
         </h1>
-        <p className="mx-auto mt-3 max-w-md text-[13px] leading-relaxed text-white/40 md:text-sm">Here&apos;s how your track improved.</p>
-        {file?.name ? <p className="mt-2 text-[11px] text-white/28">{file.name}</p> : null}
+        <div
+          className="mx-auto mt-2.5 h-px w-12 bg-gradient-to-r from-transparent via-violet-400/35 to-transparent sm:w-16 sm:via-violet-400/30"
+          aria-hidden
+        />
+        <p className="mx-auto mt-2.5 max-w-md text-[13px] leading-snug text-white/42 md:text-[14px] md:leading-relaxed">
+          Here&apos;s how your track improved.
+        </p>
+        {file?.name ? (
+          <p className="mx-auto mt-2 max-w-lg truncate px-2 text-[11px] text-white/30 md:text-xs">{file.name}</p>
+        ) : null}
       </motion.header>
 
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
-        className="mt-12 rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.52] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_28px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:mt-14 md:rounded-3xl md:p-10 lg:p-11"
+        className="mt-8 rounded-2xl border border-white/[0.055] bg-gradient-to-b from-white/[0.035] to-black/[0.58] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_20px_56px_rgba(0,0,0,0.52)] ring-1 ring-white/[0.03] backdrop-blur-2xl md:mt-10 md:rounded-[1.35rem] md:p-8 lg:p-9"
       >
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start lg:gap-12">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-stretch lg:gap-10 xl:gap-11">
           {/* Before / After metrics */}
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/32">Comparison</p>
-            <div className="mt-4 overflow-hidden rounded-xl border border-white/[0.06]">
-              <table className="w-full border-collapse text-left text-[13px] md:text-sm">
+          <div className="flex min-w-0 flex-col">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/28">Comparison</p>
+            <div className="mt-3 flex-1 overflow-hidden rounded-xl border border-white/[0.05] bg-black/[0.26] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <table className="w-full table-fixed border-collapse text-left text-[12px] md:text-[13px]">
                 <thead>
-                  <tr className="border-b border-white/[0.06] bg-black/[0.35]">
-                    <th className="px-4 py-3 font-semibold text-white/35 md:px-5" />
-                    <th className="px-4 py-3 font-semibold text-white/45 md:px-5">Before</th>
-                    <th className="px-4 py-3 font-semibold text-emerald-300/85 md:px-5">After</th>
+                  <tr className="border-b border-white/[0.045] bg-white/[0.02]">
+                    <th className="w-[38%] px-3 py-2.5 pl-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/28 md:px-4 md:py-3" />
+                    <th className="w-[31%] px-3 py-2.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/36 md:px-4 md:py-3">
+                      Before
+                    </th>
+                    <th className="w-[31%] px-3 py-2.5 pr-4 text-right text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-200/55 md:px-4 md:py-3 md:text-left">
+                      After
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-white/[0.04]">
                   {metricRows.map((row) => (
-                    <tr key={row.label} className="border-b border-white/[0.05] last:border-0">
-                      <td className="px-4 py-3.5 font-medium text-white/55 md:px-5">{row.label}</td>
-                      <td className="px-4 py-3.5 tabular-nums text-white/32 md:px-5">{row.before}</td>
-                      <td className="px-4 py-3.5 tabular-nums font-medium text-emerald-300/[0.88] md:px-5">{row.after}</td>
+                    <tr key={row.label} className="transition-colors duration-150 hover:bg-white/[0.015]">
+                      <td className="px-3 py-3.5 pl-4 font-medium text-white/48 md:px-4 md:py-4">{row.label}</td>
+                      <td className="px-3 py-3.5 tabular-nums text-white/28 md:px-4 md:py-4">{row.before}</td>
+                      <td className="px-3 py-3.5 pr-4 text-right tabular-nums text-[13px] font-semibold tracking-tight text-emerald-200/[0.92] md:px-4 md:py-4 md:text-left md:text-[14px]">
+                        {row.after}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -482,18 +499,18 @@ export default function MasterResultClient() {
           </div>
 
           {/* Preview + settings */}
-          <div className="flex min-w-0 flex-col gap-5">
-            <div className="rounded-xl border border-white/[0.07] bg-black/[0.4] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:p-6">
-              <p className="text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-white/32">Mastering preview</p>
+          <div className="flex min-w-0 flex-col gap-4 lg:gap-4">
+            <div className="flex flex-1 flex-col rounded-xl border border-white/[0.055] bg-black/[0.3] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] md:p-5">
+              <p className="text-center text-[9px] font-semibold uppercase tracking-[0.24em] text-white/28">Mastering preview</p>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="mt-3 grid grid-cols-2 gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={() => selectSource("original")}
-                  className={`rounded-lg py-2.5 text-xs font-semibold transition ${
+                  className={`rounded-lg py-2 text-[11px] font-semibold transition-all duration-200 sm:py-2.5 sm:text-xs ${
                     selectedSource === "original"
-                      ? "bg-gradient-to-r from-violet-600/85 to-indigo-600/85 text-white shadow-[0_0_16px_rgba(99,102,241,0.18)] ring-1 ring-white/[0.08]"
-                      : "border border-white/[0.08] bg-white/[0.04] text-white/55 hover:bg-white/[0.07]"
+                      ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.11)] ring-1 ring-white/[0.07]"
+                      : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/65"
                   }`}
                 >
                   Original
@@ -501,39 +518,39 @@ export default function MasterResultClient() {
                 <button
                   type="button"
                   onClick={() => selectSource("mastered")}
-                  className={`rounded-lg py-2.5 text-xs font-semibold transition ${
+                  className={`rounded-lg py-2 text-[11px] font-semibold transition-all duration-200 sm:py-2.5 sm:text-xs ${
                     selectedSource === "mastered"
-                      ? "bg-gradient-to-r from-violet-600/85 to-indigo-600/85 text-white shadow-[0_0_16px_rgba(99,102,241,0.18)] ring-1 ring-white/[0.08]"
-                      : "border border-white/[0.08] bg-white/[0.04] text-white/55 hover:bg-white/[0.07]"
+                      ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.11)] ring-1 ring-white/[0.07]"
+                      : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/65"
                   }`}
                 >
                   Mastered
                 </button>
               </div>
 
-              <div className="relative mt-5 overflow-hidden rounded-lg bg-white/[0.04] ring-1 ring-white/[0.05]">
-                <div className="flex h-12 items-end justify-center gap-px px-3 pt-3 opacity-[0.38]">
-                  {Array.from({ length: 72 }).map((_, i) => (
+              <div className="relative mt-3 overflow-hidden rounded-lg bg-gradient-to-b from-white/[0.04] to-black/[0.2] ring-1 ring-white/[0.04]">
+                <div className="flex h-9 items-end justify-center gap-px px-2.5 pb-2 pt-2.5 opacity-[0.34] sm:h-10 sm:px-3">
+                  {Array.from({ length: 64 }).map((_, i) => (
                     <span
                       key={i}
-                      className="w-0.5 rounded-full bg-gradient-to-t from-violet-500/35 to-sky-400/45"
-                      style={{ height: `${22 + (i % 6) * 10}%` }}
+                      className="w-0.5 rounded-full bg-gradient-to-t from-violet-400/25 to-slate-400/35"
+                      style={{ height: `${20 + (i % 6) * 9}%` }}
                     />
                   ))}
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-3.5 flex items-center gap-3 sm:mt-4">
                 <button
                   type="button"
                   onClick={togglePlayPause}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-[0_0_18px_rgba(99,102,241,0.22)] ring-1 ring-white/10 transition hover:brightness-110"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600/95 to-indigo-700/95 text-white shadow-[0_0_12px_rgba(99,102,241,0.12),0_6px_16px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.05] hover:shadow-[0_0_14px_rgba(99,102,241,0.14)] active:scale-[0.97]"
                   aria-label={isPlaying ? "Pause" : "Play"}
                 >
                   {isPlaying ? (
                     <span className="flex gap-0.5">
-                      <span className="block h-3.5 w-1 rounded-sm bg-white" />
-                      <span className="block h-3.5 w-1 rounded-sm bg-white" />
+                      <span className="block h-3.5 w-1 rounded-sm bg-white/95" />
+                      <span className="block h-3.5 w-1 rounded-sm bg-white/95" />
                     </span>
                   ) : (
                     <svg className="ml-0.5 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -542,19 +559,23 @@ export default function MasterResultClient() {
                   )}
                 </button>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between text-[11px] tabular-nums text-white/38">
+                  <div className="flex items-center justify-between text-[11px] tabular-nums text-white/34">
                     <span>
                       {fmtClock(playHeadSec)} / {fmtClock(windowEndSec)}
                     </span>
-                    <button type="button" className="rounded p-1 text-white/30 hover:text-white/50" aria-label="Expand preview">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <button
+                      type="button"
+                      className="rounded-md p-1.5 text-white/28 transition-colors duration-200 hover:bg-white/[0.05] hover:text-white/45"
+                      aria-label="Expand preview"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                       </svg>
                     </button>
                   </div>
-                  <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/[0.08]">
+                  <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-white/[0.07]">
                     <motion.div
-                      className="h-full rounded-full bg-gradient-to-r from-violet-400/90 to-sky-400/85"
+                      className="h-full rounded-full bg-gradient-to-r from-violet-400/75 to-sky-500/55"
                       style={{ width: `${playProgress}%` }}
                     />
                   </div>
@@ -562,14 +583,14 @@ export default function MasterResultClient() {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/[0.06] bg-black/[0.35] px-4 py-3.5">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/32">Mastering style</p>
-                <p className="mt-1.5 text-sm font-medium text-cyan-200/85">{STYLE_LABELS[stylePreset]}</p>
+            <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 sm:items-stretch">
+              <div className="flex flex-col justify-center rounded-xl border border-white/[0.05] bg-black/[0.26] px-4 py-3 md:px-4 md:py-3.5">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/28">Mastering style</p>
+                <p className="mt-1 text-[13px] font-medium leading-snug text-teal-200/75 md:text-sm">{STYLE_LABELS[stylePreset]}</p>
               </div>
-              <div className="rounded-xl border border-white/[0.06] bg-black/[0.35] px-4 py-3.5">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/32">Loudness target</p>
-                <p className="mt-1.5 text-sm font-medium text-cyan-200/85">{loudnessLabel(targetLufs)}</p>
+              <div className="flex flex-col justify-center rounded-xl border border-white/[0.05] bg-black/[0.26] px-4 py-3 md:px-4 md:py-3.5">
+                <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/28">Loudness target</p>
+                <p className="mt-1 text-[13px] font-medium leading-snug text-teal-200/75 md:text-sm">{loudnessLabel(targetLufs)}</p>
               </div>
             </div>
           </div>
@@ -580,13 +601,13 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1 }}
-        className="mx-auto mt-10 flex w-full max-w-xl flex-col gap-3 sm:mt-12 sm:flex-row sm:justify-center sm:gap-4"
+        className="mx-auto mt-9 flex w-full max-w-[28rem] flex-col gap-3.5 sm:mt-10 sm:flex-row sm:justify-center sm:gap-4"
       >
         {!isPaid ? (
           <button
             type="button"
             onClick={handlePayment}
-            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#6d28d9] via-[#4f46e5] to-[#2563eb] px-8 text-[14px] font-semibold text-white shadow-[0_0_22px_rgba(99,102,241,0.2),0_12px_36px_rgba(0,0,0,0.42)] ring-1 ring-white/10 transition hover:brightness-110"
+            className="inline-flex min-h-[54px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-9 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99]"
           >
             Unlock download
           </button>
@@ -594,7 +615,7 @@ export default function MasterResultClient() {
           <a
             href={masteredUrl ? `${masteredUrl}?download=1` : "#"}
             download="master.wav"
-            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#6d28d9] via-[#4f46e5] to-[#2563eb] px-8 text-[14px] font-semibold text-white shadow-[0_0_22px_rgba(99,102,241,0.2),0_12px_36px_rgba(0,0,0,0.42)] ring-1 ring-white/10 transition hover:brightness-110"
+            className="inline-flex min-h-[54px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-9 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99]"
           >
             Download master
           </a>
@@ -602,7 +623,7 @@ export default function MasterResultClient() {
         <Link
           href="/master"
           onClick={() => resetSession()}
-          className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.04] px-8 text-[14px] font-semibold text-white/88 transition hover:border-white/[0.18] hover:bg-white/[0.07]"
+          className="inline-flex min-h-[54px] flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-8 text-[14px] font-semibold text-white/82 transition-all duration-200 hover:border-white/[0.11] hover:bg-white/[0.055] hover:text-white/92 active:scale-[0.99]"
         >
           New master
         </Link>
@@ -612,15 +633,15 @@ export default function MasterResultClient() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="mx-auto mt-14 max-w-md text-center md:mt-16"
+        className="mx-auto mt-11 max-w-md text-center md:mt-12"
       >
-        <p className="text-[13px] text-white/38">Happy with the result? Share your master!</p>
+        <p className="text-[12px] leading-relaxed text-white/34 md:text-[13px]">Happy with the result? Share your master!</p>
         <button
           type="button"
           onClick={handleShare}
-          className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-black/[0.35] px-5 py-2 text-[12px] font-medium text-white/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white/90"
+          className="mt-3.5 inline-flex items-center gap-2 rounded-full border border-white/[0.07] bg-black/[0.28] px-4 py-2 text-[11px] font-medium text-white/68 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.1] hover:bg-white/[0.04] hover:text-white/85 active:scale-[0.98] md:mt-4 md:px-5 md:text-xs"
         >
-          <svg className="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <svg className="h-3.5 w-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.935-2.186 2.25 2.25 0 00-3.935 2.186z" />
           </svg>
           {shareLabel}
