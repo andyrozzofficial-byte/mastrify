@@ -6,9 +6,23 @@ import axios from "axios"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
 import { appendHistory } from "../../../lib/history"
-import { useMasterSession } from "../MasterSessionProvider"
+import { MASTER_METRIC_STAGE5_STORAGE_KEY, useMasterSession } from "../MasterSessionProvider"
 
 const API = "https://mastrify-backend-production.up.railway.app"
+
+function pickFiveComparisonMetricsForLog(obj: unknown) {
+  if (obj == null || typeof obj !== "object") {
+    return { lufs: null, dynamicRange: null, stereoWidth: null, bassWeight: null, brightness: null }
+  }
+  const o = obj as Record<string, unknown>
+  return {
+    lufs: o.lufs,
+    dynamicRange: o.dynamicRange,
+    stereoWidth: o.stereoWidth,
+    bassWeight: o.bassWeight,
+    brightness: o.brightness,
+  }
+}
 
 /** Display steps — must stay in sync with timed progression before the API call */
 const UI_STEPS = [
@@ -74,6 +88,27 @@ export default function MasterProcessingPage() {
 
         const res = await axios.post(`${API}/master`, formData, { signal: ac.signal })
         if (cancelled) return
+
+        const traceId =
+          typeof res.data.masterMetricTraceId === "string" ? res.data.masterMetricTraceId : null
+        const stage5Axios = pickFiveComparisonMetricsForLog(res.data.analysisAfter)
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(
+              MASTER_METRIC_STAGE5_STORAGE_KEY,
+              JSON.stringify({ traceId, stage5_axios_res_data_analysisAfter: stage5Axios })
+            )
+          } catch {
+            /* ignore */
+          }
+        }
+        console.log(
+          "[MASTER_METRIC_STAGES]",
+          JSON.stringify({
+            traceId,
+            stage5_axios_res_data_analysisAfter: stage5Axios,
+          })
+        )
 
         const mastered =
           res.data.afterUrl || res.data.fullUrl || (res.data.after ? `${API}${res.data.after}` : "")

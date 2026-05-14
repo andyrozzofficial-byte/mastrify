@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
+import { MASTER_METRIC_STAGE5_STORAGE_KEY, useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
 
 const PREVIEW_START = 60
 const PREVIEW_DURATION = 30
@@ -86,6 +86,20 @@ function isIOSSafari() {
   return isWebKit && !isCriOS && !isFxiOS
 }
 
+function pickFiveComparisonMetricsForLog(obj: unknown) {
+  if (obj == null || typeof obj !== "object") {
+    return { lufs: null, dynamicRange: null, stereoWidth: null, bassWeight: null, brightness: null }
+  }
+  const o = obj as Record<string, unknown>
+  return {
+    lufs: o.lufs,
+    dynamicRange: o.dynamicRange,
+    stereoWidth: o.stereoWidth,
+    bassWeight: o.bassWeight,
+    brightness: o.brightness,
+  }
+}
+
 function isAbortError(e: unknown) {
   return (
     (typeof DOMException !== "undefined" && e instanceof DOMException && e.name === "AbortError") ||
@@ -105,6 +119,27 @@ export default function MasterResultClient() {
     analysisBefore,
     analysisAfter,
   } = useMasterSession()
+
+  useEffect(() => {
+    if (!masteredUrl) return
+    let stored: { traceId: string | null; stage5_axios_res_data_analysisAfter: ReturnType<typeof pickFiveComparisonMetricsForLog> } | null = null
+    try {
+      const raw = typeof window !== "undefined" ? sessionStorage.getItem(MASTER_METRIC_STAGE5_STORAGE_KEY) : null
+      if (raw) stored = JSON.parse(raw) as typeof stored
+    } catch {
+      stored = null
+    }
+    console.log(
+      "[MASTER_METRIC_STAGES]",
+      JSON.stringify({
+        traceId: stored?.traceId ?? null,
+        stage5a_stored_axios_from_processing: stored?.stage5_axios_res_data_analysisAfter ?? null,
+        stage5b_masterResultClient_context: analysisAfter
+          ? pickFiveComparisonMetricsForLog(analysisAfter)
+          : { lufs: null, dynamicRange: null, stereoWidth: null, bassWeight: null, brightness: null },
+      })
+    )
+  }, [masteredUrl, analysisAfter])
 
   const [mounted, setMounted] = useState(false)
   const [isMobileClient, setIsMobileClient] = useState(false)

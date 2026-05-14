@@ -7,96 +7,58 @@
 
 const METRIC_KEYS = ["lufs", "dynamicRange", "stereoWidth", "bassWeight", "brightness", "mixQuality"]
 
-/** UI comparison keys (MasterResultClient) — logged alongside raw analyzer output */
+/** UI comparison keys — must match MasterResultClient metric rows (excl. derived clarity). */
 export const UI_COMPARISON_METRIC_KEYS = ["lufs", "dynamicRange", "stereoWidth", "bassWeight", "brightness"]
 
 /**
- * Log raw return value from analyzeTrack(outputPath) before any serialization.
- * Surfaces null/undefined, wrong types, and non-finite numbers that become JSON null.
+ * Pick only the five comparison fields for logs (null-safe, no fabrication).
  */
-export function logRawPostMasterAnalyzeTrack(outputPath, raw) {
-  console.log("[POST_MASTER] analyzeTrack(outputPath) path:", outputPath)
-  if (raw == null || typeof raw !== "object") {
-    console.log("[POST_MASTER] analyzeTrack(outputPath) raw:", raw === null ? "<null>" : typeof raw)
-    return
-  }
-  const diag = {}
-  for (const k of UI_COMPARISON_METRIC_KEYS) {
-    const v = raw[k]
-    diag[k] = {
-      value: v,
-      typeof: typeof v,
-      isFiniteNumber: typeof v === "number" && Number.isFinite(v),
-      isNullJsonRisk: typeof v === "number" && !Number.isFinite(v),
+export function pickFiveComparisonMetrics(obj) {
+  if (obj == null || typeof obj !== "object") {
+    return {
+      lufs: null,
+      dynamicRange: null,
+      stereoWidth: null,
+      bassWeight: null,
+      brightness: null,
     }
   }
-  console.log("[POST_MASTER] analyzeTrack(outputPath) raw UI-metric diag:", JSON.stringify(diag))
-  try {
-    const probe = JSON.stringify(raw, (_key, v) => {
-      if (typeof v === "number" && !Number.isFinite(v)) return `__nonfinite__:${String(v)}`
-      return v
-    })
-    console.log("[POST_MASTER] analyzeTrack(outputPath) full object JSON (nonfinite tagged):", probe)
-  } catch (e) {
-    console.error("[POST_MASTER] analyzeTrack(outputPath) JSON.stringify failed:", e?.message || e)
+  return {
+    lufs: obj.lufs,
+    dynamicRange: obj.dynamicRange,
+    stereoWidth: obj.stereoWidth,
+    bassWeight: obj.bassWeight,
+    brightness: obj.brightness,
   }
 }
 
 /**
- * Log raw vs serialized analysisAfter + what survives JSON.stringify (as sent to client).
+ * One line per request: stages 1–4 for analysisAfter (same traceId as res.json masterMetricTraceId).
+ * stage4 = metrics after JSON.stringify/parse of the same object tree Express puts in res.json (analysisAfter slice).
  */
-export function logAnalysisAfterSerializationPipeline(raw, serialized) {
-  console.log("[POST_MASTER] serializeMasterAnalysisForJson('after') INPUT (UI keys only):")
-  console.log(
-    JSON.stringify(
-      Object.fromEntries(UI_COMPARISON_METRIC_KEYS.map((k) => [k, raw == null ? null : raw[k]]))
-    )
-  )
-  console.log("[POST_MASTER] serializeMasterAnalysisForJson('after') OUTPUT (UI keys only):")
-  console.log(
-    JSON.stringify(
-      Object.fromEntries(UI_COMPARISON_METRIC_KEYS.map((k) => [k, serialized == null ? null : serialized[k]]))
-    )
-  )
+export function logMasterMetricFiveStagesServer(traceId, rawAfter, serializedAfter) {
+  const s1 = pickFiveComparisonMetrics(rawAfter)
+  const s2 = pickFiveComparisonMetrics(rawAfter)
+  const s3 = pickFiveComparisonMetrics(serializedAfter)
+  let stage4 = pickFiveComparisonMetrics(serializedAfter)
   try {
-    const wire = JSON.stringify({ analysisAfter: serialized })
-    const back = JSON.parse(wire).analysisAfter
-    const afterRoundTrip = Object.fromEntries(
-      UI_COMPARISON_METRIC_KEYS.map((k) => [k, back == null ? undefined : back[k]])
-    )
-    console.log("[POST_MASTER] analysisAfter after JSON.stringify→parse (wire-level, as axios sees):")
-    console.log(JSON.stringify(afterRoundTrip))
+    const wire = JSON.stringify({ analysisAfter: serializedAfter })
+    const parsed = JSON.parse(wire)
+    stage4 = pickFiveComparisonMetrics(parsed.analysisAfter)
   } catch (e) {
-    console.error("[POST_MASTER] analysisAfter wire round-trip failed:", e?.message || e)
+    console.error("[MASTER_METRIC_STAGES] stage4 wire stringify failed:", e?.message || e)
+    stage4 = { lufs: null, dynamicRange: null, stereoWidth: null, bassWeight: null, brightness: null }
   }
-}
-
-/**
- * Log the exact analysisAfter object attached to res.json (post-serialize).
- */
-export function logFinalMasterJsonPayload(analysisAfterSerialized) {
-  const slice =
-    analysisAfterSerialized && typeof analysisAfterSerialized === "object"
-      ? {
-          lufs: analysisAfterSerialized.lufs,
-          dynamicRange: analysisAfterSerialized.dynamicRange,
-          stereoWidth: analysisAfterSerialized.stereoWidth,
-          bassWeight: analysisAfterSerialized.bassWeight,
-          brightness: analysisAfterSerialized.brightness,
-          mixQuality: analysisAfterSerialized.mixQuality,
-          issuesCount: Array.isArray(analysisAfterSerialized.issues) ? analysisAfterSerialized.issues.length : 0,
-        }
-      : null
-  console.log("[POST /master] final res.json analysisAfter metric slice:", JSON.stringify(slice))
-  try {
-    const full = JSON.stringify({
-      success: true,
-      analysisAfter: analysisAfterSerialized,
+  console.log(
+    "[MASTER_METRIC_STAGES]",
+    JSON.stringify({
+      traceId,
+      stage1_raw_analyzeTrack_outputPath: s1,
+      stage2_serializeMasterAnalysisForJson_INPUT: s2,
+      stage3_serializeMasterAnalysisForJson_OUTPUT: s3,
+      stage4_resJson_wire_analysisAfter: stage4,
     })
-    console.log("[POST /master] final JSON byte length (success + analysisAfter only):", full.length)
-  } catch (e) {
-    console.error("[POST /master] final JSON stringify check failed:", e?.message || e)
-  }
+  )
 }
 
 function finiteNum(v, fallback, key, label) {

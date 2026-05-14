@@ -4,7 +4,6 @@ import path from "path"
 import fs from "fs"
 import { fileURLToPath } from "url"
 import { analyzeTrack } from "./analyze.js"
-import { logRawPostMasterAnalyzeTrack } from "./masterAnalysisPayload.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -52,7 +51,7 @@ async function waitForMasterOutputReady(filePath) {
   return fs.existsSync(filePath) ? fs.statSync(filePath).size : 0
 }
 
-export async function masterTrack({ file, output, reference, style, targetLufs, mode }) {
+export async function masterTrack({ file, output, reference, style, targetLufs, mode, metricTraceId }) {
 
   console.log("REFERENCE IN MASTER:", reference)
 
@@ -191,10 +190,8 @@ const target = referenceAnalysis?.spectral || {
             console.log("POST-MASTER ANALYZE FAILED (attempt " + (attempt + 1) + "):", e)
           }
         }
-        if (analysisAfter) {
-          logRawPostMasterAnalyzeTrack(outputPath, analysisAfter)
-        } else {
-          console.log("[POST_MASTER] analyzeTrack(outputPath) never returned — analysisAfter is null")
+        if (!analysisAfter) {
+          console.log("[POST_MASTER] analysisAfter is null after all attempts; metricTraceId:", metricTraceId ?? "(none)")
         }
         resolve({
           path: outputPath,

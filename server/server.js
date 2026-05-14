@@ -5,13 +5,11 @@ import multer from "multer"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
+import { randomUUID } from "crypto"
 import { analyzeTrack } from "./analyze.js"
 import { masterTrack } from "./master.js"
 import {
-  logAnalysisAfterSerializationPipeline,
-  logFinalMasterJsonPayload,
-  logFullMasterAnalysis,
-  logMasterComparisonMetricsSummary,
+  logMasterMetricFiveStagesServer,
   serializeMasterAnalysisForJson,
 } from "./masterAnalysisPayload.js"
 
@@ -893,9 +891,12 @@ app.post("/master",
       console.log("INPUT:", newPath)
       console.log("OUTPUT:", masterPath)
 
+      const metricTraceId = randomUUID()
+
       const masterResult = await masterTrack({
         file: newPath,
-        output: masterPath
+        output: masterPath,
+        metricTraceId,
       })
 
       const forwardedProto = req.headers["x-forwarded-proto"]
@@ -906,14 +907,9 @@ app.post("/master",
       const before = `/uploads/${fileName}`
       const after = `/masters/${masterFileName}`
 
-      logFullMasterAnalysis("analysisBefore_raw", masterResult?.analysisBefore)
-      logFullMasterAnalysis("analysisAfter_raw", masterResult?.analysisAfter)
-
       const analysisBefore = serializeMasterAnalysisForJson(masterResult?.analysisBefore, "before")
       const analysisAfter = serializeMasterAnalysisForJson(masterResult?.analysisAfter, "after")
-      logMasterComparisonMetricsSummary(analysisBefore, analysisAfter)
-      logAnalysisAfterSerializationPipeline(masterResult?.analysisAfter, analysisAfter)
-      logFinalMasterJsonPayload(analysisAfter)
+      logMasterMetricFiveStagesServer(metricTraceId, masterResult?.analysisAfter, analysisAfter)
 
       res.json({
         success: true,
@@ -924,6 +920,7 @@ app.post("/master",
         fullUrl: `${baseUrl}${after}`,
         analysisBefore,
         analysisAfter,
+        masterMetricTraceId: metricTraceId,
       })
 
     } catch (err) {
