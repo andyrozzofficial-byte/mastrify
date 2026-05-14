@@ -180,17 +180,17 @@ export default function MasterUploadPage() {
             </li>
           </ul>
 
-          {/* Premium note — lighter, less boxed */}
-          <div className="mt-9 flex flex-col items-stretch gap-3 border-t border-white/[0.05] pt-8 sm:mt-10 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pt-9">
-            <p className="text-center text-[12px] leading-snug text-white/42 sm:flex-1 sm:text-left md:text-[13px] md:leading-relaxed">
-              <span className="font-medium text-white/78">AI mastering is a premium feature.</span>{" "}
-              <span className="text-white/40">Get unlimited masters, stereo depth, and more.</span>
+          {/* Light reassurance — not a pricing upsell */}
+          <div className="mt-8 flex flex-col items-center gap-1.5 pt-1 sm:mt-9 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-2 sm:gap-y-1 sm:pt-0">
+            <p className="max-w-[20rem] text-center text-[11px] leading-relaxed text-white/34 md:max-w-none md:text-[12px]">
+              Professional AI mastering in seconds.{" "}
+              <span className="text-white/28">Pay only for the masters you export.</span>
             </p>
             <Link
               href="/pricing"
-              className="shrink-0 self-center rounded-md border border-purple-400/22 px-2.5 py-1 text-[11px] font-medium text-purple-200/90 transition hover:border-purple-400/35 hover:bg-white/[0.03] hover:text-white sm:self-auto sm:px-3 sm:py-1 sm:text-xs"
+              className="text-[10px] font-normal text-white/26 underline-offset-[5px] transition hover:text-white/40 hover:underline md:text-[11px]"
             >
-              See pricing
+              Pricing
             </Link>
           </div>
 
