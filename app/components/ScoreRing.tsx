@@ -29,10 +29,10 @@ export default function ScoreRing({
       <div
         className="pointer-events-none absolute inset-0 rounded-full opacity-80 blur-2xl"
         style={{
-          background: `conic-gradient(from 200deg, rgba(139,92,246,0.45), rgba(34,211,238,0.35), rgba(139,92,246,0.2))`,
+          background: `conic-gradient(from 200deg, rgba(139,92,246,0.28), rgba(34,211,238,0.2), rgba(139,92,246,0.12))`,
         }}
       />
-      <svg width={size} height={size} className="relative -rotate-90 drop-shadow-[0_0_24px_rgba(139,92,246,0.35)]">
+      <svg width={size} height={size} className="relative -rotate-90 drop-shadow-[0_0_16px_rgba(139,92,246,0.22)]">
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -73,7 +73,7 @@ export default function ScoreRing({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {variant === "percent" ? (
-          <span className="text-3xl font-bold tabular-nums tracking-tight text-white drop-shadow-[0_0_18px_rgba(255,255,255,0.15)] md:text-[2.125rem]">
+          <span className="text-3xl font-bold tabular-nums tracking-tight text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.1)] md:text-[2.125rem]">
             {v}
             <span className="text-[0.55em] font-semibold text-white/90">%</span>
           </span>

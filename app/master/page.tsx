@@ -43,7 +43,7 @@ export default function MasterUploadPage() {
           className="mt-12 w-full"
         >
           <div
-            className="group relative w-full cursor-pointer overflow-hidden rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.07] to-black/50 p-12 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_32px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl transition hover:border-cyan-400/25 md:p-16"
+            className="group relative w-full cursor-pointer overflow-hidden rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.07] to-black/50 p-12 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_36px_96px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition hover:border-cyan-400/25 md:p-16"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault()
@@ -73,7 +73,7 @@ export default function MasterUploadPage() {
                 <p className="text-lg font-semibold tracking-tight text-white">Drop your track</p>
                 <p className="mt-1 text-sm text-white/45">WAV or MP3 • High resolution recommended</p>
               </div>
-              <span className="rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(139,92,246,0.35)]">
+              <span className="rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_10px_32px_rgba(139,92,246,0.22),0_4px_14px_rgba(0,0,0,0.35)]">
                 Choose file
               </span>
             </div>

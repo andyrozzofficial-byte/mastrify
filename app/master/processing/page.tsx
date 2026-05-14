@@ -95,9 +95,9 @@ export default function MasterProcessingPage() {
         animate={{ rotate: tick * 2 }}
         transition={{ duration: 0.25, ease: "linear" }}
       >
-        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500/50 via-cyan-400/25 to-blue-500/35 blur-3xl" />
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500/32 via-cyan-400/14 to-blue-500/22 blur-3xl" />
         <div className="absolute inset-3 rounded-full border border-white/15 bg-black/50 backdrop-blur-2xl" />
-        <div className="relative flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/35 to-cyan-500/25 shadow-[0_0_80px_rgba(139,92,246,0.5)] ring-1 ring-white/10">
+        <div className="relative flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/35 to-cyan-500/25 shadow-[0_0_48px_rgba(139,92,246,0.28),0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10">
           <svg className="h-12 w-12 text-white/90" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
           </svg>

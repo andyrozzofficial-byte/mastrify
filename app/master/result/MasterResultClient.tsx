@@ -356,7 +356,7 @@ export default function MasterResultClient() {
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-black/45 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_32px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:p-10"
+        className="rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-black/45 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_36px_96px_rgba(0,0,0,0.6)] backdrop-blur-2xl md:p-10"
       >
         <p className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-cyan-400/70">Complete</p>
         <h1 className="mt-3 text-center text-2xl font-bold tracking-tight text-transparent bg-gradient-to-r from-white via-purple-100 to-cyan-100 bg-clip-text md:text-3xl">
@@ -370,7 +370,7 @@ export default function MasterResultClient() {
             <p className="mt-2 text-lg font-semibold text-white/90">Upload</p>
             <p className="mt-2 text-sm text-white/45">Preview 60s–90s window</p>
           </div>
-          <div className="rounded-2xl border border-cyan-400/25 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 p-5 shadow-[0_0_30px_rgba(34,211,238,0.08)]">
+          <div className="rounded-2xl border border-cyan-400/25 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 p-5 shadow-[0_0_18px_rgba(34,211,238,0.04),0_12px_36px_rgba(0,0,0,0.35)]">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/80">After</p>
             <p className="mt-2 text-lg font-semibold text-white">Mastered</p>
             <p className="mt-2 text-sm text-white/55">
@@ -448,7 +448,7 @@ export default function MasterResultClient() {
             <button
               type="button"
               onClick={handlePayment}
-              className="flex-1 rounded-2xl bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 py-4 text-base font-bold text-white shadow-[0_20px_50px_rgba(139,92,246,0.35)] transition hover:brightness-110"
+              className="flex-1 rounded-2xl bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 py-4 text-base font-bold text-white shadow-[0_16px_44px_rgba(139,92,246,0.22),0_8px_24px_rgba(0,0,0,0.4)] transition hover:brightness-110"
             >
               Unlock download
             </button>
@@ -456,7 +456,7 @@ export default function MasterResultClient() {
             <a
               href={masteredUrl ? `${masteredUrl}?download=1` : "#"}
               download="master.wav"
-              className="flex-1 rounded-2xl bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 py-4 text-center text-base font-bold text-white shadow-[0_20px_50px_rgba(139,92,246,0.35)] transition hover:brightness-110"
+              className="flex-1 rounded-2xl bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 py-4 text-center text-base font-bold text-white shadow-[0_16px_44px_rgba(139,92,246,0.22),0_8px_24px_rgba(0,0,0,0.4)] transition hover:brightness-110"
             >
               Download master
             </a>

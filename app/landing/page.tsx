@@ -7,15 +7,15 @@ import CinematicBackground from "../components/CinematicBackground"
 import ScoreRing from "../components/ScoreRing"
 
 const previewRows = [
-  { label: "Low end", status: "Needs work", dot: "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.55)]", statusClass: "text-rose-400" },
+  { label: "Low end", status: "Needs work", dot: "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.38)]", statusClass: "text-rose-400" },
   {
     label: "Too much dynamic range",
     status: "Major issue",
-    dot: "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.45)]",
+    dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.32)]",
     statusClass: "text-amber-300",
   },
-  { label: "Stereo image", status: "Good", dot: "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.4)]", statusClass: "text-emerald-400" },
-  { label: "Loudness", status: "Good", dot: "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.4)]", statusClass: "text-emerald-400" },
+  { label: "Stereo image", status: "Good", dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.28)]", statusClass: "text-emerald-400" },
+  { label: "Loudness", status: "Good", dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.28)]", statusClass: "text-emerald-400" },
 ]
 
 const dawLogos = ["Ableton", "FL Studio", "Logic Pro", "Pro Tools", "Studio One"]
@@ -47,7 +47,7 @@ export default function Landing() {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <motion.div
-          className="absolute inset-0 bg-[radial-gradient(ellipse_88%_58%_at_50%_-8%,rgba(124,58,237,0.22),transparent_58%),radial-gradient(ellipse_42%_48%_at_88%_18%,rgba(34,211,238,0.14),transparent_50%)]"
+          className="absolute inset-0 bg-[radial-gradient(ellipse_88%_58%_at_50%_-8%,rgba(124,58,237,0.15),transparent_58%),radial-gradient(ellipse_42%_48%_at_88%_18%,rgba(34,211,238,0.08),transparent_50%)]"
           animate={{ opacity: [0.88, 1, 0.88] }}
           transition={{ duration: 8, ease: "easeInOut", repeat: Infinity }}
         />
@@ -57,7 +57,7 @@ export default function Landing() {
         {/* Hero */}
         <div className="grid items-start gap-11 pt-0 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-x-14 lg:gap-y-8 lg:pt-1 xl:gap-x-16">
           <div className="text-center lg:max-w-none lg:pr-2 lg:text-left">
-            <div className="inline-flex rounded-full border border-purple-500/38 bg-purple-500/[0.1] px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-purple-200/95 shadow-[0_0_32px_rgba(168,85,247,0.38)]">
+            <div className="inline-flex rounded-full border border-purple-500/38 bg-purple-500/[0.1] px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-purple-200/95 shadow-[0_0_22px_rgba(168,85,247,0.22)]">
               AI powered
             </div>
 
@@ -75,13 +75,13 @@ export default function Landing() {
             <div className="mx-auto mt-9 flex w-full max-w-[29rem] flex-col gap-3.5 sm:max-w-none sm:flex-row sm:justify-center lg:mx-0 lg:mt-10 lg:max-w-none lg:justify-start">
               <Link
                 href="/analyze"
-                className="inline-flex min-h-[56px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-8 py-4 text-[15px] font-semibold text-white shadow-[0_0_48px_rgba(99,102,241,0.52),0_22px_60px_rgba(0,0,0,0.4)] transition hover:brightness-110 sm:min-w-[240px] sm:flex-none lg:min-h-[58px] lg:px-10 lg:text-base"
+                className="inline-flex min-h-[56px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-8 py-4 text-[15px] font-semibold text-white shadow-[0_0_34px_rgba(99,102,241,0.36),0_22px_56px_rgba(0,0,0,0.48)] transition hover:brightness-110 sm:min-w-[240px] sm:flex-none lg:min-h-[58px] lg:px-10 lg:text-base"
               >
                 Analyze my mix — It&apos;s free
               </Link>
               <Link
                 href="/master"
-                className="inline-flex min-h-[56px] flex-1 items-center justify-center rounded-xl border border-white/22 bg-transparent px-8 py-4 text-[15px] font-semibold text-white/95 transition hover:border-white/38 hover:bg-white/[0.07] hover:shadow-[0_0_32px_rgba(255,255,255,0.07)] sm:min-w-[192px] sm:flex-none lg:min-h-[58px] lg:text-base"
+                className="inline-flex min-h-[56px] flex-1 items-center justify-center rounded-xl border border-white/22 bg-transparent px-8 py-4 text-[15px] font-semibold text-white/95 transition hover:border-white/38 hover:bg-white/[0.07] hover:shadow-[0_0_22px_rgba(255,255,255,0.05)] sm:min-w-[192px] sm:flex-none lg:min-h-[58px] lg:text-base"
               >
                 Try Mastering
               </Link>
@@ -97,15 +97,15 @@ export default function Landing() {
           <div className="relative mx-auto w-full max-w-[500px] lg:mx-0 lg:max-w-none lg:pt-2">
             {/* Stronger purple / cyan halo behind preview card */}
             <div
-              className="pointer-events-none absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-purple-500/35 via-fuchsia-500/12 to-cyan-400/28 opacity-90 blur-2xl"
+              className="pointer-events-none absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-purple-500/22 via-fuchsia-500/8 to-cyan-400/16 opacity-90 blur-2xl"
               aria-hidden
             />
             <div
-              className="pointer-events-none absolute -inset-12 rounded-[2.5rem] bg-gradient-to-tr from-purple-600/25 via-transparent to-cyan-500/22 blur-3xl"
+              className="pointer-events-none absolute -inset-12 rounded-[2.5rem] bg-gradient-to-tr from-purple-600/14 via-transparent to-cyan-500/12 blur-3xl"
               aria-hidden
             />
             <div className="relative">
-              <div className="overflow-hidden rounded-[22px] border border-white/[0.13] bg-gradient-to-b from-white/[0.09] to-black/[0.76] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_44px_110px_rgba(0,0,0,0.58)] backdrop-blur-2xl md:rounded-3xl md:p-11 lg:p-12">
+              <div className="overflow-hidden rounded-[22px] border border-white/[0.13] bg-gradient-to-b from-white/[0.09] to-black/[0.76] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_44px_110px_rgba(0,0,0,0.62)] backdrop-blur-2xl md:rounded-3xl md:p-11 lg:p-12">
                 <div className="flex flex-col-reverse items-center gap-8 sm:flex-row sm:items-center sm:justify-between sm:gap-7">
                   <p className="max-w-[17rem] text-center text-[16px] leading-snug text-white/72 sm:max-w-[15rem] sm:text-left md:text-[17px] md:leading-snug">
                     Your mix is <span className="font-semibold text-white">44%</span> ready for release
@@ -140,7 +140,7 @@ export default function Landing() {
         <div className="relative mx-auto mt-16 w-full md:mt-[4.25rem] lg:mt-20">
           <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
           <div
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[3px] w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-transparent via-fuchsia-400/90 to-transparent opacity-90 blur-[6px] shadow-[0_0_28px_rgba(217,70,239,0.85),0_0_60px_rgba(168,85,247,0.45)]"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[3px] w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-transparent via-fuchsia-400/70 to-transparent opacity-90 blur-[6px] shadow-[0_0_18px_rgba(217,70,239,0.45),0_0_40px_rgba(168,85,247,0.22)]"
             aria-hidden
           />
         </div>

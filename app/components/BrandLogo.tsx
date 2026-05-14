@@ -8,7 +8,7 @@ export default function BrandLogo({
   return (
     <div className={`text-center ${className}`}>
       <h2
-        className="mb-2 text-4xl font-extrabold tracking-tight text-transparent md:text-5xl bg-gradient-to-r from-white via-purple-300 to-purple-500 bg-clip-text drop-shadow-[0_0_35px_rgba(139,92,246,0.8)]"
+        className="mb-2 text-4xl font-extrabold tracking-tight text-transparent md:text-5xl bg-gradient-to-r from-white via-purple-300 to-purple-500 bg-clip-text drop-shadow-[0_0_22px_rgba(139,92,246,0.38)]"
       >
         Mastrify
       </h2>

@@ -299,12 +299,12 @@ export default function AnalyzePage() {
           <div className="relative w-full">
             {/* Ambient glow — full hero column (softer, less cyan wash) */}
             <div
-              className="pointer-events-none absolute left-1/2 top-[2%] z-0 h-[min(52vh,520px)] w-[min(92vw,30rem)] -translate-x-1/2 rounded-[3rem] bg-[radial-gradient(ellipse_58%_44%_at_50%_20%,rgba(109,40,217,0.09),rgba(217,70,239,0.03)_48%,transparent_68%)] blur-2xl"
+              className="pointer-events-none absolute left-1/2 top-[2%] z-0 h-[min(52vh,520px)] w-[min(92vw,30rem)] -translate-x-1/2 rounded-[3rem] bg-[radial-gradient(ellipse_58%_44%_at_50%_20%,rgba(109,40,217,0.055),rgba(217,70,239,0.018)_48%,transparent_68%)] blur-2xl"
               aria-hidden
             />
 
             <div className="relative z-10 flex w-full flex-col items-center">
-            <span className="rounded-full border border-purple-500/40 bg-purple-500/[0.07] px-3.5 py-1 text-[9px] font-bold uppercase tracking-[0.26em] text-purple-200/95 shadow-[0_0_16px_rgba(139,92,246,0.2)]">
+            <span className="rounded-full border border-purple-500/40 bg-purple-500/[0.07] px-3.5 py-1 text-[9px] font-bold uppercase tracking-[0.26em] text-purple-200/95 shadow-[0_0_12px_rgba(139,92,246,0.12)]">
               Free analysis
             </span>
             <motion.h1
@@ -333,7 +333,7 @@ export default function AnalyzePage() {
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold leading-none sm:h-[2.125rem] sm:w-[2.125rem] sm:text-xs ${
                         i === 0
-                          ? "bg-gradient-to-br from-purple-600 to-violet-600 text-white shadow-[0_0_16px_rgba(147,51,234,0.5)] ring-1 ring-purple-400/40"
+                          ? "bg-gradient-to-br from-purple-600 to-violet-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.32)] ring-1 ring-purple-400/40"
                           : "border border-white/[0.1] bg-black/55 text-white/30"
                       }`}
                     >
@@ -370,14 +370,14 @@ export default function AnalyzePage() {
           <div className="relative w-full overflow-visible">
             {/* Radial glow behind card — subtle, edge-focused */}
             <div
-              className="pointer-events-none absolute left-1/2 top-[40%] z-0 h-[min(260px,58vw)] w-[min(400px,76%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_40%_34%_at_50%_50%,rgba(147,51,234,0.15),rgba(192,38,211,0.05)_52%,transparent_62%)] blur-2xl"
+              className="pointer-events-none absolute left-1/2 top-[40%] z-0 h-[min(260px,58vw)] w-[min(400px,76%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_40%_34%_at_50%_50%,rgba(147,51,234,0.09),rgba(192,38,211,0.028)_52%,transparent_62%)] blur-2xl"
               aria-hidden
             />
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative z-10 mx-auto w-full max-w-[min(100%,28rem)] origin-top scale-[1.13] overflow-hidden rounded-[1.45rem] border border-white/[0.16] bg-gradient-to-b from-black/[0.54] to-black/[0.92] p-8 shadow-[0_0_0_1px_rgba(167,139,250,0.14),0_0_18px_rgba(88,28,135,0.14),0_22px_52px_rgba(0,0,0,0.55)] ring-1 ring-fuchsia-500/10 backdrop-blur-2xl sm:p-9 md:p-10"
+              className="relative z-10 mx-auto w-full max-w-[min(100%,28rem)] origin-top scale-[1.13] overflow-hidden rounded-[1.45rem] border border-white/[0.16] bg-gradient-to-b from-black/[0.54] to-black/[0.92] p-8 shadow-[0_0_0_1px_rgba(167,139,250,0.1),0_0_12px_rgba(88,28,135,0.08),0_26px_58px_rgba(0,0,0,0.62)] ring-1 ring-fuchsia-500/8 backdrop-blur-2xl sm:p-9 md:p-10"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault()
@@ -388,12 +388,12 @@ export default function AnalyzePage() {
                 }
               }}
             >
-              <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-purple-600/12 blur-2xl" />
+              <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-purple-600/7 blur-2xl" />
 
               <div className="relative flex w-full flex-col items-center text-center">
                 <div className="mx-1 w-full rounded-[1.1rem] border border-dashed border-white/[0.1] bg-black/[0.62] px-8 py-16 sm:mx-1.5 sm:px-10 sm:py-[4.5rem] md:px-11 md:py-[5rem]">
-                  <div className="mx-auto mb-4 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/40 to-purple-900/25 ring-1 ring-white/[0.12] shadow-[0_0_16px_rgba(168,85,247,0.26)]">
-                    <svg className="h-10 w-10 drop-shadow-[0_0_5px_rgba(216,180,254,0.45)]" viewBox="0 0 24 24" aria-hidden>
+                  <div className="mx-auto mb-4 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/40 to-purple-900/25 ring-1 ring-white/[0.12] shadow-[0_0_12px_rgba(168,85,247,0.14)]">
+                    <svg className="h-10 w-10 drop-shadow-[0_0_4px_rgba(216,180,254,0.28)]" viewBox="0 0 24 24" aria-hidden>
                       <defs>
                         <linearGradient id="analyzeUploadIcon" x1="0%" y1="0%" x2="100%" y2="100%">
                           <stop offset="0%" stopColor="#e9d5ff" />
@@ -427,7 +427,7 @@ export default function AnalyzePage() {
                         handleUpload()
                       }
                     }}
-                    className="w-full rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_32px_rgba(91,33,182,0.42),0_0_20px_rgba(14,116,144,0.25),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 transition hover:brightness-110 sm:py-4 sm:text-[15px]"
+                    className="w-full rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-3.5 text-[14px] font-semibold text-white shadow-[0_0_22px_rgba(91,33,182,0.28),0_0_14px_rgba(14,116,144,0.14),inset_0_1px_0_rgba(255,255,255,0.12),0_12px_32px_rgba(0,0,0,0.45)] ring-1 ring-white/10 transition hover:brightness-110 sm:py-4 sm:text-[15px]"
                   >
                     {file ? "Scan my track" : "Choose file"}
                   </button>
@@ -502,7 +502,7 @@ export default function AnalyzePage() {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-8 w-full space-y-12 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-black/40 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_32px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:mt-10 md:p-12 lg:p-14"
+          className="mt-8 w-full space-y-12 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.06] to-black/40 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_36px_96px_rgba(0,0,0,0.6)] backdrop-blur-2xl md:mt-10 md:p-12 lg:p-14"
         >
           <div className="flex flex-col items-center gap-10 border-b border-white/10 pb-12 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-xl flex-1 text-center lg:text-left">
@@ -731,7 +731,7 @@ export default function AnalyzePage() {
 </div>
 
 
-          <div className="rounded-3xl border border-purple-500/25 bg-gradient-to-r from-purple-950/50 via-black/60 to-cyan-950/40 p-8 shadow-[0_0_60px_rgba(139,92,246,0.15)] md:p-10">
+          <div className="rounded-3xl border border-purple-500/25 bg-gradient-to-r from-purple-950/50 via-black/60 to-cyan-950/40 p-8 shadow-[0_0_36px_rgba(139,92,246,0.08),0_24px_56px_rgba(0,0,0,0.45)] md:p-10">
             <p className="text-center text-lg font-semibold text-white md:text-xl">Ready for a pro master?</p>
             <p className="mx-auto mt-2 max-w-lg text-center text-sm text-white/50">
               Take this mix to our AI mastering flow — quick path or guided wizard.
@@ -745,7 +745,7 @@ export default function AnalyzePage() {
                 disabled={!canMaster}
                 className={`rounded-2xl px-8 py-4 text-sm font-bold transition md:text-base ${
                   canMaster
-                    ? "bg-gradient-to-r from-emerald-400 to-cyan-500 text-black shadow-[0_12px_40px_rgba(52,211,153,0.3)] hover:brightness-110"
+                    ? "bg-gradient-to-r from-emerald-400 to-cyan-500 text-black shadow-[0_12px_36px_rgba(52,211,153,0.18),0_4px_12px_rgba(0,0,0,0.35)] hover:brightness-110"
                     : "cursor-not-allowed bg-white/10 text-white/40"
                 }`}
               >

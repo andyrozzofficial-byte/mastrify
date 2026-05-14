@@ -19,7 +19,7 @@ export default function SiteHeader() {
         <div className="flex items-center justify-between md:contents">
           <Link
             href="/"
-            className="shrink-0 text-lg font-bold tracking-tight text-transparent md:text-xl bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text drop-shadow-[0_0_22px_rgba(139,92,246,0.35)]"
+            className="shrink-0 text-lg font-bold tracking-tight text-transparent md:text-xl bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text drop-shadow-[0_0_14px_rgba(139,92,246,0.22)]"
           >
             Mastrify
           </Link>
@@ -32,7 +32,7 @@ export default function SiteHeader() {
             </Link>
             <Link
               href="/pricing"
-              className="rounded-lg bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-3 py-2 text-[12px] font-semibold text-white shadow-[0_0_24px_rgba(124,58,237,0.42)] transition hover:brightness-110"
+              className="rounded-lg bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-3 py-2 text-[12px] font-semibold text-white shadow-[0_0_17px_rgba(124,58,237,0.28),0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-110"
             >
               Sign up
             </Link>
@@ -51,7 +51,7 @@ export default function SiteHeader() {
                 }`}
               >
                 {active && (
-                  <span className="pointer-events-none absolute -bottom-0.5 left-1/2 h-[2px] w-[calc(100%+8px)] -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_14px_rgba(192,132,252,0.9)]" />
+                  <span className="pointer-events-none absolute -bottom-0.5 left-1/2 h-[2px] w-[calc(100%+8px)] -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_10px_rgba(192,132,252,0.42)]" />
                 )}
                 {label}
               </Link>
@@ -68,7 +68,7 @@ export default function SiteHeader() {
           </Link>
           <Link
             href="/pricing"
-            className="rounded-lg bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white shadow-[0_0_28px_rgba(99,102,241,0.38)] transition hover:brightness-110"
+            className="rounded-lg bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.26),0_8px_28px_rgba(0,0,0,0.38)] transition hover:brightness-110"
           >
             Sign up
           </Link>

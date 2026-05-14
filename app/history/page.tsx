@@ -40,7 +40,7 @@ export default function HistoryPage() {
           Analyses and masters from this browser. Sync across devices is not available yet.
         </p>
 
-        <div className="mt-12 flex flex-col gap-6 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/50 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_28px_80px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:p-8">
+        <div className="mt-12 flex flex-col gap-6 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/50 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_32px_88px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
               {(
@@ -56,7 +56,7 @@ export default function HistoryPage() {
                   onClick={() => setTab(id)}
                   className={`rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition ${
                     tab === id
-                      ? "bg-gradient-to-r from-purple-500/30 to-cyan-500/20 text-white ring-1 ring-white/15 shadow-[0_0_24px_rgba(139,92,246,0.2)]"
+                      ? "bg-gradient-to-r from-purple-500/30 to-cyan-500/20 text-white ring-1 ring-white/15 shadow-[0_0_14px_rgba(139,92,246,0.12)]"
                       : "border border-white/10 bg-black/30 text-white/45 hover:border-white/20 hover:text-white/85"
                   }`}
                 >
