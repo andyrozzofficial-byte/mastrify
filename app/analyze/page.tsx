@@ -25,11 +25,11 @@ function MetricTile({
   hintClassName?: string
 }) {
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-black/[0.38] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-md md:rounded-2xl md:px-5 md:py-4">
+    <div className="rounded-xl border border-white/[0.06] bg-black/[0.38] px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-md md:rounded-2xl md:px-4 md:py-3.5">
       <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/38">{label}</div>
-      <div className="mt-1.5 text-lg font-bold tabular-nums tracking-tight text-white md:text-xl">{value}</div>
+      <div className="mt-1 text-lg font-bold tabular-nums tracking-tight text-white md:text-xl">{value}</div>
       {hint ? (
-        <div className={`mt-1.5 text-[10px] font-medium leading-snug text-white/42 md:text-[11px] ${hintClassName ?? ""}`}>{hint}</div>
+        <div className={`mt-1 text-[10px] font-medium leading-snug text-white/42 md:text-[11px] ${hintClassName ?? ""}`}>{hint}</div>
       ) : null}
     </div>
   )
@@ -559,7 +559,7 @@ export default function AnalyzePage() {
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
-          className="mt-6 w-full max-w-5xl space-y-12 pb-6 md:mt-8 md:space-y-16 lg:max-w-6xl"
+          className="mt-5 w-full max-w-5xl space-y-7 pb-4 md:mt-6 md:space-y-9 lg:max-w-6xl lg:space-y-10"
         >
           <div className="w-full">
             <button
@@ -579,21 +579,21 @@ export default function AnalyzePage() {
             <span className="rounded-full border border-purple-500/35 bg-purple-500/[0.06] px-3.5 py-1 text-[9px] font-bold uppercase tracking-[0.26em] text-purple-200/90 shadow-[0_0_12px_rgba(139,92,246,0.1)]">
               Free analysis
             </span>
-            <h1 className="mt-5 text-[1.85rem] font-bold leading-[1.08] tracking-tight text-white sm:text-[2.1rem] md:text-[2.35rem]">
+            <h1 className="mt-3.5 text-[1.85rem] font-bold leading-[1.08] tracking-tight text-white sm:text-[2.1rem] md:text-[2.35rem]">
               <span className="text-white">Your mix </span>
               <span className="bg-gradient-to-r from-purple-400 via-violet-400 to-sky-400 bg-clip-text text-transparent">analysis</span>
             </h1>
-            <p className="mx-auto mt-3 max-w-xl text-[13px] leading-relaxed text-white/38 md:text-sm">
+            <p className="mx-auto mt-2 max-w-xl text-[13px] leading-relaxed text-white/38 md:text-sm">
               AI shows exactly what&apos;s holding your track back — before you release it.
             </p>
           </header>
 
           {/* Hero analysis card */}
-          <div className="rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:rounded-3xl md:p-9 lg:p-10">
-            <div className="flex flex-col items-stretch gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
+          <div className="rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_28px_72px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:rounded-3xl md:p-7 lg:p-8">
+            <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 text-center lg:max-w-xl lg:text-left">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/35">Release readiness</p>
-                <h2 className="mt-3 text-2xl font-bold leading-tight tracking-tight text-white md:text-3xl lg:text-[2.15rem]">
+                <h2 className="mt-2 text-2xl font-bold leading-tight tracking-tight text-white md:text-3xl lg:text-[2.15rem]">
                   Your mix is{" "}
                   <span className="text-transparent bg-gradient-to-r from-fuchsia-300 via-white to-cyan-200 bg-clip-text">
                     {result.mixQuality != null ? Math.round(result.mixQuality) : 0}%
@@ -601,7 +601,7 @@ export default function AnalyzePage() {
                   ready for release
                 </h2>
 
-                <div className="mx-auto mt-5 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/[0.07] lg:mx-0">
+                <div className="mx-auto mt-3.5 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/[0.07] lg:mx-0">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-400 to-violet-500 shadow-[0_0_12px_rgba(244,114,182,0.15)]"
                     style={{ width: `${Math.min(100, Math.max(0, result.mixQuality ?? 0))}%` }}
@@ -609,16 +609,16 @@ export default function AnalyzePage() {
                 </div>
 
                 {verdict ? (
-                  <p className="mx-auto mt-4 max-w-md text-[13px] leading-relaxed text-white/45 lg:mx-0">{verdict}</p>
+                  <p className="mx-auto mt-3 max-w-md text-[13px] leading-relaxed text-white/45 lg:mx-0">{verdict}</p>
                 ) : (
-                  <p className="mx-auto mt-4 max-w-md text-[13px] leading-relaxed text-white/45 lg:mx-0">
+                  <p className="mx-auto mt-3 max-w-md text-[13px] leading-relaxed text-white/45 lg:mx-0">
                     {typeof result.mixQuality === "number" && result.mixQuality >= 75
                       ? "Mix is in good shape for mastering."
                       : "Mix needs improvement before release"}
                   </p>
                 )}
 
-                <ul className="mx-auto mt-6 max-w-md space-y-2.5 text-left text-[12px] leading-snug text-white/42 lg:mx-0 md:text-[13px]">
+                <ul className="mx-auto mt-4 max-w-md space-y-2 text-left text-[12px] leading-snug text-white/42 lg:mx-0 md:text-[13px]">
                   <li className="flex gap-2">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-white/25" aria-hidden />
                     <span>
@@ -641,7 +641,7 @@ export default function AnalyzePage() {
                   )}
                 </ul>
 
-                <div className="mx-auto mt-8 flex flex-wrap items-center justify-center gap-3 lg:mx-0 lg:justify-start">
+                <div className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-3 lg:mx-0 lg:justify-start">
                   <button
                     type="button"
                     onClick={async () => {
@@ -682,7 +682,7 @@ export default function AnalyzePage() {
             <h3 className="text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/34 md:text-left">
               Mix metrics
             </h3>
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            <div className="mt-3.5 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
               <MetricTile
                 label="LUFS"
                 value={formatMetricValue(result.lufs)}
@@ -735,22 +735,22 @@ export default function AnalyzePage() {
 
           {/* No issues (API returned zero-length issues) */}
           {(result.issues?.length || 0) === 0 && (
-            <div className="rounded-2xl border border-emerald-500/15 bg-emerald-950/[0.12] px-5 py-6 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:px-8">
+            <div className="rounded-2xl border border-emerald-500/15 bg-emerald-950/[0.12] px-5 py-5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:px-7">
               <p className="text-sm font-medium text-emerald-300/95">Ready for mastering — no critical issues detected</p>
-              <p className="mx-auto mt-3 max-w-md text-[12px] leading-relaxed text-white/42">
+              <p className="mx-auto mt-2 max-w-md text-[12px] leading-relaxed text-white/42">
                 Estimated loudness after mastering:{" "}
                 <span className="font-semibold text-emerald-300/90">-9 LUFS</span>
               </p>
-              <p className="mt-2 text-[11px] text-white/32">Target for streaming platforms: -8 to -10 LUFS</p>
-              <p className="mt-3 text-[11px] text-purple-300/75">AI insight → mastering will enhance loudness, clarity and punch</p>
+              <p className="mt-1.5 text-[11px] text-white/32">Target for streaming platforms: -8 to -10 LUFS</p>
+              <p className="mt-2 text-[11px] text-purple-300/75">AI insight → mastering will enhance loudness, clarity and punch</p>
             </div>
           )}
 
           {/* Issues found */}
           {(result.issues?.length || 0) > 0 && issueListForUi.length > 0 && (
-            <section className="rounded-[1.25rem] border border-white/[0.07] bg-black/[0.35] px-5 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_56px_rgba(0,0,0,0.45)] backdrop-blur-xl md:px-8 md:py-8">
+            <section className="rounded-[1.25rem] border border-white/[0.07] bg-black/[0.35] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_56px_rgba(0,0,0,0.45)] backdrop-blur-xl md:px-7 md:py-6">
               <h3 className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/36">Issues found</h3>
-              <ul className="mt-6 space-y-0 divide-y divide-white/[0.06]">
+              <ul className="mt-4 space-y-0 divide-y divide-white/[0.06]">
                 {issueListForUi.map((issue: any, i: number) => {
                   const current = Math.round(result.mixQuality)
                   const next = Math.min(99, Math.round(current + (issue.realImpact || 0)))
@@ -767,7 +767,7 @@ export default function AnalyzePage() {
                         : "bg-emerald-400/90 shadow-[0_0_8px_rgba(52,211,153,0.16)] ring-1 ring-emerald-400/25"
 
                   return (
-                    <li key={`${issue.text}-${i}`} className="flex gap-4 py-5 first:pt-0 md:gap-5">
+                    <li key={`${issue.text}-${i}`} className="flex gap-3.5 py-3.5 first:pt-0 md:gap-4 md:py-4">
                       <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${dotClass}`} aria-hidden />
                       <div className="min-w-0 flex-1">
                         {isMain ? (
@@ -780,7 +780,7 @@ export default function AnalyzePage() {
                         </p>
                         {insight ? <p className="mt-1.5 text-[12px] leading-relaxed text-white/38 md:text-[13px]">{insight}</p> : null}
                         {isMain && issue.realImpact !== undefined ? (
-                          <div className="mt-3 space-y-1 text-[11px] md:text-xs">
+                          <div className="mt-2 space-y-0.5 text-[11px] md:text-xs">
                             <p className="text-amber-200/80">+{Math.max(1, actualGain)}% improvement if fixed</p>
                             <p className="text-emerald-300/85">
                               Your score: {current}% → {next}%
@@ -796,11 +796,11 @@ export default function AnalyzePage() {
           )}
 
           {/* Recommendations — same data as before */}
-          <section className="rounded-[1.25rem] border border-white/[0.06] bg-gradient-to-b from-white/[0.03] to-black/[0.45] px-5 py-6 backdrop-blur-xl md:px-8 md:py-8">
+          <section className="rounded-[1.25rem] border border-white/[0.06] bg-gradient-to-b from-white/[0.03] to-black/[0.45] px-5 py-5 backdrop-blur-xl md:px-7 md:py-6">
             {issues.length > 0 ? (
               <>
                 <h3 className="text-sm font-semibold text-white/90">What affects your mix</h3>
-                <div className="mt-5 space-y-6">
+                <div className="mt-3.5 space-y-4">
                   {issues.map((issue: any, i: number) => {
                     const rec = recommendations.find((r) => r.title === issue.text)
                     const isLocked = false
@@ -813,7 +813,7 @@ export default function AnalyzePage() {
                           {issue.level === "low" && "Subtle improvement"}
                         </p>
                         {rec?.steps?.map((step: string, j: number) => (
-                          <p key={j} className="mt-2 pl-3 text-[13px] leading-relaxed text-purple-200/75 md:text-sm">
+                          <p key={j} className="mt-1.5 pl-3 text-[13px] leading-relaxed text-purple-200/75 md:text-sm">
                             • {step}
                           </p>
                         ))}
@@ -822,10 +822,10 @@ export default function AnalyzePage() {
                   })}
                 </div>
                 {recommendations?.length > issues.length && (
-                  <div className="mt-8 border-t border-white/[0.06] pt-6">
+                  <div className="mt-5 border-t border-white/[0.06] pt-4">
                     <p className="text-sm font-semibold text-purple-200/85">Pro enhancement</p>
                     {recommendations[recommendations.length - 1]?.steps?.map((step: string, j: number) => (
-                      <p key={j} className="mt-2 pl-3 text-[13px] leading-relaxed text-white/45 md:text-sm">
+                      <p key={j} className="mt-1.5 pl-3 text-[13px] leading-relaxed text-white/45 md:text-sm">
                         • {step}
                       </p>
                     ))}
@@ -836,12 +836,12 @@ export default function AnalyzePage() {
           </section>
 
           {/* CTA */}
-          <div className="rounded-[1.35rem] border border-purple-500/18 bg-gradient-to-br from-purple-950/35 via-black/55 to-slate-950/40 px-6 py-9 text-center shadow-[0_0_28px_rgba(88,28,135,0.06),0_24px_56px_rgba(0,0,0,0.48)] md:px-10 md:py-11">
+          <div className="rounded-[1.35rem] border border-purple-500/18 bg-gradient-to-br from-purple-950/35 via-black/55 to-slate-950/40 px-6 py-7 text-center shadow-[0_0_28px_rgba(88,28,135,0.06),0_24px_56px_rgba(0,0,0,0.48)] md:px-8 md:py-8">
             <h3 className="text-xl font-semibold tracking-tight text-white md:text-2xl">Ready for a pro master?</h3>
-            <p className="mx-auto mt-3 max-w-lg text-[13px] leading-relaxed text-white/45 md:text-sm">
+            <p className="mx-auto mt-2 max-w-lg text-[13px] leading-relaxed text-white/45 md:text-sm">
               Let AI fix these issues and make your track sound release-ready.
             </p>
-            <div className="mx-auto mt-8 flex max-w-lg flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
+            <div className="mx-auto mt-5 flex max-w-lg flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
               <button
                 type="button"
                 onClick={() => {
@@ -871,7 +871,7 @@ export default function AnalyzePage() {
                 One-page master
               </button>
             </div>
-            <p className="mt-5 text-center text-[11px] text-white/38">
+            <p className="mt-3.5 text-center text-[11px] text-white/38">
               {canMaster
                 ? "Same engine — pick the experience you prefer."
                 : "Address critical mix issues first for the best master."}
