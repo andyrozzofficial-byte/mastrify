@@ -291,29 +291,36 @@ export default function AnalyzePage() {
     <div className="relative min-h-screen text-white">
       <CinematicBackground />
       <div
-        className={`relative mx-auto flex w-full flex-col items-center px-4 pb-20 pt-8 sm:px-5 md:pb-24 md:pt-10 ${
-          result ? "max-w-6xl md:max-w-7xl md:px-8" : "max-w-[580px] md:max-w-[600px] md:px-5"
+        className={`relative mx-auto flex w-full flex-col items-center px-4 pb-16 pt-5 sm:px-5 md:pb-20 md:pt-6 ${
+          result ? "max-w-6xl md:max-w-7xl md:px-8" : "max-w-[500px] md:max-w-[528px] md:px-4"
         }`}
       >
         {!result && (
-          <>
+          <div className="relative w-full">
+            {/* Ambient glow — full hero column */}
+            <div
+              className="pointer-events-none absolute left-1/2 top-[2%] z-0 h-[min(78vh,680px)] w-[min(104vw,36rem)] -translate-x-1/2 rounded-[3rem] bg-[radial-gradient(ellipse_62%_48%_at_50%_22%,rgba(109,40,217,0.16),rgba(34,211,238,0.05)_42%,transparent_70%)] blur-3xl"
+              aria-hidden
+            />
+
+            <div className="relative z-10 w-full">
             <span className="rounded-full border border-purple-500/40 bg-purple-500/[0.07] px-3.5 py-1 text-[9px] font-bold uppercase tracking-[0.26em] text-purple-200/95 shadow-[0_0_20px_rgba(139,92,246,0.25)]">
               Free analysis
             </span>
             <motion.h1
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-5 text-center text-[1.8rem] font-extrabold leading-[1.1] tracking-tight sm:text-[1.95rem] md:text-[2.15rem]"
+              className="mt-3.5 text-center text-[1.9rem] font-extrabold leading-[1.08] tracking-tight sm:text-[2.05rem] md:text-[2.3rem]"
             >
               <span className="text-white">Your mix </span>
               <span className="bg-gradient-to-r from-purple-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">analysis</span>
             </motion.h1>
-            <p className="mt-2.5 max-w-[26rem] text-center text-[13px] leading-snug text-white/40 md:text-[13px]">
+            <p className="mt-2 max-w-[26rem] text-center text-[13px] leading-snug text-white/32 md:text-[13px]">
               AI shows exactly what&apos;s holding your track back — before you release it.
             </p>
 
             {/* Step indicator — thin connectors */}
-            <div className="mt-7 flex w-full max-w-[min(100%,360px)] items-center justify-center md:max-w-[380px]">
+            <div className="mt-6 flex w-full max-w-[min(100%,360px)] items-center justify-center md:max-w-[380px]">
               {(["Upload", "Analyze", "Results"] as const).map((label, i) => (
                 <div key={label} className="contents">
                   {i > 0 ? (
@@ -334,7 +341,7 @@ export default function AnalyzePage() {
                     </span>
                     <span
                       className={`mt-1.5 text-center text-[8px] font-semibold uppercase tracking-[0.2em] sm:text-[9px] ${
-                        i === 0 ? "text-purple-300/95" : "text-white/28"
+                        i === 0 ? "text-purple-300/95" : "text-white/22"
                       }`}
                     >
                       {label}
@@ -343,11 +350,8 @@ export default function AnalyzePage() {
                 </div>
               ))}
             </div>
-          </>
-        )}
 
-      {!result && (
-        <div className="mt-7 w-full">
+        <div className="mt-6 w-full">
           <input
             type="file"
             ref={fileInputRef}
@@ -363,17 +367,17 @@ export default function AnalyzePage() {
             }}
           />
 
-          <div className="relative w-full">
-            {/* Radial glow behind card */}
+          <div className="relative w-full overflow-visible pt-1">
+            {/* Radial glow behind card — stronger */}
             <div
-              className="pointer-events-none absolute left-1/2 top-[42%] z-0 h-[min(420px,95vw)] w-[min(640px,118%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_55%_45%_at_50%_50%,rgba(124,58,237,0.26),rgba(34,211,238,0.08)_45%,transparent_72%)] blur-3xl"
+              className="pointer-events-none absolute left-1/2 top-[40%] z-0 h-[min(460px,100vw)] w-[min(680px,125%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_52%_42%_at_50%_50%,rgba(124,58,237,0.36),rgba(34,211,238,0.12)_48%,transparent_74%)] blur-3xl"
               aria-hidden
             />
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative z-10 overflow-hidden rounded-[1.35rem] border border-purple-500/28 bg-gradient-to-b from-black/50 to-black/[0.82] p-6 shadow-[0_0_0_1px_rgba(139,92,246,0.18),0_0_64px_rgba(88,28,135,0.28),0_0_100px_rgba(34,211,238,0.08),0_28px_70px_rgba(0,0,0,0.6)] backdrop-blur-2xl sm:p-7 md:p-8"
+              className="relative z-10 origin-top scale-[1.13] overflow-hidden rounded-[1.45rem] border border-white/[0.1] bg-gradient-to-b from-black/48 to-black/[0.84] p-7 shadow-[0_0_0_1px_rgba(139,92,246,0.12),0_0_72px_rgba(88,28,135,0.38),0_0_120px_rgba(34,211,238,0.12),0_32px_80px_rgba(0,0,0,0.62)] ring-1 ring-purple-500/15 backdrop-blur-2xl sm:p-8 md:p-9"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault()
@@ -384,13 +388,13 @@ export default function AnalyzePage() {
                 }
               }}
             >
-              <div className="pointer-events-none absolute -right-12 -top-12 h-52 w-52 rounded-full bg-purple-600/30 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-10 -left-10 h-44 w-44 rounded-full bg-cyan-500/18 blur-3xl" />
+              <div className="pointer-events-none absolute -right-12 -top-12 h-56 w-56 rounded-full bg-purple-600/35 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-10 -left-10 h-48 w-48 rounded-full bg-cyan-500/22 blur-3xl" />
 
               <div className="relative flex flex-col items-center text-center">
-                <div className="w-full rounded-[1.05rem] border border-dashed border-white/[0.09] bg-black/50 px-8 py-12 sm:px-10 sm:py-14 md:px-11 md:py-[3.75rem]">
-                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/45 to-cyan-500/28 ring-1 ring-white/12 shadow-[0_0_36px_rgba(168,85,247,0.45),0_0_24px_rgba(34,211,238,0.2)]">
-                    <svg className="h-9 w-9 drop-shadow-[0_0_12px_rgba(192,132,252,0.65)]" viewBox="0 0 24 24" aria-hidden>
+                <div className="w-full rounded-[1.1rem] border border-dashed border-white/[0.07] bg-black/52 px-9 py-14 sm:px-11 sm:py-16 md:px-12 md:py-[4.25rem]">
+                  <div className="mx-auto mb-5 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/45 to-cyan-500/28 ring-1 ring-white/12 shadow-[0_0_40px_rgba(168,85,247,0.5),0_0_28px_rgba(34,211,238,0.22)]">
+                    <svg className="h-10 w-10 drop-shadow-[0_0_14px_rgba(192,132,252,0.7)]" viewBox="0 0 24 24" aria-hidden>
                       <defs>
                         <linearGradient id="analyzeUploadIcon" x1="0%" y1="0%" x2="100%" y2="100%">
                           <stop offset="0%" stopColor="#d8b4fe" />
@@ -408,8 +412,8 @@ export default function AnalyzePage() {
                       />
                     </svg>
                   </div>
-                  <p className="text-[1.05rem] font-semibold tracking-tight text-white sm:text-[1.1rem]">Drop your track here</p>
-                  <p className="mx-auto mt-2.5 max-w-[19rem] text-[12px] leading-relaxed text-white/36 sm:text-[13px]">
+                  <p className="text-[1.08rem] font-semibold tracking-tight text-white sm:text-[1.14rem]">Drop your track here</p>
+                  <p className="mx-auto mt-2.5 max-w-[19rem] text-[12px] leading-relaxed text-white/28 sm:text-[13px]">
                     WAV, AIFF, FLAC, MP3 up to 500MB
                   </p>
                 </div>
@@ -427,7 +431,7 @@ export default function AnalyzePage() {
                 >
                   {file ? "Scan my track" : "Choose file"}
                 </button>
-                <p className="mt-2 text-[11px] text-white/30">or drag and drop</p>
+                <p className="mt-2 text-[11px] text-white/24">or drag and drop</p>
                 {file && <p className="mt-3 max-w-full truncate px-2 text-xs text-cyan-300/85">{file.name}</p>}
                 {loading && (
                   <p className="mt-4 font-mono text-[11px] text-purple-200/90 sm:text-xs">{loadingStep || "Analyzing your mix…"}</p>
@@ -437,13 +441,13 @@ export default function AnalyzePage() {
           </div>
 
           {/* Feature cards */}
-          <div className="mt-3.5 grid w-full grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-2 md:gap-2.5">
+          <div className="mt-2.5 grid w-full grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-1.5 md:gap-2">
             {[
               {
                 title: "100% free",
                 sub: "No credit card",
                 icon: (
-                  <svg className="h-5 w-5 text-purple-300/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  <svg className="h-6 w-6 text-purple-300/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 ),
@@ -452,7 +456,7 @@ export default function AnalyzePage() {
                 title: "Private & secure",
                 sub: "Your files are safe",
                 icon: (
-                  <svg className="h-5 w-5 text-cyan-300/85" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  <svg className="h-6 w-6 text-cyan-300/85" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 ),
@@ -461,7 +465,7 @@ export default function AnalyzePage() {
                 title: "Instant results",
                 sub: "Takes ~30 seconds",
                 icon: (
-                  <svg className="h-5 w-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  <svg className="h-6 w-6 text-white/45" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                   </svg>
                 ),
@@ -469,25 +473,27 @@ export default function AnalyzePage() {
             ].map((card) => (
               <div
                 key={card.title}
-                className="flex min-h-[5.5rem] flex-col items-center justify-center rounded-lg border border-white/[0.08] bg-black/[0.48] px-2 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:min-h-[5.75rem] sm:py-2.5 md:px-2.5"
+                className="flex min-h-[5.25rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-white/[0.09] bg-black/[0.5] px-1.5 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:min-h-[5.5rem] sm:px-2 sm:py-2"
               >
-                <div className="mb-1.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/[0.05] ring-1 ring-white/[0.07] sm:mb-2 sm:h-9 sm:w-9">
+                <div className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/[0.05] ring-1 ring-white/[0.07] sm:h-10 sm:w-10">
                   {card.icon}
                 </div>
                 <p className="text-[11.5px] font-semibold leading-tight text-white/92 sm:text-[12.5px]">{card.title}</p>
-                <p className="mt-0.5 max-w-[9.5rem] text-[9.5px] leading-snug text-white/34 sm:max-w-none sm:text-[10px]">{card.sub}</p>
+                <p className="max-w-[9.5rem] text-[9.5px] leading-snug text-white/28 sm:max-w-none sm:text-[10px]">{card.sub}</p>
               </div>
             ))}
           </div>
 
-          <p className="mt-6 text-center text-[11px] text-white/35 sm:text-xs">
+          <p className="mt-3.5 text-center text-[11px] text-white/28 sm:text-xs">
             Need help?{" "}
-            <Link href="/how-it-works" className="text-purple-300/90 underline-offset-2 transition hover:text-cyan-200/90 hover:underline">
+            <Link href="/how-it-works" className="text-purple-300/80 underline-offset-2 transition hover:text-cyan-200/85 hover:underline">
               Supported formats &amp; tips
             </Link>
           </p>
         </div>
-      )}
+            </div>
+          </div>
+        )}
 
 
       {/* RESULT */}
