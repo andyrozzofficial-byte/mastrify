@@ -189,11 +189,7 @@ export default function FlowPage() {
 }
 
       const masterUrl = `${API}/master`
-      console.log("[MASTRIFY_API] POST", masterUrl)
       const res = await axios.post(masterUrl, formData)
-
-      console.log("SERVER RESPONSE:", res.data)
-console.log("MASTER PATH:", res.data.after)
 
 const mastered =
   res.data.afterUrl ||
@@ -201,7 +197,6 @@ const mastered =
   (res.data.after ? `${API}${res.data.after}` : "")
 
 setMasteredUrl(mastered)
-console.log("MASTERED URL:", mastered)
 
 const previewMp3 =
   res.data.previewAfterMp3Url ||
@@ -211,7 +206,7 @@ setMasteredPreviewMp3Url(previewMp3)
 setSelectedSource("mastered")
 
 } catch (err) {
-  console.log("Auto master failed", err)
+  console.error("Auto master failed:", err)
   throw err
 }
   }
@@ -235,7 +230,7 @@ setSelectedSource("mastered")
     setStep("done")
 
   } catch (err) {
-    console.log(err)
+    console.error("Mastering failed:", err)
     alert("Mastering failed")
     setStep("upload")
   }
@@ -419,12 +414,6 @@ const handlePayment = () => {
     setSelectedSource(next)
   }
 
-  const isAbortError = (e: unknown) =>
-    (typeof DOMException !== "undefined" &&
-      e instanceof DOMException &&
-      e.name === "AbortError") ||
-    (e instanceof Error && e.name === "AbortError")
-
   const waitForReady = (el: HTMLAudioElement) => {
     // Resolves when metadata is available for currentTime seeks (iOS-safe).
     if (el.readyState >= 1) return Promise.resolve()
@@ -477,8 +466,7 @@ const handlePayment = () => {
       try {
         await el.play()
         setIsPlaying(true)
-      } catch (e) {
-        if (!isAbortError(e)) console.log("AUDIO PLAY FAILED:", e)
+      } catch {
         setIsPlaying(false)
       }
       return
@@ -491,11 +479,7 @@ const handlePayment = () => {
       // DESKTOP flow (two audio elements already in DOM)
       // Desktop MASTERED must use the WAV master URL (afterUrl/fullUrl).
       if (selectedSourceRef.current === "mastered") {
-        console.log("[desktop] selectedSource:", selectedSourceRef.current)
-        console.log("[desktop] mastered desktop URL:", masteredUrl)
-
         if (!masteredUrl || !/^https:\/\//i.test(masteredUrl)) {
-          console.log("[desktop] invalid masteredUrl:", masteredUrl)
           setIsPlaying(false)
           return
         }
@@ -505,7 +489,6 @@ const handlePayment = () => {
 
         const masteredEl = masteredAudioRef.current
         if (masteredEl) {
-          console.log("[desktop] audio.src before play:", masteredEl.src)
           if (masteredEl.src !== masteredUrl) {
             masteredEl.src = masteredUrl
             masteredEl.load()
@@ -518,8 +501,7 @@ const handlePayment = () => {
           try {
             await masteredEl.play()
             setIsPlaying(true)
-          } catch (e) {
-            if (!isAbortError(e)) console.log("[desktop] play error:", e)
+          } catch {
             setIsPlaying(false)
           }
         }
@@ -537,8 +519,7 @@ const handlePayment = () => {
       try {
         await selectedEl.play()
         setIsPlaying(true)
-      } catch (e) {
-        if (!isAbortError(e)) console.log("AUDIO PLAY FAILED:", e)
+      } catch {
         setIsPlaying(false)
       }
     } finally {
@@ -913,9 +894,6 @@ shadow-[0_0_40px_rgba(139,92,246,0.35)]
 hover:brightness-110 hover:scale-[1.02]
 active:scale-[0.98]
 transition-all duration-300"
-  onClick={() => {
-    console.log("EXPORT URL:", masteredUrl ? `${masteredUrl}?download=1` : "")
-  }}
 >
   Download master 🎧
 </a>

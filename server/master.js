@@ -12,8 +12,6 @@ if (ffprobePath?.path) {
   ffmpeg.setFfprobePath(ffprobePath.path)
 }
 
-// ffmpeg/ffprobe paths: same packages as server.js [FFMPEG_BOOT] logs (ffmpeg-static / ffprobe-static).
-
 const mastersDir = "/tmp/masters"
 if (!fs.existsSync(mastersDir)) {
   fs.mkdirSync(mastersDir, { recursive: true })
@@ -57,11 +55,7 @@ export async function masterTrack({
   style,
   targetLufs,
   mode,
-  metricTraceId,
 }) {
-  console.log("REFERENCE IN MASTER:", reference)
-  if (metricTraceId) console.log("METRIC TRACE:", metricTraceId)
-
   if (!file) throw new Error("File missing")
 
   if (!style) style = "STREAM"
@@ -98,14 +92,8 @@ export async function masterTrack({
     throw new Error("Input file not found")
   }
 
-  console.log("INPUT PATH:", file)
-  console.log("INPUT SIZE:", fs.statSync(file).size)
-  console.log("INPUT:", input)
-  console.log("OUTPUT:", outputPath)
-
   const probeResult = await new Promise((resolve) => {
     ffmpeg.ffprobe(file, (err, data) => {
-      if (err) console.log("FFPROBE ERROR:", err)
       resolve({ err, data })
     })
   })
@@ -122,9 +110,8 @@ export async function masterTrack({
     const stagingTarget = -15
     stagingDb = stagingTarget - raw
     stagingDb = Math.max(-12, Math.min(6, stagingDb))
-    console.log("INPUT STAGING:", { rawLevelDb: raw, stagingDb })
-  } catch (e) {
-    console.log("PRE-ANALYSIS STAGING SKIP:", e?.message || e)
+  } catch {
+    /* staging optional */
   }
 
   const safeIntegratedLufs = Math.min(targetLufs, -9)
@@ -185,24 +172,18 @@ export async function masterTrack({
     const timeoutId = setTimeout(() => {
       if (settled) return
       settled = true
-      console.log("⏱️ FFMPEG TIMEOUT")
       try {
         cmdRef?.kill("SIGKILL")
-      } catch (e) {
-        // ignore
+      } catch {
+        /* ignore */
       }
       reject(new Error("Mastering timed out"))
     }, 60_000)
 
-    console.log("INPUT EXISTS:", fs.existsSync(file))
-    console.log("OUTPUT DIR EXISTS:", fs.existsSync("/tmp/masters"))
-    console.log("FFMPEG PATH:", ffmpegPath)
-    const ffStat = fs.statSync(ffmpegPath)
-    console.log("MODE:", ffStat.mode.toString(8))
     try {
       fs.chmodSync(ffmpegPath, 0o755)
-    } catch (e) {
-      console.log("CHMOD ERROR:", e?.message || e)
+    } catch {
+      /* ignore */
     }
 
     const args = [
@@ -223,21 +204,10 @@ export async function masterTrack({
       outputPath,
     ]
 
-    console.log("SPAWN FFMPEG:", ffmpegPath, args)
-
     const ff = spawn(ffmpegPath, args, { shell: false })
     cmdRef = ff
 
-    ff.stderr.on("data", (d) => {
-      console.log("FFMPEG STDERR:", d.toString())
-    })
-
-    ff.stdout.on("data", (d) => {
-      console.log("FFMPEG STDOUT:", d.toString())
-    })
-
     ff.on("close", (code) => {
-      console.log("FFMPEG EXIT CODE:", code)
       if (settled) return
       settled = true
       clearTimeout(timeoutId)
@@ -253,20 +223,18 @@ export async function masterTrack({
       if (settled) return
       settled = true
       clearTimeout(timeoutId)
-      console.error("SPAWN ERROR:", err)
+      console.error("[master] ffmpeg spawn error:", err?.message || err)
       reject(err)
     })
   })
 
-  const outBytes = await waitForMasterOutputReady(outputPath)
-  console.log("POST-MASTER OUTPUT BYTES (stable):", outBytes)
+  await waitForMasterOutputReady(outputPath)
 
   let analysisBefore = preAnalysis
   if (!analysisBefore) {
     try {
       analysisBefore = await analyzeTrack(input)
-    } catch (e) {
-      console.log("analysisBefore fallback failed:", e?.message || e)
+    } catch {
       analysisBefore = null
     }
   }
@@ -277,20 +245,10 @@ export async function masterTrack({
     try {
       if (delays[attempt] > 0) await new Promise((r) => setTimeout(r, delays[attempt]))
       analysisAfter = await analyzeTrack(outputPath)
-    } catch (e) {
-      console.log("POST-MASTER ANALYZE FAILED (attempt " + (attempt + 1) + "):", e)
+    } catch {
+      /* retry */
     }
   }
-  if (!analysisAfter) {
-    console.log("[POST_MASTER] analysisAfter is null after all attempts; metricTraceId:", metricTraceId ?? "(none)")
-  }
-
-  console.log("TARGET LUFS:", targetLufs)
-  console.log("SAFE INTEGRATED LUFS (loudnorm):", safeIntegratedLufs)
-  console.log("REFERENCE LUFS:", referenceAnalysis?.lufs)
-  console.log("🔥 USING FFMPEG MASTER (spawn chain)")
-  console.log("🎧 ANALYSIS BEFORE:", analysisBefore)
-  console.log("🎧 ANALYSIS AFTER:", analysisAfter)
 
   return {
     path: outputPath,

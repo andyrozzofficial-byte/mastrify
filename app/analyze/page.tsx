@@ -290,8 +290,6 @@ export default function AnalyzePage() {
   try {
 
     const uploadUrl = publicBackendUrl("/upload")
-    console.log("[MASTRIFY_API] POST", uploadUrl)
-    console.log("SENDING FILE:", file)
 
     const res = await axios.post(uploadUrl, formData, {
       headers: {
@@ -320,7 +318,6 @@ export default function AnalyzePage() {
     }, 3200)
 
     setTimeout(() => {
-      console.log("RESULT:", res.data)
       setResult(res.data)
       appendHistory({
         kind: "analysis",

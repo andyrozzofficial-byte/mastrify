@@ -86,13 +86,6 @@ function isIOSSafari() {
   return isWebKit && !isCriOS && !isFxiOS
 }
 
-function isAbortError(e: unknown) {
-  return (
-    (typeof DOMException !== "undefined" && e instanceof DOMException && e.name === "AbortError") ||
-    (e instanceof Error && e.name === "AbortError")
-  )
-}
-
 export default function MasterResultClient() {
   const {
     file,
@@ -331,8 +324,7 @@ export default function MasterResultClient() {
       try {
         await el.play()
         setIsPlaying(true)
-      } catch (e) {
-        if (!isAbortError(e)) console.log("AUDIO PLAY FAILED:", e)
+      } catch {
         setIsPlaying(false)
       }
       return
@@ -361,8 +353,7 @@ export default function MasterResultClient() {
           try {
             await masteredEl.play()
             setIsPlaying(true)
-          } catch (e) {
-            if (!isAbortError(e)) console.log("play error", e)
+          } catch {
             setIsPlaying(false)
           }
         }
@@ -378,8 +369,7 @@ export default function MasterResultClient() {
       try {
         await selectedEl.play()
         setIsPlaying(true)
-      } catch (e) {
-        if (!isAbortError(e)) console.log("AUDIO PLAY FAILED:", e)
+      } catch {
         setIsPlaying(false)
       }
     } finally {
@@ -481,16 +471,6 @@ export default function MasterResultClient() {
           {/* Before / After metrics */}
           <div className="flex min-w-0 flex-col">
             <p className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/28">Comparison</p>
-            <div className="mb-3 max-h-[min(38vh,300px)] space-y-2 overflow-auto rounded-lg border border-amber-500/25 bg-black/55 p-3 text-left ring-1 ring-amber-500/10">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-amber-200/85">Debug — analysisBefore (client)</p>
-              <pre className="whitespace-pre-wrap break-words font-mono text-[10px] leading-snug text-emerald-100/88 [tab-size:2]">
-                {JSON.stringify(analysisBefore, null, 2)}
-              </pre>
-              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-amber-200/85">Debug — analysisAfter (client)</p>
-              <pre className="whitespace-pre-wrap break-words font-mono text-[10px] leading-snug text-emerald-100/88 [tab-size:2]">
-                {JSON.stringify(analysisAfter, null, 2)}
-              </pre>
-            </div>
             <div className="mt-3 flex-1 overflow-hidden rounded-xl border border-white/[0.05] bg-black/[0.26] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
               <table className="w-full table-fixed border-collapse text-left text-[12px] md:text-[13px]">
                 <thead>

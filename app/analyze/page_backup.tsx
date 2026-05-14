@@ -219,8 +219,6 @@ export default function AnalyzePage() {
 
   try {
 
-    console.log("SENDING FILE:", file)
-
     const res = await axios.post(
   "https://mastrify-backend-production.up.railway.app/upload",
   formData,
@@ -252,7 +250,6 @@ export default function AnalyzePage() {
     }, 3200)
 
     setTimeout(() => {
-      console.log("RESULT:", res.data)
       setResult(res.data)
       setLoading(false)
       setLoadingStep("")

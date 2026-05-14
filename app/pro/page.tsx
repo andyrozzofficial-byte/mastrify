@@ -16,7 +16,6 @@ export default function ProPage() {
     formData.append("file", file)
 
     const analyzeUrl = publicBackendUrl("/analyze")
-    console.log("[MASTRIFY_API] POST", analyzeUrl)
     const res = await fetch(analyzeUrl, {
       method: "POST",
       body: formData

@@ -237,7 +237,6 @@ const aiInterval = setInterval(() => {
 
     try {
       const masterUrl = `${PUBLIC_BACKEND_API_BASE}/master`
-      console.log("[MASTRIFY_API] POST", masterUrl)
       const resPromise = axios.post(masterUrl, formData, {
     headers: {
       "Content-Type": "multipart/form-data"
@@ -258,7 +257,7 @@ const res = await resPromise
       setAnalysis(res.data.analysis)
 
     } catch (err) {
-      console.log(err)
+      console.error("Error processing track:", err)
       alert("Error processing track")
       clearInterval(interval)
       clearInterval(aiInterval)
@@ -273,11 +272,10 @@ const res = await resPromise
 
     try {
       const waitlistUrl = `${PUBLIC_BACKEND_API_BASE}/waitlist`
-      console.log("[MASTRIFY_API] POST", waitlistUrl)
       await axios.post(waitlistUrl, { email })
       setSubmitted(true)
     } catch (err) {
-      console.log(err)
+      console.error("Waitlist signup failed:", err)
     }
   }
 

@@ -74,16 +74,11 @@ export default function MasterProcessingPage() {
         formData.append("file", file)
 
         const masterUrl = `${API}/master`
-        console.log("[MASTRIFY_API] POST", masterUrl)
         const res = await axios.post(masterUrl, formData, { signal: ac.signal })
         if (cancelled) return
 
-        console.log("MASTER RESPONSE", res.data)
-
         setAnalysisBefore((res.data.analysisBefore ?? null) as Record<string, unknown> | null)
         setAnalysisAfter((res.data.analysisAfter ?? null) as Record<string, unknown> | null)
-        console.log("SETTING BEFORE", res.data.analysisBefore)
-        console.log("SETTING AFTER", res.data.analysisAfter)
 
         const mastered =
           res.data.afterUrl || res.data.fullUrl || (res.data.after ? `${API}${res.data.after}` : "")

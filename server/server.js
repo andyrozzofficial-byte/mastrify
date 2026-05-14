@@ -1,26 +1,21 @@
-import { exec, spawn } from "child_process"
 import express from "express"
 import cors from "cors"
 import multer from "multer"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
-import { randomUUID } from "crypto"
 import { analyzeTrack } from "./analyze.js"
 import { masterTrack } from "./master.js"
-import {
-  logMasterMetricFiveStagesServer,
-  serializeMasterAnalysisForJson,
-} from "./masterAnalysisPayload.js"
+import { serializeMasterAnalysisForJson } from "./masterAnalysisPayload.js"
 import ffmpegPath from "ffmpeg-static"
 import ffprobeStatic from "ffprobe-static"
 
 process.on("uncaughtException", (err) => {
-  console.error("💥 UNCAUGHT:", err)
+  console.error("Uncaught exception:", err)
 })
 
 process.on("unhandledRejection", (err) => {
-  console.error("💥 PROMISE ERROR:", err)
+  console.error("Unhandled promise rejection:", err)
 })
 // import { aiMixAssistant } from "./ai.js"
 // import { buildMasteringChain } from "./masteringEngine.js"
@@ -52,7 +47,7 @@ app.get("/debug-version", (req, res) => {
 const uploadsDir = "/tmp/uploads"
 const mastersDir = "/tmp/masters"
 
-// Ensure dirs at cold boot (Railway /tmp is often empty) — create before verification logs.
+// Ensure dirs at cold boot (Railway /tmp is often empty).
 try {
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true })
@@ -62,23 +57,15 @@ try {
     fs.mkdirSync(mastersDir, { recursive: true })
   }
 } catch (err) {
-  console.log("Folder error:", err)
+  console.error("Failed to create uploads/masters directories:", err)
 }
-
-console.log("Uploads exists:", fs.existsSync(uploadsDir))
-console.log("Masters exists:", fs.existsSync(mastersDir))
-console.log("UPLOADS DIR:", uploadsDir)
-console.log("MASTERS DIR:", mastersDir)
 
 // serve masters folder
 app.use("/uploads", express.static(uploadsDir))
 app.get("/masters/:file", (req, res) => {
   const filePath = path.join(mastersDir, req.params.file)
 
-  console.log("Serving file:", filePath)
-
   if (!fs.existsSync(filePath)) {
-    console.log("❌ FILE NOT FOUND")
     return res.status(404).send("File not found")
   }
 
@@ -354,10 +341,6 @@ if(!isNaN(stereo)){
 
   const finalScore = Math.max(0, Math.min(100, Math.round(score)))
 
-console.log("INPUT:", a)
-console.log("LUFS:", lufs)
-console.log("FINAL SCORE:", finalScore)
-
 return finalScore
 }
 
@@ -546,8 +529,6 @@ const newPath = file.path + ".wav"
 
 fs.renameSync(file.path, newPath)
 
-console.log("Uploaded:", fileName)
-
 // const analysis = await analyzeTrack(newPath)
 const analysis = await analyzeTrack(newPath)
 if (!analysis) {
@@ -650,15 +631,10 @@ brightness: analysis.highEnergy ?? 0.25,
 })
 
 } catch (err) {
-
-console.log(err)
-
-
-
-res.status(500).json({
-error:"Upload failed"
-})
-
+  console.error("Upload failed:", err)
+  res.status(500).json({
+    error: "Upload failed",
+  })
 }
 
 })
@@ -898,15 +874,9 @@ app.post("/master",
       const masterFileName = Date.now() + "-master.wav"
       const masterPath = path.join(mastersDir, masterFileName)
 
-      console.log("INPUT:", newPath)
-      console.log("OUTPUT:", masterPath)
-
-      const metricTraceId = randomUUID()
-
       const masterResult = await masterTrack({
         file: newPath,
         output: masterPath,
-        metricTraceId,
       })
 
       const forwardedProto = req.headers["x-forwarded-proto"]
@@ -923,8 +893,8 @@ app.post("/master",
       if (rawBefore == null && fs.existsSync(newPath)) {
         try {
           rawBefore = await analyzeTrack(newPath)
-        } catch (e) {
-          console.log("[POST /master] fallback analyzeTrack(before) failed:", e?.message || e)
+        } catch {
+          /* optional fallback */
         }
       }
 
@@ -934,19 +904,17 @@ app.post("/master",
           try {
             rawAfter = await analyzeTrack(masterPath)
             if (rawAfter != null) break
-          } catch (e) {
-            console.log("[POST /master] fallback analyzeTrack(after) failed:", e?.message || e)
+          } catch {
+            /* retry */
           }
         }
       }
 
       const analysisBefore = serializeMasterAnalysisForJson(rawBefore, "before")
       const analysisAfter = serializeMasterAnalysisForJson(rawAfter, "after")
-      logMasterMetricFiveStagesServer(metricTraceId, rawAfter, analysisAfter)
 
       res.json({
         success: true,
-        debugVersion: "NEW_MASTER_RESPONSE_V2",
         before,
         after,
         afterUrl: `${baseUrl}${after}`,
@@ -954,11 +922,10 @@ app.post("/master",
         fullUrl: `${baseUrl}${after}`,
         analysisBefore,
         analysisAfter,
-        masterMetricTraceId: metricTraceId,
       })
 
     } catch (err) {
-      console.log(err)
+      console.error("Master failed:", err)
       res.status(500).json({ error: "Master failed" })
     }
 
@@ -970,8 +937,6 @@ app.post("/master",
 /* START SERVER */
 
 app.post("/waitlist", (req, res) => {
-  const { email } = req.body
-  console.log("🔥 New signup:", email)
   res.json({ success: true })
 })
 
@@ -979,76 +944,28 @@ app.get("/test", (req, res) => {
   res.send("TEST OK")
 })
 
-const PORT = process.env.PORT || 3001
-
-
-// 🔥 VIKTIG: snabb health response innan allt annat
 app.get("/health", (req, res) => {
   res.status(200).send("OK")
 })
 
-async function logFfmpegRuntimeAndProbe() {
+const PORT = process.env.PORT || 3001
+
+function ensureFfmpegBinariesExecutable() {
   const bin =
     typeof ffmpegPath === "string" ? ffmpegPath : ffmpegPath != null ? String(ffmpegPath) : ""
   const ffprobeBin = ffprobeStatic?.path ?? ""
-
-  console.log("[FFMPEG_BOOT] process.platform", process.platform, "arch", process.arch)
-  console.log("[FFMPEG_BOOT] ffmpeg path", bin || "(empty)")
-  console.log("[FFMPEG_BOOT] ffmpeg exists", bin ? fs.existsSync(bin) : false)
-  if (bin && fs.existsSync(bin)) {
+  for (const p of [bin, ffprobeBin].filter(Boolean)) {
     try {
-      console.log("[FFMPEG_BOOT] ffmpeg mode", fs.statSync(bin).mode.toString(8))
-      fs.chmodSync(bin, 0o755)
-    } catch (e) {
-      console.log("[FFMPEG_BOOT] chmod/stat ffmpeg:", e?.message || e)
+      if (fs.existsSync(p)) fs.chmodSync(p, 0o755)
+    } catch {
+      /* ignore */
     }
   }
-
-  console.log("[FFMPEG_BOOT] ffprobe path", ffprobeBin || "(empty)")
-  console.log(
-    "[FFMPEG_BOOT] ffprobe exists",
-    ffprobeBin ? fs.existsSync(ffprobeBin) : false
-  )
-  if (ffprobeBin && fs.existsSync(ffprobeBin)) {
-    try {
-      console.log("[FFMPEG_BOOT] ffprobe mode", fs.statSync(ffprobeBin).mode.toString(8))
-      fs.chmodSync(ffprobeBin, 0o755)
-    } catch (e) {
-      console.log("[FFMPEG_BOOT] chmod/stat ffprobe:", e?.message || e)
-    }
-  }
-
-  if (!bin || !fs.existsSync(bin)) {
-    console.error("[FFMPEG_BOOT] SKIP ffmpeg -version (missing binary); run npm install in server/")
-    return
-  }
-
-  await new Promise((resolve) => {
-    const p = spawn(bin, ["-hide_banner", "-version"], { stdio: ["ignore", "pipe", "pipe"] })
-    let combined = ""
-    p.stdout?.on("data", (d) => {
-      combined += d.toString()
-    })
-    p.stderr?.on("data", (d) => {
-      combined += d.toString()
-    })
-    p.on("close", (code) => {
-      const first = combined.split("\n").find((l) => l.trim()) || ""
-      console.log("[FFMPEG_BOOT] ffmpeg -version exit", code, "firstLine:", first)
-      resolve()
-    })
-    p.on("error", (err) => {
-      console.error("[FFMPEG_BOOT] ffmpeg -version spawn error:", err?.message || err)
-      resolve()
-    })
-  })
 }
 
-// 🔥 STARTA SERVER (after ffmpeg probe so Railway logs show binary health)
-logFfmpegRuntimeAndProbe()
-  .catch((e) => console.error("[FFMPEG_BOOT] probe failed:", e?.message || e))
-  .finally(() => {
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log("🔥 Server running on port", PORT)
-    })
-  })
+ensureFfmpegBinariesExecutable()
+
+// 🔥 STARTA SERVER
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("Server listening on port", PORT)
+})
