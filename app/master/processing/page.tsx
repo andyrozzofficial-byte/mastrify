@@ -11,6 +11,7 @@ import { useMasterSession } from "../MasterSessionProvider"
 
 const API = PUBLIC_BACKEND_API_BASE
 const PIPELINE_DEBUG = process.env.NEXT_PUBLIC_MASTRIFY_PIPELINE_DEBUG === "1"
+const LUFS_TRACE = process.env.NEXT_PUBLIC_MASTRIFY_LUFS_TRACE === "1"
 
 /** Display steps — must stay in sync with timed progression before the API call */
 const UI_STEPS = [
@@ -91,8 +92,23 @@ export default function MasterProcessingPage() {
         formData.append("clarityPresence", String(clarityPresence))
 
         const masterUrl = `${API}/master`
+        if (LUFS_TRACE) {
+          console.log("[LUFS_TRACE] client → POST /master", {
+            outgoingFormTargetLufs: targetLufs,
+            stylePreset,
+            NEXT_PUBLIC_MASTRIFY_API_URL: process.env.NEXT_PUBLIC_MASTRIFY_API_URL ?? "(unset — see lib/publicBackendUrl DEFAULT)",
+            resolvedApiBase: API,
+            masterUrl,
+          })
+        }
         const res = await axios.post(masterUrl, formData, { signal: ac.signal })
         if (cancelled) return
+
+        if (LUFS_TRACE) {
+          const aa = res.data.analysisAfter as Record<string, unknown> | undefined
+          console.log("[LUFS_TRACE] AUTHORITY_CLIENT_AXIOS analysisAfter.lufs=", aa?.lufs)
+          console.log("[LUFS_TRACE] server lufsTrace echo", res.data.lufsTrace)
+        }
 
         if (PIPELINE_DEBUG) {
           console.log("[pipeline] client POST /master response", {

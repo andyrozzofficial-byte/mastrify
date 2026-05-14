@@ -26,6 +26,7 @@ const __dirname = path.dirname(__filename)
 const app = express()
 
 const PIPELINE_DEBUG = process.env.MASTRIFY_PIPELINE_DEBUG === "1"
+const LUFS_TRACE = process.env.MASTRIFY_LUFS_TRACE === "1"
 
 app.use(cors())
 app.use(express.json())
@@ -883,6 +884,16 @@ app.post("/master",
       const lowEndControl = body.lowEndControl
       const clarityPresence = body.clarityPresence
 
+      if (LUFS_TRACE) {
+        console.log("[LUFS_TRACE] POST /master incoming (req.body after multer)", {
+          targetLufs,
+          stylePreset,
+          stereoEnhance,
+          lowEndControl,
+          clarityPresence,
+        })
+      }
+
       const masterResult = await masterTrack({
         file: newPath,
         output: masterPath,
@@ -892,6 +903,16 @@ app.post("/master",
         lowEndControl,
         clarityPresence,
       })
+
+      if (LUFS_TRACE) {
+        const ra = masterResult?.analysisAfter
+        console.log("[LUFS_TRACE] masterResult.analysisAfter from masterTrack()", {
+          lufs: ra?.lufs ?? null,
+          lufsRmsProxy: ra?.lufsRmsProxy ?? null,
+          targetLufsApplied: ra?.targetLufsApplied ?? null,
+          lufsTraceMeta: masterResult?.lufsTraceMeta ?? null,
+        })
+      }
 
       const forwardedProto = req.headers["x-forwarded-proto"]
       const proto = (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto || req.protocol)
@@ -946,6 +967,22 @@ app.post("/master",
       const analysisBefore = serializeMasterAnalysisForJson(rawBefore, "before")
       const analysisAfter = serializeMasterAnalysisForJson(rawAfter, "after")
 
+      if (LUFS_TRACE) {
+        console.log("[LUFS_TRACE] AUTHORITY_HTTP_JSON_AFTER_SERIALIZE", {
+          serializedAnalysisAfterLufs: analysisAfter?.lufs ?? null,
+          rawAfterLufsPreSerialize: rawAfter?.lufs ?? null,
+          rawAfterHasLufsRmsProxy: rawAfter?.lufsRmsProxy != null,
+        })
+        console.log(
+          "[LUFS_TRACE] AUTHORITY_COMPARE rawAfter.lufs",
+          rawAfter?.lufs,
+          "vs serialized",
+          analysisAfter?.lufs,
+          "finiteNum applied:",
+          analysisAfter?.lufs !== rawAfter?.lufs ? "YES (check finiteNum)" : "same"
+        )
+      }
+
       if (PIPELINE_DEBUG) {
         const absMaster = path.resolve(masterPath)
         const absUpload = fs.existsSync(newPath) ? path.resolve(newPath) : null
@@ -989,6 +1026,22 @@ app.post("/master",
           hasLufsRmsProxy: Boolean(rawAfter && rawAfter.lufsRmsProxy != null),
           masterBytes: fs.existsSync(masterPath) ? fs.statSync(masterPath).size : 0,
         }
+      }
+      if (LUFS_TRACE) {
+        resPayload.lufsTrace = {
+          ...(masterResult?.lufsTraceMeta && typeof masterResult.lufsTraceMeta === "object"
+            ? masterResult.lufsTraceMeta
+            : {}),
+          rawAfterLufsPreSerialize: rawAfter?.lufs ?? null,
+          serializedAnalysisAfterLufs: analysisAfter?.lufs ?? null,
+          hint: "Set NEXT_PUBLIC_MASTRIFY_API_URL to this server's public URL if stamp does not match deploy.",
+        }
+        console.log(
+          "[LUFS_TRACE] AUTHORITY_RESPONSE_PAYLOAD lufsTrace.serializedAnalysisAfterLufs=",
+          resPayload.lufsTrace.serializedAnalysisAfterLufs,
+          "stamp=",
+          resPayload.lufsTrace.stamp
+        )
       }
       res.json(resPayload)
 

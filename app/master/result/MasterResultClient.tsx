@@ -136,6 +136,18 @@ export default function MasterResultClient() {
   }, [masteredUrl, analysisAfter, stylePreset, targetLufs])
 
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_MASTRIFY_LUFS_TRACE !== "1") return
+    const measured = toFiniteNumber(analysisAfter?.lufs)
+    const displayStr = measured !== null ? measured.toFixed(1) : "—"
+    console.log("[LUFS_TRACE] AUTHORITY_UI_RESULT_PAGE", {
+      analysisAfterLufsRaw: analysisAfter?.lufs,
+      parsedForDisplay: measured,
+      metricRowAfterString: displayStr,
+      sessionTargetLufs: targetLufs,
+    })
+  }, [analysisAfter, targetLufs])
+
+  useEffect(() => {
     setMounted(true)
     const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
     setIsMobileClient(/iPhone|iPad|iPod|Android|Mobile/i.test(ua))

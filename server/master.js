@@ -21,6 +21,9 @@ const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 const MASTER_DEBUG = process.env.MASTRIFY_MASTER_DEBUG === "1"
 const PIPELINE_DEBUG = process.env.MASTRIFY_PIPELINE_DEBUG === "1"
+const LUFS_TRACE = process.env.MASTRIFY_LUFS_TRACE === "1"
+/** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260211b"
 
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n))
@@ -446,6 +449,22 @@ export async function masterTrack({
   targetLufs = parseFloat(targetLufs)
   if (!Number.isFinite(targetLufs)) targetLufs = -14
 
+  /** Cap loudest integrated target (streaming-safe ceiling). */
+  const safeIntegratedLufs = Math.min(targetLufs, -9)
+  const lra = lraForStyle(style)
+
+  if (LUFS_TRACE) {
+    console.log("[LUFS_TRACE] masterTrack target resolution", {
+      stamp: LUFS_TRACE_BUILD_STAMP,
+      incomingTargetLufsRaw: targetLufsIn,
+      parsedClient,
+      referenceBranch: Boolean(reference && referenceAnalysis?.lufs != null),
+      targetLufsResolved: targetLufs,
+      safeIntegratedLufs,
+      lra,
+    })
+  }
+
   const input = file
   const outputPath = output
 
@@ -466,10 +485,6 @@ export async function masterTrack({
   if (probeResult?.err) {
     throw new Error(`ffprobe failed: ${probeResult.err.message || probeResult.err}`)
   }
-
-  /** Cap loudest integrated target (streaming-safe ceiling). */
-  const safeIntegratedLufs = Math.min(targetLufs, -9)
-  const lra = lraForStyle(style)
 
   let preAnalysis = null
   try {
@@ -535,12 +550,14 @@ export async function masterTrack({
   let loudnormPass1Json = null
   let usedTwoPass = false
   let audioFilterFinal = ""
+  let pass1ExitCode = null
 
   const pass1Af = `${colorBase}loudnorm=${loudnormStem}:linear=true:print_format=json`
   const pass1Args = ["-hide_banner", "-nostats", "-i", file, "-vn", "-ar", "44100", "-ac", "2", "-af", pass1Af, "-f", "null", "-"]
 
   try {
     const r1 = await runFfmpegCapture(pass1Args, "loudnorm-pass1")
+    pass1ExitCode = r1.code
     if (r1.code === 0) {
       loudnormPass1Json = extractLoudnormJsonFromStderr(r1.stderr)
     }
@@ -551,7 +568,7 @@ export async function masterTrack({
       usedTwoPass = true
     }
   } catch (e) {
-    if (MASTER_DEBUG || PIPELINE_DEBUG) {
+    if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
       console.warn("[master] loudnorm pass1 error:", e?.message || e)
     }
   }
@@ -561,7 +578,18 @@ export async function masterTrack({
     usedTwoPass = false
   }
 
-  if (MASTER_DEBUG || PIPELINE_DEBUG) {
+  if (LUFS_TRACE) {
+    console.log("[LUFS_TRACE] loudnorm path", {
+      stamp: LUFS_TRACE_BUILD_STAMP,
+      pass1ExitCode,
+      usedTwoPass,
+      pass1HasInputI: Boolean(loudnormPass1Json?.input_i),
+      pass1OutputI: loudnormPass1Json?.output_i ?? null,
+      fallbackOnePassOnly: !usedTwoPass,
+    })
+  }
+
+  if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
     console.log("[master] loudnorm plan", {
       style,
       targetLufsClient: Number.isFinite(parsedClient) ? parsedClient : null,
@@ -605,11 +633,26 @@ export async function masterTrack({
 
   await waitForMasterOutputReady(outputPath)
 
+  /** Single post-render EBU measurement — authoritative integrated loudness of the WAV on disk. */
+  const authorityEbuIntegrated = await measureIntegratedLufsEbur128(outputPath)
+  if (LUFS_TRACE) {
+    console.log("[LUFS_TRACE] AUTHORITY_EBU_AFTER_ENCODE_FILE", {
+      stamp: LUFS_TRACE_BUILD_STAMP,
+      outputPath,
+      authorityEbuIntegrated,
+      loudnormTargetI: safeIntegratedLufs,
+      deltaFromTargetLu:
+        authorityEbuIntegrated != null && Number.isFinite(authorityEbuIntegrated)
+          ? Number((authorityEbuIntegrated - safeIntegratedLufs).toFixed(2))
+          : null,
+      usedTwoPass,
+    })
+  }
+
   if (MASTER_DEBUG || PIPELINE_DEBUG) {
-    const ebuPost = await measureIntegratedLufsEbur128(outputPath)
     console.log("[master] loudness after render", {
       targetLufsIntegrated: safeIntegratedLufs,
-      measuredEbuIntegrated: ebuPost,
+      measuredEbuIntegrated: authorityEbuIntegrated,
       loudnormTwoPass: usedTwoPass,
       truePeakCeiling_TP: tp,
       pass1_predicted_output_i: loudnormPass1Json?.output_i,
@@ -645,6 +688,9 @@ export async function masterTrack({
       await new Promise((r) => setTimeout(r, 220))
       ebu = await measureIntegratedLufsEbur128(outputPath)
     }
+    if (ebu == null && authorityEbuIntegrated != null && Number.isFinite(authorityEbuIntegrated)) {
+      ebu = authorityEbuIntegrated
+    }
     const rmsProxy = analysisAfter.lufs
     if (ebu != null && Number.isFinite(ebu)) {
       analysisAfter = {
@@ -653,8 +699,27 @@ export async function masterTrack({
         lufsRmsProxy: rmsProxy,
         targetLufsApplied: safeIntegratedLufs,
       }
-    } else if (MASTER_DEBUG) {
-      console.warn("[master] EBU-128 measure failed; using RMS-proxy lufs in payload")
+    } else if (MASTER_DEBUG || LUFS_TRACE) {
+      console.warn("[master] EBU-128 measure failed; using RMS-proxy lufs in payload", {
+        stamp: LUFS_TRACE ? LUFS_TRACE_BUILD_STAMP : undefined,
+        rmsProxyLufs: rmsProxy,
+      })
+    }
+    if (LUFS_TRACE) {
+      console.log("[LUFS_TRACE] AUTHORITY_PAYLOAD_LUFS", {
+        stamp: LUFS_TRACE_BUILD_STAMP,
+        analysisAfterLufs: analysisAfter.lufs,
+        lufsRmsProxy: analysisAfter.lufsRmsProxy ?? null,
+        ebuSecondPassOk: ebu != null && Number.isFinite(ebu),
+        authorityEbuAfterEncode: authorityEbuIntegrated,
+        authorityVsPayloadLu:
+          authorityEbuIntegrated != null &&
+          ebu != null &&
+          Number.isFinite(authorityEbuIntegrated) &&
+          Number.isFinite(ebu)
+            ? Number((ebu - authorityEbuIntegrated).toFixed(3))
+            : null,
+      })
     }
     if (MASTER_DEBUG) {
       console.log("[master] after metrics", {
@@ -699,11 +764,34 @@ export async function masterTrack({
       autoPreGainBeforeLoudnormDb: autoPreGainDb,
       ebuInputIntegrated,
       measuredEbuAfter: analysisAfter?.lufs ?? null,
+      authorityEbuIntegrated,
       style,
       stereoEnhance,
       lowEndControl,
       clarityPresence,
     }
+  }
+  if (LUFS_TRACE) {
+    out.lufsTraceMeta = {
+      stamp: LUFS_TRACE_BUILD_STAMP,
+      incomingTargetLufsRaw: targetLufsIn,
+      parsedClient: Number.isFinite(parsedClient) ? parsedClient : null,
+      targetLufsResolved: targetLufs,
+      safeIntegratedLufs,
+      loudnormTwoPass: usedTwoPass,
+      pass1HasJson: Boolean(loudnormPass1Json?.input_i),
+      authorityEbuIntegrated,
+      analysisAfterLufs: analysisAfter?.lufs ?? null,
+      analysisAfterHasRmsProxy: analysisAfter?.lufsRmsProxy != null,
+    }
+    console.log(
+      "[LUFS_TRACE] AUTHORITY_MASTER_RETURN_FINAL analysisAfter.lufs=",
+      analysisAfter?.lufs ?? null,
+      "authorityEbuIntegrated=",
+      authorityEbuIntegrated,
+      "twoPass=",
+      usedTwoPass
+    )
   }
   return out
 }
