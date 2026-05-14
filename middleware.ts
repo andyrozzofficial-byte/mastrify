@@ -33,7 +33,8 @@ export function middleware(request: NextRequest) {
     pathname === "/landing" ||
     pathname.startsWith("/about") ||
     pathname.startsWith("/pricing") ||
-    pathname.startsWith("/how-it-works")
+    pathname.startsWith("/how-it-works") ||
+    pathname.startsWith("/blog")
   ) {
     return NextResponse.next()
   }
