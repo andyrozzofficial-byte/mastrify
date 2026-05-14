@@ -5,7 +5,7 @@ import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 import { analyzeTrack } from "./analyze.js"
-import { masterTrack } from "./master.js"
+import { masterTrack, measureIntegratedLufsEbur128 } from "./master.js"
 import { serializeMasterAnalysisForJson } from "./masterAnalysisPayload.js"
 import ffmpegPath from "ffmpeg-static"
 import ffprobeStatic from "ffprobe-static"
@@ -922,10 +922,18 @@ app.post("/master",
         }
       }
 
+      if (rawAfter && rawAfter.lufsRmsProxy == null && fs.existsSync(masterPath)) {
+        const ebu = await measureIntegratedLufsEbur128(masterPath)
+        if (ebu != null && Number.isFinite(ebu)) {
+          const prev = rawAfter.lufs
+          rawAfter = { ...rawAfter, lufs: ebu, lufsRmsProxy: prev }
+        }
+      }
+
       const analysisBefore = serializeMasterAnalysisForJson(rawBefore, "before")
       const analysisAfter = serializeMasterAnalysisForJson(rawAfter, "after")
 
-      res.json({
+      const resPayload = {
         success: true,
         before,
         after,
@@ -934,7 +942,11 @@ app.post("/master",
         fullUrl: `${baseUrl}${after}`,
         analysisBefore,
         analysisAfter,
-      })
+      }
+      if (masterResult?.debugInfo) {
+        resPayload.masterDebug = masterResult.debugInfo
+      }
+      res.json(resPayload)
 
     } catch (err) {
       console.error("Master failed:", err)

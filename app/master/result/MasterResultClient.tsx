@@ -410,11 +410,22 @@ export default function MasterResultClient() {
   const windowEndSec = windowStart + windowLen
 
   const afterLufsMeasured = toFiniteNumber(analysisAfter?.lufs)
-  const afterLufsDisplay =
-    afterLufsMeasured !== null ? formatLufs(afterLufsMeasured) : formatLufs(targetLufs)
+  const afterLufsDisplay = afterLufsMeasured !== null ? formatLufs(afterLufsMeasured) : "—"
+  const appliedLufs = toFiniteNumber(analysisAfter?.targetLufsApplied)
+  const lufsAfterCell =
+    afterLufsMeasured !== null &&
+    appliedLufs !== null &&
+    Math.abs(appliedLufs - afterLufsMeasured) > 1.25 ? (
+      <span className="inline-flex flex-col items-end gap-0.5">
+        <span>{afterLufsDisplay}</span>
+        <span className="text-[10px] font-normal leading-none text-white/40">Target {formatLufs(appliedLufs)}</span>
+      </span>
+    ) : (
+      afterLufsDisplay
+    )
 
   const metricRows = [
-    { label: "LUFS", before: formatLufs(analysisBefore?.lufs), after: afterLufsDisplay },
+    { label: "LUFS", before: formatLufs(analysisBefore?.lufs), after: lufsAfterCell },
     { label: "Dynamic range", before: formatDr(analysisBefore?.dynamicRange), after: formatDr(analysisAfter?.dynamicRange) },
     { label: "Stereo width", before: formatPct(analysisBefore?.stereoWidth), after: formatPct(analysisAfter?.stereoWidth) },
     { label: "Clarity", before: clarityWord(analysisBefore), after: clarityWord(analysisAfter) },

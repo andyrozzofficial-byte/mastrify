@@ -36,11 +36,16 @@ export function serializeMasterAnalysisForJson(raw, label = "analysis") {
   const issuesClone = cloneJsonSafe(raw.issues)
   const recClone = cloneJsonSafe(raw.recommendations)
 
+  const lufsRmsProxy = finiteNum(raw.lufsRmsProxy, NaN)
+  const targetLufsApplied = finiteNum(raw.targetLufsApplied, NaN)
+
   return {
     bpm: finiteNum(raw.bpm, 120),
     energy: typeof raw.energy === "string" ? raw.energy : "medium",
     lufs: finiteNum(raw.lufs, -60),
     targetLufs: finiteNum(raw.targetLufs, -14),
+    ...(Number.isFinite(lufsRmsProxy) ? { lufsRmsProxy } : {}),
+    ...(Number.isFinite(targetLufsApplied) ? { targetLufsApplied } : {}),
     lufsAdjustment: finiteNum(raw.lufsAdjustment, 0),
     peakDb: finiteNum(raw.peakDb, -60),
     headroomStatus: typeof raw.headroomStatus === "string" ? raw.headroomStatus : "OK",

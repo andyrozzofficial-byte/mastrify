@@ -19,6 +19,8 @@ if (!fs.existsSync(mastersDir)) {
 
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
+const MASTER_DEBUG = process.env.MASTRIFY_MASTER_DEBUG === "1"
+
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n))
 }
@@ -35,106 +37,194 @@ function parseStyle(style) {
   return VALID_STYLES.has(s) ? s : "STREAM"
 }
 
-/** Subtle stereo width: `extrastereo` m near 1.0 is transparent; default filter constant is much higher. */
+/** Integrated loudness (LUFS) via EBU R128 — aligns “After” metrics with the real WAV. */
+export function measureIntegratedLufsEbur128(filePath) {
+  return new Promise((resolve) => {
+    if (!ffmpegPath || !fs.existsSync(filePath)) {
+      resolve(null)
+      return
+    }
+    const args = [
+      "-hide_banner",
+      "-nostats",
+      "-i",
+      filePath,
+      "-af",
+      "ebur128=framelog=quiet:metadata=0",
+      "-f",
+      "null",
+      "-",
+    ]
+    const ff = spawn(ffmpegPath, args, { shell: false })
+    let stderr = ""
+    ff.stderr?.on("data", (d) => {
+      stderr += d.toString()
+    })
+    ff.on("close", () => {
+      const m =
+        stderr.match(/\bI:\s*([-0-9.]+)\s*LUFS/i) ||
+        stderr.match(/Integrated loudness I:\s*([-0-9.]+)/i) ||
+        stderr.match(/lavfi\.ebur128\.\d+\.I=\s*([-0-9.]+)/)
+      if (m) {
+        const v = parseFloat(m[1])
+        resolve(Number.isFinite(v) ? v : null)
+      } else {
+        resolve(null)
+      }
+    })
+    ff.on("error", () => resolve(null))
+  })
+}
+
+/** Stereo width — `extrastereo` m≈1 is neutral; wider >1, narrower <1. */
 function buildStereoStage(stereoEnhance, style) {
   let se = clamp(parseIntSlider(stereoEnhance, 50), 0, 100)
-  if (style === "FESTIVAL") se = Math.min(100, se + 6)
-  if (style === "WARM") se = Math.max(0, se - 4)
+  if (style === "FESTIVAL") se = Math.min(100, se + 10)
+  if (style === "WARM") se = Math.max(0, se - 6)
+  if (style === "LOUD") se = Math.min(100, se + 4)
 
-  if (se >= 49 && se <= 51) return ""
+  if (se >= 47 && se <= 53) return ""
 
-  if (se > 51) {
-    const t = (se - 51) / 49
-    const m = 1 + t * 0.1
+  if (se > 53) {
+    const t = (se - 53) / 47
+    const m = 1 + t * 0.26
     return `extrastereo=m=${m.toFixed(4)},`
   }
-  const t = (49 - se) / 49
-  const m = 1 - t * 0.06
+  const t = (47 - se) / 47
+  const m = 1 - t * 0.18
   return `extrastereo=m=${m.toFixed(4)},`
 }
 
 function compressorForStyle(style) {
   if (style === "LOUD") {
-    return { threshold: -19, ratio: 1.68, attack: 26, release: 210 }
+    return { threshold: -20.2, ratio: 1.95, attack: 22, release: 185 }
   }
   if (style === "CLUB") {
-    return { threshold: -19.2, ratio: 1.64, attack: 28, release: 218 }
+    return { threshold: -20, ratio: 1.88, attack: 24, release: 195 }
   }
   if (style === "WARM") {
-    return { threshold: -18.2, ratio: 1.38, attack: 36, release: 285 }
+    return { threshold: -17.4, ratio: 1.22, attack: 42, release: 320 }
   }
   if (style === "FESTIVAL") {
-    return { threshold: -18.4, ratio: 1.52, attack: 30, release: 228 }
+    return { threshold: -18.1, ratio: 1.62, attack: 28, release: 220 }
   }
-  return { threshold: -18, ratio: 1.55, attack: 30, release: 240 }
+  return { threshold: -18, ratio: 1.52, attack: 30, release: 240 }
+}
+
+function lraForStyle(style) {
+  if (style === "WARM") return 12
+  if (style === "LOUD") return 8.5
+  if (style === "CLUB") return 8
+  if (style === "FESTIVAL") return 9
+  return 10
+}
+
+/** Per-preset EQ “character” before loudnorm (distinct but still hi-fi). */
+function styleCharacterFilters(style) {
+  if (style === "WARM") {
+    return (
+      `equalizer=f=10500:t=q:w=0.9:g=-0.48,` +
+      `equalizer=f=7400:t=q:w=1:g=-0.28,`
+    )
+  }
+  if (style === "LOUD") {
+    return (
+      `equalizer=f=4600:t=q:w=1.05:g=0.72,` +
+      `equalizer=f=240:t=q:w=1:g=-0.42,`
+    )
+  }
+  if (style === "CLUB") {
+    return (
+      `equalizer=f=58:t=q:w=0.78:g=1.12,` +
+      `equalizer=f=108:t=q:w=0.82:g=0.62,` +
+      `equalizer=f=380:t=q:w=1:g=-0.28,`
+    )
+  }
+  if (style === "FESTIVAL") {
+    return `equalizer=f=15200:t=q:w=0.88:g=0.48,`
+  }
+  return ""
 }
 
 function baseTone(style) {
   if (style === "WARM") {
     return {
-      lowHz: 72,
-      lowGain: 1.12,
-      mudGain: -1.15,
-      mudWideGain: -0.45,
-      airHz: 12500,
-      airGain: 0.14,
-      dipAboveAirHz: 15500,
-      dipAboveAirGain: -0.32,
-      highShelf9k: 0.28,
-    }
-  }
-  if (style === "LOUD" || style === "FESTIVAL") {
-    return {
-      lowHz: 82,
-      lowGain: 1.04,
+      lowHz: 70,
+      lowGain: 1.28,
       mudGain: -1.22,
       mudWideGain: -0.48,
-      airHz: 13200,
-      airGain: style === "FESTIVAL" ? 0.22 : 0.19,
+      airHz: 11800,
+      airGain: 0.08,
       dipAboveAirHz: 15500,
+      dipAboveAirGain: -0.26,
+      highShelf9k: 0.18,
+    }
+  }
+  if (style === "LOUD") {
+    return {
+      lowHz: 84,
+      lowGain: 0.98,
+      mudGain: -1.32,
+      mudWideGain: -0.52,
+      airHz: 13400,
+      airGain: 0.22,
+      dipAboveAirHz: 15600,
+      dipAboveAirGain: -0.48,
+      highShelf9k: 0.38,
+    }
+  }
+  if (style === "FESTIVAL") {
+    return {
+      lowHz: 80,
+      lowGain: 1.02,
+      mudGain: -1.18,
+      mudWideGain: -0.46,
+      airHz: 13600,
+      airGain: 0.28,
+      dipAboveAirHz: 15600,
       dipAboveAirGain: -0.42,
-      highShelf9k: 0.34,
+      highShelf9k: 0.42,
     }
   }
   if (style === "CLUB") {
     return {
-      lowHz: 80,
-      lowGain: 1.1,
-      mudGain: -1.18,
-      mudWideGain: -0.44,
-      airHz: 12800,
-      airGain: 0.17,
-      dipAboveAirHz: 15500,
-      dipAboveAirGain: -0.4,
-      highShelf9k: 0.32,
+      lowHz: 76,
+      lowGain: 1.32,
+      mudGain: -1.08,
+      mudWideGain: -0.36,
+      airHz: 12600,
+      airGain: 0.15,
+      dipAboveAirHz: 15400,
+      dipAboveAirGain: -0.36,
+      highShelf9k: 0.3,
     }
   }
   return {
     lowHz: 78,
-    lowGain: 1.06,
-    mudGain: -1.12,
-    mudWideGain: -0.4,
+    lowGain: 1.04,
+    mudGain: -1.14,
+    mudWideGain: -0.42,
     airHz: 13000,
-    airGain: 0.19,
+    airGain: 0.18,
     dipAboveAirHz: 15500,
     dipAboveAirGain: -0.38,
-    highShelf9k: 0.32,
+    highShelf9k: 0.3,
   }
 }
 
-/** Slider deltas: subtle, musical */
+/** Sliders — audible but still mastering-safe */
 function applyToneSliders(tone, lowEndControl, clarityPresence) {
   const lc = (parseIntSlider(lowEndControl, 50) - 50) / 50
   const cp = (parseIntSlider(clarityPresence, 50) - 50) / 50
   return {
     ...tone,
-    lowGain: tone.lowGain + lc * 0.16,
-    mudGain: tone.mudGain - lc * 0.05 - cp * 0.06,
-    mudWideGain: tone.mudWideGain - cp * 0.04,
-    airGain: tone.airGain + cp * 0.14,
-    dipAboveAirGain: tone.dipAboveAirGain - Math.max(0, cp) * 0.05,
-    highShelf9k: tone.highShelf9k + cp * 0.08,
-    presenceDb: cp * 0.55,
+    lowGain: tone.lowGain + lc * 0.42,
+    mudGain: tone.mudGain - lc * 0.12 - cp * 0.12,
+    mudWideGain: tone.mudWideGain - cp * 0.08,
+    airGain: tone.airGain + cp * 0.32,
+    dipAboveAirGain: tone.dipAboveAirGain - Math.max(0, cp) * 0.08,
+    highShelf9k: tone.highShelf9k + cp * 0.22,
+    presenceDb: cp * 1.35,
   }
 }
 
@@ -265,11 +355,14 @@ export async function masterTrack({
     /* staging optional */
   }
 
+  /** Cap loudest integrated target (streaming-safe ceiling). */
   const safeIntegratedLufs = Math.min(targetLufs, -9)
+  const lra = lraForStyle(style)
 
   let tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
   const comp = compressorForStyle(style)
   const stereoStage = buildStereoStage(stereoEnhance, style)
+  const styleTail = styleCharacterFilters(style)
 
   const volumeStaging = stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
 
@@ -293,7 +386,23 @@ export async function masterTrack({
     `acompressor=threshold=${comp.threshold}dB:ratio=${comp.ratio}:attack=${comp.attack}:release=${comp.release},` +
     `equalizer=f=${tone.airHz}:t=q:w=1.15:g=${airG},` +
     `equalizer=f=${tone.dipAboveAirHz}:t=q:w=1:g=${dipG},` +
-    `loudnorm=I=${safeIntegratedLufs}:LRA=10:TP=-1:linear=true`
+    styleTail +
+    `loudnorm=I=${safeIntegratedLufs}:LRA=${lra}:TP=-1:linear=true`
+
+  if (MASTER_DEBUG) {
+    console.log("[master] incoming", {
+      style,
+      targetLufsClient: Number.isFinite(parsedClient) ? parsedClient : null,
+      targetLufsResolved: targetLufs,
+      loudnormI: safeIntegratedLufs,
+      loudnormLRA: lra,
+      stereoEnhance,
+      lowEndControl,
+      clarityPresence,
+      reference: Boolean(reference),
+    })
+    console.log("[master] ffmpeg -af", audioFilter)
+  }
 
   await new Promise((resolve, reject) => {
     let settled = false
@@ -370,7 +479,7 @@ export async function masterTrack({
   }
 
   let analysisAfter = null
-  const delays = [0, 200, 450]
+  const delays = [0, 200, 450, 900]
   for (let attempt = 0; attempt < delays.length && !analysisAfter; attempt++) {
     try {
       if (delays[attempt] > 0) await new Promise((r) => setTimeout(r, delays[attempt]))
@@ -380,9 +489,46 @@ export async function masterTrack({
     }
   }
 
-  return {
+  if (analysisAfter) {
+    const ebu = await measureIntegratedLufsEbur128(outputPath)
+    const rmsProxy = analysisAfter.lufs
+    if (ebu != null && Number.isFinite(ebu)) {
+      analysisAfter = {
+        ...analysisAfter,
+        lufs: ebu,
+        lufsRmsProxy: rmsProxy,
+        targetLufsApplied: safeIntegratedLufs,
+      }
+    } else if (MASTER_DEBUG) {
+      console.warn("[master] EBU-128 measure failed; using RMS-proxy lufs in payload")
+    }
+    if (MASTER_DEBUG) {
+      console.log("[master] after metrics", {
+        lufs: analysisAfter.lufs,
+        targetLufsApplied: analysisAfter.targetLufsApplied ?? safeIntegratedLufs,
+        stereoWidth: analysisAfter.stereoWidth,
+        bassWeight: analysisAfter.bassWeight,
+        brightness: analysisAfter.brightness,
+        dynamicRange: analysisAfter.dynamicRange,
+      })
+    }
+  }
+
+  const out = {
     path: outputPath,
     analysisBefore,
     analysisAfter,
   }
+  if (MASTER_DEBUG) {
+    out.debugInfo = {
+      audioFilter,
+      loudnormI: safeIntegratedLufs,
+      loudnormLRA: lra,
+      style,
+      stereoEnhance,
+      lowEndControl,
+      clarityPresence,
+    }
+  }
+  return out
 }
