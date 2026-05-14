@@ -529,22 +529,22 @@ UPLOAD TRACK
 
 app.post(
 "/upload",
-upload.single("track"),
+upload.single("file"),
 async (req,res)=>{
 
 try {
 
-const track = req.file
+const file = req.file
 
-if(!track){
-  return res.status(400).json({error:"No track uploaded"})
+if(!file){
+  return res.status(400).json({error:"No file uploaded"})
 }
 
 // rename uploaded file
-const fileName = track.filename + ".wav"
-const newPath = track.path + ".wav"
+const fileName = file.filename + ".wav"
+const newPath = file.path + ".wav"
 
-fs.renameSync(track.path, newPath)
+fs.renameSync(file.path, newPath)
 
 console.log("Uploaded:", fileName)
 
@@ -669,8 +669,6 @@ error:"Upload failed"
 
 app.post("/analyze", upload.single("file"), async (req, res) => {
   try {
-
-    console.log("🔥 HIT /analyze")
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" })
@@ -882,8 +880,6 @@ MASTER TRACK
 app.post("/master",
   upload.single("file"),
   async (req, res) => {
-  console.log("🔥 LIVE /MASTER ROUTE HIT - NEW CODE ACTIVE")
-
   res.setTimeout(0) // 🔥 LÄGG DEN HÄR
 
   try {
