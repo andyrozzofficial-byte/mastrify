@@ -26,7 +26,7 @@ export default function ProPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-10">
+    <div className="min-h-screen bg-black px-6 py-8 text-white md:px-10 md:py-10">
       
       <h1 className="text-3xl font-bold mb-6">
         Mastrify PRO 🔥

@@ -187,7 +187,7 @@ export default function MasterSettingsPage() {
   return (
     <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
       <CinematicBackground />
-      <div className="relative mx-auto w-full max-w-[720px] px-4 pb-16 pt-8 md:px-6 md:pb-20 md:pt-10">
+      <div className="relative mx-auto w-full max-w-[720px] px-4 pb-16 pt-5 md:px-6 md:pb-20 md:pt-6">
         <div className="relative">
           {/* Radial glow — behind main card */}
           <div

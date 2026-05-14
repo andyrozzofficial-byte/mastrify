@@ -280,7 +280,7 @@ const res = await resPromise
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center pt-32 pb-32 relative overflow-hidden">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-5 pb-16 pt-12 text-white md:px-8 md:pb-20 md:pt-14">
       <div className="absolute top-6 left-6 z-20">
   <img
     src="/logo.png"

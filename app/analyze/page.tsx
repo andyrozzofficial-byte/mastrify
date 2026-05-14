@@ -343,7 +343,7 @@ export default function AnalyzePage() {
     <div className="relative min-h-screen text-white">
       <CinematicBackground />
       <div
-        className={`relative mx-auto flex w-full flex-col items-center px-5 pb-20 pt-6 sm:px-5 md:pb-24 md:pt-8 ${
+        className={`relative mx-auto flex w-full flex-col items-center px-5 pb-16 pt-4 sm:px-5 md:pb-20 md:pt-5 ${
           result ? "max-w-6xl md:max-w-7xl md:px-8" : "max-w-[520px] md:max-w-[568px]"
         }`}
       >
@@ -559,7 +559,7 @@ export default function AnalyzePage() {
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
-          className="mt-10 w-full max-w-5xl space-y-12 pb-6 md:mt-14 md:space-y-16 lg:max-w-6xl"
+          className="mt-6 w-full max-w-5xl space-y-12 pb-6 md:mt-8 md:space-y-16 lg:max-w-6xl"
         >
           <div className="w-full">
             <button

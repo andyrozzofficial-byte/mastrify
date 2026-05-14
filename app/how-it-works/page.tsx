@@ -1,6 +1,6 @@
 export default function HowItWorks() {
   return (
-    <main className="min-h-screen bg-black text-white px-6 py-20">
+    <main className="min-h-screen bg-black px-6 pb-16 pt-10 text-white md:pt-12 md:pb-20">
       <div className="max-w-4xl mx-auto space-y-16">
         
         {/* TITLE */}

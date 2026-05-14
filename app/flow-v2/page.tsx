@@ -24,7 +24,7 @@ export default function FlowPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#05070d] via-[#0b0f1a] to-black text-white flex items-center justify-center">
+    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-[#05070d] via-[#0b0f1a] to-black pb-16 pt-12 text-white md:pt-14">
 
       <div className="w-full max-w-7xl px-6">
 

@@ -17,7 +17,7 @@ export default function Pricing() {
         aria-hidden
       />
 
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-[520px] flex-col items-center justify-center px-5 py-16 sm:max-w-[580px] md:max-w-[640px] md:px-8 md:py-20">
+      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-[520px] flex-col items-center justify-start px-5 pb-14 pt-7 sm:max-w-[580px] md:max-w-[640px] md:px-8 md:pb-16 md:pt-8">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -80,7 +80,7 @@ export default function Pricing() {
                   localStorage.setItem("unlocked", "true")
                   window.location.href = "/app"
                 }}
-                className="mt-10 w-full rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-4 text-[15px] font-semibold text-white shadow-[0_0_22px_rgba(91,33,182,0.28),0_0_14px_rgba(14,116,144,0.14),inset_0_1px_0_rgba(255,255,255,0.12),0_14px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10 transition duration-300 hover:brightness-110 sm:text-[16px] md:mt-11"
+                className="mt-8 w-full rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-8 py-4 text-[15px] font-semibold text-white shadow-[0_0_22px_rgba(91,33,182,0.28),0_0_14px_rgba(14,116,144,0.14),inset_0_1px_0_rgba(255,255,255,0.12),0_14px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10 transition duration-300 hover:brightness-110 sm:text-[16px] md:mt-9"
               >
                 Pay &amp; unlock
               </button>

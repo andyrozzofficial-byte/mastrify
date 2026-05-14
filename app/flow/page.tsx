@@ -533,7 +533,7 @@ const handlePayment = () => {
   if (!mounted) return null
 
   return (
-    <main className="min-h-screen flex items-start justify-center pt-20 px-6 text-white relative overflow-hidden bg-black">
+    <main className="min-h-screen flex items-start justify-center px-6 pb-8 pt-12 text-white relative overflow-hidden bg-black md:pt-14">
 
   {/* BACKGROUND */}
 <div className="absolute inset-0 z-0 pointer-events-none">

@@ -31,7 +31,7 @@ export default function HistoryPage() {
   return (
     <div className="relative min-h-screen text-white">
       <CinematicBackground intensity="strong" />
-      <div className="relative mx-auto w-full max-w-6xl px-5 pb-28 pt-14 md:px-10 md:pt-20">
+      <div className="relative mx-auto w-full max-w-6xl px-5 pb-24 pt-6 md:px-10 md:pb-28 md:pt-8">
         <p className="text-center text-[10px] font-bold uppercase tracking-[0.35em] text-cyan-400/80">Library</p>
         <h1 className="mt-4 text-center text-4xl font-bold tracking-tight text-transparent md:text-5xl bg-gradient-to-r from-white via-purple-100 to-cyan-100/90 bg-clip-text">
           Projects
