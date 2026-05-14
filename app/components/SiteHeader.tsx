@@ -15,7 +15,7 @@ export default function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-[100] border-b border-white/[0.06] bg-black/55 shadow-[0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-2xl backdrop-saturate-150">
-      <div className="mx-auto flex max-w-[1240px] flex-col gap-4 px-5 py-4 md:h-[72px] md:flex-row md:items-center md:justify-between md:gap-6 md:px-10 md:py-0">
+      <div className="mx-auto flex max-w-[1240px] flex-col gap-3 px-5 py-3 md:h-[64px] md:flex-row md:items-center md:justify-between md:gap-5 md:px-8 md:py-0">
         <div className="flex items-center justify-between md:contents">
           <Link
             href="/"
@@ -23,7 +23,7 @@ export default function SiteHeader() {
           >
             Mastrify
           </Link>
-          <div className="flex items-center gap-4 md:hidden">
+          <div className="flex items-center gap-3 md:hidden">
             <Link
               href="/pricing"
               className="text-[13px] font-medium text-white/50 transition hover:text-white/90"
@@ -32,14 +32,14 @@ export default function SiteHeader() {
             </Link>
             <Link
               href="/pricing"
-              className="rounded-lg bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-3.5 py-2 text-[12px] font-semibold text-white shadow-[0_0_28px_rgba(124,58,237,0.45)] transition hover:brightness-110"
+              className="rounded-lg bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-3 py-2 text-[12px] font-semibold text-white shadow-[0_0_24px_rgba(124,58,237,0.42)] transition hover:brightness-110"
             >
               Sign up
             </Link>
           </div>
         </div>
 
-        <nav className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 border-t border-white/[0.06] pt-4 md:flex-1 md:border-t-0 md:pt-0 lg:gap-x-10">
+        <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1.5 border-t border-white/[0.06] pt-3 md:flex-1 md:border-t-0 md:pt-0 lg:gap-x-8">
           {links.map(({ href, label }) => {
             const active = pathname === href || pathname?.startsWith(`${href}/`)
             return (
@@ -59,16 +59,16 @@ export default function SiteHeader() {
           })}
         </nav>
 
-        <div className="hidden shrink-0 items-center gap-6 md:flex">
+        <div className="hidden shrink-0 items-center gap-4 md:flex">
           <Link
             href="/pricing"
-            className="text-sm font-medium text-white/50 transition hover:text-white/90"
+            className="text-[13px] font-medium text-white/50 transition hover:text-white/90"
           >
             Log in
           </Link>
           <Link
             href="/pricing"
-            className="rounded-lg bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-[18px] py-2.5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(99,102,241,0.42)] transition hover:brightness-110"
+            className="rounded-lg bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white shadow-[0_0_28px_rgba(99,102,241,0.38)] transition hover:brightness-110"
           >
             Sign up
           </Link>
