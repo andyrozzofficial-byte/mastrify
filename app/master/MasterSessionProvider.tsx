@@ -253,6 +253,14 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     file,
   ])
 
+  useEffect(() => {
+    console.log("CONTEXT analysisBefore", analysisBefore)
+  }, [analysisBefore])
+
+  useEffect(() => {
+    console.log("CONTEXT analysisAfter", analysisAfter)
+  }, [analysisAfter])
+
   const value = useMemo(
     () => ({
       file,

@@ -75,6 +75,13 @@ export default function MasterProcessingPage() {
         const res = await axios.post(`${API}/master`, formData, { signal: ac.signal })
         if (cancelled) return
 
+        console.log("MASTER RESPONSE", res.data)
+
+        setAnalysisBefore((res.data.analysisBefore ?? null) as Record<string, unknown> | null)
+        setAnalysisAfter((res.data.analysisAfter ?? null) as Record<string, unknown> | null)
+        console.log("SETTING BEFORE", res.data.analysisBefore)
+        console.log("SETTING AFTER", res.data.analysisAfter)
+
         const mastered =
           res.data.afterUrl || res.data.fullUrl || (res.data.after ? `${API}${res.data.after}` : "")
         const previewMp3 =
@@ -83,13 +90,6 @@ export default function MasterProcessingPage() {
 
         setMasteredUrl(mastered)
         setMasteredPreviewMp3Url(previewMp3)
-        const fromApiBefore = (res.data.analysisBefore as Record<string, unknown> | null | undefined) ?? null
-        setAnalysisBefore((prev) => {
-          if (!fromApiBefore) return prev ?? null
-          return { ...(prev ?? {}), ...fromApiBefore }
-        })
-        const fromApiAfter = (res.data.analysisAfter as Record<string, unknown> | null | undefined) ?? null
-        setAnalysisAfter((prev) => fromApiAfter ?? prev ?? null)
 
         appendHistory({
           kind: "master",
