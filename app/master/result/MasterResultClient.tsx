@@ -1,9 +1,13 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
+import {
+  MASTER_RESULT_STORAGE_KEY,
+  useMasterSession,
+  type MasterStylePreset,
+} from "../MasterSessionProvider"
 
 const PREVIEW_START = 60
 const PREVIEW_DURATION = 30
@@ -31,25 +35,37 @@ function loudnessLabel(lufs: number): string {
   return row ? `${row.label} (${lufs} LUFS)` : `${lufs} LUFS`
 }
 
+/** JSON / proxies sometimes deliver numerics as strings; strict typeof checks hid real metrics in the UI. */
+function toFiniteNumber(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v
+  if (typeof v === "string") {
+    const t = v.trim()
+    if (t === "") return null
+    const n = Number(t)
+    if (Number.isFinite(n)) return n
+  }
+  return null
+}
+
 function formatLufs(v: unknown): string {
-  if (typeof v === "number" && Number.isFinite(v)) return v.toFixed(1)
-  return "—"
+  const n = toFiniteNumber(v)
+  return n !== null ? n.toFixed(1) : "—"
 }
 
 function formatDr(v: unknown): string {
-  if (typeof v === "number" && Number.isFinite(v)) return v.toFixed(1)
-  return "—"
+  const n = toFiniteNumber(v)
+  return n !== null ? n.toFixed(1) : "—"
 }
 
 function formatPct(v: unknown): string {
-  if (typeof v === "number" && Number.isFinite(v)) return `${Math.round(v * 100)}%`
-  return "—"
+  const n = toFiniteNumber(v)
+  return n !== null ? `${Math.round(n * 100)}%` : "—"
 }
 
 function clarityWord(a: Record<string, unknown> | null | undefined): string {
   if (!a) return "—"
-  const b = typeof a.brightness === "number" ? a.brightness : 0
-  const s = typeof a.stereoWidth === "number" ? a.stereoWidth : 0
+  const b = toFiniteNumber(a.brightness) ?? 0
+  const s = toFiniteNumber(a.stereoWidth) ?? 0
   const blend = b * 0.55 + s * 0.45
   if (blend < 0.22) return "Low"
   if (blend < 0.42) return "Medium"
@@ -86,13 +102,50 @@ export default function MasterResultClient() {
     file,
     audioUrl,
     masteredUrl,
+    setMasteredUrl,
     masteredPreviewMp3Url,
+    setMasteredPreviewMp3Url,
     targetLufs,
+    setTargetLufs,
     stylePreset,
     resetSession,
     analysisBefore,
+    setAnalysisBefore,
     analysisAfter,
+    setAnalysisAfter,
   } = useMasterSession()
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return
+    if (masteredUrl) return
+    try {
+      const raw = sessionStorage.getItem(MASTER_RESULT_STORAGE_KEY)
+      if (!raw) return
+      const snap = JSON.parse(raw) as {
+        v?: number
+        masteredUrl?: string
+        masteredPreviewMp3Url?: string
+        analysisBefore?: Record<string, unknown> | null
+        analysisAfter?: Record<string, unknown> | null
+        targetLufs?: number
+      }
+      if (snap.v !== 1 || typeof snap.masteredUrl !== "string" || !snap.masteredUrl) return
+      setMasteredUrl(snap.masteredUrl)
+      setMasteredPreviewMp3Url(typeof snap.masteredPreviewMp3Url === "string" ? snap.masteredPreviewMp3Url : "")
+      setAnalysisBefore(snap.analysisBefore ?? null)
+      setAnalysisAfter(snap.analysisAfter ?? null)
+      if (typeof snap.targetLufs === "number" && Number.isFinite(snap.targetLufs)) setTargetLufs(snap.targetLufs)
+    } catch {
+      /* ignore corrupt storage */
+    }
+  }, [
+    masteredUrl,
+    setMasteredUrl,
+    setMasteredPreviewMp3Url,
+    setAnalysisBefore,
+    setAnalysisAfter,
+    setTargetLufs,
+  ])
 
   const [mounted, setMounted] = useState(false)
   const [isMobileClient, setIsMobileClient] = useState(false)
@@ -407,10 +460,9 @@ export default function MasterResultClient() {
   const playHeadSec = windowStart + (playProgress / 100) * windowLen
   const windowEndSec = windowStart + windowLen
 
+  const afterLufsMeasured = toFiniteNumber(analysisAfter?.lufs)
   const afterLufsDisplay =
-    analysisAfter && typeof analysisAfter.lufs === "number" && Number.isFinite(analysisAfter.lufs as number)
-      ? formatLufs(analysisAfter.lufs)
-      : formatLufs(targetLufs)
+    afterLufsMeasured !== null ? formatLufs(afterLufsMeasured) : formatLufs(targetLufs)
 
   const metricRows = [
     { label: "LUFS", before: formatLufs(analysisBefore?.lufs), after: afterLufsDisplay },

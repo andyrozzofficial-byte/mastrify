@@ -1,6 +1,17 @@
 "use client"
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
+
+export const MASTER_RESULT_STORAGE_KEY = "mastrify:master-result-v1"
+
+type MasterResultSnapshot = {
+  v: 1
+  masteredUrl: string
+  masteredPreviewMp3Url: string
+  analysisBefore: Record<string, unknown> | null
+  analysisAfter: Record<string, unknown> | null
+  targetLufs: number
+}
 
 export type MasterStylePreset = "STREAM" | "CLUB" | "LOUD" | "WARM" | "FESTIVAL"
 
@@ -55,6 +66,11 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setMasteredPreviewMp3Url("")
     setAnalysisBefore(null)
     setAnalysisAfter(null)
+    try {
+      if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(MASTER_RESULT_STORAGE_KEY)
+    } catch {
+      /* ignore quota / private mode */
+    }
   }, [])
 
   const resetSession = useCallback(() => {
@@ -72,7 +88,30 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setStereoEnhance(50)
     setLowEndControl(50)
     setClarityPresence(50)
+    try {
+      if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(MASTER_RESULT_STORAGE_KEY)
+    } catch {
+      /* ignore */
+    }
   }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (!masteredUrl) return
+    const payload: MasterResultSnapshot = {
+      v: 1,
+      masteredUrl,
+      masteredPreviewMp3Url,
+      analysisBefore,
+      analysisAfter,
+      targetLufs,
+    }
+    try {
+      sessionStorage.setItem(MASTER_RESULT_STORAGE_KEY, JSON.stringify(payload))
+    } catch {
+      /* ignore */
+    }
+  }, [masteredUrl, masteredPreviewMp3Url, analysisBefore, analysisAfter, targetLufs])
 
   const value = useMemo(
     () => ({

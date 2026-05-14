@@ -148,10 +148,13 @@ const target = referenceAnalysis?.spectral || {
           return reject(new Error("Master completed but output file missing"))
         }
         let analysisAfter = null
-        try {
-          analysisAfter = await analyzeTrack(outputPath)
-        } catch (e) {
-          console.log("POST-MASTER ANALYZE FAILED:", e)
+        for (let attempt = 0; attempt < 2 && !analysisAfter; attempt++) {
+          try {
+            if (attempt > 0) await new Promise((r) => setTimeout(r, 150))
+            analysisAfter = await analyzeTrack(outputPath)
+          } catch (e) {
+            console.log("POST-MASTER ANALYZE FAILED:", e)
+          }
         }
         resolve({
           path: outputPath,
