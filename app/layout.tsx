@@ -53,9 +53,7 @@ export default function RootLayout({
       >
         <SiteHeader />
         <MasterSessionRootProvider>
-          <div className="flex min-h-0 flex-1 flex-col">
-            <main className="flex-1">{children}</main>
-          </div>
+          <main className="w-full">{children}</main>
         </MasterSessionRootProvider>
         <SiteFooter />
       </body>

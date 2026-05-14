@@ -436,7 +436,7 @@ export default function MasterResultClient() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1080px] px-5 pb-24 pt-5 sm:px-6 md:px-10 md:pb-28 md:pt-6 lg:px-12">
+    <div className="mx-auto w-full max-w-[1080px] px-5 pb-12 pt-5 sm:px-6 md:px-10 md:pb-14 md:pt-6 lg:px-12">
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

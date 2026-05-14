@@ -5,7 +5,7 @@ import CinematicBackground from "../components/CinematicBackground"
 
 export default function Pricing() {
   return (
-    <div className="relative min-h-screen overflow-hidden text-white">
+    <div className="relative overflow-hidden text-white">
       <CinematicBackground intensity="strong" />
 
       <div
@@ -17,7 +17,7 @@ export default function Pricing() {
         aria-hidden
       />
 
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-[520px] flex-col items-center justify-start px-5 pb-14 pt-7 sm:max-w-[580px] md:max-w-[640px] md:px-8 md:pb-16 md:pt-8">
+      <main className="relative z-10 mx-auto flex w-full max-w-[520px] flex-col items-center justify-start px-5 pb-10 pt-7 sm:max-w-[580px] md:max-w-[640px] md:px-8 md:pb-12 md:pt-8">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}

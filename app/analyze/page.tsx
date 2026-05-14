@@ -340,10 +340,10 @@ export default function AnalyzePage() {
 
 
   return (
-    <div className="relative min-h-screen text-white">
+    <div className="relative text-white">
       <CinematicBackground />
       <div
-        className={`relative mx-auto flex w-full flex-col items-center px-5 pb-16 pt-4 sm:px-5 md:pb-20 md:pt-5 ${
+        className={`relative mx-auto flex w-full flex-col items-center px-5 pb-10 pt-4 sm:px-5 md:pb-12 md:pt-5 ${
           result ? "max-w-6xl md:max-w-7xl md:px-8" : "max-w-[520px] md:max-w-[568px]"
         }`}
       >

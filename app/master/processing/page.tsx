@@ -115,7 +115,7 @@ export default function MasterProcessingPage() {
   }, [sessionHydrated, file, router, setMasteredUrl, setMasteredPreviewMp3Url, setAnalysisBefore, setAnalysisAfter])
 
   return (
-    <div className="relative flex min-h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-center overflow-hidden px-5 py-10 text-white md:min-h-[calc(100vh-4rem)] md:px-8 md:py-12">
+    <div className="relative flex w-full flex-col items-center overflow-hidden px-5 py-8 text-white md:px-8 md:py-10">
       <CinematicBackground intensity="strong" />
 
       <div className="relative z-10 flex w-full max-w-lg flex-col items-center text-center">

@@ -21,9 +21,9 @@ export default function MasterUploadPage() {
   const openFilePicker = () => inputRef.current?.click()
 
   return (
-    <div className="relative min-h-screen text-white">
+    <div className="relative text-white">
       <CinematicBackground intensity="strong" />
-      <div className="relative mx-auto flex w-full max-w-[520px] flex-col items-center px-5 pb-16 pt-4 sm:px-5 md:max-w-[568px] md:pb-20 md:pt-5">
+      <div className="relative mx-auto flex w-full max-w-[520px] flex-col items-center px-5 pb-10 pt-4 sm:px-5 md:max-w-[568px] md:pb-12 md:pt-5">
         {/* Ambient glow — aligned with analyze hero column */}
         <div
           className="pointer-events-none absolute left-1/2 top-[2%] z-0 h-[min(52vh,520px)] w-[min(92vw,30rem)] -translate-x-1/2 rounded-[3rem] bg-[radial-gradient(ellipse_58%_44%_at_50%_20%,rgba(109,40,217,0.055),rgba(217,70,239,0.018)_48%,transparent_68%)] blur-2xl"

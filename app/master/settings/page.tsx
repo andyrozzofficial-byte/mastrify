@@ -124,9 +124,9 @@ export default function MasterSettingsPage() {
 
   if (!sessionHydrated) {
     return (
-      <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
+      <div className="relative text-white">
         <CinematicBackground />
-        <div className="relative flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6">
+        <div className="relative flex flex-col items-center justify-center gap-4 px-6 py-12">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
           <p className="text-sm text-white/50">Restoring session…</p>
         </div>
@@ -136,9 +136,9 @@ export default function MasterSettingsPage() {
 
   if (!file && analysisBefore) {
     return (
-      <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
+      <div className="relative text-white">
         <CinematicBackground />
-        <div className="relative mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
+        <div className="relative mx-auto flex max-w-md flex-col items-center justify-center gap-5 px-6 py-12 text-center">
           <input
             ref={reconnectInputRef}
             type="file"
@@ -171,9 +171,9 @@ export default function MasterSettingsPage() {
 
   if (!file) {
     return (
-      <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
+      <div className="relative text-white">
         <CinematicBackground />
-        <div className="relative flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6">
+        <div className="relative flex flex-col items-center justify-center gap-4 px-6 py-12">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
           <p className="text-sm text-white/50">Preparing session…</p>
           <Link href="/master" className="text-xs text-purple-300 hover:underline">
@@ -185,9 +185,9 @@ export default function MasterSettingsPage() {
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] text-white md:min-h-[calc(100vh-4rem)]">
+    <div className="relative text-white">
       <CinematicBackground />
-      <div className="relative mx-auto w-full max-w-[720px] px-4 pb-16 pt-5 md:px-6 md:pb-20 md:pt-6">
+      <div className="relative mx-auto w-full max-w-[720px] px-4 pb-10 pt-5 md:px-6 md:pb-12 md:pt-6">
         <div className="relative">
           {/* Radial glow — behind main card */}
           <div
