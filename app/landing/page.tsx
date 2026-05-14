@@ -1,396 +1,166 @@
 "use client"
+
 import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { useState, useEffect, useRef } from "react"
-import { supabase } from "../../lib/supabase"
+import Link from "next/link"
+import type { ReactNode } from "react"
+import CinematicBackground from "../components/CinematicBackground"
+import ScoreRing from "../components/ScoreRing"
+
+const previewRows = [
+  { label: "Low end", status: "Needs work", dot: "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.38)]", statusClass: "text-rose-400" },
+  {
+    label: "Too much dynamic range",
+    status: "Major issue",
+    dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.32)]",
+    statusClass: "text-amber-300",
+  },
+  { label: "Stereo image", status: "Good", dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.28)]", statusClass: "text-emerald-400" },
+  { label: "Loudness", status: "Good", dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.28)]", statusClass: "text-emerald-400" },
+]
+
+const dawLogos = ["Ableton", "FL Studio", "Logic Pro", "Pro Tools", "Studio One"]
+
+function HeroCheck({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-2.5 text-[14px] text-white/65 md:text-[15px]">
+      <span
+        className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border border-white/18 bg-white/[0.05] text-[9px] font-bold text-cyan-200/95"
+        aria-hidden
+      >
+        ✓
+      </span>
+      <span>{children}</span>
+    </div>
+  )
+}
 
 export default function Landing() {
-  const router = useRouter()
-
-  const [email, setEmail] = useState("")
-  const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState("")
-  const [count, setCount] = useState(0)
-  
-
-  // AUDIO
-  const [playing, setPlaying] = useState(false)
-  const [mode, setMode] = useState<"before" | "after">("before")
-  const [progress, setProgress] = useState(0)
-
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-
-  const src =
-    mode === "before" ? "/audio/before.mp3" : "/audio/after.mp3"
-
-  /* LOAD AUDIO */
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    audio.pause()
-    setPlaying(false)
-    setProgress(0)
-
-    audio.src = src
-    audio.load()
-  }, [mode])
-
-  /* PROGRESS */
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    const update = () => {
-      if (!audio.duration) return
-      setProgress((audio.currentTime / audio.duration) * 100)
-    }
-
-    audio.addEventListener("timeupdate", update)
-    return () => audio.removeEventListener("timeupdate", update)
-  }, [])
-
-  const handleSeek = (e: any) => {
-    const audio = audioRef.current
-    if (!audio || !audio.duration) return
-
-    const rect = e.currentTarget.getBoundingClientRect()
-    const percent = (e.clientX - rect.left) / rect.width
-
-    audio.currentTime = percent * audio.duration
-  }
-
-  useEffect(() => {
-    const fetchCount = async () => {
-      const { count } = await supabase
-        .from("waitlist")
-        .select("*", { count: "exact", head: true })
-
-      if (count) setCount(count)
-    }
-
-    fetchCount()
-  }, [])
-
-  const handleSubmit = async () => {
-    setErrorMsg("")
-
-    if (!email) return setErrorMsg("Enter an email")
-    if (!email.includes("@")) return setErrorMsg("Enter a valid email")
-
-    setLoading(true)
-
-    const { error } = await supabase
-      .from("waitlist")
-      .insert([{ email }])
-
-    setLoading(false)
-
-    if (error) {
-      if (error.message.includes("duplicate")) {
-        setErrorMsg("You're already on the list 😉")
-      } else {
-        setErrorMsg("Something went wrong")
-      }
-      return
-    }
-
-    setSubmitted(true)
-    setCount(prev => prev + 1)
-    setEmail("")
-    setTimeout(() => setSubmitted(false), 3000)
-  }
-
-  const togglePlay = async () => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    try {
-      if (playing) {
-        audio.pause()
-        setPlaying(false)
-      } else {
-        await audio.play()
-        setPlaying(true)
-      }
-    } catch (err) {
-      console.log(err)
-    }
-  }
-
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-20 relative overflow-hidden">
+    <div className="relative min-h-[calc(100vh-3.5rem)] overflow-hidden bg-black px-5 pb-16 pt-4 text-white md:min-h-[calc(100vh-4rem)] md:px-10 md:pb-20 md:pt-5 lg:pt-6">
+      <CinematicBackground intensity="strong" />
 
-      <audio
-  ref={audioRef}
-  src={src}
-  playsInline
-  
-  preload="auto"
-  controls={false}
-  controlsList="nodownload nofullscreen noremoteplayback"
-  style={{ display: "none" }}
-/>
-
-      {/* BACKGROUND */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.35),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(59,130,246,0.25),transparent_60%)]" />
-      </div>
-
-      {/* HERO subtle cinematic layer (minimal movement) */}
       <motion.div
         aria-hidden="true"
-        className="absolute top-0 left-0 right-0 h-[520px] -z-10 pointer-events-none"
+        className="pointer-events-none absolute left-0 right-0 top-0 h-[min(680px,78vh)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <motion.div
-          className="absolute inset-0 bg-[conic-gradient(from_180deg_at_50%_35%,rgba(139,92,246,0.10),rgba(59,130,246,0.08),rgba(139,92,246,0.10))] blur-3xl"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 90, ease: "linear", repeat: Infinity }}
-          style={{ transformOrigin: "50% 35%" }}
+          className="absolute inset-0 bg-[radial-gradient(ellipse_88%_58%_at_50%_-8%,rgba(124,58,237,0.15),transparent_58%),radial-gradient(ellipse_42%_48%_at_88%_18%,rgba(34,211,238,0.08),transparent_50%)]"
+          animate={{ opacity: [0.88, 1, 0.88] }}
+          transition={{ duration: 8, ease: "easeInOut", repeat: Infinity }}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.06),transparent_55%)]" />
-        <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.6)_0px,rgba(255,255,255,0.6)_1px,transparent_1px,transparent_3px)]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/40 to-black" />
       </motion.div>
 
-      {/* 🔥 MASRIFY LOGO TEXT */}
-      <div className="mb-6 text-center">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight 
-bg-gradient-to-r from-white via-purple-300 to-purple-500 
-bg-clip-text text-transparent 
-drop-shadow-[0_0_35px_rgba(139,92,246,0.8)]">
-          Mastrify
-        </h1>
-        
-      </div>
-
-      {/* 🔥 HEADLINE */}
-      <div className="text-center max-w-2xl">
-
-        <h1 className="text-5xl md:text-7xl font-extrabold leading-tight 
-bg-gradient-to-r from-white via-purple-200 to-blue-400 
-bg-clip-text text-transparent 
-drop-shadow-[0_0_40px_rgba(139,92,246,0.6)]">
-  Fix your mix before <br /> you master it.
-</h1>
-
-        <p className="mt-6 text-white/70 text-lg">
-          AI shows exactly what's wrong with your track — before you release it.
-        </p>
-
-        {/* INPUT */}
-        <div className="mt-10 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 blur-xl rounded-full" />
-
-          <div className="relative flex items-center bg-white/[0.05] border border-white/10 rounded-full p-2 backdrop-blur-xl">
-
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              placeholder="Enter your email"
-              className="bg-transparent px-4 py-2 flex-1 outline-none"
-            />
-
-            <button
-  onClick={async () => {
-  try {
-    if (email && email.includes("@")) {
-      await supabase.from("waitlist").insert([{ email }])
-    }
-  } catch (err) {
-    console.log("waitlist error", err)
-  }
-
-  router.push("/analyze")
-}}
-  className="relative px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-blue-500
-hover:scale-[1.04] active:scale-[0.985] transition-all duration-300
-shadow-[0_16px_55px_rgba(0,0,0,0.55)] hover:shadow-[0_22px_75px_rgba(0,0,0,0.62)]"
->
-  <span className="absolute inset-0 rounded-full bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
-  <span className="absolute -inset-[1px] rounded-full bg-gradient-to-r from-purple-400/40 to-blue-400/40 blur-lg opacity-70" />
-  <span className="relative">Try it now</span>
-</button>
-
-          </div>
-        </div>
-
-        {count > 0 ? (
-  <p className="text-xs text-white/30 mt-3">
-    Join {count}+ producers already testing Mastrify
-  </p>
-) : (
-  <p className="text-xs text-white/20 mt-3">
-    Fix your mix in seconds
-  </p>
-)}
-
-      </div>
-
-      {/* PLAYER */}
-      <div className="mt-24 md:mt-28 w-full max-w-3xl">
-
-        <h2 className="text-center text-2xl mb-6">
-          Hear the difference
-        </h2>
-
-        <div className="relative">
-
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/14 to-blue-500/12 blur-2xl rounded-2xl" />
-
-          <div className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_22px_70px_rgba(0,0,0,0.55)]">
-
-            {/* TOGGLE */}
-            <div className="flex justify-center gap-4 mb-6">
-              {["before", "after"].map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m as any)}
-                  className={`px-6 py-2 rounded-full transition ${
-                    mode === m
-                      ? "bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_18px_rgba(139,92,246,0.62)]"
-                      : "bg-white/10 text-white/50"
-                  }`}
-                >
-                  {m.toUpperCase()}
-                </button>
-              ))}
+      <div className="relative z-10 mx-auto flex w-full max-w-[1240px] flex-col pb-2">
+        {/* Hero */}
+        <div className="grid items-start gap-11 pt-0 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-x-14 lg:gap-y-8 lg:pt-1 xl:gap-x-16">
+          <div className="text-center lg:max-w-none lg:pr-2 lg:text-left">
+            <div className="inline-flex rounded-full border border-purple-500/38 bg-purple-500/[0.1] px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-purple-200/95 shadow-[0_0_22px_rgba(168,85,247,0.22)]">
+              AI powered
             </div>
 
-            {/* PLAYER */}
-            <div className="relative h-20 flex items-center">
+            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.05] tracking-[-0.035em] text-white sm:text-[2.85rem] lg:mt-8 lg:text-[3.65rem] lg:leading-[1.03] xl:text-[4rem]">
+              Fix your mix{" "}
+              <span className="bg-gradient-to-r from-cyan-300 via-sky-400 to-indigo-400 bg-clip-text text-transparent">before</span>
+              <br />
+              you master it.
+            </h1>
 
-              {/* WAVEFORM */}
-              <div
-                onClick={handleSeek}
-                className="absolute inset-0 flex items-center cursor-pointer"
+            <p className="mx-auto mt-6 max-w-[29rem] text-[16px] leading-relaxed text-white/45 sm:text-[17px] lg:mx-0 lg:mt-7 lg:max-w-[31rem] lg:text-lg lg:leading-relaxed">
+              AI shows you exactly what&apos;s holding your track back — before you release it.
+            </p>
+
+            <div className="mx-auto mt-9 flex w-full max-w-[29rem] flex-col gap-3.5 sm:max-w-none sm:flex-row sm:justify-center lg:mx-0 lg:mt-10 lg:max-w-none lg:justify-start">
+              <Link
+                href="/analyze"
+                className="inline-flex min-h-[56px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-8 py-4 text-[15px] font-semibold text-white shadow-[0_0_34px_rgba(99,102,241,0.36),0_22px_56px_rgba(0,0,0,0.48)] transition hover:brightness-110 sm:min-w-[240px] sm:flex-none lg:min-h-[58px] lg:px-10 lg:text-base"
               >
-                <div className="w-full flex justify-between text-[6px] text-white/20">
-                  {Array.from({ length: 120 }).map((_, i) => (
-                    <span key={i}>|</span>
+                Analyze my mix — It&apos;s free
+              </Link>
+              <Link
+                href="/master"
+                className="inline-flex min-h-[56px] flex-1 items-center justify-center rounded-xl border border-white/22 bg-transparent px-8 py-4 text-[15px] font-semibold text-white/95 transition hover:border-white/38 hover:bg-white/[0.07] hover:shadow-[0_0_22px_rgba(255,255,255,0.05)] sm:min-w-[192px] sm:flex-none lg:min-h-[58px] lg:text-base"
+              >
+                Try Mastering
+              </Link>
+            </div>
+
+            <div className="mx-auto mt-9 flex max-w-md flex-col items-start gap-3.5 sm:mx-auto sm:max-w-xl sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-9 sm:gap-y-3 lg:mx-0 lg:mt-10 lg:justify-start">
+              <HeroCheck>Free analysis</HeroCheck>
+              <HeroCheck>Instant feedback</HeroCheck>
+              <HeroCheck>No signup</HeroCheck>
+            </div>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-[500px] lg:mx-0 lg:max-w-none lg:pt-2">
+            {/* Stronger purple / cyan halo behind preview card */}
+            <div
+              className="pointer-events-none absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-purple-500/22 via-fuchsia-500/8 to-cyan-400/16 opacity-90 blur-2xl"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute -inset-12 rounded-[2.5rem] bg-gradient-to-tr from-purple-600/14 via-transparent to-cyan-500/12 blur-3xl"
+              aria-hidden
+            />
+            <div className="relative">
+              <div className="overflow-hidden rounded-[22px] border border-white/[0.13] bg-gradient-to-b from-white/[0.09] to-black/[0.76] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_44px_110px_rgba(0,0,0,0.62)] backdrop-blur-2xl md:rounded-3xl md:p-11 lg:p-12">
+                <div className="flex flex-col-reverse items-center gap-8 sm:flex-row sm:items-center sm:justify-between sm:gap-7">
+                  <p className="max-w-[17rem] text-center text-[16px] leading-snug text-white/72 sm:max-w-[15rem] sm:text-left md:text-[17px] md:leading-snug">
+                    Your mix is <span className="font-semibold text-white">44%</span> ready for release
+                  </p>
+                  <ScoreRing value={44} size={192} variant="percent" />
+                </div>
+
+                <div className="mt-8 space-y-0 divide-y divide-white/[0.07] rounded-xl border border-white/[0.08] bg-black/30">
+                  {previewRows.map((row) => (
+                    <div key={row.label} className="flex items-center justify-between gap-4 px-4 py-3.5 md:px-5 md:py-[15px]">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${row.dot}`} />
+                        <span className="truncate text-[13px] text-white/85 md:text-[14px]">{row.label}</span>
+                      </div>
+                      <span className={`shrink-0 text-[12px] font-medium md:text-[13px] ${row.statusClass}`}>{row.status}</span>
+                    </div>
                   ))}
                 </div>
 
-                <div
-                  className="absolute left-0 h-[2px] bg-gradient-to-r from-purple-400 to-blue-400 shadow-[0_0_12px_rgba(139,92,246,0.45)]"
-                  style={{ width: `${progress}%` }}
-                />
-
-                <div
-                  className="absolute w-5 h-5 rounded-full 
-bg-white 
-shadow-[0_0_25px_white] 
-border border-white/50"
-                  style={{ left: `${progress}%` }}
-                />
+                <Link
+                  href="/analyze"
+                  className="mt-7 flex min-h-[52px] w-full items-center justify-center rounded-xl border border-purple-500/42 bg-gradient-to-b from-white/[0.09] to-black/60 text-[15px] font-semibold text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.11),0_16px_48px_rgba(0,0,0,0.4)] transition hover:border-purple-400/55 hover:brightness-105"
+                >
+                  Analyze your mix
+                </Link>
               </div>
-
-              {/* PLAY */}
-              <div className="absolute left-1/2 -translate-x-1/2">
-                <motion.button
-  onClick={togglePlay}
-  onTouchStart={() => {}}
-  animate={
-  playing
-    ? { scale: 1 }
-    : { scale: [1, 1.15, 1] }
-}
-  transition={{
-    duration: 1.8,
-    repeat: Infinity,
-  }}
-  className="w-20 h-20 rounded-full 
-  bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 
-  flex items-center justify-center 
-  hover:scale-110 active:scale-95 transition 
-  shadow-[0_0_70px_rgba(139,92,246,0.78)]"
->
-  {playing ? (
-  <div className="flex gap-[3px]">
-    <div className="w-[3px] h-4 bg-white rounded-sm" />
-    <div className="w-[3px] h-4 bg-white rounded-sm" />
-  </div>
-) : (
-  <svg
-    viewBox="0 0 24 24"
-    className="w-6 h-6 fill-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
-  >
-    <polygon points="5,3 19,12 5,21" />
-  </svg>
-)}
-</motion.button>
-              </div>
-
             </div>
-
-            <p className="mt-6 text-center text-sm text-white/50">
-              <span className="block">Before: muddy, harsh, flat</span>
-              <span className="block mt-1">After: clean, punchy, wide</span>
-            </p>
-
           </div>
         </div>
+
+        {/* Divider */}
+        <div className="relative mx-auto mt-16 w-full md:mt-[4.25rem] lg:mt-20">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+          <div
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[3px] w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-transparent via-fuchsia-400/70 to-transparent opacity-90 blur-[6px] shadow-[0_0_18px_rgba(217,70,239,0.45),0_0_40px_rgba(168,85,247,0.22)]"
+            aria-hidden
+          />
+        </div>
+
+        {/* Trusted by + DAW row */}
+        <div className="mx-auto mt-12 w-full max-w-[920px] md:mt-14">
+          <p className="text-center text-[13px] leading-relaxed text-white/36 md:text-sm">
+            Trusted by 8,000+ producers and artists worldwide
+          </p>
+          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 sm:gap-x-10 md:mt-9 md:gap-x-12 lg:gap-x-14">
+            {dawLogos.map((name) => (
+              <li key={name}>
+                <span className="block select-none text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-white/24 transition hover:text-white/34 md:text-xs">
+                  {name}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-
-      {/* ANALYSIS + FEEDBACK (oförändrat) */}
-
-{/* ANALYSIS */}
-<div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl w-full">
-
-  {[
-    ["LUFS", "-17", "target -9"],
-    ["BASS", "Weak"],
-    ["HIGHS", "Harsh"],
-    ["STEREO", "Narrow"],
-  ].map((item, i) => (
-    <div key={i} className="relative">
-
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/14 to-blue-500/12 blur-xl rounded-xl" />
-
-      <div className="relative h-[120px] flex flex-col justify-center bg-white/[0.04] border border-white/10 rounded-xl p-5 text-center backdrop-blur-xl hover:scale-[1.05] transition shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_18px_50px_rgba(0,0,0,0.52)]">
-        <p className="text-xs text-white/40">{item[0]}</p>
-        <p className="text-lg font-semibold mt-2">{item[1]}</p>
-        {item[2] && <p className="text-xs text-white/40">{item[2]}</p>}
-      </div>
-
     </div>
-  ))}
-
-</div>
-
-{/* FEEDBACK */}
-<div className="mt-16 max-w-xl w-full">
-
-  <h2 className="text-center text-2xl mb-6">
-    What needs fixing
-  </h2>
-
-  <div className="relative">
-
-    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/14 to-blue-500/12 blur-2xl rounded-2xl" />
-
-    <div className="relative bg-white/[0.04] border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shadow-[0_20px_65px_rgba(0,0,0,0.55)]">
-
-      <ul className="space-y-3 text-white/70">
-        <li>• Your drop lacks low-end weight</li>
-        <li>• High frequencies are too sharp</li>
-        <li>• Mix feels too narrow</li>
-      </ul>
-
-    </div>
-
-  </div>
-
-</div>
-
-    </main>
-
-    
   )
 }
