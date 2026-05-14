@@ -955,6 +955,11 @@ app.get("/health", (req, res) => {
   res.status(200).send("OK")
 })
 
+// Temporary: proves Railway is running this server.js (remove after deploy verified)
+app.get("/debug-version", (req, res) => {
+  res.json({ debugVersion: "NEW_MASTER_RESPONSE_V2" })
+})
+
 // 🔥 STARTA SERVER DIREKT
 app.listen(PORT, "0.0.0.0", () => {
   console.log("🔥 Server running on port", PORT)
