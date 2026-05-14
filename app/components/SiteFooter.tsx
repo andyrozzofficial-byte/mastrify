@@ -38,7 +38,7 @@ function SocialPlaceholder({
   return (
     <button
       type="button"
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/40 transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white/65"
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.05] text-white/48 transition hover:border-white/[0.18] hover:bg-white/[0.09] hover:text-white/72"
       aria-label={`${label} (coming soon)`}
     >
       {children}
@@ -50,9 +50,9 @@ export default function SiteFooter() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="relative mt-auto border-t border-white/[0.06] bg-black/[0.72] shadow-[0_-1px_0_rgba(255,255,255,0.03)] backdrop-blur-2xl backdrop-saturate-150">
+    <footer className="relative mt-auto border-t border-white/[0.1] bg-black/[0.88] shadow-[0_-1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl backdrop-saturate-150">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_50%_100%,rgba(88,28,135,0.12),transparent_58%),radial-gradient(ellipse_40%_35%_at_90%_30%,rgba(34,211,238,0.05),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_50%_100%,rgba(88,28,135,0.16),transparent_58%),radial-gradient(ellipse_40%_35%_at_90%_30%,rgba(34,211,238,0.07),transparent_50%)]"
         aria-hidden
       />
 
@@ -60,7 +60,7 @@ export default function SiteFooter() {
         <span id="privacy" className="sr-only">
           Privacy policy — placeholder anchor for footer Privacy link until a dedicated page exists.
         </span>
-        <div className="grid gap-10 md:grid-cols-12 md:gap-8 lg:gap-10">
+        <div className="grid gap-8 md:grid-cols-12 md:gap-x-12 md:gap-y-8 lg:gap-x-14 lg:gap-y-8">
           <div className="md:col-span-4 lg:col-span-3">
             <Link href="/" className="inline-flex items-center gap-2.5">
               <WaveMark className="h-5 w-5 shrink-0 text-purple-400" />
@@ -68,20 +68,20 @@ export default function SiteFooter() {
                 Mastrify
               </span>
             </Link>
-            <p className="mt-3 max-w-[16.5rem] text-[12px] leading-relaxed text-white/38 md:text-[13px]">
+            <p className="mt-3 max-w-[16.5rem] text-[12px] leading-relaxed text-white/48 md:text-[13px]">
               AI-powered tools to help producers fix their mixes and release with confidence.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:gap-10 md:col-span-4 md:grid-cols-2 lg:col-span-5">
+          <div className="grid grid-cols-2 gap-10 sm:gap-12 md:col-span-4 md:grid-cols-2 lg:col-span-5 lg:gap-x-14">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/38">Product</p>
-              <ul className="mt-3 space-y-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/46">Product</p>
+              <ul className="mt-3.5 space-y-2.5">
                 {product.map(({ href, label }) => (
                   <li key={href}>
                     <Link
                       href={href}
-                      className="text-[13px] font-medium text-white/55 transition hover:text-white/90 md:text-sm"
+                      className="text-[13px] font-medium text-white/62 transition hover:text-white/92 md:text-sm"
                     >
                       {label}
                     </Link>
@@ -90,13 +90,13 @@ export default function SiteFooter() {
               </ul>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/38">Support</p>
-              <ul className="mt-3 space-y-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/46">Support</p>
+              <ul className="mt-3.5 space-y-2.5">
                 {support.map(({ href, label }) => (
                   <li key={label}>
                     <Link
                       href={href}
-                      className="text-[13px] font-medium text-white/55 transition hover:text-white/90 md:text-sm"
+                      className="text-[13px] font-medium text-white/62 transition hover:text-white/92 md:text-sm"
                     >
                       {label}
                     </Link>
@@ -107,21 +107,22 @@ export default function SiteFooter() {
           </div>
 
           <div className="md:col-span-4 lg:col-span-4">
-            <div className="relative overflow-hidden rounded-xl border border-white/[0.09] bg-gradient-to-br from-white/[0.06] to-black/[0.55] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_0_1px_rgba(139,92,246,0.06),0_16px_48px_rgba(0,0,0,0.45)] ring-1 ring-purple-500/10 md:p-5">
+            <div className="relative overflow-hidden rounded-xl border border-white/[0.14] bg-gradient-to-br from-white/[0.1] to-black/[0.62] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(167,139,250,0.12),0_0_36px_rgba(88,28,135,0.18),0_20px_56px_rgba(0,0,0,0.5)] ring-1 ring-purple-400/22 md:p-6">
               <div
-                className="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-purple-500/15 blur-2xl"
+                className="pointer-events-none absolute -right-4 -top-8 h-32 w-32 rounded-full bg-purple-500/22 blur-2xl"
                 aria-hidden
               />
-              <div className="relative max-w-[16rem]">
-                <p className="text-[15px] font-semibold leading-snug tracking-tight text-white md:text-base">
+              <div className="pointer-events-none absolute bottom-0 right-0 h-24 w-32 rounded-full bg-cyan-500/10 blur-3xl" aria-hidden />
+              <div className="relative max-w-[17rem]">
+                <p className="text-[16px] font-semibold leading-snug tracking-tight text-white md:text-[1.05rem]">
                   Ready to master your track?
                 </p>
-                <p className="mt-1.5 text-[11px] leading-relaxed text-white/38 md:text-[12px]">
+                <p className="mt-2 text-[12px] leading-relaxed text-white/44 md:text-[13px]">
                   Studio-grade AI mastering in minutes — pay only for what you export.
                 </p>
                 <Link
                   href="/master"
-                  className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-4 py-2.5 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(91,33,182,0.22),inset_0_1px_0_rgba(255,255,255,0.1)] ring-1 ring-white/10 transition hover:brightness-110 sm:w-auto sm:px-5"
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_0_22px_rgba(91,33,182,0.32),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/12 transition hover:brightness-110 sm:w-auto sm:px-6"
                 >
                   Try mastering
                 </Link>
@@ -130,9 +131,9 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-stretch gap-6 border-t border-white/[0.05] pt-8 md:mt-9 md:flex-row md:items-center md:justify-between md:gap-4 md:pt-7">
+        <div className="mt-10 flex flex-col items-stretch gap-6 border-t border-white/[0.08] pt-8 md:mt-10 md:flex-row md:items-center md:justify-between md:gap-6 md:pt-8">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/32">Follow us</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">Follow us</p>
             <div className="mt-2.5 flex gap-2">
               <SocialPlaceholder label="Instagram">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
@@ -154,7 +155,7 @@ export default function SiteFooter() {
             </div>
           </div>
           <div className="text-center md:text-right">
-            <p className="text-[11px] text-white/28 md:text-xs">© {year} Mastrify. All rights reserved.</p>
+            <p className="text-[11px] text-white/38 md:text-xs">© {year} Mastrify. All rights reserved.</p>
           </div>
         </div>
       </div>

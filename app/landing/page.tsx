@@ -36,7 +36,7 @@ function HeroCheck({ children }: { children: ReactNode }) {
 
 export default function Landing() {
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] overflow-hidden bg-black px-5 pb-16 pt-4 text-white md:min-h-[calc(100vh-4rem)] md:px-10 md:pb-20 md:pt-5 lg:pt-6">
+    <div className="relative overflow-hidden bg-black px-5 pb-10 pt-4 text-white md:px-10 md:pb-12 md:pt-5 lg:pt-5">
       <CinematicBackground intensity="strong" />
 
       <motion.div
@@ -53,26 +53,26 @@ export default function Landing() {
         />
       </motion.div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[1240px] flex-col pb-2">
+      <div className="relative z-10 mx-auto flex w-full max-w-[1240px] flex-col pb-0">
         {/* Hero */}
-        <div className="grid items-start gap-11 pt-0 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-x-14 lg:gap-y-8 lg:pt-1 xl:gap-x-16">
+        <div className="grid items-start gap-8 pt-0 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-x-14 lg:gap-y-6 lg:pt-0 xl:gap-x-16">
           <div className="text-center lg:max-w-none lg:pr-2 lg:text-left">
             <div className="inline-flex rounded-full border border-purple-500/38 bg-purple-500/[0.1] px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-purple-200/95 shadow-[0_0_22px_rgba(168,85,247,0.22)]">
               AI powered
             </div>
 
-            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.05] tracking-[-0.035em] text-white sm:text-[2.85rem] lg:mt-8 lg:text-[3.65rem] lg:leading-[1.03] xl:text-[4rem]">
+            <h1 className="mt-5 text-[2.65rem] font-extrabold leading-[1.05] tracking-[-0.035em] text-white sm:text-[2.85rem] lg:mt-6 lg:text-[3.65rem] lg:leading-[1.03] xl:text-[4rem]">
               Fix your mix{" "}
               <span className="bg-gradient-to-r from-cyan-300 via-sky-400 to-indigo-400 bg-clip-text text-transparent">before</span>
               <br />
               you master it.
             </h1>
 
-            <p className="mx-auto mt-6 max-w-[29rem] text-[16px] leading-relaxed text-white/45 sm:text-[17px] lg:mx-0 lg:mt-7 lg:max-w-[31rem] lg:text-lg lg:leading-relaxed">
+            <p className="mx-auto mt-5 max-w-[29rem] text-[16px] leading-relaxed text-white/45 sm:text-[17px] lg:mx-0 lg:mt-6 lg:max-w-[31rem] lg:text-lg lg:leading-relaxed">
               AI shows you exactly what&apos;s holding your track back — before you release it.
             </p>
 
-            <div className="mx-auto mt-9 flex w-full max-w-[29rem] flex-col gap-3.5 sm:max-w-none sm:flex-row sm:justify-center lg:mx-0 lg:mt-10 lg:max-w-none lg:justify-start">
+            <div className="mx-auto mt-7 flex w-full max-w-[29rem] flex-col gap-3.5 sm:max-w-none sm:flex-row sm:justify-center lg:mx-0 lg:mt-8 lg:max-w-none lg:justify-start">
               <Link
                 href="/analyze"
                 className="inline-flex min-h-[56px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-8 py-4 text-[15px] font-semibold text-white shadow-[0_0_34px_rgba(99,102,241,0.36),0_22px_56px_rgba(0,0,0,0.48)] transition hover:brightness-110 sm:min-w-[240px] sm:flex-none lg:min-h-[58px] lg:px-10 lg:text-base"
@@ -87,14 +87,14 @@ export default function Landing() {
               </Link>
             </div>
 
-            <div className="mx-auto mt-9 flex max-w-md flex-col items-start gap-3.5 sm:mx-auto sm:max-w-xl sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-9 sm:gap-y-3 lg:mx-0 lg:mt-10 lg:justify-start">
+            <div className="mx-auto mt-7 flex max-w-md flex-col items-start gap-3 sm:mx-auto sm:max-w-xl sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-8 sm:gap-y-2.5 lg:mx-0 lg:mt-8 lg:justify-start">
               <HeroCheck>Free analysis</HeroCheck>
               <HeroCheck>Instant feedback</HeroCheck>
               <HeroCheck>No signup</HeroCheck>
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[500px] lg:mx-0 lg:max-w-none lg:pt-2">
+          <div className="relative mx-auto w-full max-w-[500px] lg:mx-0 lg:max-w-none lg:pt-0">
             {/* Stronger purple / cyan halo behind preview card */}
             <div
               className="pointer-events-none absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-purple-500/22 via-fuchsia-500/8 to-cyan-400/16 opacity-90 blur-2xl"
@@ -106,14 +106,14 @@ export default function Landing() {
             />
             <div className="relative">
               <div className="overflow-hidden rounded-[22px] border border-white/[0.13] bg-gradient-to-b from-white/[0.09] to-black/[0.76] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_44px_110px_rgba(0,0,0,0.62)] backdrop-blur-2xl md:rounded-3xl md:p-11 lg:p-12">
-                <div className="flex flex-col-reverse items-center gap-8 sm:flex-row sm:items-center sm:justify-between sm:gap-7">
+                <div className="flex flex-col-reverse items-center gap-6 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
                   <p className="max-w-[17rem] text-center text-[16px] leading-snug text-white/72 sm:max-w-[15rem] sm:text-left md:text-[17px] md:leading-snug">
                     Your mix is <span className="font-semibold text-white">44%</span> ready for release
                   </p>
                   <ScoreRing value={44} size={192} variant="percent" />
                 </div>
 
-                <div className="mt-8 space-y-0 divide-y divide-white/[0.07] rounded-xl border border-white/[0.08] bg-black/30">
+                <div className="mt-6 space-y-0 divide-y divide-white/[0.07] rounded-xl border border-white/[0.08] bg-black/30">
                   {previewRows.map((row) => (
                     <div key={row.label} className="flex items-center justify-between gap-4 px-4 py-3.5 md:px-5 md:py-[15px]">
                       <div className="flex min-w-0 items-center gap-3">
@@ -127,7 +127,7 @@ export default function Landing() {
 
                 <Link
                   href="/analyze"
-                  className="mt-7 flex min-h-[52px] w-full items-center justify-center rounded-xl border border-purple-500/42 bg-gradient-to-b from-white/[0.09] to-black/60 text-[15px] font-semibold text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.11),0_16px_48px_rgba(0,0,0,0.4)] transition hover:border-purple-400/55 hover:brightness-105"
+                  className="mt-6 flex min-h-[52px] w-full items-center justify-center rounded-xl border border-purple-500/42 bg-gradient-to-b from-white/[0.09] to-black/60 text-[15px] font-semibold text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.11),0_16px_48px_rgba(0,0,0,0.4)] transition hover:border-purple-400/55 hover:brightness-105"
                 >
                   Analyze your mix
                 </Link>
@@ -137,7 +137,7 @@ export default function Landing() {
         </div>
 
         {/* Divider */}
-        <div className="relative mx-auto mt-16 w-full md:mt-[4.25rem] lg:mt-20">
+        <div className="relative mx-auto mt-10 w-full md:mt-11 lg:mt-12">
           <div className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
           <div
             className="pointer-events-none absolute left-1/2 top-1/2 h-[3px] w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-transparent via-fuchsia-400/70 to-transparent opacity-90 blur-[6px] shadow-[0_0_18px_rgba(217,70,239,0.45),0_0_40px_rgba(168,85,247,0.22)]"
@@ -146,14 +146,14 @@ export default function Landing() {
         </div>
 
         {/* Trusted by + DAW row */}
-        <div className="mx-auto mt-12 w-full max-w-[920px] md:mt-14">
-          <p className="text-center text-[13px] leading-relaxed text-white/36 md:text-sm">
+        <div className="mx-auto mt-6 w-full max-w-[920px] md:mt-7">
+          <p className="text-center text-[13px] leading-relaxed text-white/42 md:text-sm">
             Trusted by 8,000+ producers and artists worldwide
           </p>
-          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 sm:gap-x-10 md:mt-9 md:gap-x-12 lg:gap-x-14">
+          <ul className="mt-5 flex flex-wrap items-center justify-center gap-x-7 gap-y-2.5 sm:gap-x-9 md:mt-6 md:gap-x-11 lg:gap-x-12">
             {dawLogos.map((name) => (
               <li key={name}>
-                <span className="block select-none text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-white/24 transition hover:text-white/34 md:text-xs">
+                <span className="block select-none text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-white/30 transition hover:text-white/40 md:text-xs">
                   {name}
                 </span>
               </li>
