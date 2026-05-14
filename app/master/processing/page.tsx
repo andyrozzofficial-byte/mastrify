@@ -10,21 +10,44 @@ import { useMasterSession } from "../MasterSessionProvider"
 
 const API = "https://mastrify-backend-production.up.railway.app"
 
-const STEPS = [
-  "Initializing mastering engine",
-  "Balancing low-end",
+/** Display steps — must stay in sync with timed progression before the API call */
+const UI_STEPS = [
+  "Analyzing mix",
+  "Balancing EQ",
+  "Optimizing dynamics",
   "Enhancing stereo image",
-  "Optimizing loudness",
-  "Controlling dynamics",
   "Finalizing master",
-]
+] as const
+
+const STEP_DELAYS_MS = [480, 620, 620, 720, 400] as const
+
+function AudioWaveIcon({ className }: { className?: string }) {
+  const heightsPx = [14, 24, 32, 22, 17]
+  return (
+    <div className={`flex h-14 w-14 items-end justify-center gap-[5px] md:h-16 md:w-16 ${className ?? ""}`} aria-hidden>
+      {heightsPx.map((h, i) => (
+        <motion.div
+          key={i}
+          className="w-[5px] rounded-full bg-gradient-to-t from-violet-400 via-purple-400 to-fuchsia-300/95"
+          style={{ height: h, transformOrigin: "bottom" }}
+          animate={{ scaleY: [0.88, 1.06, 0.9, 1.04, 0.88] }}
+          transition={{
+            duration: 1.45 + i * 0.06,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.1,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
 
 export default function MasterProcessingPage() {
   const router = useRouter()
   const { file, setMasteredUrl, setMasteredPreviewMp3Url } = useMasterSession()
-  const [line, setLine] = useState(STEPS[0])
-  const [tick, setTick] = useState(0)
-  const [doneStep, setDoneStep] = useState(-1)
+  /** Index of the step currently in progress (0–4). */
+  const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
     if (!file) {
@@ -37,11 +60,10 @@ export default function MasterProcessingPage() {
     const ac = new AbortController()
 
     const run = async () => {
-      for (let i = 0; i < STEPS.length; i++) {
+      for (let i = 0; i < UI_STEPS.length; i++) {
         if (cancelled) return
-        setDoneStep(i)
-        setLine(STEPS[i] + "…")
-        await sleep(i === 0 ? 500 : 800)
+        setActiveStep(i)
+        await sleep(STEP_DELAYS_MS[i] ?? 600)
       }
 
       try {
@@ -66,7 +88,7 @@ export default function MasterProcessingPage() {
           masteredUrl: mastered || undefined,
         })
 
-        await sleep(500)
+        await sleep(420)
         if (!cancelled) router.replace("/master/result")
       } catch (e: unknown) {
         const aborted =
@@ -79,71 +101,129 @@ export default function MasterProcessingPage() {
     }
 
     run()
-    const pulse = setInterval(() => setTick((t) => t + 1), 120)
     return () => {
       cancelled = true
-      clearInterval(pulse)
       ac.abort()
     }
   }, [file, router, setMasteredUrl, setMasteredPreviewMp3Url])
 
   return (
-    <div className="relative flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center overflow-hidden px-6 pb-16 text-white md:min-h-[calc(100vh-4rem)]">
+    <div className="relative flex min-h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-center overflow-hidden px-5 py-14 text-white md:min-h-[calc(100vh-4rem)] md:px-8 md:py-16">
       <CinematicBackground intensity="strong" />
-      <motion.div
-        className="relative flex h-52 w-52 items-center justify-center rounded-full"
-        animate={{ rotate: tick * 2 }}
-        transition={{ duration: 0.25, ease: "linear" }}
-      >
-        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500/32 via-cyan-400/14 to-blue-500/22 blur-3xl" />
-        <div className="absolute inset-3 rounded-full border border-white/15 bg-black/50 backdrop-blur-2xl" />
-        <div className="relative flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/35 to-cyan-500/25 shadow-[0_0_48px_rgba(139,92,246,0.28),0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10">
-          <svg className="h-12 w-12 text-white/90" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-          </svg>
-        </div>
-      </motion.div>
 
-      <motion.p
-        key={line}
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative mt-12 max-w-lg text-center text-sm font-medium tracking-wide text-white/75 md:text-base"
-      >
-        {line}
-      </motion.p>
+      <div className="relative z-10 flex w-full max-w-lg flex-col items-center text-center">
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: "easeOut" }}
+          className="max-w-[22rem] text-[1.65rem] font-bold leading-tight tracking-tight text-white sm:text-[1.85rem] md:max-w-none md:text-[2rem]"
+        >
+          AI is mastering your track
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.06, ease: "easeOut" }}
+          className="mt-3 text-[13px] leading-relaxed text-white/42 md:text-sm"
+        >
+          This usually takes 30–60 seconds.
+        </motion.p>
 
-      <div className="relative mt-10 w-full max-w-md rounded-2xl border border-white/[0.08] bg-black/40 p-6 backdrop-blur-xl">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Progress</p>
-        <ul className="mt-4 space-y-3">
-          {STEPS.map((label, i) => {
-            const done = i <= doneStep
-            return (
-              <li key={label} className={`flex items-center gap-3 text-sm transition ${done ? "text-white" : "text-white/35"}`}>
-                <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                    done ? "bg-emerald-500/25 text-emerald-300 ring-1 ring-emerald-400/40" : "border border-white/10 bg-white/[0.03]"
+        {/* Orb */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}
+          className="relative mt-12 flex w-[min(17.5rem,78vw)] shrink-0 items-center justify-center md:mt-14 md:w-[min(19rem,72vw)]"
+        >
+          <motion.div
+            className="pointer-events-none absolute inset-[-18%] rounded-full bg-gradient-to-tr from-violet-600/25 via-indigo-500/12 to-sky-500/20 blur-3xl"
+            animate={{ opacity: [0.55, 0.75, 0.55], scale: [1, 1.06, 1] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+            aria-hidden
+          />
+          <motion.div
+            className="pointer-events-none absolute inset-[-8%] rounded-full bg-violet-500/10 blur-2xl"
+            animate={{ opacity: [0.35, 0.55, 0.35] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            aria-hidden
+          />
+
+          <div className="relative rounded-full p-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.06)] ring-1 ring-white/[0.04]">
+            <div
+              className="rounded-full p-[2.5px] md:p-[3px]"
+              style={{
+                background: "linear-gradient(135deg, #a78bfa 0%, #6366f1 45%, #38bdf8 100%)",
+              }}
+            >
+              <motion.div
+                className="relative flex h-[10.25rem] w-[10.25rem] items-center justify-center rounded-full bg-[#07070a]/95 backdrop-blur-md md:h-[11.25rem] md:w-[11.25rem]"
+                animate={{ boxShadow: ["0 0 0 0 rgba(139,92,246,0)", "0 0 48px rgba(99,102,241,0.12)", "0 0 0 0 rgba(139,92,246,0)"] }}
+                transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <motion.div
+                  className="absolute inset-[18%] rounded-full bg-gradient-to-b from-violet-500/12 to-transparent blur-xl"
+                  animate={{ opacity: [0.4, 0.65, 0.4] }}
+                  transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+                  aria-hidden
+                />
+                <div className="relative z-[1] flex items-center justify-center">
+                  <AudioWaveIcon />
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Progress card */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+          className="mt-12 w-full max-w-[22rem] rounded-2xl border border-white/[0.07] bg-black/[0.42] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-xl md:mt-14 md:max-w-md md:px-6 md:py-6"
+        >
+          <ul className="flex flex-col gap-4 text-left">
+            {UI_STEPS.map((label, i) => {
+              const done = i < activeStep
+              const active = i === activeStep
+              const pending = i > activeStep
+
+              return (
+                <li
+                  key={label}
+                  className={`flex items-center gap-3.5 text-[13px] leading-snug transition-colors md:text-sm ${
+                    done ? "text-white/92" : active ? "text-white" : "text-white/32"
                   }`}
                 >
-                  {done ? "✓" : i + 1}
-                </span>
-                {label}
-              </li>
-            )
-          })}
-        </ul>
-      </div>
-
-      <div className="relative mt-8 flex gap-1.5">
-        {STEPS.map((_, i) => (
-          <motion.span
-            key={i}
-            className="h-1 w-8 rounded-full bg-white/10"
-            animate={{
-              backgroundColor: i <= doneStep ? "rgba(167,139,250,0.9)" : "rgba(255,255,255,0.08)",
-            }}
-          />
-        ))}
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center" aria-hidden>
+                    {done ? (
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/[0.12] ring-1 ring-emerald-400/25">
+                        <svg className="h-3.5 w-3.5 text-emerald-400/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </span>
+                    ) : active ? (
+                      <motion.span
+                        className="relative flex h-6 w-6 items-center justify-center"
+                        initial={false}
+                        animate={{ scale: [1, 1.04, 1] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <span className="absolute inset-0 rounded-full bg-violet-500/20 blur-md" />
+                        <span className="relative flex h-5 w-5 items-center justify-center rounded-full border border-violet-400/45 bg-violet-500/[0.15] shadow-[0_0_14px_rgba(139,92,246,0.22)]">
+                          <span className="h-2 w-2 rounded-full bg-violet-200/90" />
+                        </span>
+                      </motion.span>
+                    ) : (
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.02]" />
+                    )}
+                  </span>
+                  <span className="font-medium">{label}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </motion.div>
       </div>
     </div>
   )
