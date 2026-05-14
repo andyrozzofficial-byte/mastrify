@@ -36,6 +36,12 @@ app.get("/", (req, res) => {
   res.send("Mastrify backend is live 🚀")
 })
 
+app.get("/debug-version", (req, res) => {
+  res.json({
+    debugVersion: "NEW_MASTER_RESPONSE_V2"
+  })
+})
+
 // absolute paths
 const uploadsDir = "/tmp/uploads"
 const mastersDir = "/tmp/masters"
@@ -953,11 +959,6 @@ const PORT = process.env.PORT || 3001
 // 🔥 VIKTIG: snabb health response innan allt annat
 app.get("/health", (req, res) => {
   res.status(200).send("OK")
-})
-
-// Temporary: proves Railway is running this server.js (remove after deploy verified)
-app.get("/debug-version", (req, res) => {
-  res.json({ debugVersion: "NEW_MASTER_RESPONSE_V2" })
 })
 
 // 🔥 STARTA SERVER DIREKT
