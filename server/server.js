@@ -51,11 +51,8 @@ app.get("/debug-version", (req, res) => {
 // absolute paths
 const uploadsDir = "/tmp/uploads"
 const mastersDir = "/tmp/masters"
-console.log("Uploads exists:", fs.existsSync(uploadsDir))
-console.log("Masters exists:", fs.existsSync(mastersDir))
-console.log("MASTERS DIR:", mastersDir)
 
-// ensure folders exist
+// Ensure dirs at cold boot (Railway /tmp is often empty) — create before verification logs.
 try {
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true })
@@ -67,6 +64,11 @@ try {
 } catch (err) {
   console.log("Folder error:", err)
 }
+
+console.log("Uploads exists:", fs.existsSync(uploadsDir))
+console.log("Masters exists:", fs.existsSync(mastersDir))
+console.log("UPLOADS DIR:", uploadsDir)
+console.log("MASTERS DIR:", mastersDir)
 
 // serve masters folder
 app.use("/uploads", express.static(uploadsDir))
