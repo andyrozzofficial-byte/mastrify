@@ -15,8 +15,6 @@ export default function MasterUploadPage() {
   const { file, setFile } = useMasterSession()
   const reduce = useReducedMotion()
 
-  const openFilePicker = () => inputRef.current?.click()
-
   return (
     <motion.div
       className="relative min-h-screen text-white"
@@ -43,7 +41,6 @@ export default function MasterUploadPage() {
           file={file}
           fileInputRef={inputRef}
           onFileSelected={setFile}
-          onChooseClick={openFilePicker}
           onContinue={() => router.push("/master/settings")}
         />
       </motion.div>

@@ -1,13 +1,14 @@
 "use client"
 
 import { motion, useReducedMotion } from "framer-motion"
-import { useState, type RefObject } from "react"
+import { useId, useState, type RefObject } from "react"
 import HeroWaveBackdrop from "../HeroWaveBackdrop"
 import {
   AUDIO_UPLOAD_ACCEPT,
   AUDIO_UPLOAD_REJECT_MESSAGE,
   isAcceptedAudioUpload,
 } from "../../../lib/audioUploadAccept"
+import { IOS_SAFE_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -15,16 +16,17 @@ type Props = {
   file: File | null
   fileInputRef: RefObject<HTMLInputElement | null>
   onFileInputChange: (file: File) => void
-  onUploadClick: () => void
+  onScanClick: () => void
 }
 
 export default function AnalyzeUploadCard({
   file,
   fileInputRef,
   onFileInputChange,
-  onUploadClick,
+  onScanClick,
 }: Props) {
   const reduce = useReducedMotion()
+  const fileInputId = useId()
   const [dragging, setDragging] = useState(false)
   const [pickError, setPickError] = useState<string | null>(null)
 
@@ -37,7 +39,12 @@ export default function AnalyzeUploadCard({
     }
     setPickError(null)
     onFileInputChange(candidate)
+    if (input) input.value = ""
   }
+
+  const fileInputHandlers = bindIosFileInputHandlers((candidate, input) =>
+    handlePickedFile(candidate, input)
+  )
 
   return (
     <motion.div
@@ -76,16 +83,6 @@ export default function AnalyzeUploadCard({
           handlePickedFile(e.dataTransfer.files[0])
         }}
       >
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept={AUDIO_UPLOAD_ACCEPT}
-          onChange={(e) => {
-            handlePickedFile(e.target.files?.[0], e.target)
-          }}
-        />
-
         <motion.div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[45%] overflow-hidden opacity-[0.12]"
           aria-hidden
@@ -101,7 +98,7 @@ export default function AnalyzeUploadCard({
         />
 
         <motion.div className="relative p-6 sm:p-7 md:p-8">
-          <div
+          <motion.div
             className={`relative overflow-hidden rounded-xl border border-dashed px-6 py-10 text-center transition-colors duration-300 sm:px-8 sm:py-12 ${
               dragging
                 ? "border-violet-400/35 bg-violet-950/[0.12]"
@@ -124,33 +121,67 @@ export default function AnalyzeUploadCard({
               </svg>
             </motion.div>
             <p className="text-[1.05rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.12rem]">
-              {dragging ? "Release to analyze" : "Drop your track here"}
+              {dragging ? "Release to analyze" : file ? "Track ready to scan" : "Drop your track here"}
             </p>
             <p className="mx-auto mt-2.5 max-w-[18rem] text-[12px] leading-relaxed text-white/64 sm:text-[13px]">
               WAV, AIFF, FLAC, MP3 — up to 500MB
             </p>
-          </div>
+            {file ? (
+              <p className="mx-auto mt-3 max-w-full truncate px-2 text-xs text-cyan-200/60">{file.name}</p>
+            ) : null}
+          </motion.div>
 
-          <motion.div className="mt-6 flex flex-col items-center gap-3">
-            <button
-              type="button"
-              onClick={onUploadClick}
-              className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
-            >
-              <span
-                className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
-                aria-hidden
-              />
-              <span className="relative z-[1]">{file ? "Scan my track" : "Choose file"}</span>
-            </button>
-            <p className="text-[11px] text-white/58">or drag and drop</p>
+          <input
+            id={fileInputId}
+            type="file"
+            ref={fileInputRef}
+            tabIndex={-1}
+            className="pointer-events-none fixed left-0 top-0 h-px w-px opacity-[0.01]"
+            accept={AUDIO_UPLOAD_ACCEPT}
+            {...fileInputHandlers}
+          />
+
+          <motion.div className="relative z-[2] mt-6 flex flex-col items-center gap-3">
+            {file ? (
+              <button
+                type="button"
+                onClick={onScanClick}
+                className="group relative flex min-h-[48px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
+              >
+                <span
+                  className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
+                  aria-hidden
+                />
+                <span className="relative z-[1]">Scan my track</span>
+              </button>
+            ) : (
+              <label
+                htmlFor={fileInputId}
+                className="group relative flex min-h-[48px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
+              >
+                <span
+                  className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
+                  aria-hidden
+                />
+                <span className="relative z-[1]">Choose file</span>
+              </label>
+            )}
+
+            {file ? (
+              <label
+                htmlFor={fileInputId}
+                className="cursor-pointer text-[12px] font-medium text-white/55 underline-offset-2 transition hover:text-white/78 hover:underline"
+              >
+                Choose a different file
+              </label>
+            ) : (
+              <p className="text-[11px] text-white/58">or drag and drop</p>
+            )}
+
             {pickError ? (
               <p className="text-center text-[12px] leading-relaxed text-rose-300/88" role="alert">
                 {pickError}
               </p>
-            ) : null}
-            {file ? (
-              <p className="max-w-full truncate px-2 text-xs text-cyan-200/55">{file.name}</p>
             ) : null}
           </motion.div>
         </motion.div>

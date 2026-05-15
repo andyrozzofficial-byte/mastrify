@@ -53,18 +53,42 @@ export function getAudioFileExtension(filename: string): string {
   return dot >= 0 ? base.slice(dot + 1).toLowerCase() : ""
 }
 
+const GENERIC_BINARY_MIMES = new Set([
+  "application/octet-stream",
+  "binary/octet-stream",
+  "application/x-binary",
+])
+
+/** iOS Files / UTType strings that are not `audio/*` but still denote audio. */
+function mimeSuggestsAudio(mime: string): boolean {
+  if (!mime) return false
+  if (mime.startsWith("audio/")) return true
+  if (mime === "public.audio" || mime === "public.mpeg-4-audio" || mime === "public.mp3") return true
+  if (
+    mime === "application/vnd.wave" ||
+    mime === "application/x-wav" ||
+    mime === "audio/vnd.wave"
+  ) {
+    return true
+  }
+  if (mime.includes("mpeg") || mime.includes("mp3") || mime.includes("wav") || mime.includes("flac")) {
+    return true
+  }
+  return false
+}
+
 export function isAcceptedAudioUpload(file: File): boolean {
   const mime = file.type.toLowerCase().trim()
   const ext = getAudioFileExtension(file.name)
 
   if (mime.startsWith("video/")) return false
 
-  if (mime.startsWith("audio/")) return true
+  if (mimeSuggestsAudio(mime)) return true
 
   if (ext && AUDIO_EXTENSIONS.has(ext)) return true
 
   // Files / iCloud / DAW exports often arrive with an empty or generic MIME on iOS.
-  if ((mime === "" || mime === "application/octet-stream") && ext && AUDIO_EXTENSIONS.has(ext)) {
+  if ((mime === "" || GENERIC_BINARY_MIMES.has(mime)) && ext && AUDIO_EXTENSIONS.has(ext)) {
     return true
   }
 

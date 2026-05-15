@@ -22,21 +22,21 @@ export default function HeroEngineOrb({ activeStep, compactAtmosphere = false, c
 
   return (
     <motion.div
-      className={`relative mx-auto w-full overflow-visible py-3 sm:py-4 lg:py-0 ${className}`}
+      className={`relative isolate mx-auto w-full max-w-full overflow-visible px-3 py-6 max-lg:mb-2 sm:px-4 sm:py-8 lg:px-0 lg:py-0 ${className}`}
       initial={reduce ? false : { opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.85, delay: 0.08, ease: EASE }}
     >
-      <div className="relative mx-auto aspect-square w-[min(17rem,80vw)] overflow-visible sm:w-[min(19rem,84vw)] md:w-[min(21rem,38vw)] lg:w-[min(24rem,42vw)] lg:max-w-[28rem]">
+      <motion.div className="relative mx-auto w-[min(18rem,78vw)] overflow-visible sm:w-[min(20rem,82vw)] md:w-[min(21rem,38vw)] lg:w-[min(24rem,42vw)] lg:max-w-[28rem]">
         <LandingHeroAtmosphere compact={compactAtmosphere} />
-        <motion.div className="relative h-full w-full overflow-visible">
+        <motion.div className="relative aspect-square w-full overflow-visible">
           <HeroWaveBackdrop heightClass="h-[34%] md:h-[40%]" className="opacity-[0.18] md:opacity-[0.22]" />
           <MasteringEngineVisual
             activeStep={activeStep}
             className="relative z-[1] mx-auto !h-full !w-full !max-w-none"
           />
         </motion.div>
-      </div>
+      </motion.div>
     </motion.div>
   )
 }

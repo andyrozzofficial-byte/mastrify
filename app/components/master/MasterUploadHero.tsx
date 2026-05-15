@@ -19,7 +19,6 @@ type Props = {
   file: File | null
   fileInputRef: RefObject<HTMLInputElement | null>
   onFileSelected: (file: File) => void
-  onChooseClick: () => void
   onContinue: () => void
 }
 
@@ -27,7 +26,6 @@ export default function MasterUploadHero({
   file,
   fileInputRef,
   onFileSelected,
-  onChooseClick,
   onContinue,
 }: Props) {
   const reduce = useReducedMotion()
@@ -55,13 +53,13 @@ export default function MasterUploadHero({
       />
 
       <motion.div
-        className="relative grid gap-6 max-lg:grid-cols-1 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
+        className="relative isolate grid gap-8 max-lg:grid-cols-1 max-lg:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
       >
         {/* Copy + upload — primary column on mobile */}
-        <div className="flex min-w-0 flex-col max-lg:order-1">
+        <motion.div className="relative z-10 flex min-w-0 flex-col max-lg:order-1">
           <span className="inline-flex w-fit rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-0.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-violet-200/70 backdrop-blur-md sm:px-3.5 sm:py-1 sm:text-[10px] sm:tracking-[0.26em]">
             Spatial mastering engine
           </span>
@@ -103,7 +101,6 @@ export default function MasterUploadHero({
               file={file}
               fileInputRef={fileInputRef}
               onFileSelected={onFileSelected}
-              onChooseClick={onChooseClick}
               onContinue={onContinue}
             />
           </motion.div>
@@ -132,12 +129,12 @@ export default function MasterUploadHero({
               Pricing
             </Link>
           </p>
-        </div>
+        </motion.div>
 
         <HeroEngineOrb
           activeStep={engineStep}
           compactAtmosphere
-          className="max-lg:order-2 lg:sticky lg:top-20 lg:justify-self-end"
+          className="relative z-0 max-lg:order-2 max-lg:mt-1 lg:sticky lg:top-20 lg:justify-self-end"
         />
       </motion.div>
     </section>

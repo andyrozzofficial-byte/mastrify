@@ -21,7 +21,7 @@ export default function LandingHeroAtmosphere({ className = "", compact = false 
 
   return (
     <motion.div
-      className={`pointer-events-none absolute ${compact ? "inset-[-10%]" : "inset-[-18%]"} ${className}`}
+      className={`pointer-events-none absolute ${compact ? "inset-[-6%] sm:inset-[-10%]" : "inset-[-12%] sm:inset-[-16%] md:inset-[-18%]"} ${className}`}
       aria-hidden
     >
       <motion.div

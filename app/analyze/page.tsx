@@ -382,10 +382,7 @@ export default function AnalyzePage() {
                 file={file}
                 fileInputRef={fileInputRef}
                 onFileInputChange={(selected) => void handleUpload(selected)}
-                onUploadClick={() => {
-                  if (!file) fileInputRef.current?.click()
-                  else void handleUpload()
-                }}
+                onScanClick={() => void handleUpload()}
               />
             </motion.div>
           )}

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
-import { useState, type RefObject } from "react"
+import { useId, useState, type RefObject } from "react"
 import CinematicWaveform from "../audio/CinematicWaveform"
 import HeroWaveBackdrop from "../HeroWaveBackdrop"
 import {
@@ -10,6 +10,7 @@ import {
   AUDIO_UPLOAD_REJECT_MESSAGE,
   isAcceptedAudioUpload,
 } from "../../../lib/audioUploadAccept"
+import { IOS_SAFE_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -17,7 +18,6 @@ type Props = {
   file: File | null
   fileInputRef: RefObject<HTMLInputElement | null>
   onFileSelected: (file: File) => void
-  onChooseClick: () => void
   onContinue: () => void
 }
 
@@ -25,13 +25,16 @@ export default function MasterUploadCard({
   file,
   fileInputRef,
   onFileSelected,
-  onChooseClick,
   onContinue,
 }: Props) {
   const reduce = useReducedMotion()
+  const fileInputId = useId()
   const [dragging, setDragging] = useState(false)
   const [pickError, setPickError] = useState<string | null>(null)
   const loaded = Boolean(file)
+  const fileInputHandlers = bindIosFileInputHandlers((candidate, input) =>
+    handlePickedFile(candidate, input)
+  )
 
   function handlePickedFile(candidate: File | undefined, input?: HTMLInputElement | null) {
     if (!candidate) return
@@ -42,6 +45,7 @@ export default function MasterUploadCard({
     }
     setPickError(null)
     onFileSelected(candidate)
+    if (input) input.value = ""
   }
 
   return (
@@ -84,16 +88,6 @@ export default function MasterUploadCard({
           handlePickedFile(e.dataTransfer.files[0])
         }}
       >
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept={AUDIO_UPLOAD_ACCEPT}
-          onChange={(e) => {
-            handlePickedFile(e.target.files?.[0], e.target)
-          }}
-        />
-
         <motion.div
           className="pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden"
           animate={{ height: loaded ? "48%" : "38%", opacity: loaded ? 0.22 : 0.1 }}
@@ -202,17 +196,26 @@ export default function MasterUploadCard({
               <span className="relative z-[1]">Continue to settings</span>
             </button>
 
-            <button
-              type="button"
-              onClick={onChooseClick}
-              className="group relative w-full overflow-hidden rounded-xl border border-white/[0.1] bg-white/[0.04] px-6 py-3 text-[13px] font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
+            <label
+              htmlFor={fileInputId}
+              className="group relative flex min-h-[44px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-white/[0.1] bg-white/[0.04] px-6 py-3 text-[13px] font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
             >
+              <input
+                id={fileInputId}
+                type="file"
+                ref={fileInputRef}
+                className={IOS_SAFE_FILE_INPUT_CLASS}
+                accept={AUDIO_UPLOAD_ACCEPT}
+                {...fileInputHandlers}
+              />
               <span
                 className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.1] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
                 aria-hidden
               />
-              <span className="relative z-[1]">{loaded ? "Choose a different file" : "Choose file"}</span>
-            </button>
+              <span className="pointer-events-none relative z-[1]">
+                {loaded ? "Choose a different file" : "Choose file"}
+              </span>
+            </label>
 
             {!loaded ? <p className="text-center text-[11px] text-white/58">or drag and drop</p> : null}
 
