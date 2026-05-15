@@ -3,7 +3,9 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState, type RefObject } from "react"
-import HeroEngineOrb from "../HeroEngineOrb"
+import HeroWaveBackdrop from "../HeroWaveBackdrop"
+import LandingHeroAtmosphere from "../LandingHeroAtmosphere"
+import MasteringEngineVisual from "../../master/processing/MasteringEngineVisual"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import MasterUploadCard from "./MasterUploadCard"
 
@@ -30,18 +32,12 @@ export default function MasterUploadHero({
 }: Props) {
   const reduce = useReducedMotion()
   const [engineStep, setEngineStep] = useState(0)
-  const loaded = Boolean(file)
 
   useEffect(() => {
     if (reduce) return
     const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 4000)
     return () => clearInterval(id)
   }, [reduce])
-
-  useEffect(() => {
-    if (!loaded || reduce) return
-    setEngineStep(1)
-  }, [loaded, reduce])
 
   return (
     <section className="relative w-full overflow-visible">
@@ -53,13 +49,12 @@ export default function MasterUploadHero({
       />
 
       <motion.div
-        className="relative isolate grid gap-8 max-lg:grid-cols-1 max-lg:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
+        className="relative grid gap-6 max-lg:grid-cols-1 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
       >
-        {/* Copy + upload — primary column on mobile */}
-        <motion.div className="relative z-10 flex min-w-0 flex-col max-lg:order-1">
+        <motion.div className="flex min-w-0 flex-col max-lg:order-1">
           <span className="inline-flex w-fit rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-0.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-violet-200/70 backdrop-blur-md sm:px-3.5 sm:py-1 sm:text-[10px] sm:tracking-[0.26em]">
             Spatial mastering engine
           </span>
@@ -131,11 +126,21 @@ export default function MasterUploadHero({
           </p>
         </motion.div>
 
-        <HeroEngineOrb
-          activeStep={engineStep}
-          compactAtmosphere
-          className="relative z-0 max-lg:order-2 max-lg:mt-1 lg:sticky lg:top-20 lg:justify-self-end"
-        />
+        <motion.div
+          className="relative mx-auto flex w-full max-w-[14rem] justify-center overflow-visible max-lg:order-2 max-lg:py-3 sm:max-w-[16rem] sm:max-lg:py-4 lg:sticky lg:top-20 lg:max-w-none lg:justify-end lg:py-0"
+          initial={reduce ? false : { opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
+        >
+          <LandingHeroAtmosphere compact />
+          <motion.div className="relative w-full max-w-[min(14rem,78vw)] overflow-visible sm:max-w-[16rem] lg:max-w-[28rem]">
+            <HeroWaveBackdrop heightClass="h-[32%] lg:h-[40%]" className="opacity-[0.14] lg:opacity-[0.2]" />
+            <MasteringEngineVisual
+              activeStep={engineStep}
+              className="relative z-[1] mx-auto w-[min(11.5rem,72vw)] max-w-[14rem] sm:w-[min(13rem,76vw)] sm:max-w-[16rem] md:w-[min(18rem,40vw)] md:max-w-[22rem] lg:w-[min(22rem,40vw)] lg:max-w-[26rem]"
+            />
+          </motion.div>
+        </motion.div>
       </motion.div>
     </section>
   )

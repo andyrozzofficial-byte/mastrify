@@ -36,7 +36,7 @@ export default function MasterUploadPage() {
         transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <motion.div className="page-container page-hero-pad relative pb-10 sm:pb-14 md:pb-20">
+      <motion.div className="relative mx-auto w-full max-w-[1080px] px-5 pb-4 pt-6 md:px-10 md:pb-8 md:pt-8">
         <MasterUploadHero
           file={file}
           fileInputRef={inputRef}

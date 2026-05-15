@@ -3,14 +3,13 @@
 import Link from "next/link"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useId, useState, type RefObject } from "react"
-import CinematicWaveform from "../audio/CinematicWaveform"
 import HeroWaveBackdrop from "../HeroWaveBackdrop"
 import {
   AUDIO_UPLOAD_ACCEPT,
   AUDIO_UPLOAD_REJECT_MESSAGE,
   isAcceptedAudioUpload,
 } from "../../../lib/audioUploadAccept"
-import { IOS_SAFE_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
+import { OFF_SCREEN_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -97,27 +96,6 @@ export default function MasterUploadCard({
           <HeroWaveBackdrop heightClass="h-full" className="opacity-100" />
         </motion.div>
 
-        <AnimatePresence>
-          {loaded ? (
-            <motion.div
-              key="loaded-wave"
-              className="pointer-events-none absolute inset-x-3 bottom-3 z-[1]"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: EASE }}
-            >
-              <CinematicWaveform
-                mode="processing"
-                audioSrc={file}
-                activeStep={0}
-                height={48}
-                className="opacity-90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-              />
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-
         <motion.div
           className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-violet-600/[0.08] blur-3xl"
           animate={reduce ? undefined : { opacity: loaded ? [0.55, 0.75, 0.55] : [0.4, 0.65, 0.4] }}
@@ -148,8 +126,11 @@ export default function MasterUploadCard({
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80 shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
                     Mix loaded
                   </motion.span>
-                  <p className="text-[1rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.05rem]">Ready for mastering</p>
-                  <p className="mx-auto mt-1.5 max-w-[18rem] truncate text-[12px] text-white/68">{file?.name}</p>
+                  <p className="text-[1rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.05rem]">Mix received</p>
+                  <p className="mx-auto mt-1.5 max-w-[20rem] text-[12px] leading-relaxed text-white/64">
+                    Continue below to choose your master settings.
+                  </p>
+                  <p className="mx-auto mt-2 max-w-[18rem] truncate text-[12px] text-white/68">{file?.name}</p>
                 </>
               ) : (
                 <>
@@ -179,6 +160,16 @@ export default function MasterUploadCard({
             </motion.div>
           </AnimatePresence>
 
+          <input
+            id={fileInputId}
+            type="file"
+            ref={fileInputRef}
+            tabIndex={-1}
+            className={OFF_SCREEN_FILE_INPUT_CLASS}
+            accept={AUDIO_UPLOAD_ACCEPT}
+            {...fileInputHandlers}
+          />
+
           <motion.div
             className="relative z-[2] mt-4 flex flex-col items-stretch gap-2 border-t border-white/[0.06] pt-4"
             layout
@@ -187,7 +178,7 @@ export default function MasterUploadCard({
               type="button"
               disabled={!loaded}
               onClick={onContinue}
-              className="group relative flex min-h-[44px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-5 text-[13px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-35 sm:min-h-[46px] sm:px-6 sm:text-[14px]"
+              className="group relative z-[3] flex min-h-[46px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-6 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-35"
             >
               <span
                 className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%] group-disabled:translate-x-[-120%]"
@@ -198,23 +189,13 @@ export default function MasterUploadCard({
 
             <label
               htmlFor={fileInputId}
-              className="group relative flex min-h-[44px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-white/[0.1] bg-white/[0.04] px-6 py-3 text-[13px] font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
+              className="group relative flex min-h-[46px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-white/[0.1] bg-white/[0.04] px-6 py-3 text-[13px] font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
             >
-              <input
-                id={fileInputId}
-                type="file"
-                ref={fileInputRef}
-                className={IOS_SAFE_FILE_INPUT_CLASS}
-                accept={AUDIO_UPLOAD_ACCEPT}
-                {...fileInputHandlers}
-              />
               <span
                 className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.1] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
                 aria-hidden
               />
-              <span className="pointer-events-none relative z-[1]">
-                {loaded ? "Choose a different file" : "Choose file"}
-              </span>
+              <span className="relative z-[1]">{loaded ? "Choose a different file" : "Choose file"}</span>
             </label>
 
             {!loaded ? <p className="text-center text-[11px] text-white/58">or drag and drop</p> : null}
