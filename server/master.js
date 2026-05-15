@@ -40,7 +40,134 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-chain-isolation"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-static-loudnorm-safety"
+
+/** Max integrated lift loudnorm may pursue above measured input. */
+const LOUDNORM_MAX_RECOVERY_STREAMING_LU = 6
+const LOUDNORM_MAX_RECOVERY_LOUD_LU = 8
+/** Never allow pass1 (output_i − input_i) above this — audible pumping territory. */
+const LOUDNORM_MAX_PASS1_LIFT_LU = 8
+
+function maxLoudnormRecoveryLu(requestedLufs) {
+  return isHotLoudnessTarget(requestedLufs)
+    ? LOUDNORM_MAX_RECOVERY_LOUD_LU
+    : LOUDNORM_MAX_RECOVERY_STREAMING_LU
+}
+
+/**
+ * Relax effective target on very dynamic / quiet material — stability over loudness.
+ */
+function assessDynamicMaterialRelaxation({ ctx, pass1Json = null, requestedLufs }) {
+  const reasons = []
+  let relaxationLu = 0
+  let staticLoudnorm = false
+  const dr = ctx?.dynamicRange
+  const integrated =
+    ctx?.integratedLufs ??
+    (pass1Json ? parseLoudnormJsonNum(pass1Json, "input_i") : null)
+
+  if (dr != null && dr > 14) {
+    relaxationLu += Math.min(3, 1 + (dr - 14) * 0.35)
+    reasons.push(`highDR=${dr.toFixed(1)}dB`)
+    staticLoudnorm = true
+  }
+  if (integrated != null && integrated < -22) {
+    relaxationLu += Math.min(2, 1 + (-22 - integrated) * 0.12)
+    reasons.push(`quietInput=${integrated.toFixed(1)}LUFS`)
+    staticLoudnorm = true
+  }
+
+  if (pass1Json) {
+    const inputI = parseLoudnormJsonNum(pass1Json, "input_i")
+    const outputI = parseLoudnormJsonNum(pass1Json, "output_i")
+    if (inputI != null && outputI != null) {
+      const lift = outputI - inputI
+      if (lift > 6) {
+        relaxationLu += Math.min(3, 1 + (lift - 6) * 0.45)
+        reasons.push(`shortTermLift=${lift.toFixed(1)}LU`)
+        staticLoudnorm = true
+      }
+    }
+  }
+
+  relaxationLu = Math.min(relaxationLu, 3)
+  return {
+    active: reasons.length > 0,
+    reasons,
+    relaxationLu: Number(relaxationLu.toFixed(2)),
+    staticLoudnorm,
+  }
+}
+
+/** Cap loudnorm I= so integrated recovery cannot exceed maxLoudnormRecoveryLu. */
+function capLoudnormIntegratedTarget(loudnormI, ctx, requestedLufs, pass1Json = null) {
+  const integrated =
+    (pass1Json ? parseLoudnormJsonNum(pass1Json, "input_i") : null) ?? ctx?.integratedLufs
+  const maxRec = maxLoudnormRecoveryLu(requestedLufs)
+  if (integrated == null || !Number.isFinite(integrated)) {
+    return { loudnormI, capped: false, maxRecoveryLu: maxRec }
+  }
+  const ceiling = integrated + maxRec
+  if (loudnormI > ceiling) {
+    return {
+      loudnormI: Number(ceiling.toFixed(2)),
+      capped: true,
+      maxRecoveryLu: maxRec,
+      recoveryCeilingLu: Number(ceiling.toFixed(2)),
+      inputIntegratedLu: integrated,
+    }
+  }
+  return {
+    loudnormI,
+    capped: false,
+    maxRecoveryLu: maxRec,
+    recoveryCeilingLu: Number(ceiling.toFixed(2)),
+    inputIntegratedLu: integrated,
+  }
+}
+
+/** After pass1, clamp target if predicted lift exceeds LOUDNORM_MAX_PASS1_LIFT_LU. */
+function correctLoudnormTargetForPass1Lift(loudnormI, pass1Json, requestedLufs) {
+  const inputI = parseLoudnormJsonNum(pass1Json, "input_i")
+  const outputI = parseLoudnormJsonNum(pass1Json, "output_i")
+  if (inputI == null || outputI == null) return { loudnormI, liftCapped: false }
+  const lift = outputI - inputI
+  if (lift <= LOUDNORM_MAX_PASS1_LIFT_LU) {
+    return { loudnormI, liftCapped: false, pass1LiftLu: Number(lift.toFixed(2)) }
+  }
+  const maxRec = maxLoudnormRecoveryLu(requestedLufs)
+  const corrected = Math.min(loudnormI, inputI + maxRec, inputI + LOUDNORM_MAX_PASS1_LIFT_LU - 0.5)
+  return {
+    loudnormI: Number(corrected.toFixed(2)),
+    liftCapped: true,
+    pass1LiftLu: Number(lift.toFixed(2)),
+    maxPass1LiftLu: LOUDNORM_MAX_PASS1_LIFT_LU,
+  }
+}
+
+function assessPostRenderMovement(inputProbe, outputProbe) {
+  const inM = summarizeGainMovement(inputProbe?.momentary)
+  const outM = summarizeGainMovement(outputProbe?.momentary)
+  if (!inM || !outM) return { needsRerun: false }
+  const addedSwing = outM.swingLu - inM.swingLu
+  const addedScore = outM.pumpingScore - inM.pumpingScore
+  const needsRerun = addedSwing > 2.5 || outM.swingLu > 8 || addedScore > 1.2
+  return {
+    needsRerun,
+    inputSwingLu: inM.swingLu,
+    outputSwingLu: outM.swingLu,
+    addedSwingLu: Number(addedSwing.toFixed(2)),
+    addedPumpingScore: Number(addedScore.toFixed(3)),
+    targetDropLu: addedSwing > 4 ? 2.5 : 1.5,
+    extraSlackLu: addedSwing > 4 ? 1.25 : 0.85,
+  }
+}
+
+function logStaticLoudnormSafety(payload) {
+  if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
+    console.log("[master] static loudnorm safety", payload)
+  }
+}
 
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n))
@@ -269,12 +396,15 @@ function loudnessTargetForLoudnorm(resolvedLufs, requestedLufs, ctx, extraSlackL
   const maxSlack = transparent ? 4.5 : isHotLoudnessTarget(requestedLufs) ? 2.1 : 1.9
   slack = Math.min(slack, maxSlack)
   const floor = isHotLoudnessTarget(requestedLufs) ? -11.5 : -16.5
-  const loudnormI = Math.max(resolvedLufs - slack, floor)
+  let loudnormI = Math.max(resolvedLufs - slack, floor)
+  const recoveryCap = capLoudnormIntegratedTarget(loudnormI, ctx, requestedLufs)
+  loudnormI = recoveryCap.loudnormI
   return {
-    loudnormI: Number(loudnormI.toFixed(2)),
+    loudnormI,
     pursuitSlackLu: Number(slack.toFixed(2)),
     transparentMode: transparent,
     extraSlackAppliedLu: Number(Math.max(0, extraSlackLu).toFixed(2)),
+    recoveryCap,
   }
 }
 
@@ -358,13 +488,25 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
       backoff += 0.3
       reasons.push("spotifyLoudTierSlack")
     }
-    backoff = Math.min(backoff, 2.2)
-    const resolved = Math.max(requested - backoff, -16)
+    const dynRelax = assessDynamicMaterialRelaxation({ ctx, requestedLufs: requested })
+    if (dynRelax.active) {
+      backoff += dynRelax.relaxationLu
+      reasons.push(...dynRelax.reasons)
+    }
+    backoff = Math.min(backoff, 3.2)
+    let resolved = Math.max(requested - backoff, -16)
+    const maxRec = maxLoudnormRecoveryLu(requested)
+    if (integrated != null && resolved > integrated + maxRec) {
+      resolved = integrated + maxRec
+      reasons.push(`recoveryCap=${maxRec}LU`)
+    }
     return {
       requested,
       resolved,
       backoffLu: Number(backoff.toFixed(2)),
       limiterReductionEstimateDb: Number(backoff.toFixed(2)),
+      maxRecoveryLu: maxRec,
+      dynamicRelaxationLu: dynRelax.relaxationLu,
       transientProtection: { active: true, reasons, preserveTransients: true },
     }
   }
@@ -419,11 +561,23 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
     reasons.push(`pass1LRA=${inputLra.toFixed(1)}LU`)
   }
 
-  const maxBackoff = 2
+  const dynRelaxHot = assessDynamicMaterialRelaxation({ ctx, requestedLufs: requested })
+  if (dynRelaxHot.active) {
+    backoff += dynRelaxHot.relaxationLu
+    reasons.push(...dynRelaxHot.reasons)
+  }
+
+  const maxBackoff = 2.8
   backoff = Math.min(backoff, maxBackoff)
   let resolved = requested - backoff
   resolved = Math.max(resolved, -11)
   resolved = Math.min(resolved, requested)
+
+  const maxRec = maxLoudnormRecoveryLu(requested)
+  if (integrated != null && resolved > integrated + maxRec) {
+    resolved = integrated + maxRec
+    reasons.push(`recoveryCap=${maxRec}LU`)
+  }
 
   const limiterReductionEstimateDb = Number((requested - resolved).toFixed(2))
 
@@ -432,6 +586,8 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
     resolved,
     backoffLu: Number(backoff.toFixed(2)),
     limiterReductionEstimateDb,
+    maxRecoveryLu: maxRec,
+    dynamicRelaxationLu: dynRelaxHot.relaxationLu,
     transientProtection: {
       active: backoff > 0.05,
       reasons,
@@ -617,14 +773,33 @@ function assessTransientSafety({
       }
       estimatedGainReductionDb = Math.max(estimatedGainReductionDb, Math.abs(offset))
     }
-    if (inputI != null && outputI != null && outputI - inputI > 2.2) {
-      triggers.push(`pass1HeavyLift=${(outputI - inputI).toFixed(1)}LU`)
-      pregainScale *= 0.45
-      loudnormOverDriven = true
+    if (inputI != null && outputI != null) {
+      const lift = outputI - inputI
+      if (lift > LOUDNORM_MAX_PASS1_LIFT_LU) {
+        triggers.push(`pass1LiftExceeded=${lift.toFixed(1)}LU`)
+        pregainScale *= 0.2
+        targetBackoffLu += Math.min(2.5, lift - LOUDNORM_MAX_PASS1_LIFT_LU + 0.5)
+        loudnormOverDriven = true
+        transientSuppressionRisk = Math.min(1, transientSuppressionRisk + 0.55)
+      } else if (lift > 2.2) {
+        triggers.push(`pass1HeavyLift=${lift.toFixed(1)}LU`)
+        pregainScale *= 0.45
+        targetBackoffLu += Math.min(1.5, (lift - 2.2) * 0.35)
+        loudnormOverDriven = true
+        transientSuppressionRisk = Math.min(1, transientSuppressionRisk + 0.25)
+      }
     }
   }
 
-  targetBackoffLu = Math.min(targetBackoffLu, 1.75)
+  const dynRelax = assessDynamicMaterialRelaxation({ ctx, pass1Json, requestedLufs })
+  if (dynRelax.active) {
+    triggers.push(...dynRelax.reasons.map((r) => `dynRelax:${r}`))
+    targetBackoffLu += dynRelax.relaxationLu
+    transientSuppressionRisk = Math.min(1, transientSuppressionRisk + 0.2)
+    if (dynRelax.staticLoudnorm) loudnormOverDriven = true
+  }
+
+  targetBackoffLu = Math.min(targetBackoffLu, 3)
   pregainScale = Math.max(0, Math.min(1, pregainScale))
   compIntensity = Math.max(0.28, Math.min(1, compIntensity))
   transientSuppressionRisk = Math.min(1, Number(transientSuppressionRisk.toFixed(2)))
@@ -636,6 +811,9 @@ function assessTransientSafety({
     adjustedResolved = Math.min(adjustedResolved, resolvedLufs)
   }
 
+  const staticLoudnormRecommended =
+    loudnormOverDriven || transientSuppressionRisk > 0.35 || dynRelax.staticLoudnorm
+
   return {
     active,
     triggers,
@@ -646,6 +824,8 @@ function assessTransientSafety({
     loudnormOverDriven,
     estimatedGainReductionDb: Number(estimatedGainReductionDb.toFixed(2)),
     transientSuppressionRisk,
+    staticLoudnormRecommended,
+    dynamicRelaxationLu: dynRelax.relaxationLu,
     lowEndProtectionTriggers,
     crestDb: crest != null ? Number(crest.toFixed(2)) : null,
   }
@@ -909,9 +1089,11 @@ function assessTransparencyGuardrails({
       stabilityRisk += 0.32
     }
 
-    const swingTrip = transparent ? 0.55 : 0.95
-    if (inputI != null && outputI != null && Math.abs(outputI - inputI) > swingTrip) {
-      triggers.push(`shortTermSwing=${(outputI - inputI).toFixed(2)}LU`)
+    const liftLu =
+      inputI != null && outputI != null ? Math.abs(outputI - inputI) : null
+    const swingTrip = transparent || streaming ? 6 : 2.5
+    if (liftLu != null && liftLu > swingTrip) {
+      triggers.push(`pass1Lift=${(outputI - inputI).toFixed(2)}LU`)
       skipPass2Offset = true
       extraPursuitSlackLu += 0.5
       offsetCap = Math.min(offsetCap, 0.38)
@@ -1356,8 +1538,29 @@ export async function masterTrack({
   let limiterIntensity = transparentLoudnorm ? 0.42 : isStreamingProfile(requestedLufs) ? 0.72 : 1
   let extraPursuitSlackLu = transparentLoudnorm ? 0.3 : 0
   let skipPass2Offset = transparentLoudnorm
+  let staticLoudnormMode = transparentLoudnorm
+  let loudnormLinear = !staticLoudnormMode
+  let staticSafetyMeta = null
   if (chainDebugActive && chainDebugModeId === "B") {
     skipPass2Offset = false
+    staticLoudnormMode = false
+    loudnormLinear = true
+  }
+  const preDynRelax = assessDynamicMaterialRelaxation({
+    ctx: headroomCtxInitial,
+    requestedLufs,
+  })
+  if (preDynRelax.active && preDynRelax.relaxationLu > 0) {
+    safeIntegratedLufs = Math.max(
+      requestedLufs - 3.2,
+      safeIntegratedLufs - preDynRelax.relaxationLu
+    )
+    safeIntegratedLufs = Number(safeIntegratedLufs.toFixed(2))
+  }
+  if (preDynRelax.staticLoudnorm) {
+    staticLoudnormMode = true
+    loudnormLinear = false
+    skipPass2Offset = true
   }
   if (!isHotLoudnessTarget(requestedLufs)) {
     compIntensity =
@@ -1557,7 +1760,8 @@ export async function masterTrack({
     let twoPass = false
     let exitCode = null
 
-    const pass1Af = `${pipe.colorBase}loudnorm=${stem}:linear=true:print_format=json`
+    const linearToken = loudnormLinear ? "true" : "false"
+    const pass1Af = `${pipe.colorBase}loudnorm=${stem}:linear=${linearToken}:print_format=json`
     const pass1Args = [
       "-hide_banner",
       "-nostats",
@@ -1589,7 +1793,7 @@ export async function masterTrack({
       )
       if (measured) {
         filterFinal =
-          `${pipe.colorBase}loudnorm=${stem}:measured_I=${measured.measured_I}:measured_LRA=${measured.measured_LRA}:measured_TP=${measured.measured_TP}:measured_thresh=${measured.measured_thresh}:offset=${measured.offset}:linear=true`
+          `${pipe.colorBase}loudnorm=${stem}:measured_I=${measured.measured_I}:measured_LRA=${measured.measured_LRA}:measured_TP=${measured.measured_TP}:measured_thresh=${measured.measured_thresh}:offset=${measured.offset}:linear=${linearToken}`
         twoPass = true
       }
     } catch (e) {
@@ -1599,7 +1803,7 @@ export async function masterTrack({
     }
 
     if (!filterFinal) {
-      filterFinal = `${pipe.colorBase}loudnorm=${stem}:linear=true`
+      filterFinal = `${pipe.colorBase}loudnorm=${stem}:linear=${linearToken}`
       twoPass = false
     }
 
@@ -1724,6 +1928,34 @@ export async function masterTrack({
       extraPursuitSlackLu = Math.max(extraPursuitSlackLu, transparencyGuard.extraPursuitSlackLu)
       limiterIntensity = Math.min(limiterIntensity, transparencyGuard.limiterIntensity)
       skipPass2Offset = skipPass2Offset || transparencyGuard.skipPass2Offset
+      if (
+        pass1Safety.transientSuppressionRisk > 0.35 ||
+        transparencyGuard.stabilityRisk > 0.35 ||
+        pass1Safety.loudnormOverDriven
+      ) {
+        staticLoudnormMode = true
+        loudnormLinear = false
+        skipPass2Offset = true
+      }
+      if (pass1Safety.staticLoudnormRecommended) {
+        staticLoudnormMode = true
+        loudnormLinear = false
+        skipPass2Offset = true
+      }
+      if (loudnormPass1Json) {
+        const liftFix = correctLoudnormTargetForPass1Lift(
+          loudnormTargetPlan.loudnormI,
+          loudnormPass1Json,
+          requestedLufs
+        )
+        if (liftFix.liftCapped) {
+          loudnormTargetPlan = { ...loudnormTargetPlan, loudnormI: liftFix.loudnormI }
+          staticLoudnormMode = true
+          loudnormLinear = false
+          skipPass2Offset = true
+          logStaticLoudnormSafety({ phase: "pass1-lift-cap", ...liftFix })
+        }
+      }
       adaptiveGain = computeAdaptivePregain(
         safeIntegratedLufs,
         ctxPass1,
@@ -1845,10 +2077,15 @@ export async function masterTrack({
     transparentLoudnormMode: transparentLoudnorm,
     limiterIntensity,
     staticPass2Offset: skipPass2Offset,
+    staticLoudnormMode,
+    loudnormLinear,
+    maxRecoveryLu: maxLoudnormRecoveryLu(requestedLufs),
     extraPursuitSlackLu,
     transparencyStabilityRisk: transparencyGuard?.stabilityRisk ?? null,
     loudnormOverDriven: transientSafety?.loudnormOverDriven ?? false,
     antiPumpingRisk: antiPumping?.pumpingRisk ?? null,
+    postRenderMovement,
+    staticSafetyMeta,
   })
 
   if (LUFS_TRACE) {
@@ -1895,30 +2132,75 @@ export async function masterTrack({
     console.log("[master] ffmpeg -af", audioFilterFinal)
   }
 
-  const encodeArgs = [
-    "-y",
-    "-i",
-    file,
-    "-vn",
-    "-ar",
-    "44100",
-    "-ac",
-    "2",
-    "-c:a",
-    "pcm_s16le",
-    "-f",
-    "wav",
-    "-af",
-    audioFilterFinal,
-    outputPath,
-  ]
-
-  const enc = await runFfmpegCapture(encodeArgs, "master-encode")
-  if (enc.code !== 0) {
-    throw new Error("ffmpeg master encode failed")
+  async function encodeMasterWav(filterAf) {
+    const encodeArgs = [
+      "-y",
+      "-i",
+      file,
+      "-vn",
+      "-ar",
+      "44100",
+      "-ac",
+      "2",
+      "-c:a",
+      "pcm_s16le",
+      "-f",
+      "wav",
+      "-af",
+      filterAf,
+      outputPath,
+    ]
+    const enc = await runFfmpegCapture(encodeArgs, "master-encode")
+    if (enc.code !== 0) {
+      throw new Error("ffmpeg master encode failed")
+    }
+    await waitForMasterOutputReady(outputPath)
   }
 
-  await waitForMasterOutputReady(outputPath)
+  await encodeMasterWav(audioFilterFinal)
+
+  let postRenderMovement = null
+  if (!chainDebugActive) {
+    const inputMovementProbe = await probeMomentaryLufsSeries(file, "")
+    const outputMovementProbe = await probeMomentaryLufsSeries(outputPath, "")
+    postRenderMovement = assessPostRenderMovement(inputMovementProbe, outputMovementProbe)
+    if (postRenderMovement.needsRerun) {
+      logStaticLoudnormSafety({ phase: "post-render-movement", ...postRenderMovement })
+      safeIntegratedLufs = Math.max(
+        isHotLoudnessTarget(requestedLufs) ? -11 : -16.5,
+        safeIntegratedLufs - postRenderMovement.targetDropLu
+      )
+      extraPursuitSlackLu += postRenderMovement.extraSlackLu
+      skipPass2Offset = true
+      staticLoudnormMode = true
+      loudnormLinear = false
+      loudnormTargetPlan = loudnessTargetForLoudnorm(
+        safeIntegratedLufs,
+        requestedLufs,
+        headroomCtxInitial,
+        extraPursuitSlackLu
+      )
+      ;({
+        audioFilterFinal,
+        loudnormPass1Json,
+        usedTwoPass,
+        pass1ExitCode,
+        lra,
+        tp,
+        loudnormI: passLoudnormI,
+        pursuitSlackLu: passPursuitSlack,
+      } = await runLoudnormPasses(safeIntegratedLufs, autoPreGainDb, compIntensity, headroomCtxInitial))
+      loudnormI = passLoudnormI ?? loudnormTargetPlan.loudnormI
+      staticSafetyMeta = {
+        postRenderRerun: true,
+        postRenderMovement,
+        staticLoudnormMode,
+        loudnormLinear,
+        recoveryCapLu: maxLoudnormRecoveryLu(requestedLufs),
+      }
+      await encodeMasterWav(audioFilterFinal)
+    }
+  }
 
   let chainDiagnostics = null
   if (chainDebugActive || chainSweep) {
@@ -2129,6 +2411,10 @@ export async function masterTrack({
       transientSafety,
       compressionIntensity: compIntensity,
       hotClubProtection,
+      staticLoudnormMode,
+      loudnormLinear,
+      maxRecoveryLu: maxLoudnormRecoveryLu(requestedLufs),
+      staticSafetyMeta,
       ebuInputIntegrated,
       measuredEbuAfter: analysisAfter?.lufs ?? null,
       authorityEbuIntegrated,
