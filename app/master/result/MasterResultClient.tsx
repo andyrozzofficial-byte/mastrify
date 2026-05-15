@@ -577,7 +577,7 @@ export default function MasterResultClient() {
           className="mx-auto mt-3 h-px w-12 bg-gradient-to-r from-transparent via-violet-400/35 to-transparent sm:mt-3.5 sm:w-16 sm:via-violet-400/30"
           aria-hidden
         />
-        <p className="mx-auto mt-3 max-w-md text-[13px] leading-snug text-white/40 md:mt-3.5 md:text-[14px] md:leading-relaxed">
+        <p className="mx-auto mt-3 max-w-md text-[13px] leading-snug text-white/70 md:mt-3.5 md:text-[14px] md:leading-relaxed">
           Smart mastering tuned for punch, clarity, and your loudness goal.
         </p>
         {adaptiveMessage ? (
@@ -591,7 +591,7 @@ export default function MasterResultClient() {
               {adaptiveMessage}
             </span>
             {adaptiveDetails.map((line) => (
-              <span key={line} className="text-[11px] text-white/38">
+              <span key={line} className="text-[11px] text-white/68">
                 {line}
               </span>
             ))}
@@ -620,7 +620,7 @@ export default function MasterResultClient() {
               {trackMeta.title}
             </p>
             {trackMeta.artist ? (
-              <p className="mt-1.5 text-[12px] font-medium leading-snug tracking-[0.01em] text-white/36 sm:text-[13px]">
+              <p className="mt-1.5 text-[12px] font-medium leading-snug tracking-[0.01em] text-white/68 sm:text-[13px]">
                 {trackMeta.artist}
               </p>
             ) : null}
@@ -637,14 +637,14 @@ export default function MasterResultClient() {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-stretch lg:gap-10 xl:gap-11">
           {/* Before / After metrics */}
           <div className="flex min-w-0 flex-col">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/28">Sound profile</p>
-            <p className="mt-1 text-[11px] leading-snug text-white/32">How your master feels — not just the numbers.</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/60">Sound profile</p>
+            <p className="mt-1 text-[11px] leading-snug text-white/64">How your master feels — not just the numbers.</p>
             <div className="mt-3 flex-1 overflow-hidden rounded-xl border border-white/[0.05] bg-black/[0.26] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
               <table className="w-full table-fixed border-collapse text-left text-[12px] md:text-[13px]">
                 <thead>
                   <tr className="border-b border-white/[0.045] bg-white/[0.02]">
-                    <th className="w-[34%] px-3 py-2.5 pl-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/28 md:px-4 md:py-3" />
-                    <th className="w-[33%] px-3 py-2.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/32 md:px-4 md:py-3">
+                    <th className="w-[34%] px-3 py-2.5 pl-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/60 md:px-4 md:py-3" />
+                    <th className="w-[33%] px-3 py-2.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/64 md:px-4 md:py-3">
                       Before
                     </th>
                     <th className="w-[33%] px-3 py-2.5 pr-4 text-right text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-200/50 md:px-4 md:py-3 md:text-left">
@@ -655,14 +655,14 @@ export default function MasterResultClient() {
                 <tbody className="divide-y divide-white/[0.04]">
                   {metricRows.map((row) => (
                     <tr key={row.label} className="transition-colors duration-150 hover:bg-white/[0.015]">
-                      <td className="px-3 py-3.5 pl-4 font-medium text-white/45 md:px-4 md:py-4">{row.label}</td>
-                      <td className="px-3 py-3.5 text-[12px] text-white/26 md:px-4 md:py-4">{row.before}</td>
+                      <td className="px-3 py-3.5 pl-4 font-medium text-white/75 md:px-4 md:py-4">{row.label}</td>
+                      <td className="px-3 py-3.5 text-[12px] text-white/58 md:px-4 md:py-4">{row.before}</td>
                       <td className="px-3 py-3.5 pr-4 text-right md:px-4 md:py-4 md:text-left">
                         <span className="block text-[13px] font-semibold leading-snug tracking-tight text-emerald-200/[0.92] md:text-[14px]">
                           {row.after}
                         </span>
                         {row.afterDetail ? (
-                          <span className="mt-0.5 block text-[10px] font-normal tabular-nums text-white/32">{row.afterDetail}</span>
+                          <span className="mt-0.5 block text-[10px] font-normal tabular-nums text-white/64">{row.afterDetail}</span>
                         ) : null}
                       </td>
                     </tr>
@@ -675,7 +675,7 @@ export default function MasterResultClient() {
           {/* Preview + settings */}
           <div className="flex min-w-0 flex-col gap-4 lg:gap-4">
             <div className="flex flex-1 flex-col rounded-xl border border-white/[0.055] bg-black/[0.3] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] md:p-5">
-              <p className="text-center text-[9px] font-semibold uppercase tracking-[0.24em] text-white/28">Mastering preview</p>
+              <p className="text-center text-[9px] font-semibold uppercase tracking-[0.24em] text-white/60">Mastering preview</p>
 
               <div className="mt-3 grid grid-cols-2 gap-1.5 sm:gap-2">
                 <button
@@ -684,7 +684,7 @@ export default function MasterResultClient() {
                   className={`rounded-lg py-2 text-[11px] font-semibold transition-all duration-200 sm:py-2.5 sm:text-xs ${
                     selectedSource === "original"
                       ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.11)] ring-1 ring-white/[0.07]"
-                      : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/65"
+                      : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/88"
                   }`}
                 >
                   Original
@@ -695,7 +695,7 @@ export default function MasterResultClient() {
                   className={`rounded-lg py-2 text-[11px] font-semibold transition-all duration-200 sm:py-2.5 sm:text-xs ${
                     selectedSource === "mastered"
                       ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.11)] ring-1 ring-white/[0.07]"
-                      : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/65"
+                      : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/88"
                   }`}
                 >
                   Mastered
@@ -744,13 +744,13 @@ export default function MasterResultClient() {
                   )}
                 </button>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between text-[11px] tabular-nums text-white/34">
+                  <div className="flex items-center justify-between text-[11px] tabular-nums text-white/66">
                     <span>
                       {fmtClock(playHeadSec)} / {fmtClock(windowEndSec)}
                     </span>
                     <button
                       type="button"
-                      className="rounded-md p-1.5 text-white/28 transition-colors duration-200 hover:bg-white/[0.05] hover:text-white/45"
+                      className="rounded-md p-1.5 text-white/60 transition-colors duration-200 hover:bg-white/[0.05] hover:text-white/75"
                       aria-label="Expand preview"
                     >
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -770,15 +770,15 @@ export default function MasterResultClient() {
 
             <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 sm:items-stretch">
               <div className="flex flex-col justify-center rounded-xl border border-white/[0.05] bg-black/[0.26] px-4 py-3 md:px-4 md:py-3.5">
-                <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/28">Mastering style</p>
+                <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/60">Mastering style</p>
                 <p className="mt-1 text-[13px] font-medium leading-snug text-teal-200/75 md:text-sm">{STYLE_LABELS[stylePreset]}</p>
               </div>
               <div className="flex flex-col justify-center rounded-xl border border-white/[0.05] bg-black/[0.26] px-4 py-3 md:px-4 md:py-3.5">
-                <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/28">Loudness profile</p>
+                <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/60">Loudness profile</p>
                 <p className="mt-1 text-[13px] font-medium leading-snug text-teal-200/80 md:text-sm">{loudnessCardTitle}</p>
-                <p className="mt-0.5 text-[11px] leading-snug text-white/38">{loudnessCardSubtitle}</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-white/68">{loudnessCardSubtitle}</p>
                 {measuredApprox ? (
-                  <p className="mt-1.5 text-[10px] tabular-nums text-white/28">{measuredApprox}</p>
+                  <p className="mt-1.5 text-[10px] tabular-nums text-white/60">{measuredApprox}</p>
                 ) : null}
               </div>
             </div>
@@ -824,7 +824,7 @@ export default function MasterResultClient() {
         transition={{ delay: 0.15 }}
         className="mx-auto mt-4 max-w-md pb-1 text-center md:mt-5"
       >
-        <p className="text-[12px] leading-relaxed text-white/34 md:text-[13px]">Happy with the result? Share your master!</p>
+        <p className="text-[12px] leading-relaxed text-white/66 md:text-[13px]">Happy with the result? Share your master!</p>
         <button
           type="button"
           onClick={handleShare}

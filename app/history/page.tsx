@@ -57,7 +57,7 @@ export default function HistoryPage() {
                   className={`rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition ${
                     tab === id
                       ? "bg-gradient-to-r from-purple-500/30 to-cyan-500/20 text-white ring-1 ring-white/15 shadow-[0_0_14px_rgba(139,92,246,0.12)]"
-                      : "border border-white/10 bg-black/30 text-white/45 hover:border-white/20 hover:text-white/85"
+                      : "border border-white/10 bg-black/30 text-white/75 hover:border-white/20 hover:text-white/85"
                   }`}
                 >
                   {label}
@@ -65,7 +65,7 @@ export default function HistoryPage() {
               ))}
             </div>
             <div className="relative w-full lg:max-w-sm">
-              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-white/30">
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-white/62">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -80,7 +80,7 @@ export default function HistoryPage() {
           </div>
 
           <div className="mt-8 overflow-hidden rounded-2xl border border-white/[0.06]">
-            <div className="grid grid-cols-[1fr_auto] gap-4 border-b border-white/10 bg-white/[0.03] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 md:grid-cols-[minmax(0,2fr)_1fr_1fr_auto]">
+            <div className="grid grid-cols-[1fr_auto] gap-4 border-b border-white/10 bg-white/[0.03] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/70 md:grid-cols-[minmax(0,2fr)_1fr_1fr_auto]">
               <span>Track</span>
               <span className="hidden md:block">Stats</span>
               <span className="hidden md:block">When</span>
@@ -88,7 +88,7 @@ export default function HistoryPage() {
             </div>
 
             {rows.length === 0 ? (
-              <div className="px-6 py-16 text-center text-sm text-white/45">
+              <div className="px-6 py-16 text-center text-sm text-white/75">
                 No projects yet. Run a{" "}
                 <Link href="/analyze" className="font-medium text-purple-300 hover:underline">
                   free analysis
@@ -128,20 +128,20 @@ export default function HistoryPage() {
                         </span>
                         <span className="truncate font-medium text-white/95">{e.name}</span>
                       </div>
-                      <p className="mt-1 text-xs text-white/40 md:hidden">{formatTime(e.createdAt)}</p>
+                      <p className="mt-1 text-xs text-white/70 md:hidden">{formatTime(e.createdAt)}</p>
                     </div>
                   </div>
                   <div className="hidden text-sm text-white/55 md:block">
                     {e.mixQuality != null && <span>{Math.round(e.mixQuality)} score</span>}
                     {e.lufs != null && (
-                      <span className="ml-2 text-white/40">
+                      <span className="ml-2 text-white/70">
                         {e.mixQuality != null ? " · " : ""}
                         {e.lufs.toFixed(1)} LUFS
                       </span>
                     )}
                     {e.mixQuality == null && e.lufs == null && "—"}
                   </div>
-                  <div className="hidden text-sm text-white/45 md:block">{formatTime(e.createdAt)}</div>
+                  <div className="hidden text-sm text-white/75 md:block">{formatTime(e.createdAt)}</div>
                   <div className="flex justify-end gap-2">
                     {e.kind === "master" && e.masteredUrl && (
                       <a

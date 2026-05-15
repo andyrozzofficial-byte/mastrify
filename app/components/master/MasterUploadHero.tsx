@@ -75,12 +75,12 @@ export default function MasterUploadHero({
             </span>
           </h1>
 
-          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/44 md:text-[16px]">
+          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/74 md:text-[16px]">
             Hand your mix to an intelligent mastering engine that listens with restraint — shaping loudness, space,
             and tone while preserving what makes your music feel alive.
           </p>
 
-          <ul className="mt-6 space-y-2.5 text-[14px] text-white/40">
+          <ul className="mt-6 space-y-2.5 text-[14px] text-white/70">
             <li className="flex gap-2.5">
               <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
               Perceptual processing tuned to your mix, not a one-size chain
@@ -142,21 +142,21 @@ export default function MasterUploadHero({
                 transition={{ duration: 0.5, delay: 0.15 + i * 0.05, ease: EASE }}
               >
                 <p className="text-[11px] font-medium text-white/72">{item.title}</p>
-                <p className="mt-0.5 text-[10px] text-white/28">{item.sub}</p>
+                <p className="mt-0.5 text-[10px] text-white/60">{item.sub}</p>
               </motion.div>
             ))}
           </div>
 
-          <p className="mt-6 text-[11px] text-white/28">
+          <p className="mt-6 text-[11px] text-white/60">
             <Link href="/how-it-works" className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline">
               Why Mastrify
             </Link>
-            <span className="mx-2 text-white/18">·</span>
-            <Link href="/pricing" className="text-white/28 underline-offset-2 transition hover:text-white/45 hover:underline">
+            <span className="mx-2 text-white/48">·</span>
+            <Link href="/pricing" className="text-white/60 underline-offset-2 transition hover:text-white/75 hover:underline">
               Pricing
             </Link>
-            <span className="mx-2 text-white/18">·</span>
-            <Link href="/flow" className="text-white/28 underline-offset-2 transition hover:text-white/45 hover:underline">
+            <span className="mx-2 text-white/48">·</span>
+            <Link href="/flow" className="text-white/60 underline-offset-2 transition hover:text-white/75 hover:underline">
               One-page master
             </Link>
           </p>
@@ -227,7 +227,7 @@ export default function MasterUploadHero({
       >
         <CinematicDivider />
         <motion.p
-          className="mt-8 text-center text-[12px] leading-relaxed text-white/26 md:text-[13px]"
+          className="mt-8 text-center text-[12px] leading-relaxed text-white/58 md:text-[13px]"
           animate={reduce ? undefined : { opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         >

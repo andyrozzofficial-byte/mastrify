@@ -33,7 +33,7 @@ export default function PricingTrustRow() {
           transition={{ duration: 0.5, delay: 0.04 * i, ease: EASE }}
         >
           <span className="h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
-          <span className="text-[12px] text-white/42 sm:text-[13px]">{label}</span>
+          <span className="text-[12px] text-white/72 sm:text-[13px]">{label}</span>
         </motion.li>
       ))}
     </motion.ul>

@@ -585,7 +585,7 @@ active:scale-[0.99]"
             Select track
           </label>
 
-          <p className="text-xs mt-3 text-white/40">
+          <p className="text-xs mt-3 text-white/70">
             {file ? file.name : "No file selected"}
           </p>
         </motion.div>
@@ -612,7 +612,7 @@ active:scale-[0.99]"
 </p>
     </div>
   ) : (
-    <p className="text-xs text-white/40">
+    <p className="text-xs text-white/70">
       No reference track selected
     </p>
   )}
@@ -874,7 +874,7 @@ transition-all duration-300"
       Export master
 
 
-      <p className="text-xs text-white/40 mt-2 text-center">
+      <p className="text-xs text-white/70 mt-2 text-center">
   Ready for release • Instant download
 </p>
     </button>

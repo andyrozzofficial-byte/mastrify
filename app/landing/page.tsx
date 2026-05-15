@@ -75,12 +75,12 @@ export default function Landing() {
               </span>
             </h1>
 
-            <p className="mx-auto mt-5 max-w-lg text-[15px] leading-relaxed text-white/44 md:text-[16px] md:leading-relaxed lg:mx-0">
+            <p className="mx-auto mt-5 max-w-lg text-[15px] leading-relaxed text-white/74 md:text-[16px] md:leading-relaxed lg:mx-0">
               Mastrify masters with perceptual intelligence — preserving punch, space, and emotional movement while
               bringing your mix to a confident, streaming-ready level.
             </p>
 
-            <ul className="mx-auto mt-6 max-w-md space-y-2.5 text-left text-[14px] text-white/40 lg:mx-0">
+            <ul className="mx-auto mt-6 max-w-md space-y-2.5 text-left text-[14px] text-white/70 lg:mx-0">
               <li className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
                 Transparent dynamics that respect what your mix already does well
@@ -105,14 +105,14 @@ export default function Landing() {
               </PremiumButton>
             </motion.div>
 
-            <p className="mt-5 text-center text-[13px] text-white/32 lg:text-left">
+            <p className="mt-5 text-center text-[13px] text-white/64 lg:text-left">
               <Link
                 href="/how-it-works"
                 className="transition hover:text-violet-200/70 hover:underline hover:underline-offset-2"
               >
                 Why Mastrify
               </Link>
-              <span className="mx-2 text-white/20">·</span>
+              <span className="mx-2 text-white/48">·</span>
               No signup required to begin
             </p>
           </motion.div>
@@ -198,7 +198,7 @@ export default function Landing() {
             <h2 className="mt-3 text-[1.5rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.75rem]">
               Understand your mix with clarity
             </h2>
-            <p className="mt-4 text-[14px] leading-relaxed text-white/40 md:text-[15px]">
+            <p className="mt-4 text-[14px] leading-relaxed text-white/70 md:text-[15px]">
               Perceptual analysis highlights dynamics, balance, and release readiness — so you know what your song
               needs before the final master.
             </p>
@@ -209,7 +209,7 @@ export default function Landing() {
 
           <CinematicReveal className="mx-auto mt-14 max-w-[920px] md:mt-16" delay={0.08}>
             <CinematicDivider className="mb-10" />
-            <p className="text-center text-[12px] tracking-wide text-white/28 md:text-[13px]">
+            <p className="text-center text-[12px] tracking-wide text-white/60 md:text-[13px]">
               Trusted by producers and artists worldwide
             </p>
             <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 md:gap-x-12">
@@ -221,7 +221,7 @@ export default function Landing() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.04 * i, ease: EASE }}
                 >
-                  <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/24 md:text-[11px]">
+                  <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/54 md:text-[11px]">
                     {name}
                   </span>
                 </motion.li>

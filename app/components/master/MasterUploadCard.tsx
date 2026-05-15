@@ -137,7 +137,7 @@ export default function MasterUploadCard({
                     Mix loaded
                   </motion.span>
                   <p className="text-[1.05rem] font-semibold tracking-[-0.02em] text-white/92">Ready for mastering</p>
-                  <p className="mx-auto mt-2 max-w-[18rem] truncate text-[12px] text-white/38 sm:text-[13px]">{file?.name}</p>
+                  <p className="mx-auto mt-2 max-w-[18rem] truncate text-[12px] text-white/68 sm:text-[13px]">{file?.name}</p>
                 </>
               ) : (
                 <>
@@ -159,7 +159,7 @@ export default function MasterUploadCard({
                   <p className="text-[1.05rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.12rem]">
                     {dragging ? "Release your mix" : "Drop your mix here"}
                   </p>
-                  <p className="mx-auto mt-2.5 max-w-[18rem] text-[12px] leading-relaxed text-white/32 sm:text-[13px]">
+                  <p className="mx-auto mt-2.5 max-w-[18rem] text-[12px] leading-relaxed text-white/64 sm:text-[13px]">
                     WAV, AIFF, FLAC, MP3 — up to 500MB
                   </p>
                 </>
@@ -179,7 +179,7 @@ export default function MasterUploadCard({
               />
               <span className="relative z-[1]">{loaded ? "Choose a different file" : "Choose file"}</span>
             </button>
-            {!loaded ? <p className="text-[11px] text-white/26">or drag and drop</p> : null}
+            {!loaded ? <p className="text-[11px] text-white/58">or drag and drop</p> : null}
           </div>
         </div>
       </motion.div>

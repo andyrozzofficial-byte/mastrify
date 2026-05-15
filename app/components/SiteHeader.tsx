@@ -27,7 +27,7 @@ export default function SiteHeader() {
           <div className="flex items-center gap-3 md:hidden">
             <Link
               href="/pricing"
-              className="text-[13px] font-medium text-white/50 transition hover:text-white/90"
+              className="text-[13px] font-medium text-muted-strong transition hover:text-white/90"
             >
               Log in
             </Link>
@@ -48,7 +48,7 @@ export default function SiteHeader() {
                 key={href}
                 href={href}
                 className={`relative pb-0.5 text-[13px] font-medium tracking-wide transition md:text-sm ${
-                  active ? "text-white" : "text-white/45 hover:text-white/88"
+                  active ? "text-white" : "text-white/75 hover:text-white/88"
                 }`}
               >
                 {active && (
@@ -63,7 +63,7 @@ export default function SiteHeader() {
         <div className="hidden shrink-0 items-center gap-4 md:flex">
           <Link
             href="/pricing"
-            className="text-[13px] font-medium text-white/50 transition hover:text-white/90"
+            className="text-[13px] font-medium text-muted-strong transition hover:text-white/90"
           >
             Log in
           </Link>

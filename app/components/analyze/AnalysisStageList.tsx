@@ -126,7 +126,7 @@ export default function AnalysisStageList({ activeStep }: Props) {
               >
                 <span
                   className={`block text-[13px] font-medium tracking-wide md:text-[14px] ${
-                    active ? "text-white" : done ? "text-white/72" : "text-white/34"
+                    active ? "text-white" : done ? "text-white/72" : "text-white/66"
                   }`}
                 >
                   {step.label}

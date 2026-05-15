@@ -70,7 +70,7 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
           </span>
         </h1>
         {fileName ? (
-          <p className="mt-3 max-w-md truncate text-center text-[12px] text-white/30 md:text-[13px]">{fileName}</p>
+          <p className="mt-3 max-w-md truncate text-center text-[12px] text-white/62 md:text-[13px]">{fileName}</p>
         ) : null}
       </motion.header>
 
@@ -133,7 +133,7 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
           <AnalysisStageList activeStep={activeStep} />
         </div>
         <motion.p
-          className="mt-5 text-center text-[12px] tracking-wide text-white/26 md:text-[13px]"
+          className="mt-5 text-center text-[12px] tracking-wide text-white/58 md:text-[13px]"
           animate={reduce ? undefined : { opacity: [0.5, 0.85, 0.5] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         >

@@ -33,7 +33,7 @@ export default function FlowPage() {
           <h1 className="text-2xl tracking-widest bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
             MASTRIFY AI ANALYZER
           </h1>
-          <p className="text-white/40 text-sm mt-2">
+          <p className="text-white/70 text-sm mt-2">
             Make your mix release-ready
           </p>
         </div>
@@ -66,14 +66,14 @@ export default function FlowPage() {
 
               <div className="text-red-400">
                 ▲ Your low end is muddy
-                <p className="text-white/40 text-xs mt-1">
+                <p className="text-white/70 text-xs mt-1">
                   Cut below 100 Hz
                 </p>
               </div>
 
               <div className="text-yellow-400">
                 ▲ Lacks stereo width
-                <p className="text-white/40 text-xs mt-1">
+                <p className="text-white/70 text-xs mt-1">
                   Add widening
                 </p>
               </div>
@@ -170,12 +170,12 @@ export default function FlowPage() {
 
             <div className="pt-6 border-t border-white/10 mt-6">
 
-              <p className="text-white/40 text-xs">Loudness</p>
+              <p className="text-white/70 text-xs">Loudness</p>
               <p className="text-lg">
                 {analysis?.lufs || "-9.7"} LUFS
               </p>
 
-              <p className="text-white/40 text-xs mt-4">
+              <p className="text-white/70 text-xs mt-4">
                 Dynamic Range
               </p>
               <p className="text-lg">

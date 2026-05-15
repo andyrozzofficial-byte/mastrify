@@ -52,12 +52,12 @@ export default function PricingPageHero() {
             </span>
           </h1>
 
-          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/44 md:text-[16px]">
+          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/74 md:text-[16px]">
             Release-ready mastering without subscriptions — unlock a professional export when your mix is ready,
             powered by the same cinematic engine as the rest of Mastrify.
           </p>
 
-          <ul className="mt-6 space-y-2.5 text-[14px] text-white/40">
+          <ul className="mt-6 space-y-2.5 text-[14px] text-white/70">
             {BULLETS.map((text) => (
               <li key={text} className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
@@ -66,17 +66,17 @@ export default function PricingPageHero() {
             ))}
           </ul>
 
-          <p className="mt-6 text-[13px] text-white/32">
+          <p className="mt-6 text-[13px] text-white/64">
             <Link
               href="/master"
               className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline"
             >
               Start mastering
             </Link>
-            <span className="mx-2 text-white/18">·</span>
+            <span className="mx-2 text-white/48">·</span>
             <Link
               href="/how-it-works"
-              className="text-white/28 underline-offset-2 transition hover:text-white/50 hover:underline"
+              className="text-white/60 underline-offset-2 transition hover:text-white/82 hover:underline"
             >
               Why Mastrify
             </Link>

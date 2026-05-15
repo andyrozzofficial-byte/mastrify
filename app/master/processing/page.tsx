@@ -184,7 +184,7 @@ export default function MasterProcessingPage() {
               with musical depth
             </span>
           </h1>
-          <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-white/42 md:text-[15px] md:leading-relaxed">
+          <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-white/72 md:text-[15px] md:leading-relaxed">
             Perceptual analysis, transparent dynamics, and spatial balance — tuned to preserve what
             makes your mix unique.
           </p>
@@ -241,7 +241,7 @@ export default function MasterProcessingPage() {
         </motion.div>
 
         <motion.p
-          className="mt-6 text-center text-[12px] tracking-wide text-white/28 md:text-[13px]"
+          className="mt-6 text-center text-[12px] tracking-wide text-white/60 md:text-[13px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.35, duration: 0.5 }}

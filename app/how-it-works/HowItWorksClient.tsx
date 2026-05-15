@@ -199,11 +199,11 @@ export default function HowItWorksClient() {
                 release-ready
               </span>
             </h1>
-            <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/45 md:text-[16px] md:leading-relaxed">
+            <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/75 md:text-[16px] md:leading-relaxed">
               Mastrify listens like an engineer who cares about the song — preserving dynamics, emotional movement,
               and the identity of your mix while bringing it to a confident, streaming-ready level.
             </p>
-            <ul className="mt-6 space-y-2.5 text-[14px] text-white/42">
+            <ul className="mt-6 space-y-2.5 text-[14px] text-white/72">
               <li className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
                 Perceptual processing that follows the music, not a fixed template
@@ -256,7 +256,7 @@ export default function HowItWorksClient() {
             <h2 className="mt-3 text-[1.65rem] font-semibold tracking-[-0.02em] text-white sm:text-[2rem]">
               Six stages of intelligent care
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-[14px] leading-relaxed text-white/38 md:text-[15px]">
+            <p className="mx-auto mt-3 max-w-xl text-[14px] leading-relaxed text-white/68 md:text-[15px]">
               Each step is deliberate — built to support your mix, not overwrite it.
             </p>
           </Reveal>
@@ -289,11 +289,11 @@ export default function HowItWorksClient() {
                     <step.icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="text-[10px] font-medium tabular-nums text-white/28">
+                    <span className="text-[10px] font-medium tabular-nums text-white/60">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <h3 className="mt-0.5 text-[15px] font-semibold tracking-[-0.01em] text-white/92">{step.title}</h3>
-                    <p className="mt-2 text-[13px] leading-relaxed text-white/40">{step.body}</p>
+                    <p className="mt-2 text-[13px] leading-relaxed text-white/70">{step.body}</p>
                   </div>
                 </div>
               </motion.article>
@@ -311,7 +311,7 @@ export default function HowItWorksClient() {
               <h2 className="mt-3 max-w-2xl text-[1.65rem] font-semibold leading-[1.15] tracking-[-0.02em] text-white sm:text-[2rem]">
                 Smart transparency — the mix stays yours
               </h2>
-              <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-white/42 md:text-[15px]">
+              <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-white/72 md:text-[15px]">
                 Great mastering is often about what you choose not to do. Mastrify earns each move of the chain — so
                 punch, space, and emotion survive the journey to release.
               </p>
@@ -322,7 +322,7 @@ export default function HowItWorksClient() {
                 <Reveal key={item.title} delay={i * 0.05}>
                   <div className="rounded-xl border border-white/[0.06] bg-black/30 px-4 py-4 transition hover:border-white/[0.09] hover:bg-black/40 md:px-5 md:py-5">
                     <h3 className="text-[14px] font-semibold text-violet-100/90">{item.title}</h3>
-                    <p className="mt-2 text-[13px] leading-relaxed text-white/38">{item.body}</p>
+                    <p className="mt-2 text-[13px] leading-relaxed text-white/68">{item.body}</p>
                   </div>
                 </Reveal>
               ))}
@@ -340,11 +340,11 @@ export default function HowItWorksClient() {
               <h2 className="mt-3 text-[1.65rem] font-semibold tracking-[-0.02em] text-white sm:text-[2rem]">
                 Give your mix a little room to breathe
               </h2>
-              <p className="mt-4 text-[14px] leading-relaxed text-white/42 md:text-[15px]">
+              <p className="mt-4 text-[14px] leading-relaxed text-white/72 md:text-[15px]">
                 Clean, unclipped mixes with some dynamic space usually produce the most transparent masters. You do not
                 need to hit a specific peak level — just avoid slamming the bus if you want the most open result.
               </p>
-              <p className="mt-4 text-[14px] leading-relaxed text-white/38 md:text-[15px]">
+              <p className="mt-4 text-[14px] leading-relaxed text-white/68 md:text-[15px]">
                 Already heavily limited or loud? That is fine. The engine reads the material and adapts — supporting
                 what is there instead of fighting it.
               </p>
@@ -352,7 +352,7 @@ export default function HowItWorksClient() {
 
             <Reveal delay={0.1}>
               <div className="rounded-[1.15rem] border border-white/[0.07] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_24px_56px_rgba(0,0,0,0.4)] backdrop-blur-xl md:p-8">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/32">Helpful habits</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/64">Helpful habits</p>
                 <ul className="mt-5 space-y-4">
                   {[
                     "Leave a little headroom on your stereo bus — not for rules, but for clarity.",
@@ -360,7 +360,7 @@ export default function HowItWorksClient() {
                     "Trust your ears: if the mix already feels finished, choose a gentler loudness goal.",
                     "Use analyze first if you are unsure — it highlights what the song may need.",
                   ].map((tip) => (
-                    <li key={tip} className="flex gap-3 text-[13px] leading-relaxed text-white/45">
+                    <li key={tip} className="flex gap-3 text-[13px] leading-relaxed text-white/75">
                       <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-400/60" aria-hidden />
                       {tip}
                     </li>
@@ -386,7 +386,7 @@ export default function HowItWorksClient() {
             {TRUST.map((label) => (
               <span
                 key={label}
-                className="rounded-full border border-white/[0.07] bg-white/[0.04] px-3.5 py-1.5 text-[11px] font-medium tracking-wide text-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md transition hover:border-white/[0.1] hover:text-white/65"
+                className="rounded-full border border-white/[0.07] bg-white/[0.04] px-3.5 py-1.5 text-[11px] font-medium tracking-wide text-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md transition hover:border-white/[0.1] hover:text-white/88"
               >
                 {label}
               </span>
@@ -394,7 +394,7 @@ export default function HowItWorksClient() {
           </Reveal>
 
           <Reveal delay={0.15} className="mt-14 text-center">
-            <p className="text-[14px] text-white/35">Ready when your mix is.</p>
+            <p className="text-[14px] text-white/66">Ready when your mix is.</p>
             <Link
               href="/master"
               className="mt-5 inline-flex min-h-[52px] items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-10 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition hover:brightness-[1.06]"

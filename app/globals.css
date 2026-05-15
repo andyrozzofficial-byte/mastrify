@@ -3,6 +3,14 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Cinematic muted text — readable on dark without breaking restraint */
+  --text-muted-faint: rgba(210, 214, 228, 0.44);
+  --text-muted-soft: rgba(220, 224, 236, 0.52);
+  --text-muted: rgba(255, 255, 255, 0.64);
+  --text-muted-strong: rgba(255, 255, 255, 0.72);
+  --text-label: rgba(196, 200, 220, 0.58);
+  --text-label-strong: rgba(210, 214, 232, 0.68);
 }
 
 
@@ -17,6 +25,27 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-muted-faint {
+    color: var(--text-muted-faint);
+  }
+  .text-muted-soft {
+    color: var(--text-muted-soft);
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+  .text-muted-strong {
+    color: var(--text-muted-strong);
+  }
+  .text-label {
+    color: var(--text-label);
+  }
+  .text-label-strong {
+    color: var(--text-label-strong);
+  }
 }
 @keyframes fadeIn {
   from {

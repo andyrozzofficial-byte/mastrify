@@ -32,10 +32,10 @@ function MetricTile({
 }) {
   return (
     <div className="rounded-xl border border-white/[0.06] bg-black/[0.38] px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-md md:rounded-2xl md:px-4 md:py-3.5">
-      <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/38">{label}</div>
+      <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/68">{label}</div>
       <div className="mt-1 text-lg font-bold tabular-nums tracking-tight text-white md:text-xl">{value}</div>
       {hint ? (
-        <div className={`mt-1 text-[10px] font-medium leading-snug text-white/42 md:text-[11px] ${hintClassName ?? ""}`}>{hint}</div>
+        <div className={`mt-1 text-[10px] font-medium leading-snug text-white/72 md:text-[11px] ${hintClassName ?? ""}`}>{hint}</div>
       ) : null}
     </div>
   )
@@ -416,7 +416,7 @@ export default function AnalyzePage() {
                 setProcessing(false)
                 setAnalysisStep(0)
               }}
-              className="z-10 shrink-0 text-left text-[11px] font-medium text-white/38 transition hover:text-white/65 md:text-xs"
+              className="z-10 shrink-0 text-left text-[11px] font-medium text-white/68 transition hover:text-white/88 md:text-xs"
             >
               ← Back to upload
             </button>
@@ -444,7 +444,7 @@ export default function AnalyzePage() {
           >
             <div className="flex flex-col items-stretch gap-4 md:flex-row md:items-center md:justify-between md:gap-6">
               <div className="min-w-0 flex-1 text-center md:max-w-xl md:text-left">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/32">Release readiness</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/64">Release readiness</p>
                 <h2 className="mt-1 text-xl font-bold leading-tight tracking-tight text-white md:text-2xl lg:text-[1.65rem]">
                   Your mix is{" "}
                   <span className="text-transparent bg-gradient-to-r from-fuchsia-300 via-white to-cyan-200 bg-clip-text">
@@ -461,16 +461,16 @@ export default function AnalyzePage() {
                 </div>
 
                 {verdict ? (
-                  <p className="mx-auto mt-2 max-w-md line-clamp-2 text-[12px] leading-snug text-white/42 md:mx-0">{verdict}</p>
+                  <p className="mx-auto mt-2 max-w-md line-clamp-2 text-[12px] leading-snug text-white/72 md:mx-0">{verdict}</p>
                 ) : (
-                  <p className="mx-auto mt-2 max-w-md text-[12px] leading-snug text-white/42 md:mx-0">
+                  <p className="mx-auto mt-2 max-w-md text-[12px] leading-snug text-white/72 md:mx-0">
                     {typeof result.mixQuality === "number" && result.mixQuality >= 75
                       ? "Mix is in good shape for mastering."
                       : "Mix needs improvement before release"}
                   </p>
                 )}
 
-                <ul className="mx-auto mt-2.5 max-w-md space-y-1 text-left text-[11px] leading-snug text-white/38 md:mx-0">
+                <ul className="mx-auto mt-2.5 max-w-md space-y-1 text-left text-[11px] leading-snug text-white/68 md:mx-0">
                   <li className="flex gap-2">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-white/22" aria-hidden />
                     <span>
@@ -588,9 +588,9 @@ export default function AnalyzePage() {
           {(result.issues?.length || 0) === 0 && (
             <div className="rounded-lg border border-emerald-500/12 bg-emerald-950/[0.1] px-3.5 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:text-left">
               <p className="text-[13px] font-medium text-emerald-300/95">Production-ready — no critical issues flagged</p>
-              <p className="mx-auto mt-1 max-w-xl text-[11px] leading-snug text-white/38 md:mx-0">
+              <p className="mx-auto mt-1 max-w-xl text-[11px] leading-snug text-white/68 md:mx-0">
                 Estimated post-master loudness <span className="font-semibold text-emerald-300/85">~−9 LUFS</span>
-                <span className="text-white/28"> · </span>
+                <span className="text-white/60"> · </span>
                 Streaming target typically −8 to −10 LUFS
               </p>
             </div>
@@ -600,7 +600,7 @@ export default function AnalyzePage() {
           <div className="flex flex-col gap-2 rounded-lg border border-purple-500/16 bg-gradient-to-r from-purple-950/30 via-black/50 to-slate-950/35 px-3.5 py-3 shadow-[0_0_20px_rgba(88,28,135,0.05),0_16px_40px_rgba(0,0,0,0.4)] md:flex-row md:items-center md:justify-between md:gap-4 md:px-4 md:py-2.5">
             <div className="min-w-0 text-center md:text-left">
               <h3 className="text-[15px] font-semibold tracking-tight text-white md:text-base">Ready for a pro master?</h3>
-              <p className="mt-0.5 text-[11px] leading-snug text-white/40 line-clamp-2 md:line-clamp-1">
+              <p className="mt-0.5 text-[11px] leading-snug text-white/70 line-clamp-2 md:line-clamp-1">
                 Let AI tighten loudness, clarity, and punch — same engine as full Master.
               </p>
             </div>
@@ -628,14 +628,14 @@ export default function AnalyzePage() {
                 className={`inline-flex min-h-[44px] items-center justify-center rounded-lg border px-5 text-[13px] font-semibold transition ${
                   canMaster
                     ? "border-white/[0.12] bg-white/[0.04] text-white/88 hover:border-cyan-400/22 hover:bg-white/[0.07]"
-                    : "cursor-not-allowed border-white/[0.06] bg-white/[0.02] text-white/32"
+                    : "cursor-not-allowed border-white/[0.06] bg-white/[0.02] text-white/64"
                 }`}
               >
                 One-page master
               </button>
             </div>
           </div>
-          <p className="-mt-0.5 text-center text-[10px] leading-tight text-white/28 md:text-left">
+          <p className="-mt-0.5 text-center text-[10px] leading-tight text-white/60 md:text-left">
             {canMaster
               ? "Choose workflow — identical processing core."
               : "Fix critical mix issues first for the strongest master."}
@@ -645,8 +645,8 @@ export default function AnalyzePage() {
           {(result.issues?.length || 0) > 0 && issueListForUi.length > 0 && (
             <section className="rounded-lg border border-white/[0.09] bg-black/[0.48] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_40px_rgba(0,0,0,0.42)] backdrop-blur-xl md:px-3.5 md:py-3">
               <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] pb-1.5">
-                <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/38">Issues found</h3>
-                <span className="text-[10px] tabular-nums text-white/26">{issueListForUi.length} signals</span>
+                <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/68">Issues found</h3>
+                <span className="text-[10px] tabular-nums text-white/58">{issueListForUi.length} signals</span>
               </div>
               <ul className="mt-0 divide-y divide-white/[0.05]">
                 {issueListForUi.map((issue: any, i: number) => {
@@ -684,10 +684,10 @@ export default function AnalyzePage() {
                           ) : null}
                         </div>
                         {detailLine ? (
-                          <p className="mt-1 text-[11px] leading-snug text-white/34 line-clamp-2">{detailLine}</p>
+                          <p className="mt-1 text-[11px] leading-snug text-white/66 line-clamp-2">{detailLine}</p>
                         ) : null}
                         {isMain && issue.realImpact !== undefined ? (
-                          <p className="mt-0.5 text-[10px] tabular-nums text-white/28">
+                          <p className="mt-0.5 text-[10px] tabular-nums text-white/60">
                             Readiness {current}% → {next}%
                           </p>
                         ) : null}
@@ -699,7 +699,7 @@ export default function AnalyzePage() {
               {recommendations?.length > issues.length && recommendations[recommendations.length - 1]?.steps?.[0] ? (
                 <div className="mt-1.5 border-t border-white/[0.06] pt-1.5">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-purple-200/50">Pro enhancement</p>
-                  <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-white/34">{recommendations[recommendations.length - 1].steps[0]}</p>
+                  <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-white/66">{recommendations[recommendations.length - 1].steps[0]}</p>
                 </div>
               ) : null}
             </section>

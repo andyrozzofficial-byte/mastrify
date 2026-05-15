@@ -171,7 +171,7 @@ export default function CinematicWaveform({
           className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center bg-black/20 backdrop-blur-[1px]"
           aria-hidden
         >
-          <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/28">
+          <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/60">
             Reading audio…
           </span>
         </div>

@@ -68,12 +68,12 @@ export default function AnalyzeUploadHero({
             </span>
           </h1>
 
-          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/44 md:text-[16px]">
+          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/74 md:text-[16px]">
             Perceptual analysis maps dynamics, balance, and release readiness — the first step in an intelligent
             mastering journey, before you commit to the final master.
           </p>
 
-          <ul className="mt-6 space-y-2.5 text-[14px] text-white/40">
+          <ul className="mt-6 space-y-2.5 text-[14px] text-white/70">
             <li className="flex gap-2.5">
               <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
               Understand loudness, width, and tone with engineer-level clarity
@@ -109,19 +109,19 @@ export default function AnalyzeUploadHero({
                 transition={{ duration: 0.5, delay: 0.15 + i * 0.05, ease: EASE }}
               >
                 <p className="text-[11px] font-medium text-white/72">{item.title}</p>
-                <p className="mt-0.5 text-[10px] text-white/28">{item.sub}</p>
+                <p className="mt-0.5 text-[10px] text-white/60">{item.sub}</p>
               </motion.div>
             ))}
           </div>
 
-          <p className="mt-6 text-[11px] text-white/28">
+          <p className="mt-6 text-[11px] text-white/60">
             <Link
               href="/how-it-works"
               className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline"
             >
               Why Mastrify
             </Link>
-            <span className="mx-2 text-white/18">·</span>
+            <span className="mx-2 text-white/48">·</span>
             Supported formats &amp; tips
           </p>
         </motion.div>

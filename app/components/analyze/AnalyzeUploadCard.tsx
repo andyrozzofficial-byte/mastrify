@@ -112,7 +112,7 @@ export default function AnalyzeUploadCard({
             <p className="text-[1.05rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.12rem]">
               {dragging ? "Release to analyze" : "Drop your track here"}
             </p>
-            <p className="mx-auto mt-2.5 max-w-[18rem] text-[12px] leading-relaxed text-white/32 sm:text-[13px]">
+            <p className="mx-auto mt-2.5 max-w-[18rem] text-[12px] leading-relaxed text-white/64 sm:text-[13px]">
               WAV, AIFF, FLAC, MP3 — up to 500MB
             </p>
           </div>
@@ -129,7 +129,7 @@ export default function AnalyzeUploadCard({
               />
               <span className="relative z-[1]">{file ? "Scan my track" : "Choose file"}</span>
             </button>
-            <p className="text-[11px] text-white/26">or drag and drop</p>
+            <p className="text-[11px] text-white/58">or drag and drop</p>
             {file ? (
               <p className="max-w-full truncate px-2 text-xs text-cyan-200/55">{file.name}</p>
             ) : null}

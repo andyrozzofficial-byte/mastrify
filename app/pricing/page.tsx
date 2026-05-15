@@ -58,7 +58,7 @@ export default function Pricing() {
         </motion.div>
 
         <motion.div className="mt-12 md:mt-14">
-          <p className="mb-6 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/28">
+          <p className="mb-6 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/60">
             What you unlock
           </p>
           <PricingTrustRow />
@@ -72,7 +72,7 @@ export default function Pricing() {
           transition={{ duration: 0.6 }}
         >
           <CinematicDivider />
-          <p className="mt-8 text-center text-[12px] leading-relaxed text-white/26 md:text-[13px]">
+          <p className="mt-8 text-center text-[12px] leading-relaxed text-white/58 md:text-[13px]">
             Studio-quality master. One simple unlock — more value than the price suggests.
           </p>
         </motion.div>

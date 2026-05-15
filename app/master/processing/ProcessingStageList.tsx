@@ -113,7 +113,7 @@ export default function ProcessingStageList({ activeStep }: Props) {
               >
                 <span
                   className={`block text-[13px] font-medium tracking-wide md:text-[14px] ${
-                    active ? "text-white" : done ? "text-white/75" : "text-white/38"
+                    active ? "text-white" : done ? "text-white/75" : "text-white/68"
                   }`}
                 >
                   {label}

@@ -84,7 +84,7 @@ export default function PricingUnlockCard({ onUnlock, className = "" }: Props) {
           <h2 className="mt-5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/95 sm:text-[1.5rem]">
             Studio-quality master
           </h2>
-          <p className="mx-auto mt-2.5 max-w-[16rem] text-[13px] leading-relaxed text-white/38 sm:text-[14px]">
+          <p className="mx-auto mt-2.5 max-w-[16rem] text-[13px] leading-relaxed text-white/68 sm:text-[14px]">
             Pay only for the master you export. One simple unlock.
           </p>
 
@@ -100,7 +100,7 @@ export default function PricingUnlockCard({ onUnlock, className = "" }: Props) {
                 $9
               </span>
             </motion.p>
-            <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.22em] text-white/28">
+            <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.22em] text-white/60">
               per master · no subscription
             </p>
           </div>
@@ -126,7 +126,7 @@ export default function PricingUnlockCard({ onUnlock, className = "" }: Props) {
             <span className="relative z-[1]">Pay &amp; unlock</span>
           </button>
 
-          <p className="mt-4 text-[11px] text-white/26">Test mode — no real payment yet</p>
+          <p className="mt-4 text-[11px] text-white/58">Test mode — no real payment yet</p>
         </div>
       </motion.div>
     </motion.div>

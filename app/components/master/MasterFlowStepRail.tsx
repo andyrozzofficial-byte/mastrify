@@ -64,7 +64,7 @@ export default function MasterFlowStepRail({ phase, className = "" }: Props) {
                   ? "bg-violet-600/25 text-violet-200/80 ring-1 ring-violet-400/25"
                   : i === active
                     ? "bg-gradient-to-b from-violet-500/95 to-indigo-700/95 text-white ring-1 ring-white/10"
-                    : "border border-white/[0.08] bg-black/40 text-white/28"
+                    : "border border-white/[0.08] bg-black/40 text-white/60"
               }`}
               animate={
                 reduce || i !== active
@@ -83,7 +83,7 @@ export default function MasterFlowStepRail({ phase, className = "" }: Props) {
             </motion.span>
             <span
               className={`mt-2 text-center text-[8px] font-medium uppercase tracking-[0.22em] sm:text-[9px] ${
-                i === active ? "text-violet-200/75" : i < active ? "text-white/40" : "text-white/26"
+                i === active ? "text-violet-200/75" : i < active ? "text-white/70" : "text-white/58"
               }`}
             >
               {label}

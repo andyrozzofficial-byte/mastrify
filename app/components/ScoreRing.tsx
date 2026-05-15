@@ -79,9 +79,9 @@ export default function ScoreRing({
           </span>
         ) : (
           <>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">Score</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">Score</span>
             <span className="text-4xl font-bold tabular-nums text-white md:text-5xl">{v}</span>
-            <span className="text-xs text-white/35">/ 100</span>
+            <span className="text-xs text-white/66">/ 100</span>
           </>
         )}
       </div>

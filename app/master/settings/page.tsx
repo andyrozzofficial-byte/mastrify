@@ -80,7 +80,7 @@ function ThinSlider({
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-[10px] font-medium text-white/42">{label}</span>
+        <span className="truncate text-[10px] font-medium text-white/72">{label}</span>
         <span className="shrink-0 font-mono text-[10px] text-cyan-300/75">{value}%</span>
       </div>
       <input
@@ -202,21 +202,21 @@ export default function MasterSettingsPage() {
           >
             <Link
               href="/master"
-              className="absolute left-5 top-5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/32 transition hover:text-white/55 md:left-6 md:top-6"
+              className="absolute left-5 top-5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/64 transition hover:text-white/85 md:left-6 md:top-6"
             >
               &lt; Back
             </Link>
 
             <header className="mb-6 pt-1 text-center md:mb-7">
               <h1 className="text-[1.35rem] font-bold tracking-tight text-white md:text-[1.5rem]">Master settings</h1>
-              <p className="mx-auto mt-1.5 max-w-sm text-[12px] leading-snug text-white/38 md:text-[13px]">
+              <p className="mx-auto mt-1.5 max-w-sm text-[12px] leading-snug text-white/68 md:text-[13px]">
                 Choose the style and settings for your master.
               </p>
             </header>
 
             <div className="space-y-6 md:space-y-7">
               <section>
-                <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/35">Mastering style</h3>
+                <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/66">Mastering style</h3>
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                   {PRESETS.map((p) => {
                     const active = stylePreset === p.id
@@ -233,7 +233,7 @@ export default function MasterSettingsPage() {
                       >
                         <span
                           className={`mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg ${
-                            active ? "bg-white/10 text-purple-200" : "bg-white/[0.04] text-white/35"
+                            active ? "bg-white/10 text-purple-200" : "bg-white/[0.04] text-white/66"
                           }`}
                         >
                           {p.icon}
@@ -241,7 +241,7 @@ export default function MasterSettingsPage() {
                         <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-white/75"}`}>
                           {p.label}
                         </span>
-                        <span className={`mt-1 block text-[10px] leading-snug ${active ? "text-white/45" : "text-white/30"}`}>
+                        <span className={`mt-1 block text-[10px] leading-snug ${active ? "text-white/75" : "text-white/62"}`}>
                           {p.hint}
                         </span>
                       </button>
@@ -251,7 +251,7 @@ export default function MasterSettingsPage() {
               </section>
 
               <section>
-                <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/35">Loudness target</h3>
+                <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/66">Loudness target</h3>
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {LOUDNESS.map((o) => {
                     const active = targetLufs === o.lufs
@@ -263,13 +263,13 @@ export default function MasterSettingsPage() {
                         className={`rounded-xl border px-2.5 py-2 text-left transition md:px-3 md:py-2.5 ${
                           active
                             ? "border-purple-400/50 bg-purple-500/[0.12] text-white shadow-[0_0_14px_rgba(147,51,234,0.14)] ring-1 ring-purple-400/20"
-                            : "border-white/[0.06] bg-black/20 text-white/45 hover:border-white/[0.1] hover:bg-white/[0.03]"
+                            : "border-white/[0.06] bg-black/20 text-white/75 hover:border-white/[0.1] hover:bg-white/[0.03]"
                         }`}
                       >
                         <span className={`block text-[11px] font-semibold leading-tight ${active ? "text-white" : "text-white/65"}`}>
                           {o.label}
                         </span>
-                        <span className={`mt-0.5 block text-[10px] font-medium tabular-nums ${active ? "text-white/45" : "text-white/28"}`}>
+                        <span className={`mt-0.5 block text-[10px] font-medium tabular-nums ${active ? "text-white/75" : "text-white/60"}`}>
                           {o.lufs} LUFS
                         </span>
                       </button>
@@ -279,7 +279,7 @@ export default function MasterSettingsPage() {
               </section>
 
               <section>
-                <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/35">Advanced options</h3>
+                <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/66">Advanced options</h3>
                 <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-x-6 md:gap-y-4">
                   <ThinSlider label="Stereo enhancement" value={stereoEnhance} onChange={setStereoEnhance} />
                   <ThinSlider label="Low end control" value={lowEndControl} onChange={setLowEndControl} />
@@ -296,7 +296,7 @@ export default function MasterSettingsPage() {
               >
                 Start mastering
               </button>
-              <Link href="/master" className="pb-0.5 text-center text-[10px] text-white/30 transition hover:text-white/50">
+              <Link href="/master" className="pb-0.5 text-center text-[10px] text-white/62 transition hover:text-white/82">
                 ← Change file
               </Link>
             </div>
