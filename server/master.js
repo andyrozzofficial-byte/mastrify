@@ -29,7 +29,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-adaptive"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-transient-first"
 
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n))
@@ -131,47 +131,58 @@ function buildStereoStage(stereoEnhance, style, hotClubProtection = false) {
 
 function compressorForStyle(style) {
   if (style === "LOUD") {
-    return { threshold: -20.2, ratio: 1.95, attack: 22, release: 185 }
+    return { threshold: -19.5, ratio: 1.42, attack: 32, release: 260 }
   }
   if (style === "CLUB") {
-    return { threshold: -20, ratio: 1.88, attack: 24, release: 195 }
+    return { threshold: -19.8, ratio: 1.38, attack: 34, release: 280 }
   }
   if (style === "WARM") {
-    return { threshold: -17.4, ratio: 1.22, attack: 42, release: 320 }
+    return { threshold: -16.8, ratio: 1.14, attack: 48, release: 360 }
   }
   if (style === "FESTIVAL") {
-    return { threshold: -18.1, ratio: 1.62, attack: 28, release: 220 }
+    return { threshold: -18.8, ratio: 1.32, attack: 36, release: 290 }
   }
-  return { threshold: -18, ratio: 1.52, attack: 30, release: 240 }
+  return { threshold: -19.2, ratio: 1.28, attack: 38, release: 300 }
 }
 
-/** Softer bus compression — preserve transients on hot club targets. */
-function compressorForStyleAndTarget(style, integratedTarget) {
+/** Scale bus compression — 1 = full, lower = gentler (transient safety). */
+function scaleCompressorIntensity(comp, intensity) {
+  const i = clamp(intensity, 0.35, 1)
+  if (i >= 0.98) return comp
+  const ratio = 1 + (comp.ratio - 1) * i
+  return {
+    threshold: comp.threshold + (1 - i) * 3.2,
+    ratio: Math.max(1.05, Number(ratio.toFixed(2))),
+    attack: Math.round(comp.attack + (1 - i) * 14),
+    release: Math.min(420, Math.round(comp.release + (1 - i) * 40)),
+  }
+}
+
+/** Gentler bus compression — loudnorm does level work, not stacked gain. */
+function compressorForStyleAndTarget(style, integratedTarget, compIntensity = 1) {
   const base = compressorForStyle(style)
   const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
+  let comp = base
   if ((style === "CLUB" || style === "FESTIVAL") && t >= -10.5) {
-    return { threshold: -16.8, ratio: 1.22, attack: 38, release: 300 }
-  }
-  if (style === "LOUD" && t >= -10.5) {
-    return { threshold: -17.2, ratio: 1.35, attack: 34, release: 270 }
-  }
-  if (t >= -10.5) {
-    return {
-      threshold: base.threshold + 2.8,
-      ratio: Math.max(1.1, base.ratio - 0.38),
-      attack: base.attack + 8,
-      release: Math.min(400, base.release + 65),
+    comp = { threshold: -17.8, ratio: 1.12, attack: 44, release: 340 }
+  } else if (style === "LOUD" && t >= -10.5) {
+    comp = { threshold: -18.2, ratio: 1.18, attack: 40, release: 310 }
+  } else if (t >= -10.5) {
+    comp = {
+      threshold: base.threshold + 3.5,
+      ratio: Math.max(1.08, base.ratio - 0.28),
+      attack: base.attack + 12,
+      release: Math.min(400, base.release + 70),
+    }
+  } else if (t >= -12.5) {
+    comp = {
+      threshold: base.threshold + 2,
+      ratio: Math.max(1.1, base.ratio - 0.15),
+      attack: base.attack + 6,
+      release: Math.min(360, base.release + 45),
     }
   }
-  if (t >= -12.5) {
-    return {
-      threshold: base.threshold + 1.5,
-      ratio: Math.max(1.15, base.ratio - 0.22),
-      attack: base.attack + 4,
-      release: Math.min(340, base.release + 40),
-    }
-  }
-  return base
+  return scaleCompressorIntensity(comp, compIntensity)
 }
 
 /** True-peak ceiling — more headroom when we back off hot targets (punch > exact LUFS). */
@@ -201,8 +212,9 @@ function lraForStyleAndTarget(style, integratedTarget, requestedTarget) {
   const req =
     typeof requestedTarget === "number" && Number.isFinite(requestedTarget) ? requestedTarget : t
   if (isHotLoudnessTarget(req) && (style === "CLUB" || style === "FESTIVAL" || style === "LOUD")) {
-    return Math.max(base, 10.5)
+    return Math.max(base, 11)
   }
+  if (t <= -12) return Math.max(base, 11)
   if (req - t > 0.35) return Math.min(base + 1.5, 12)
   return base
 }
@@ -235,17 +247,34 @@ function headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated, pass1Json 
 function resolveSafeIntegratedLufs(requestedLufs, ctx) {
   const requested = clamp(requestedLufs, -16, -9)
   const reasons = []
-  if (!isHotLoudnessTarget(requested)) {
-    return {
-      requested,
-      resolved: requested,
-      backoffLu: 0,
-      limiterReductionEstimateDb: 0,
-      transientProtection: { active: false, reasons },
-    }
+  let backoff = 0
+
+  const drEarly = ctx.dynamicRange
+  if (drEarly != null && drEarly < 7) {
+    backoff += 0.35
+    reasons.push(`collapsedDR=${drEarly.toFixed(1)}dB`)
+  }
+  if (drEarly != null && drEarly < 5.5) {
+    backoff += 0.25
+    reasons.push(`veryLowDR=${drEarly.toFixed(1)}dB`)
   }
 
-  let backoff = 0
+  if (!isHotLoudnessTarget(requested)) {
+    const integrated = ctx.integratedLufs
+    if (integrated != null && requested - integrated > 5.5) {
+      backoff += 0.2
+      reasons.push(`streamingLargeGap=${(requested - integrated).toFixed(1)}LU`)
+    }
+    backoff = Math.min(backoff, 0.75)
+    const resolved = Math.max(requested - backoff, -16)
+    return {
+      requested,
+      resolved,
+      backoffLu: Number(backoff.toFixed(2)),
+      limiterReductionEstimateDb: Number(backoff.toFixed(2)),
+      transientProtection: { active: backoff > 0.05, reasons, preserveTransients: true },
+    }
+  }
   const dr = ctx.dynamicRange
   if (dr != null && dr > 9) {
     backoff += 0.25
@@ -315,68 +344,204 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
   }
 }
 
-/** Scale pregain from headroom — less boost when DR/crest/bass are high or target is hot. */
-function computeAdaptivePregain(resolvedLufs, ctx) {
+/**
+ * Minimal pregain — loudnorm handles level; avoid stacking gain before it.
+ * Streaming: max ~+3 dB. Club: max ~+1.25 dB.
+ */
+function computeAdaptivePregain(resolvedLufs, ctx, pregainScale = 1) {
   const integrated = ctx.integratedLufs
-  if (integrated == null || !Number.isFinite(integrated)) return { pregainDb: 0, factors: {} }
+  if (integrated == null || !Number.isFinite(integrated)) {
+    return { pregainDb: 0, factors: {}, maxGainCap: 0 }
+  }
 
   const gap = resolvedLufs - integrated
-  if (gap <= 0.55) return { pregainDb: 0, factors: { gap } }
+  if (gap <= 1.15) return { pregainDb: 0, factors: { gap, note: "nearTarget" }, maxGainCap: 0 }
 
   const hot = isHotLoudnessTarget(resolvedLufs)
-  let factor = hot ? 0.38 : 0.58
-  const factors = { gap, hot, baseFactor: factor }
+  const maxGain = hot ? 1.25 : 3
+  let factor = hot ? 0.1 : 0.2
+  const factors = { gap, hot, baseFactor: factor, maxGainCap: maxGain }
 
   const dr = ctx.dynamicRange
-  if (dr != null && dr > 8) {
-    factor *= 0.82
-    factors.drScale = 0.82
+  if (dr != null && dr > 9) {
+    factor *= 0.55
+    factors.drScale = 0.55
   }
   if (dr != null && dr > 11.5) {
-    factor *= 0.72
-    factors.drScaleHigh = 0.72
+    factor *= 0.45
+    factors.drScaleHigh = 0.45
+  }
+  if (dr != null && dr < 8) {
+    factor *= 0.65
+    factors.lowDrScale = 0.65
   }
 
   const bass = ctx.bassWeight
-  if (bass != null && bass > 0.38) {
-    factor *= 0.78
-    factors.bassScale = 0.78
-  }
-  if (bass != null && bass > 0.5) {
+  if (bass != null && bass > 0.4) {
     factor *= 0.7
-    factors.bassScaleHeavy = 0.7
+    factors.bassScale = 0.7
   }
 
-  if (ctx.peakDb != null && ctx.peakDb > -2) {
-    factor *= 0.72
-    factors.peakScale = 0.72
+  if (ctx.peakDb != null && ctx.peakDb > -2.5) {
+    factor *= 0.6
+    factors.peakScale = 0.6
   }
 
-  const maxGain = hot ? 4.25 : 6.5
+  if (gap > 6) {
+    factor *= 0.5
+    factors.largeGapScale = 0.5
+  }
+
   let pregainDb = gap * factor
   pregainDb = Math.min(pregainDb, maxGain)
+  pregainDb *= clamp(pregainScale, 0, 1)
   pregainDb = Math.max(0, pregainDb)
 
-  return { pregainDb: Number(pregainDb.toFixed(2)), factors }
+  return { pregainDb: Number(pregainDb.toFixed(2)), factors, maxGainCap: maxGain }
 }
 
-/** CLUB/CD: tighten lows + gentle soft clip before loudnorm. */
+function parseLoudnormJsonNum(j, key) {
+  if (!j || j[key] == null) return null
+  const n = parseFloat(String(j[key]).replace(/"/g, "").trim())
+  return Number.isFinite(n) ? n : null
+}
+
+/** Crest proxy from peak vs integrated (higher = more transient headroom). */
+function estimateCrestDb(ctx) {
+  const peak = ctx.peakDb
+  const lufs = ctx.integratedLufs
+  if (peak != null && lufs != null) return peak - lufs
+  return ctx.dynamicRange
+}
+
+/**
+ * Transient safety — reduce pregain, compression, and target when dynamics collapse
+ * or loudnorm would be over-driven.
+ */
+function assessTransientSafety({
+  requestedLufs,
+  resolvedLufs,
+  ctx,
+  pregainDb,
+  pass1Json = null,
+}) {
+  const triggers = []
+  let pregainScale = 1
+  let compIntensity = 1
+  let targetBackoffLu = 0
+  let loudnormOverDriven = false
+  let estimatedGainReductionDb = 0
+
+  const crest = estimateCrestDb(ctx)
+  const dr = ctx.dynamicRange
+
+  if (crest != null && crest < 8) {
+    triggers.push(`lowCrest=${crest.toFixed(1)}dB`)
+    pregainScale *= 0.45
+    compIntensity *= 0.82
+    targetBackoffLu += 0.35
+  }
+  if (dr != null && dr < 7) {
+    triggers.push(`lowDR=${dr.toFixed(1)}dB`)
+    pregainScale *= 0.4
+    compIntensity *= 0.78
+    targetBackoffLu += 0.4
+  }
+  if (dr != null && dr < 5.5) {
+    triggers.push(`collapsedDR=${dr.toFixed(1)}dB`)
+    pregainScale *= 0.55
+    targetBackoffLu += 0.35
+  }
+
+  if (pregainDb > 2.8 && !isHotLoudnessTarget(resolvedLufs)) {
+    triggers.push(`pregainHighStreaming=${pregainDb.toFixed(1)}dB`)
+    pregainScale *= 0.55
+    loudnormOverDriven = true
+  }
+  if (pregainDb > 1.1 && isHotLoudnessTarget(resolvedLufs)) {
+    triggers.push(`pregainHighClub=${pregainDb.toFixed(1)}dB`)
+    pregainScale *= 0.35
+    loudnormOverDriven = true
+  }
+
+  if (pass1Json) {
+    const inputLra = parseLoudnormJsonNum(pass1Json, "input_lra")
+    const outputLra = parseLoudnormJsonNum(pass1Json, "output_lra")
+    const inputTp = parseLoudnormJsonNum(pass1Json, "input_tp")
+    const offset = parseLoudnormJsonNum(pass1Json, "offset")
+    const inputI = parseLoudnormJsonNum(pass1Json, "input_i")
+    const outputI = parseLoudnormJsonNum(pass1Json, "output_i")
+
+    if (inputLra != null && outputLra != null && outputLra < inputLra - 3) {
+      triggers.push(`pass1LraCollapse=${(inputLra - outputLra).toFixed(1)}LU`)
+      pregainScale *= 0.35
+      compIntensity *= 0.75
+      targetBackoffLu += 0.45
+      loudnormOverDriven = true
+      estimatedGainReductionDb = Math.max(estimatedGainReductionDb, inputLra - outputLra)
+    }
+    if (inputTp != null && inputTp > -0.8) {
+      triggers.push(`pass1HotTp=${inputTp.toFixed(1)}dBTP`)
+      pregainScale *= 0.5
+      targetBackoffLu += 0.3
+      loudnormOverDriven = true
+    }
+    if (offset != null && Math.abs(offset) > 4.5) {
+      triggers.push(`pass1LoudnormOffset=${offset.toFixed(1)}dB`)
+      pregainScale *= 0.4
+      compIntensity *= 0.85
+      loudnormOverDriven = true
+      estimatedGainReductionDb = Math.max(estimatedGainReductionDb, Math.abs(offset))
+    }
+    if (inputI != null && outputI != null && outputI - inputI > 2.2) {
+      triggers.push(`pass1HeavyLift=${(outputI - inputI).toFixed(1)}LU`)
+      pregainScale *= 0.45
+      loudnormOverDriven = true
+    }
+  }
+
+  targetBackoffLu = Math.min(targetBackoffLu, 1.25)
+  pregainScale = Math.max(0, Math.min(1, pregainScale))
+  compIntensity = Math.max(0.35, Math.min(1, compIntensity))
+
+  const active = triggers.length > 0
+  let adjustedResolved = resolvedLufs
+  if (targetBackoffLu > 0.05) {
+    adjustedResolved = Math.max(resolvedLufs - targetBackoffLu, isHotLoudnessTarget(requestedLufs) ? -11 : -16)
+    adjustedResolved = Math.min(adjustedResolved, resolvedLufs)
+  }
+
+  return {
+    active,
+    triggers,
+    pregainScale,
+    compIntensity,
+    targetBackoffLu: Number(targetBackoffLu.toFixed(2)),
+    adjustedResolved: Number(adjustedResolved.toFixed(2)),
+    loudnormOverDriven,
+    estimatedGainReductionDb: Number(estimatedGainReductionDb.toFixed(2)),
+    crestDb: crest != null ? Number(crest.toFixed(2)) : null,
+  }
+}
+
+/** Light low-end balance only — no clipper (avoids stacked limiting before loudnorm). */
 function clubProtectionFilters(style, requestedLufs) {
   if (!isHotLoudnessTarget(requestedLufs)) return ""
   if (style !== "CLUB" && style !== "FESTIVAL" && !(style === "LOUD" && requestedLufs >= -10.5)) {
     return ""
   }
-  return (
-    `equalizer=f=48:t=q:w=0.82:g=-0.52,` +
-    `equalizer=f=110:t=q:w=0.9:g=-0.32,` +
-    `equalizer=f=220:t=q:w=1:g=-0.18,` +
-    `asoftclip=type=tanh:param=0.62,`
-  )
+  return `equalizer=f=52:t=q:w=0.85:g=-0.28,` + `equalizer=f=120:t=q:w=0.92:g=-0.15,`
 }
 
 function logAdaptiveLoudness(payload) {
   if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
     console.log("[master] adaptive loudness", payload)
+  }
+}
+
+function logTransientSafety(payload) {
+  if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
+    console.log("[master] transient safety", payload)
   }
 }
 
@@ -390,15 +555,15 @@ function styleCharacterFilters(style) {
   }
   if (style === "LOUD") {
     return (
-      `equalizer=f=4600:t=q:w=1.05:g=0.72,` +
-      `equalizer=f=240:t=q:w=1:g=-0.42,`
+      `equalizer=f=4600:t=q:w=1.05:g=0.42,` +
+      `equalizer=f=240:t=q:w=1:g=-0.28,`
     )
   }
   if (style === "CLUB") {
     return (
-      `equalizer=f=58:t=q:w=0.78:g=1.12,` +
-      `equalizer=f=108:t=q:w=0.82:g=0.62,` +
-      `equalizer=f=380:t=q:w=1:g=-0.28,`
+      `equalizer=f=58:t=q:w=0.78:g=0.48,` +
+      `equalizer=f=108:t=q:w=0.82:g=0.28,` +
+      `equalizer=f=380:t=q:w=1:g=-0.18,`
     )
   }
   if (style === "FESTIVAL") {
@@ -704,15 +869,33 @@ export async function masterTrack({
   let safeIntegratedLufs = adaptiveLoudness.resolved
 
   let stagingDb = 0
-  let adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, headroomCtxInitial)
+  let adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, headroomCtxInitial, 1)
   let autoPreGainDb = adaptiveGain.pregainDb
+  let compIntensity = 1
+
+  let transientSafety = assessTransientSafety({
+    requestedLufs,
+    resolvedLufs: safeIntegratedLufs,
+    ctx: headroomCtxInitial,
+    pregainDb: autoPreGainDb,
+  })
+  if (transientSafety.active) {
+    safeIntegratedLufs = transientSafety.adjustedResolved
+    adaptiveGain = computeAdaptivePregain(
+      safeIntegratedLufs,
+      headroomCtxInitial,
+      transientSafety.pregainScale
+    )
+    autoPreGainDb = adaptiveGain.pregainDb
+    compIntensity = transientSafety.compIntensity
+  }
 
   if (ebuInputIntegrated == null && preAnalysis) {
     try {
       const raw = typeof preAnalysis.lufs === "number" ? preAnalysis.lufs : -18
       const stagingTarget = -15
       stagingDb = stagingTarget - raw
-      stagingDb = Math.max(-12, Math.min(6, stagingDb))
+      stagingDb = Math.max(-10, Math.min(3, stagingDb))
     } catch {
       /* ignore */
     }
@@ -721,6 +904,13 @@ export async function masterTrack({
   const hotClubProtection =
     isHotLoudnessTarget(requestedLufs) &&
     (style === "CLUB" || style === "FESTIVAL" || (style === "LOUD" && requestedLufs >= -10.5))
+
+  logTransientSafety({
+    phase: "pre-pass1",
+    ...transientSafety,
+    pregainBeforeLoudnormDb: autoPreGainDb,
+    compressionIntensity: compIntensity,
+  })
 
   logAdaptiveLoudness({
     phase: "pre-pass1",
@@ -735,11 +925,13 @@ export async function masterTrack({
     hotClubProtection,
     ebuInputIntegrated,
     headroom: headroomCtxInitial,
+    compressionIntensity: compIntensity,
+    philosophy: "transient-first-minimal-pregain",
   })
 
-  function buildColorPipeline(integratedLufs, pregainDb) {
+  function buildColorPipeline(integratedLufs, pregainDb, compInt = compIntensity) {
     const lraVal = lraForStyleAndTarget(style, integratedLufs, requestedLufs)
-    const compVal = compressorForStyleAndTarget(style, integratedLufs)
+    const compVal = compressorForStyleAndTarget(style, integratedLufs, compInt)
     const tpVal = truePeakForLoudnormTarget(integratedLufs, requestedLufs)
     const tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
     const stereoStage = buildStereoStage(stereoEnhance, style, hotClubProtection)
@@ -781,8 +973,8 @@ export async function masterTrack({
     }
   }
 
-  async function runLoudnormPasses(integratedLufs, pregainDb) {
-    const pipe = buildColorPipeline(integratedLufs, pregainDb)
+  async function runLoudnormPasses(integratedLufs, pregainDb, compInt = compIntensity) {
+    const pipe = buildColorPipeline(integratedLufs, pregainDb, compInt)
     const stem = pipe.loudnormStem
     let pass1Json = null
     let filterFinal = ""
@@ -849,26 +1041,57 @@ export async function masterTrack({
     tp,
   } = await runLoudnormPasses(safeIntegratedLufs, autoPreGainDb)
 
-  if (loudnormPass1Json && isHotLoudnessTarget(requestedLufs)) {
+  if (loudnormPass1Json) {
     const ctxPass1 = headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated, loudnormPass1Json)
+    const pass1Safety = assessTransientSafety({
+      requestedLufs,
+      resolvedLufs: safeIntegratedLufs,
+      ctx: ctxPass1,
+      pregainDb: autoPreGainDb,
+      pass1Json: loudnormPass1Json,
+    })
     const refinedAdaptive = resolveSafeIntegratedLufs(requestedLufs, ctxPass1)
-    if (refinedAdaptive.resolved < safeIntegratedLufs - 0.24) {
-      safeIntegratedLufs = refinedAdaptive.resolved
-      adaptiveLoudness = refinedAdaptive
-      adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, ctxPass1)
+    const targetDrop =
+      refinedAdaptive.resolved < safeIntegratedLufs - 0.2 ||
+      pass1Safety.adjustedResolved < safeIntegratedLufs - 0.15
+    const needsRerun = pass1Safety.active || targetDrop
+
+    if (needsRerun) {
+      if (refinedAdaptive.resolved < safeIntegratedLufs) {
+        safeIntegratedLufs = refinedAdaptive.resolved
+        adaptiveLoudness = refinedAdaptive
+      }
+      if (pass1Safety.adjustedResolved < safeIntegratedLufs) {
+        safeIntegratedLufs = pass1Safety.adjustedResolved
+      }
+      transientSafety = pass1Safety
+      compIntensity = pass1Safety.compIntensity
+      adaptiveGain = computeAdaptivePregain(
+        safeIntegratedLufs,
+        ctxPass1,
+        pass1Safety.pregainScale
+      )
       autoPreGainDb = adaptiveGain.pregainDb
+
+      logTransientSafety({
+        phase: "pass1-refine",
+        ...pass1Safety,
+        pregainBeforeLoudnormDb: autoPreGainDb,
+        compressionIntensity: compIntensity,
+        loudnormOverDriven: pass1Safety.loudnormOverDriven,
+      })
       logAdaptiveLoudness({
         phase: "pass1-refine",
         style,
         requestedLufs,
         safeIntegratedLufs,
         backoffLu: adaptiveLoudness.backoffLu,
-        limiterReductionEstimateDb: adaptiveLoudness.limiterReductionEstimateDb,
         pregainAppliedDb: autoPreGainDb,
         pregainFactors: adaptiveGain.factors,
-        transientProtection: adaptiveLoudness.transientProtection,
+        compressionIntensity: compIntensity,
         pass1_input_tp: loudnormPass1Json.input_tp,
         pass1_input_lra: loudnormPass1Json.input_lra,
+        pass1_offset: loudnormPass1Json.offset,
       })
       ;({
         audioFilterFinal,
@@ -877,7 +1100,7 @@ export async function masterTrack({
         pass1ExitCode,
         lra,
         tp,
-      } = await runLoudnormPasses(safeIntegratedLufs, autoPreGainDb))
+      } = await runLoudnormPasses(safeIntegratedLufs, autoPreGainDb, compIntensity))
     }
   }
 
@@ -907,6 +1130,10 @@ export async function masterTrack({
       ebuInputIntegrated,
       gainStagingDb: stagingDb,
       autoPreGainBeforeLoudnormDb: autoPreGainDb,
+      compressionIntensity: compIntensity,
+      transientSafetyTriggers: transientSafety?.triggers ?? [],
+      loudnormOverDriven: transientSafety?.loudnormOverDriven ?? false,
+      estimatedGainReductionDb: transientSafety?.estimatedGainReductionDb ?? null,
       adaptiveBackoffLu: adaptiveLoudness.backoffLu,
       limiterReductionEstimateDb: adaptiveLoudness.limiterReductionEstimateDb,
       pass1_input_i: loudnormPass1Json?.input_i,
@@ -1085,6 +1312,8 @@ export async function masterTrack({
       autoPreGainBeforeLoudnormDb: autoPreGainDb,
       adaptiveLoudness,
       adaptivePregainFactors: adaptiveGain.factors,
+      transientSafety,
+      compressionIntensity: compIntensity,
       hotClubProtection,
       ebuInputIntegrated,
       measuredEbuAfter: analysisAfter?.lufs ?? null,
