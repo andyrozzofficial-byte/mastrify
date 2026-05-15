@@ -573,10 +573,7 @@ export default function MasterResultClient() {
         className="text-center"
       >
         <h1 className="text-[1.7rem] font-semibold leading-[1.12] tracking-[-0.02em] text-white sm:text-[1.95rem] md:text-[2.1rem]">
-          Your master is ready!{" "}
-          <span className="inline-block translate-y-px" aria-hidden>
-            🎉
-          </span>
+          Your master is ready!
         </h1>
         <div
           className="mx-auto mt-2.5 h-px w-12 bg-gradient-to-r from-transparent via-violet-400/35 to-transparent sm:w-16 sm:via-violet-400/30"
@@ -594,7 +591,7 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
-        className="mt-8 rounded-2xl border border-white/[0.055] bg-gradient-to-b from-white/[0.035] to-black/[0.58] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_20px_56px_rgba(0,0,0,0.52)] ring-1 ring-white/[0.03] backdrop-blur-2xl md:mt-10 md:rounded-[1.35rem] md:p-8 lg:p-9"
+        className="mt-8 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.46),0_0_72px_rgba(124,58,237,0.09)] backdrop-blur-2xl md:mt-10 md:rounded-[1.35rem] md:p-8 lg:p-9"
       >
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-stretch lg:gap-10 xl:gap-11">
           {/* Before / After metrics */}
