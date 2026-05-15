@@ -29,7 +29,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-stable-dynamics"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-kick-sub-transparent"
 
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n))
@@ -108,6 +108,12 @@ function isHotLoudnessTarget(requestedLufs) {
   return typeof requestedLufs === "number" && Number.isFinite(requestedLufs) && requestedLufs >= -10
 }
 
+/** Streaming / Spotify-style targets (−14 … −11) — prioritize openness over control. */
+function isStreamingProfile(requestedLufs) {
+  const r = typeof requestedLufs === "number" && Number.isFinite(requestedLufs) ? requestedLufs : -14
+  return r <= -10.5 && r >= -14.5
+}
+
 /** Stereo width — `extrastereo` m≈1 is neutral; wider >1, narrower <1. */
 function buildStereoStage(stereoEnhance, style, hotClubProtection = false) {
   let se = clamp(parseIntSlider(stereoEnhance, 50), 0, 100)
@@ -145,51 +151,45 @@ function compressorForStyle(style) {
   return { threshold: -19.2, ratio: 1.28, attack: 38, release: 300 }
 }
 
-/** Scale bus compression — 1 = full, lower = gentler (transient safety). */
-function scaleCompressorIntensity(comp, intensity) {
-  const i = clamp(intensity, 0.28, 1)
+/** Scale bus compression — lower intensity = gentler ratio, higher threshold, faster recovery. */
+function scaleCompressorIntensity(comp, intensity, streaming = false) {
+  const i = clamp(intensity, 0.22, 1)
   if (i >= 0.98) return comp
   const ratio = 1 + (comp.ratio - 1) * i
+  const releaseCap = streaming ? 175 : 220
   return {
-    threshold: comp.threshold + (1 - i) * 3.2,
-    ratio: Math.max(1.05, Number(ratio.toFixed(2))),
-    attack: Math.round(comp.attack + (1 - i) * 14),
-    release: Math.min(420, Math.round(comp.release + (1 - i) * 40)),
+    threshold: comp.threshold + (1 - i) * 3.8,
+    ratio: Math.max(1.03, Number(ratio.toFixed(2))),
+    attack: Math.round(comp.attack + (1 - i) * 10),
+    release: Math.min(releaseCap, Math.round(comp.release * (0.55 + 0.45 * i))),
   }
 }
 
-/** Gentler bus compression — loudnorm does level work, not stacked gain. */
-function compressorForStyleAndTarget(style, integratedTarget, compIntensity = 1) {
+/** Gentler bus compression — fast recovery on streaming, slow attack to spare kicks. */
+function compressorForStyleAndTarget(style, integratedTarget, compIntensity = 1, requestedLufs = -14) {
   const base = compressorForStyle(style)
   const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
+  const streaming = isStreamingProfile(requestedLufs)
   let comp = base
   if ((style === "CLUB" || style === "FESTIVAL") && t >= -10.5) {
-    comp = { threshold: -16.2, ratio: 1.08, attack: 48, release: 380 }
+    comp = { threshold: -16.2, ratio: 1.08, attack: 48, release: 320 }
   } else if (style === "LOUD" && t >= -10.5) {
-    comp = { threshold: -16.8, ratio: 1.1, attack: 46, release: 360 }
+    comp = { threshold: -16.8, ratio: 1.1, attack: 46, release: 300 }
   } else if (t >= -10.5) {
     comp = {
       threshold: base.threshold + 4.5,
       ratio: Math.max(1.06, base.ratio - 0.32),
       attack: base.attack + 16,
-      release: Math.min(420, base.release + 85),
+      release: Math.min(300, base.release + 50),
     }
+  } else if (t >= -11.5) {
+    comp = { threshold: -15.2, ratio: 1.04, attack: 44, release: 145 }
   } else if (t >= -12.5) {
-    comp = {
-      threshold: base.threshold + 3.5,
-      ratio: Math.max(1.06, base.ratio - 0.22),
-      attack: base.attack + 10,
-      release: Math.min(400, base.release + 60),
-    }
+    comp = { threshold: -15.8, ratio: 1.05, attack: 42, release: 155 }
   } else {
-    comp = {
-      threshold: base.threshold + 4,
-      ratio: Math.max(1.05, base.ratio - 0.25),
-      attack: base.attack + 12,
-      release: Math.min(420, base.release + 70),
-    }
+    comp = { threshold: -16.5, ratio: 1.04, attack: 44, release: 140 }
   }
-  return scaleCompressorIntensity(comp, compIntensity)
+  return scaleCompressorIntensity(comp, compIntensity, streaming)
 }
 
 /** Looser TP ceiling — less brick-wall limiting inside loudnorm (reduces pumping). */
@@ -228,13 +228,17 @@ function lraForStyleAndTarget(style, integratedTarget, requestedTarget) {
 
 /** Ask loudnorm for slightly lower I= than resolved target — less gain-riding, stable dynamics. */
 function loudnessTargetForLoudnorm(resolvedLufs, requestedLufs, ctx) {
-  let slack = isHotLoudnessTarget(requestedLufs) ? 0.65 : 0.5
+  let slack = isHotLoudnessTarget(requestedLufs) ? 0.65 : 0.55
+  if (isStreamingProfile(requestedLufs)) slack += 0.2
+  if (requestedLufs >= -11.5 && requestedLufs <= -10.5) slack += 0.15
   const dr = ctx?.dynamicRange
   const bass = ctx?.bassWeight
+  const crest = estimateCrestDb(ctx)
   if (dr != null && dr > 9.5) slack += 0.25
   if (dr != null && dr > 12) slack += 0.2
-  if (bass != null && bass > 0.4) slack += 0.2
-  if (bass != null && bass > 0.5) slack += 0.15
+  if (bass != null && bass > 0.4) slack += 0.25
+  if (bass != null && bass > 0.5) slack += 0.2
+  if (crest != null && crest < 9 && bass != null && bass > 0.38) slack += 0.25
   const floor = isHotLoudnessTarget(requestedLufs) ? -11.5 : -16
   const loudnormI = Math.max(resolvedLufs - slack, floor)
   return {
@@ -243,12 +247,12 @@ function loudnessTargetForLoudnorm(resolvedLufs, requestedLufs, ctx) {
   }
 }
 
-function softenLoudnormOffsetDb(offsetDb, cap = 2) {
+function softenLoudnormOffsetDb(offsetDb, cap = 1.65) {
   if (!Number.isFinite(offsetDb)) return offsetDb
   const sign = Math.sign(offsetDb) || 1
   const abs = Math.abs(offsetDb)
   if (abs <= cap) return offsetDb
-  return sign * (cap + (abs - cap) * 0.22)
+  return sign * (cap + (abs - cap) * 0.15)
 }
 
 function headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated, pass1Json = null) {
@@ -594,6 +598,121 @@ function assessTransientSafety({
   }
 }
 
+/**
+ * Pass1 anti-pumping — detect gain-riding / sub-triggered ducking and back off processing.
+ */
+function assessAntiPumping({ ctx, pass1Json, resolvedLufs, requestedLufs, pregainDb }) {
+  const triggers = []
+  let pregainScale = 1
+  let compIntensity = 1
+  let offsetCap = isStreamingProfile(requestedLufs) ? 1.55 : 1.75
+  let pumpingRisk = 0
+
+  if (!pass1Json) {
+    return { active: false, triggers, pregainScale, compIntensity, offsetCap, pumpingRisk }
+  }
+
+  const bass = ctx?.bassWeight
+  const crest = estimateCrestDb(ctx)
+  const offset = parseLoudnormJsonNum(pass1Json, "target_offset")
+  const inputI = parseLoudnormJsonNum(pass1Json, "input_i")
+  const outputI = parseLoudnormJsonNum(pass1Json, "output_i")
+  const inputLra = parseLoudnormJsonNum(pass1Json, "input_lra")
+  const outputLra = parseLoudnormJsonNum(pass1Json, "output_lra")
+  const inputTp = parseLoudnormJsonNum(pass1Json, "input_tp")
+
+  if (bass != null && bass > 0.38 && crest != null && crest < 9.5) {
+    triggers.push(`subDominantLowCrest=bass${(bass * 100).toFixed(0)}%`)
+    compIntensity *= 0.62
+    pregainScale *= 0.55
+    offsetCap = Math.min(offsetCap, 1.15)
+    pumpingRisk += 0.35
+  }
+
+  if (offset != null && Math.abs(offset) > 1.65) {
+    triggers.push(`gainRidingOffset=${offset.toFixed(1)}dB`)
+    pregainScale *= offset > 0 ? 0.5 : 0.65
+    compIntensity *= 0.72
+    offsetCap = Math.min(offsetCap, 1.1)
+    pumpingRisk += Math.min(0.4, Math.abs(offset) / 6)
+  }
+
+  if (inputI != null && outputI != null && Math.abs(outputI - inputI) > 1.35) {
+    triggers.push(`shortTermLift=${(outputI - inputI).toFixed(1)}LU`)
+    pregainScale *= 0.52
+    compIntensity *= 0.68
+    offsetCap = Math.min(offsetCap, 1.05)
+    pumpingRisk += 0.28
+  }
+
+  if (
+    inputLra != null &&
+    outputLra != null &&
+    inputLra - outputLra > 2.2 &&
+    bass != null &&
+    bass > 0.34
+  ) {
+    triggers.push(`lowEndReduction=${(inputLra - outputLra).toFixed(1)}LU`)
+    compIntensity *= 0.65
+    pregainScale *= 0.58
+    pumpingRisk += 0.32
+  }
+
+  if (inputTp != null && inputTp > -1.2 && bass != null && bass > 0.4) {
+    triggers.push(`hotSubPeak=${inputTp.toFixed(1)}dBTP`)
+    compIntensity *= 0.7
+    offsetCap = Math.min(offsetCap, 1.2)
+    pumpingRisk += 0.2
+  }
+
+  if (pregainDb > 1.8 && isStreamingProfile(requestedLufs)) {
+    triggers.push(`streamingPregainHigh=${pregainDb.toFixed(1)}dB`)
+    pregainScale *= 0.5
+    pumpingRisk += 0.15
+  }
+
+  pregainScale = Math.max(0, Math.min(1, pregainScale))
+  compIntensity = Math.max(0.22, Math.min(1, compIntensity))
+  pumpingRisk = Math.min(1, Number(pumpingRisk.toFixed(2)))
+
+  return {
+    active: triggers.length > 0,
+    triggers,
+    pregainScale,
+    compIntensity,
+    offsetCap,
+    pumpingRisk,
+  }
+}
+
+/** Attenuate 40–120 Hz before bus comp so detector sees less kick/sub energy. */
+function kickSubTransparencyFilters(ctx) {
+  const bass = ctx?.bassWeight
+  const crest = estimateCrestDb(ctx)
+  const heavy = bass != null && bass > 0.36
+  const lowCrest = crest != null && crest < 9.5
+
+  if (!heavy && !lowCrest) {
+    return {
+      filters: `equalizer=f=58:t=q:w=0.8:g=-0.22,` + `equalizer=f=95:t=q:w=0.9:g=-0.14,`,
+      triggers: [],
+    }
+  }
+
+  const triggers = []
+  if (heavy) triggers.push(`preCompSubAtten=bass${((bass ?? 0) * 100).toFixed(0)}%`)
+  if (lowCrest) triggers.push(`lowCrest=${crest?.toFixed(1)}dB`)
+
+  const filters =
+    `equalizer=f=48:t=q:w=0.72:g=-0.58,` +
+    `equalizer=f=72:t=q:w=0.82:g=-0.45,` +
+    `equalizer=f=98:t=q:w=0.92:g=-0.4,` +
+    `equalizer=f=118:t=q:w=1:g=-0.28,` +
+    (heavy ? `equalizer=f=42:t=q:w=0.68:g=-0.4,` : "")
+
+  return { filters, triggers }
+}
+
 /** Sub HP + low-mid tighten so limiter/loudnorm sees less sub-driven ducking. */
 function lowEndProtectionFilters(ctx, requestedLufs) {
   const bass = ctx?.bassWeight
@@ -614,21 +733,36 @@ function lowEndProtectionFilters(ctx, requestedLufs) {
   return { filters, triggers }
 }
 
-/** Final sub tighten immediately before ceiling/loudnorm. */
+/** Final sub stabilization before ceiling/loudnorm — stronger when sub dominates. */
 function lowEndPreLoudnessFilters(ctx) {
   const bass = ctx?.bassWeight
+  const crest = estimateCrestDb(ctx)
+  const subDominant = bass != null && bass > 0.4 && crest != null && crest < 9.5
+
+  if (subDominant) {
+    return (
+      `equalizer=f=52:t=q:w=0.78:g=-0.45,` +
+      `equalizer=f=88:t=q:w=0.9:g=-0.32,` +
+      `equalizer=f=125:t=q:w=1:g=-0.2,` +
+      `equalizer=f=185:t=q:w=1:g=-0.1,`
+    )
+  }
   if (bass == null || bass < 0.35) {
-    return `equalizer=f=88:t=q:w=0.95:g=-0.12,`
+    return `equalizer=f=88:t=q:w=0.95:g=-0.1,`
   }
   return (
-    `equalizer=f=78:t=q:w=0.88:g=-0.22,` +
-    `equalizer=f=130:t=q:w=1:g=-0.14,`
+    `equalizer=f=68:t=q:w=0.85:g=-0.28,` +
+    `equalizer=f=105:t=q:w=0.95:g=-0.2,` +
+    `equalizer=f=145:t=q:w=1:g=-0.12,`
   )
 }
 
-/** Slow ceiling — catches peaks without fast gain-riding (reduces kick pumping). */
-function gentleCeilingLimiter() {
-  return `alimiter=level_in=1:level_out=0.93:limit=0.94:attack=18:release=240:asc=0,`
+/** Ceiling limiter — faster recovery on streaming to avoid post-kick swell. */
+function gentleCeilingLimiter(streaming = false) {
+  if (streaming) {
+    return `alimiter=level_in=1:level_out=0.945:limit=0.96:attack=7:release=98:asc=0,`
+  }
+  return `alimiter=level_in=1:level_out=0.935:limit=0.95:attack=10:release=140:asc=0,`
 }
 
 function estimateLimiterGainReductionDb(pass1Json, tpCeiling) {
@@ -669,6 +803,12 @@ function logTransientSafety(payload) {
 function logDynamicsMastering(payload) {
   if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
     console.log("[master] dynamics mastering", payload)
+  }
+}
+
+function logAntiPumping(payload) {
+  if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
+    console.log("[master] anti-pumping", payload)
   }
 }
 
@@ -839,7 +979,7 @@ function extractLoudnormJsonFromStderr(stderr) {
   return null
 }
 
-function loudnormMeasuredToOpts(j, offsetCap = 2) {
+function loudnormMeasuredToOpts(j, offsetCap = 1.65) {
   if (!j || j.input_i == null) return null
   const qn = (v) => {
     const n = parseFloat(String(v).replace(/"/g, "").trim())
@@ -1003,12 +1143,15 @@ export async function masterTrack({
   let adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, headroomCtxInitial, 1)
   let autoPreGainDb = adaptiveGain.pregainDb
   let compIntensity = 1
-  if (!isHotLoudnessTarget(requestedLufs)) compIntensity = 0.7
+  let loudnormOffsetCap = isStreamingProfile(requestedLufs) ? 1.55 : 1.75
+  if (!isHotLoudnessTarget(requestedLufs)) {
+    compIntensity = requestedLufs >= -11.5 && requestedLufs <= -10.5 ? 0.48 : 0.55
+  }
   if (headroomCtxInitial.dynamicRange != null && headroomCtxInitial.dynamicRange > 10) {
-    compIntensity *= 0.82
+    compIntensity *= 0.8
   }
   if (headroomCtxInitial.bassWeight != null && headroomCtxInitial.bassWeight > 0.4) {
-    compIntensity *= 0.74
+    compIntensity *= 0.68
   }
 
   let transientSafety = assessTransientSafety({
@@ -1074,19 +1217,21 @@ export async function masterTrack({
     const targetPlan = loudnessTargetForLoudnorm(resolvedLufs, requestedLufs, ctx)
     const lufsForLoudnorm = targetPlan.loudnormI
     const lraVal = lraForStyleAndTarget(style, resolvedLufs, requestedLufs)
-    const compVal = compressorForStyleAndTarget(style, resolvedLufs, compInt)
+    const streaming = isStreamingProfile(requestedLufs)
+    const compVal = compressorForStyleAndTarget(style, resolvedLufs, compInt, requestedLufs)
     const tpVal = truePeakForLoudnormTarget(resolvedLufs, requestedLufs)
     const tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
     const stereoStage = buildStereoStage(stereoEnhance, style, hotClubProtection)
     const styleTail = styleCharacterFilters(style)
     const clubProt = clubProtectionFilters(style, requestedLufs)
     const lowEndGuard = lowEndProtectionFilters(ctx, requestedLufs)
+    const kickSubGuard = kickSubTransparencyFilters(ctx)
     const volumeStaging = stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
     const autoPreVol = pregainDb > 0 ? `volume=${pregainDb.toFixed(2)}dB,` : ""
     const compStage =
-      compInt < 0.52
+      compInt < 0.48
         ? ""
-        : `acompressor=threshold=${compVal.threshold}dB:ratio=${compVal.ratio}:attack=${compVal.attack}:release=${compVal.release},`
+        : `acompressor=threshold=${compVal.threshold}dB:ratio=${compVal.ratio}:attack=${compVal.attack}:release=${compVal.release}:makeup=0,`
 
     const mud = tone.mudGain.toFixed(3)
     const mudW = tone.mudWideGain.toFixed(3)
@@ -1097,9 +1242,10 @@ export async function masterTrack({
     const pr = tone.presenceDb.toFixed(3)
 
     const colorBase =
-      `highpass=f=40,` +
+      `highpass=f=45,` +
       volumeStaging +
       stereoStage +
+      kickSubGuard.filters +
       `equalizer=f=200:t=q:w=1:g=${mud},` +
       `equalizer=f=320:t=q:w=1:g=${mudW},` +
       `equalizer=f=${tone.lowHz}:t=q:w=0.92:g=${lowG},` +
@@ -1112,7 +1258,7 @@ export async function masterTrack({
       styleTail +
       clubProt +
       lowEndPreLoudnessFilters(ctx) +
-      gentleCeilingLimiter() +
+      gentleCeilingLimiter(streaming) +
       autoPreVol
 
     return {
@@ -1123,8 +1269,8 @@ export async function masterTrack({
       comp: compVal,
       loudnormI: lufsForLoudnorm,
       pursuitSlackLu: targetPlan.pursuitSlackLu,
-      lowEndProtectionTriggers: lowEndGuard.triggers,
-      compressionBypassed: compInt < 0.52,
+      lowEndProtectionTriggers: [...lowEndGuard.triggers, ...kickSubGuard.triggers],
+      compressionBypassed: compInt < 0.48,
     }
   }
 
@@ -1160,7 +1306,7 @@ export async function masterTrack({
       if (r1.code === 0) {
         pass1Json = extractLoudnormJsonFromStderr(r1.stderr)
       }
-      const measured = loudnormMeasuredToOpts(pass1Json)
+      const measured = loudnormMeasuredToOpts(pass1Json, loudnormOffsetCap)
       if (measured) {
         filterFinal =
           `${pipe.colorBase}loudnorm=${stem}:measured_I=${measured.measured_I}:measured_LRA=${measured.measured_LRA}:measured_TP=${measured.measured_TP}:measured_thresh=${measured.measured_thresh}:offset=${measured.offset}:linear=true`
@@ -1189,6 +1335,8 @@ export async function masterTrack({
     }
   }
 
+  let antiPumping = { active: false, triggers: [], pumpingRisk: 0, offsetCap: loudnormOffsetCap }
+
   let {
     audioFilterFinal,
     loudnormPass1Json,
@@ -1211,11 +1359,18 @@ export async function masterTrack({
       pregainDb: autoPreGainDb,
       pass1Json: loudnormPass1Json,
     })
+    antiPumping = assessAntiPumping({
+      ctx: ctxPass1,
+      pass1Json: loudnormPass1Json,
+      resolvedLufs: safeIntegratedLufs,
+      requestedLufs,
+      pregainDb: autoPreGainDb,
+    })
     const refinedAdaptive = resolveSafeIntegratedLufs(requestedLufs, ctxPass1)
     const targetDrop =
       refinedAdaptive.resolved < safeIntegratedLufs - 0.2 ||
       pass1Safety.adjustedResolved < safeIntegratedLufs - 0.15
-    const needsRerun = pass1Safety.active || targetDrop
+    const needsRerun = pass1Safety.active || antiPumping.active || targetDrop
 
     if (needsRerun) {
       if (refinedAdaptive.resolved < safeIntegratedLufs) {
@@ -1226,14 +1381,19 @@ export async function masterTrack({
         safeIntegratedLufs = pass1Safety.adjustedResolved
       }
       transientSafety = pass1Safety
-      compIntensity = pass1Safety.compIntensity
-      adaptiveGain = computeAdaptivePregain(
-        safeIntegratedLufs,
-        ctxPass1,
-        pass1Safety.pregainScale
-      )
+      compIntensity = Math.min(pass1Safety.compIntensity, antiPumping.compIntensity)
+      const combinedPregainScale = pass1Safety.pregainScale * antiPumping.pregainScale
+      loudnormOffsetCap = Math.min(loudnormOffsetCap, antiPumping.offsetCap)
+      adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, ctxPass1, combinedPregainScale)
       autoPreGainDb = adaptiveGain.pregainDb
       loudnormTargetPlan = loudnessTargetForLoudnorm(safeIntegratedLufs, requestedLufs, ctxPass1)
+
+      logAntiPumping({
+        phase: "pass1-refine",
+        ...antiPumping,
+        combinedPregainScale,
+        loudnormOffsetCap,
+      })
 
       const limiterGr = estimateLimiterGainReductionDb(loudnormPass1Json, tp)
       logDynamicsMastering({
@@ -1243,7 +1403,9 @@ export async function masterTrack({
         resolvedSafeLufs: safeIntegratedLufs,
         pursuitSlackLu: loudnormTargetPlan.pursuitSlackLu,
         loudnormOffsetRaw: parseLoudnormJsonNum(loudnormPass1Json, "target_offset"),
-        loudnormOffsetSoftened: loudnormMeasuredToOpts(loudnormPass1Json)?.offsetSoftened ?? null,
+        loudnormOffsetSoftened: loudnormMeasuredToOpts(loudnormPass1Json, loudnormOffsetCap)?.offsetSoftened ?? null,
+        antiPumpingRisk: antiPumping.pumpingRisk,
+        antiPumpingTriggers: antiPumping.triggers,
         limiterGainReductionEstimateDb: limiterGr,
         transientSuppressionRisk: pass1Safety.transientSuppressionRisk,
         lowEndProtectionTriggers: [
@@ -1308,7 +1470,9 @@ export async function masterTrack({
     transientSafetyTriggers: transientSafety?.triggers ?? [],
     lowEndProtectionTriggers: transientSafety?.lowEndProtectionTriggers ?? [],
     compressionIntensity: compIntensity,
+    loudnormOffsetCap,
     loudnormOverDriven: transientSafety?.loudnormOverDriven ?? false,
+    antiPumpingRisk: antiPumping?.pumpingRisk ?? null,
   })
 
   if (LUFS_TRACE) {
