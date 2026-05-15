@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
-import MasteringOrbIcon from "./MasteringOrbIcon"
+import MasteringEngineVisual from "./MasteringEngineVisual"
+import ProcessingStageList, { PROCESSING_STEPS } from "./ProcessingStageList"
 import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
@@ -13,17 +14,7 @@ import { useMasterSession } from "../MasterSessionProvider"
 
 const API = PUBLIC_BACKEND_API_BASE
 
-/** Display steps — must stay in sync with timed progression before the API call */
-const UI_STEPS = [
-  "Analyzing mix",
-  "Balancing EQ",
-  "Optimizing dynamics",
-  "Enhancing stereo image",
-  "Finalizing master",
-] as const
-
-const STEP_DELAYS_MS = [480, 620, 620, 720, 400] as const
-
+const STEP_DELAYS_MS = [520, 680, 680, 780, 480] as const
 
 export default function MasterProcessingPage() {
   const router = useRouter()
@@ -40,7 +31,6 @@ export default function MasterProcessingPage() {
     lowEndControl,
     clarityPresence,
   } = useMasterSession()
-  /** Index of the step currently in progress (0–4). */
   const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
@@ -55,7 +45,7 @@ export default function MasterProcessingPage() {
     const ac = new AbortController()
 
     const run = async () => {
-      for (let i = 0; i < UI_STEPS.length; i++) {
+      for (let i = 0; i < PROCESSING_STEPS.length; i++) {
         if (cancelled) return
         setActiveStep(i)
         await sleep(STEP_DELAYS_MS[i] ?? 600)
@@ -75,7 +65,6 @@ export default function MasterProcessingPage() {
           console.log("[LUFS_TRACE] client → POST /master", {
             outgoingFormTargetLufs: targetLufs,
             stylePreset,
-            NEXT_PUBLIC_MASTRIFY_API_URL: process.env.NEXT_PUBLIC_MASTRIFY_API_URL ?? "(unset — see lib/publicBackendUrl DEFAULT)",
             resolvedApiBase: API,
             masterUrl,
           })
@@ -86,18 +75,12 @@ export default function MasterProcessingPage() {
         if (MASTRIFY_CLIENT_LUFS_TRACE) {
           const aa = res.data.analysisAfter as Record<string, unknown> | undefined
           console.log("[LUFS_TRACE] AUTHORITY_CLIENT_AXIOS analysisAfter.lufs=", aa?.lufs)
-          console.log("[LUFS_TRACE] server lufsTrace echo", res.data.lufsTrace)
         }
 
         if (MASTRIFY_CLIENT_PIPELINE_DEBUG) {
           console.log("[pipeline] client POST /master response", {
             afterUrl: res.data.afterUrl,
-            fullUrl: res.data.fullUrl,
-            after: res.data.after,
             analysisAfter: res.data.analysisAfter,
-            analysisBefore: res.data.analysisBefore,
-            masterDebug: res.data.masterDebug,
-            pipelineDebug: res.data.pipelineDebug,
           })
         }
 
@@ -119,7 +102,7 @@ export default function MasterProcessingPage() {
           masteredUrl: mastered || undefined,
         })
 
-        await sleep(420)
+        await sleep(480)
         if (!cancelled) router.replace("/master/result")
       } catch (e: unknown) {
         const aborted =
@@ -152,129 +135,96 @@ export default function MasterProcessingPage() {
   ])
 
   return (
-    <motion.div className="relative flex min-h-[min(100dvh,880px)] w-full flex-col items-center justify-center overflow-hidden px-5 py-6 text-white md:min-h-[min(100dvh,920px)] md:px-8 md:py-8">
+    <motion.div
+      className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden text-white"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <CinematicBackground intensity="strong" />
 
-      <div className="relative z-10 flex w-full max-w-lg flex-col items-center text-center">
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
-          className="max-w-[22rem] text-[1.65rem] font-bold leading-tight tracking-tight text-white sm:text-[1.85rem] md:max-w-none md:text-[2rem]"
-        >
-          AI is mastering your track
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.06, ease: "easeOut" }}
-          className="mt-3 text-[13px] leading-relaxed text-white/42 md:text-sm"
-        >
-          This usually takes 30–60 seconds.
-        </motion.p>
+      {/* Ambient lab depth */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_12%,rgba(99,102,241,0.14),transparent_58%),radial-gradient(ellipse_50%_40%_at_85%_75%,rgba(34,211,238,0.06),transparent_50%)]"
+        aria-hidden
+      />
+      <motion.div
+        className="pointer-events-none absolute left-1/2 top-[18%] h-[min(520px,70vw)] w-[min(680px,95vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.07] blur-[100px]"
+        animate={{ opacity: [0.5, 0.75, 0.5], scale: [1, 1.04, 1] }}
+        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+        aria-hidden
+      />
 
-        {/* Orb */}
+      <motion.header
+        className="relative z-20 flex shrink-0 items-center justify-center px-6 pt-8 md:pt-10"
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/70 backdrop-blur-md">
+          Spatial mastering engine
+        </span>
+      </motion.header>
+
+      <div className="relative z-10 mx-auto flex w-full max-w-[52rem] flex-1 flex-col items-center justify-center px-5 pb-10 pt-4 md:px-8 md:pb-14">
         <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}
-          className="relative mt-9 flex w-[min(17.5rem,78vw)] shrink-0 items-center justify-center md:mt-10 md:w-[min(19rem,72vw)]"
+          className="w-full max-w-xl text-center md:max-w-2xl"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-cyan-200/45 md:text-xs">
+            Intelligent signal processing
+          </p>
+          <h1 className="mt-4 text-[1.75rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:text-[2.15rem] md:text-[2.65rem] md:leading-[1.08]">
+            Mastering your track
+            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+              with musical depth
+            </span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-white/42 md:text-[15px] md:leading-relaxed">
+            Perceptual analysis, transparent dynamics, and spatial balance — tuned to preserve what
+            makes your mix unique.
+          </p>
+        </motion.div>
+
+        <div className="relative mt-8 w-full md:mt-10">
+          <MasteringEngineVisual activeStep={activeStep} />
+        </motion.div>
+
+        <motion.div
+          className="relative mt-2 w-full max-w-md md:mt-4 md:max-w-lg"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.div
-            className="pointer-events-none absolute inset-[-18%] rounded-full bg-gradient-to-tr from-violet-600/25 via-indigo-500/12 to-sky-500/20 blur-3xl"
-            animate={{ opacity: [0.55, 0.75, 0.55], scale: [1, 1.06, 1] }}
-            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-            aria-hidden
-          />
-          <motion.div
-            className="pointer-events-none absolute inset-[-8%] rounded-full bg-violet-500/10 blur-2xl"
+            className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-b from-violet-500/20 via-transparent to-cyan-500/10 opacity-60 blur-sm"
             animate={{ opacity: [0.35, 0.55, 0.35] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             aria-hidden
           />
-
-          <div className="relative rounded-full p-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.06)] ring-1 ring-white/[0.04]">
+          <motion.div
+            className="relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:px-6 md:py-6"
+            layout
+          >
             <div
-              className="rounded-full p-[2.5px] md:p-[3px]"
-              style={{
-                background: "linear-gradient(135deg, #a78bfa 0%, #6366f1 45%, #38bdf8 100%)",
-              }}
-            >
-              <motion.div
-                className="relative flex h-[10.25rem] w-[10.25rem] items-center justify-center rounded-full bg-[#07070a]/95 backdrop-blur-md md:h-[11.25rem] md:w-[11.25rem]"
-                animate={{ boxShadow: ["0 0 0 0 rgba(139,92,246,0)", "0 0 48px rgba(99,102,241,0.12)", "0 0 0 0 rgba(139,92,246,0)"] }}
-                transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <motion.div
-                  className="absolute inset-[14%] rounded-full bg-gradient-to-b from-violet-500/16 via-indigo-500/8 to-transparent blur-xl"
-                  animate={{ opacity: [0.45, 0.72, 0.45] }}
-                  transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-                  aria-hidden
-                />
-                <motion.div
-                  className="pointer-events-none absolute inset-[8%] rounded-full border border-violet-400/10"
-                  animate={{ opacity: [0.25, 0.5, 0.25] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  aria-hidden
-                />
-                <motion.div className="relative z-[1] flex items-center justify-center">
-                  <MasteringOrbIcon />
-                </motion.div>
-              </motion.div>
-            </div>
-          </div>
+              className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,transparent_22%,transparent_100%)]"
+              aria-hidden
+            />
+            <ProcessingStageList activeStep={activeStep} />
+          </motion.div>
         </motion.div>
 
-        {/* Progress card */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
-          className="mt-8 w-full max-w-[22rem] rounded-2xl border border-white/[0.07] bg-black/[0.42] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-xl md:mt-9 md:max-w-md md:px-6 md:py-6"
+        <motion.p
+          className="mt-6 text-center text-[12px] tracking-wide text-white/28 md:text-[13px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35, duration: 0.5 }}
         >
-          <ul className="flex flex-col gap-4 text-left">
-            {UI_STEPS.map((label, i) => {
-              const done = i < activeStep
-              const active = i === activeStep
-              const pending = i > activeStep
-
-              return (
-                <li
-                  key={label}
-                  className={`flex items-center gap-3.5 text-[13px] leading-snug transition-colors md:text-sm ${
-                    done ? "text-white/92" : active ? "text-white" : "text-white/32"
-                  }`}
-                >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center" aria-hidden>
-                    {done ? (
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/[0.12] ring-1 ring-emerald-400/25">
-                        <svg className="h-3.5 w-3.5 text-emerald-400/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </span>
-                    ) : active ? (
-                      <motion.span
-                        className="relative flex h-6 w-6 items-center justify-center"
-                        initial={false}
-                        animate={{ scale: [1, 1.04, 1] }}
-                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                      >
-                        <span className="absolute inset-0 rounded-full bg-violet-500/20 blur-md" />
-                        <span className="relative flex h-5 w-5 items-center justify-center rounded-full border border-violet-400/45 bg-violet-500/[0.15] shadow-[0_0_14px_rgba(139,92,246,0.22)]">
-                          <span className="h-2 w-2 rounded-full bg-violet-200/90" />
-                        </span>
-                      </motion.span>
-                    ) : (
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.02]" />
-                    )}
-                  </span>
-                  <span className="font-medium">{label}</span>
-                </li>
-              )
-            })}
-          </ul>
-        </motion.div>
-      </div>
+          Typically 30–60 seconds · Do not close this window
+        </motion.p>
+      </motion.div>
     </motion.div>
   )
 }
