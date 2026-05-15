@@ -49,11 +49,9 @@ export default function Pricing() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.15 }}
         >
-          <motion.div
-            className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(320px,50vh)] w-[min(520px,90vw)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_50%_40%_at_50%_50%,rgba(109,40,217,0.1),transparent_68%)] blur-3xl"
+          <div
+            className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(320px,50vh)] w-[min(520px,90vw)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_50%_40%_at_50%_50%,rgba(109,40,217,0.09),transparent_68%)] opacity-80 blur-3xl"
             aria-hidden
-            animate={reduce ? undefined : { opacity: [0.5, 0.8, 0.5] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           />
           <PricingUnlockCard onUnlock={handleUnlock} className="relative z-[1]" />
         </motion.div>
