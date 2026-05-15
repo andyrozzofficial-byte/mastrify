@@ -166,8 +166,11 @@ export default function MasterResultClient() {
   }, [masteredMp3Url, masteredPlaybackUrl])
 
   const mobilePlaybackUrl = useMemo(() => {
-    return selectedSource === "mastered" ? masteredPlaybackUrl : originalPreviewUrl
-  }, [selectedSource, masteredPlaybackUrl, originalPreviewUrl])
+    if (selectedSource !== "mastered") return originalPreviewUrl
+    // Match desktop iOS Safari: prefer lightweight MP3 preview when both URLs exist.
+    if (isIOSSafari() && masteredMp3Url) return masteredMp3Url
+    return masteredPlaybackUrl
+  }, [selectedSource, masteredPlaybackUrl, originalPreviewUrl, masteredMp3Url])
 
   useEffect(() => {
     if (!originalPreviewUrl) {
@@ -838,10 +841,22 @@ export default function MasterResultClient() {
       </motion.div>
 
       {originalPreviewUrl ? (
-        <audio ref={originalAudioRef} src={originalPreviewUrl} playsInline preload="auto" className="hidden" />
+        <audio
+          ref={originalAudioRef}
+          src={originalPreviewUrl}
+          playsInline
+          preload={isMobileClient ? "metadata" : "auto"}
+          className="hidden"
+        />
       ) : null}
       {desktopMasteredPlaybackUrl ? (
-        <audio ref={masteredAudioRef} src={desktopMasteredPlaybackUrl} playsInline preload="auto" className="hidden" />
+        <audio
+          ref={masteredAudioRef}
+          src={desktopMasteredPlaybackUrl}
+          playsInline
+          preload={isMobileClient ? "metadata" : "auto"}
+          className="hidden"
+        />
       ) : null}
       {isMobileClient && isPlayableMediaUrl(mobilePlaybackUrl) ? (
         <audio
@@ -849,7 +864,7 @@ export default function MasterResultClient() {
           key={mobileAudioKey}
           src={mobilePlaybackUrl}
           playsInline
-          preload="auto"
+          preload="metadata"
           className="hidden"
         />
       ) : null}

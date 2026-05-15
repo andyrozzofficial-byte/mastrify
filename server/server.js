@@ -64,19 +64,129 @@ try {
 
 // serve masters folder
 app.use("/uploads", express.static(uploadsDir))
-app.get("/masters/:file", (req, res) => {
-  const filePath = path.join(mastersDir, req.params.file)
+
+/** MIME for mastered assets under /masters — Safari requires accurate types + byte ranges. */
+function contentTypeForMasterFile(basename) {
+  const ext = path.extname(basename).toLowerCase()
+  if (ext === ".mp3" || ext === ".mpeg") return "audio/mpeg"
+  if (ext === ".wav" || ext === ".wave") return "audio/wav"
+  if (ext === ".flac") return "audio/flac"
+  if (ext === ".m4a") return "audio/mp4"
+  if (ext === ".aac") return "audio/aac"
+  return "application/octet-stream"
+}
+
+function parseBytesRange(rangeHeader, size) {
+  if (!rangeHeader || typeof rangeHeader !== "string" || !rangeHeader.startsWith("bytes=")) return null
+  const part = rangeHeader.slice(6).split(",")[0].trim()
+  const m = /^(\d*)-(\d*)$/.exec(part)
+  if (!m) return null
+  const startStr = m[1]
+  const endStr = m[2]
+
+  if (startStr !== "" && endStr !== "") {
+    const start = Number(startStr)
+    const end = Number(endStr)
+    if (!Number.isFinite(start) || !Number.isFinite(end) || start > end || start >= size) return "unsatisfiable"
+    return { start, end: Math.min(end, size - 1) }
+  }
+  if (startStr !== "" && endStr === "") {
+    const start = Number(startStr)
+    if (!Number.isFinite(start) || start >= size) return "unsatisfiable"
+    return { start, end: size - 1 }
+  }
+  if (startStr === "" && endStr !== "") {
+    const suffixLen = Number(endStr)
+    if (!Number.isFinite(suffixLen) || suffixLen <= 0) return null
+    if (suffixLen >= size) return { start: 0, end: size - 1 }
+    return { start: size - suffixLen, end: size - 1 }
+  }
+  return null
+}
+
+function attachmentNameForMaster(basename, mime) {
+  if (/\.wav$/i.test(basename)) return "master.wav"
+  if (/\.mp3$/i.test(basename)) return "master.mp3"
+  if (/\.flac$/i.test(basename)) return "master.flac"
+  if (mime === "audio/mpeg") return "master.mp3"
+  if (mime === "audio/flac") return "master.flac"
+  if (mime === "audio/wav") return "master.wav"
+  return basename.replace(/[^\w.\-]+/g, "_") || "master.audio"
+}
+
+function sendMasterFile(req, res, headOnly) {
+  const raw = req.params.file
+  if (typeof raw !== "string" || raw.includes("..") || raw.includes("/") || raw.includes("\\")) {
+    return res.status(400).send("Invalid filename")
+  }
+  const basename = path.basename(raw)
+  const filePath = path.join(mastersDir, basename)
 
   if (!fs.existsSync(filePath)) {
     return res.status(404).send("File not found")
   }
 
-  res.setHeader("Content-Type", "audio/wav")
-  res.setHeader("Accept-Ranges", "bytes")
+  let stat
+  try {
+    stat = fs.statSync(filePath)
+  } catch {
+    return res.status(500).send("Stat failed")
+  }
+  const size = stat.size
+  const mime = contentTypeForMasterFile(basename)
+  const forceDownload =
+    req.query.download === "1" ||
+    req.query.download === "true" ||
+    req.query.download === "yes"
 
+  res.setHeader("Accept-Ranges", "bytes")
+  res.setHeader("Content-Type", mime)
+  res.setHeader("X-Content-Type-Options", "nosniff")
+
+  if (forceDownload) {
+    const fname = attachmentNameForMaster(basename, mime)
+    res.setHeader("Content-Disposition", `attachment; filename="${fname}"`)
+  } else {
+    res.setHeader("Content-Disposition", "inline")
+  }
+
+  const rangeRaw = req.headers.range
+  const parsed = parseBytesRange(Array.isArray(rangeRaw) ? rangeRaw[0] : rangeRaw, size)
+
+  if (parsed === "unsatisfiable") {
+    res.status(416)
+    res.setHeader("Content-Range", `bytes */${size}`)
+    return res.end()
+  }
+
+  if (parsed && size > 0) {
+    const { start, end } = parsed
+    const chunkSize = end - start + 1
+    res.status(206)
+    res.setHeader("Content-Range", `bytes ${start}-${end}/${size}`)
+    res.setHeader("Content-Length", String(chunkSize))
+    if (headOnly) return res.end()
+    const stream = fs.createReadStream(filePath, { start, end })
+    stream.on("error", () => {
+      if (!res.headersSent) res.status(500).end()
+      else res.destroy()
+    })
+    return stream.pipe(res)
+  }
+
+  res.status(200)
+  res.setHeader("Content-Length", String(size))
+  if (headOnly) return res.end()
   const stream = fs.createReadStream(filePath)
-  stream.pipe(res)
-})
+  stream.on("error", () => {
+    if (!res.headersSent) res.status(500).end()
+    else res.destroy()
+  })
+  return stream.pipe(res)
+}
+
+app.head("/masters/:file", (req, res) => sendMasterFile(req, res, true))
+app.get("/masters/:file", (req, res) => sendMasterFile(req, res, false))
 const upload = multer({
   storage: multer.diskStorage({
     destination: uploadsDir, // 🔥 ÄNDRA HIT
