@@ -4,6 +4,7 @@
 
 import { useState } from "react"
 import { publicBackendUrl } from "../../lib/publicBackendUrl"
+import { AUDIO_UPLOAD_ACCEPT } from "../../lib/audioUploadAccept"
 
 export default function ProPage() {
   const [analysis, setAnalysis] = useState<any>(null)
@@ -32,7 +33,7 @@ export default function ProPage() {
         Mastrify PRO 🔥
       </h1>
 
-      <input type="file" accept="audio/*" onChange={handleUpload} />
+      <input type="file" accept={AUDIO_UPLOAD_ACCEPT} onChange={handleUpload} />
 
       {analysis && (
         <div className="mt-10 space-y-4">

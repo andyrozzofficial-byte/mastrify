@@ -16,6 +16,7 @@ import CinematicBackground from "../components/CinematicBackground"
 import ScoreRing from "../components/ScoreRing"
 import { appendHistory } from "../../lib/history"
 import { publicBackendUrl } from "../../lib/publicBackendUrl"
+import { AUDIO_UPLOAD_REJECT_MESSAGE, isAcceptedAudioUpload } from "../../lib/audioUploadAccept"
 import { useMasterSession } from "../master/MasterSessionProvider"
 
 /** Small metric cell — real values only; `hint` is derived copy, not fake data */
@@ -280,8 +281,8 @@ export default function AnalyzePage() {
     if (!f) return
     if (uploadFile) setFile(uploadFile)
 
-    if (!f.type.startsWith("audio")) {
-      alert("Please upload an audio file (.wav, .mp3, .m4a)")
+    if (!isAcceptedAudioUpload(f)) {
+      alert(AUDIO_UPLOAD_REJECT_MESSAGE)
       return
     }
 

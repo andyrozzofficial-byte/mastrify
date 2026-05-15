@@ -5,6 +5,11 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useState, type RefObject } from "react"
 import CinematicWaveform from "../audio/CinematicWaveform"
 import HeroWaveBackdrop from "../HeroWaveBackdrop"
+import {
+  AUDIO_UPLOAD_ACCEPT,
+  AUDIO_UPLOAD_REJECT_MESSAGE,
+  isAcceptedAudioUpload,
+} from "../../../lib/audioUploadAccept"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -25,7 +30,19 @@ export default function MasterUploadCard({
 }: Props) {
   const reduce = useReducedMotion()
   const [dragging, setDragging] = useState(false)
+  const [pickError, setPickError] = useState<string | null>(null)
   const loaded = Boolean(file)
+
+  function handlePickedFile(candidate: File | undefined, input?: HTMLInputElement | null) {
+    if (!candidate) return
+    if (!isAcceptedAudioUpload(candidate)) {
+      setPickError(AUDIO_UPLOAD_REJECT_MESSAGE)
+      if (input) input.value = ""
+      return
+    }
+    setPickError(null)
+    onFileSelected(candidate)
+  }
 
   return (
     <motion.div
@@ -64,18 +81,16 @@ export default function MasterUploadCard({
         onDrop={(e) => {
           e.preventDefault()
           setDragging(false)
-          const f = e.dataTransfer.files[0]
-          if (f?.type.startsWith("audio")) onFileSelected(f)
+          handlePickedFile(e.dataTransfer.files[0])
         }}
       >
         <input
           type="file"
           ref={fileInputRef}
           className="hidden"
-          accept="audio/*"
+          accept={AUDIO_UPLOAD_ACCEPT}
           onChange={(e) => {
-            const selected = e.target.files?.[0]
-            if (selected) onFileSelected(selected)
+            handlePickedFile(e.target.files?.[0], e.target)
           }}
         />
 
@@ -200,6 +215,12 @@ export default function MasterUploadCard({
             </button>
 
             {!loaded ? <p className="text-center text-[11px] text-white/58">or drag and drop</p> : null}
+
+            {pickError ? (
+              <p className="text-center text-[12px] leading-relaxed text-rose-300/88" role="alert">
+                {pickError}
+              </p>
+            ) : null}
 
             <Link
               href="/analyze"

@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
 import { useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
+import { AUDIO_UPLOAD_ACCEPT, isAcceptedAudioUpload } from "../../../lib/audioUploadAccept"
 
 const PRESETS: { id: MasterStylePreset; label: string; hint: string; icon: ReactNode }[] = [
   {
@@ -143,10 +144,10 @@ export default function MasterSettingsPage() {
             ref={reconnectInputRef}
             type="file"
             className="hidden"
-            accept="audio/*"
+            accept={AUDIO_UPLOAD_ACCEPT}
             onChange={(e) => {
               const f = e.target.files?.[0]
-              if (f) reconnectSourceFile(f)
+              if (f && isAcceptedAudioUpload(f)) reconnectSourceFile(f)
               e.target.value = ""
             }}
           />

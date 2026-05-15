@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { publicBackendUrl } from "../../lib/publicBackendUrl"
+import { AUDIO_UPLOAD_ACCEPT } from "../../lib/audioUploadAccept"
 
 export default function FlowPage() {
   const [analysis, setAnalysis] = useState<any>(null)
@@ -92,7 +93,7 @@ export default function FlowPage() {
 
             <input
               type="file"
-              accept="audio/*"
+              accept={AUDIO_UPLOAD_ACCEPT}
               onChange={handleUpload}
               className="mb-6 text-sm"
             />

@@ -3,6 +3,11 @@
 import { motion, useReducedMotion } from "framer-motion"
 import { useState, type RefObject } from "react"
 import HeroWaveBackdrop from "../HeroWaveBackdrop"
+import {
+  AUDIO_UPLOAD_ACCEPT,
+  AUDIO_UPLOAD_REJECT_MESSAGE,
+  isAcceptedAudioUpload,
+} from "../../../lib/audioUploadAccept"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -21,6 +26,18 @@ export default function AnalyzeUploadCard({
 }: Props) {
   const reduce = useReducedMotion()
   const [dragging, setDragging] = useState(false)
+  const [pickError, setPickError] = useState<string | null>(null)
+
+  function handlePickedFile(candidate: File | undefined, input?: HTMLInputElement | null) {
+    if (!candidate) return
+    if (!isAcceptedAudioUpload(candidate)) {
+      setPickError(AUDIO_UPLOAD_REJECT_MESSAGE)
+      if (input) input.value = ""
+      return
+    }
+    setPickError(null)
+    onFileInputChange(candidate)
+  }
 
   return (
     <motion.div
@@ -56,19 +73,16 @@ export default function AnalyzeUploadCard({
         onDrop={(e) => {
           e.preventDefault()
           setDragging(false)
-          const f = e.dataTransfer.files[0]
-          if (f?.type.startsWith("audio")) onFileInputChange(f)
+          handlePickedFile(e.dataTransfer.files[0])
         }}
       >
         <input
           type="file"
           ref={fileInputRef}
           className="hidden"
-          accept="audio/*,video/*"
-          capture
+          accept={AUDIO_UPLOAD_ACCEPT}
           onChange={(e) => {
-            const selected = e.target.files?.[0]
-            if (selected) onFileInputChange(selected)
+            handlePickedFile(e.target.files?.[0], e.target)
           }}
         />
 
@@ -130,6 +144,11 @@ export default function AnalyzeUploadCard({
               <span className="relative z-[1]">{file ? "Scan my track" : "Choose file"}</span>
             </button>
             <p className="text-[11px] text-white/58">or drag and drop</p>
+            {pickError ? (
+              <p className="text-center text-[12px] leading-relaxed text-rose-300/88" role="alert">
+                {pickError}
+              </p>
+            ) : null}
             {file ? (
               <p className="max-w-full truncate px-2 text-xs text-cyan-200/55">{file.name}</p>
             ) : null}
