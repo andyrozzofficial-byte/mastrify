@@ -1036,6 +1036,18 @@ app.post("/master",
       if (masterResult?.chainDiagnostics) {
         resPayload.chainDiagnostics = masterResult.chainDiagnostics
       }
+      if (masterResult?.chainSweepReport) {
+        const sweep = masterResult.chainSweepReport
+        for (const r of sweep.renders ?? []) {
+          if (r.url) r.fullUrl = `${baseUrl}${r.url}`
+        }
+        for (const r of sweep.ranking ?? []) {
+          if (r.url) r.fullUrl = `${baseUrl}${r.url}`
+        }
+        resPayload.chainSweepReport = sweep
+        resPayload.culpritSummary = sweep.culpritSummary
+        resPayload.chainSweepConsole = sweep.consoleReport
+      }
       if (PIPELINE_DEBUG) {
         resPayload.pipelineDebug = {
           masterFileName,
