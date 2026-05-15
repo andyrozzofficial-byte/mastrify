@@ -17,21 +17,39 @@ export function buildMasteringInsights({
   adaptiveLoudness,
   style,
   hotClubProtection,
+  adaptiveTransparency,
+  softLoudnessWindow,
+  loudnessPhilosophyScore,
 }) {
   const requested = finiteNum(requestedLufs, -14)
   const applied = finiteNum(appliedLufs, requested)
   const backoff = finiteNum(adaptiveLoudness?.backoffLu, 0)
   const adaptiveApplied = backoff > 0.05
   const transientProtection = Boolean(adaptiveLoudness?.transientProtection?.active)
+  const materialTransparent = Boolean(adaptiveTransparency?.material)
+  const softTargetActive = Boolean(softLoudnessWindow?.philosophy !== "exact")
 
   return {
     requestedLufs: requested,
     appliedLufs: applied,
     adaptiveApplied,
     adaptiveBackoffLu: Number(backoff.toFixed(2)),
-    transientProtectionActive: transientProtection || adaptiveApplied,
+    transientProtectionActive: transientProtection || adaptiveApplied || materialTransparent,
     hotClubProtection: Boolean(hotClubProtection),
     style: typeof style === "string" ? style : "STREAM",
+    materialTransparent,
+    adaptiveTransparentMode: Boolean(adaptiveTransparency?.active),
+    softTargetWindow: softLoudnessWindow
+      ? {
+          acceptableMin: softLoudnessWindow.acceptableMin,
+          acceptableMax: softLoudnessWindow.acceptableMax,
+          floorMin: softLoudnessWindow.floorMin,
+          undershootBudgetLu: softLoudnessWindow.undershootBudgetLu,
+          philosophy: softLoudnessWindow.philosophy,
+        }
+      : null,
+    loudnessPhilosophyScore: loudnessPhilosophyScore?.score ?? null,
+    prioritizeTransients: loudnessPhilosophyScore?.prioritizeTransients ?? true,
   }
 }
 
@@ -44,6 +62,10 @@ export function attachMasteringInsightsToAnalysis(analysis, insights) {
     adaptiveApplied: insights.adaptiveApplied,
     adaptiveBackoffLu: insights.adaptiveBackoffLu,
     transientProtectionActive: insights.transientProtectionActive,
+    materialTransparent: insights.materialTransparent,
+    adaptiveTransparentMode: insights.adaptiveTransparentMode,
+    softTargetWindow: insights.softTargetWindow,
+    loudnessPhilosophyScore: insights.loudnessPhilosophyScore,
   }
 }
 
@@ -61,5 +83,11 @@ export function serializeMasteringInsightsForJson(raw) {
     transientProtectionActive: Boolean(raw.transientProtectionActive),
     hotClubProtection: Boolean(raw.hotClubProtection),
     style: typeof raw.style === "string" ? raw.style : "STREAM",
+    materialTransparent: Boolean(raw.materialTransparent),
+    adaptiveTransparentMode: Boolean(raw.adaptiveTransparentMode),
+    ...(raw.softTargetWindow ? { softTargetWindow: raw.softTargetWindow } : {}),
+    ...(raw.loudnessPhilosophyScore != null
+      ? { loudnessPhilosophyScore: raw.loudnessPhilosophyScore }
+      : {}),
   }
 }

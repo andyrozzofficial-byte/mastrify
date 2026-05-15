@@ -18,7 +18,6 @@ import {
 import {
   CHAIN_DEBUG_MODES,
   resolveChainDebugMode,
-  isChainDebugSweepRequested,
   probeMomentaryLufsSeries,
   summarizeGainMovement,
   buildLoudnormGainReport,
@@ -42,7 +41,15 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-raw-chain-sweep"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-adaptive-transparent-loudness"
+
+/** Material transparent mode — transient/dynamic mixes; musicality over exact LUFS. */
+const MATERIAL_TRANSPARENT_MIN_CREST_DB = 11
+const MATERIAL_TRANSPARENT_MIN_DR_DB = 14
+const MATERIAL_TRANSPARENT_MIN_SWING_LU = 6.5
+const MATERIAL_TRANSPARENT_MIN_LIFT_LU = 8
+const SOFT_TARGET_UNDERSHOOT_MATERIAL_LU = 3
+const SOFT_TARGET_UNDERSHOOT_STREAMING_LU = 2
 
 /** Local dev: MASTRIFY_CHAIN_SWEEP=1 forces raw A–E sweep on every /master call. */
 const CHAIN_SWEEP_FORCED_BY_ENV = process.env.MASTRIFY_CHAIN_SWEEP === "1"
@@ -257,9 +264,206 @@ function isStreamingProfile(requestedLufs) {
   return r <= -10.5 && r >= -14.5
 }
 
-/** Transparent loudness — minimal intervention; punch over exact LUFS. */
-function isTransparentLoudnessMode(requestedLufs) {
+/**
+ * Profile allows open loudness (streaming tiers). Material transparent mode stacks on top.
+ * @param {{ active?: boolean }} [adaptiveTransparency]
+ */
+function isTransparentLoudnessMode(requestedLufs, adaptiveTransparency = null) {
+  if (adaptiveTransparency?.active) return true
   return isStreamingProfile(requestedLufs)
+}
+
+/**
+ * Material-based transparent mode — high crest/DR/swing or large lift required.
+ * @param {number|null} [momentarySwingLu] optional pre-probe swing
+ */
+function detectMaterialTransparentMode(ctx, pass1Json, requestedLufs, momentarySwingLu = null) {
+  const reasons = []
+  let score = 0
+  const crest = estimateCrestDb(ctx)
+  const dr = ctx?.dynamicRange
+  const integrated = ctx?.integratedLufs
+  const requested = clamp(requestedLufs, -16, -9)
+  const requiredLiftLu =
+    integrated != null && Number.isFinite(integrated) ? Math.max(0, requested - integrated) : null
+
+  let transientSwingLu = momentarySwingLu
+  if (pass1Json) {
+    const inputI = parseLoudnormJsonNum(pass1Json, "input_i")
+    const outputI = parseLoudnormJsonNum(pass1Json, "output_i")
+    if (inputI != null && outputI != null) {
+      const passSwing = Math.abs(outputI - inputI)
+      transientSwingLu =
+        transientSwingLu != null ? Math.max(transientSwingLu, passSwing) : passSwing
+    }
+  }
+  if (transientSwingLu == null && dr != null && dr > 11) {
+    transientSwingLu = dr * 0.48
+  }
+
+  if (crest != null && crest >= MATERIAL_TRANSPARENT_MIN_CREST_DB) {
+    reasons.push(`highCrest=${crest.toFixed(1)}dB`)
+    score += 0.32
+  }
+  if (dr != null && dr >= MATERIAL_TRANSPARENT_MIN_DR_DB) {
+    reasons.push(`highDR=${dr.toFixed(1)}dB`)
+    score += 0.28
+  }
+  if (transientSwingLu != null && transientSwingLu >= MATERIAL_TRANSPARENT_MIN_SWING_LU) {
+    reasons.push(`highSwing=${transientSwingLu.toFixed(1)}LU`)
+    score += 0.26
+  }
+  if (requiredLiftLu != null && requiredLiftLu >= MATERIAL_TRANSPARENT_MIN_LIFT_LU) {
+    reasons.push(`largeLiftRequired=${requiredLiftLu.toFixed(1)}LU`)
+    score += 0.3
+  }
+
+  const active = score >= 0.52 || reasons.length >= 2
+  const undershootBudgetLu = active
+    ? Number(
+        Math.min(
+          SOFT_TARGET_UNDERSHOOT_MATERIAL_LU,
+          Math.max(1, 1 + (score - 0.5) * 4)
+        ).toFixed(2)
+      )
+    : 0
+
+  return {
+    active,
+    score: Number(Math.min(1, score).toFixed(2)),
+    reasons,
+    crestDb: crest != null ? Number(crest.toFixed(2)) : null,
+    dynamicRange: dr != null ? Number(dr.toFixed(2)) : null,
+    transientSwingLu:
+      transientSwingLu != null ? Number(transientSwingLu.toFixed(2)) : null,
+    requiredLiftLu:
+      requiredLiftLu != null ? Number(requiredLiftLu.toFixed(2)) : null,
+    undershootBudgetLu,
+  }
+}
+
+/** Combine material detection with open streaming profile behavior. */
+function resolveAdaptiveTransparency(ctx, pass1Json, requestedLufs, momentarySwingLu = null) {
+  const material = detectMaterialTransparentMode(ctx, pass1Json, requestedLufs, momentarySwingLu)
+  const profileOpen =
+    isStreamingProfile(requestedLufs) && !isHotLoudnessTarget(requestedLufs)
+  const active = material.active || profileOpen
+  const intensity = material.active ? 1 : profileOpen ? 0.62 : 0
+  return {
+    ...material,
+    profileOpen,
+    intensity,
+    material: material.active,
+    materialReasons: material.reasons,
+    active,
+  }
+}
+
+/**
+ * Soft target window — integrated result may sit below requested (musicality).
+ * Example: requested −14 → acceptable roughly −14 … −16.5.
+ */
+function computeSoftLoudnessWindow(requestedLufs, adaptiveTransparency) {
+  const requested = clamp(requestedLufs, -16, -9)
+  const hot = isHotLoudnessTarget(requested)
+  const material = Boolean(adaptiveTransparency?.material)
+  const undershootBudgetLu = material
+    ? adaptiveTransparency?.undershootBudgetLu ?? SOFT_TARGET_UNDERSHOOT_MATERIAL_LU
+    : adaptiveTransparency?.active
+      ? SOFT_TARGET_UNDERSHOOT_STREAMING_LU
+      : hot
+        ? 1
+        : 1.25
+  const windowSpanLu = hot
+    ? 1.5
+    : material
+      ? 2.5
+      : adaptiveTransparency?.active
+        ? 2.2
+        : 1.5
+  const acceptableMax = requested
+  const acceptableMin = Number((requested - windowSpanLu).toFixed(2))
+  const floorMin = Number((requested - undershootBudgetLu - (hot ? 0.5 : 0.25)).toFixed(2))
+  return {
+    requested,
+    ideal: requested,
+    acceptableMin,
+    acceptableMax,
+    floorMin: Math.min(acceptableMin, floorMin),
+    undershootBudgetLu: Number(undershootBudgetLu.toFixed(2)),
+    windowSpanLu: Number(windowSpanLu.toFixed(2)),
+    philosophy: material ? "material-transparent" : adaptiveTransparency?.active ? "soft-streaming" : "exact",
+  }
+}
+
+function lufsWithinSoftWindow(lufs, window) {
+  if (lufs == null || !window || !Number.isFinite(lufs)) return false
+  return lufs <= window.acceptableMax + 0.15 && lufs >= window.floorMin - 0.15
+}
+
+/**
+ * Prefer transients and stability over exact integrated LUFS (0–1 higher = more musical).
+ */
+function scoreLoudnessPhilosophy({
+  ctx,
+  pass1Json,
+  measuredLufs,
+  softWindow,
+  crestDelta = null,
+  shortTermVarianceIncreasePct = null,
+}) {
+  const crest = estimateCrestDb(ctx)
+  const inSoftWindow = lufsWithinSoftWindow(measuredLufs, softWindow)
+  const exactMatchLu =
+    measuredLufs != null && softWindow
+      ? Math.abs(measuredLufs - softWindow.ideal)
+      : null
+
+  let transientScore = 0.35
+  if (crest != null && crest >= 10) transientScore += 0.15
+  if (crestDelta != null && crestDelta >= -0.8) transientScore += 0.2
+  if (crestDelta != null && crestDelta < -2.5) transientScore -= 0.25
+
+  let stabilityScore = 0.3
+  if (shortTermVarianceIncreasePct != null) {
+    if (shortTermVarianceIncreasePct < 12) stabilityScore += 0.2
+    else if (shortTermVarianceIncreasePct > 25) stabilityScore -= 0.2
+  }
+  if (pass1Json) {
+    const offset = parseLoudnormJsonNum(pass1Json, "target_offset")
+    if (offset != null && Math.abs(offset) < 0.45) stabilityScore += 0.1
+    else if (offset != null && Math.abs(offset) > 1.2) stabilityScore -= 0.15
+  }
+
+  let exactScore = 0.05
+  if (exactMatchLu != null && exactMatchLu < 0.35) exactScore += 0.1
+  if (inSoftWindow) exactScore += 0.05
+
+  const score = Math.min(1, Math.max(0, transientScore + stabilityScore + exactScore))
+  return {
+    score: Number(score.toFixed(3)),
+    inSoftWindow,
+    prioritizeTransients: true,
+    exactMatchLu: exactMatchLu != null ? Number(exactMatchLu.toFixed(2)) : null,
+    components: {
+      transient: Number(transientScore.toFixed(3)),
+      stability: Number(stabilityScore.toFixed(3)),
+      exactLufs: Number(exactScore.toFixed(3)),
+    },
+  }
+}
+
+function transparentProcessingScalars(adaptiveTransparency) {
+  const i = clamp(adaptiveTransparency?.intensity ?? 0, 0, 1)
+  const material = Boolean(adaptiveTransparency?.material)
+  return {
+    offsetCap: material ? 0.42 : 0.55 + (1 - i) * 0.35,
+    limiterIntensity: material ? 0.32 : 0.38 + (1 - i) * 0.12,
+    compScale: material ? 0.28 : 0.34 + (1 - i) * 0.14,
+    extraPursuitSlackLu: material ? 0.85 : 0.35 + (1 - i) * 0.25,
+    skipPass2Offset: material || i >= 0.55,
+    pregainScaleCap: material ? 0.55 : 0.72,
+  }
 }
 
 /** Stereo width — `extrastereo` m≈1 is neutral; wider >1, narrower <1. */
@@ -456,34 +660,58 @@ function lraForStyleAndTarget(style, integratedTarget, requestedTarget) {
 /**
  * Ask loudnorm for lower I= than resolved — transparent streaming chases level loosely, not tightly.
  */
-function loudnessTargetForLoudnorm(resolvedLufs, requestedLufs, ctx, extraSlackLu = 0) {
-  const transparent = isTransparentLoudnessMode(requestedLufs)
+function loudnessTargetForLoudnorm(
+  resolvedLufs,
+  requestedLufs,
+  ctx,
+  extraSlackLu = 0,
+  adaptiveTransparency = null,
+  softWindow = null
+) {
+  const transparent = isTransparentLoudnessMode(requestedLufs, adaptiveTransparency)
+  const material = Boolean(adaptiveTransparency?.material)
   let slack = isHotLoudnessTarget(requestedLufs) ? 0.7 : transparent ? 1.2 : 0.55
   if (transparent) slack += 0.55
+  if (material) slack += 0.65
   if (transparent && requestedLufs >= -11.5 && requestedLufs <= -10.5) slack += 0.55
   const dr = ctx?.dynamicRange
   const bass = ctx?.bassWeight
   const crest = estimateCrestDb(ctx)
   if (dr != null && dr > 8) slack += transparent ? 0.45 : 0.25
   if (dr != null && dr > 11) slack += transparent ? 0.35 : 0.2
+  if (dr != null && dr > MATERIAL_TRANSPARENT_MIN_DR_DB) slack += material ? 0.4 : 0.15
   if (bass != null && bass > 0.38) slack += transparent ? 0.5 : 0.25
   if (bass != null && bass > 0.5) slack += transparent ? 0.4 : 0.2
-  if (crest != null && crest < 9.5) slack += transparent ? 0.55 : 0.2
+  if (crest != null && crest >= MATERIAL_TRANSPARENT_MIN_CREST_DB) slack += material ? 0.55 : 0.2
+  if (crest != null && crest < 9.5) slack += transparent ? 0.35 : 0.2
   if (crest != null && crest < 8 && bass != null && bass > 0.35) slack += transparent ? 0.45 : 0.3
   if (crest != null && crest < 8) slack += transparent ? 0.35 : 0.15
   slack += Math.max(0, extraSlackLu)
-  const maxSlack = transparent ? 4.5 : isHotLoudnessTarget(requestedLufs) ? 2.1 : 1.9
+  const maxSlack = material ? 5.2 : transparent ? 4.5 : isHotLoudnessTarget(requestedLufs) ? 2.1 : 1.9
   slack = Math.min(slack, maxSlack)
-  const floor = isHotLoudnessTarget(requestedLufs) ? -11.5 : -16.5
+  const floor =
+    softWindow?.acceptableMin ??
+    (isHotLoudnessTarget(requestedLufs) ? -11.5 : -16.5)
   let loudnormI = Math.max(resolvedLufs - slack, floor)
+  if (softWindow?.floorMin != null) {
+    loudnormI = Math.max(loudnormI, softWindow.floorMin)
+  }
   const recoveryCap = capLoudnormIntegratedTarget(loudnormI, ctx, requestedLufs)
   loudnormI = recoveryCap.loudnormI
   return {
     loudnormI,
     pursuitSlackLu: Number(slack.toFixed(2)),
     transparentMode: transparent,
+    materialTransparent: material,
     extraSlackAppliedLu: Number(Math.max(0, extraSlackLu).toFixed(2)),
     recoveryCap,
+    softWindow: softWindow
+      ? {
+          acceptableMin: softWindow.acceptableMin,
+          acceptableMax: softWindow.acceptableMax,
+          floorMin: softWindow.floorMin,
+        }
+      : null,
   }
 }
 
@@ -531,8 +759,10 @@ function headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated, pass1Json 
  * Back off hot targets when the mix cannot safely reach requested LUFS.
  * Quieter resolved target (e.g. -10 vs -9) preserves punch and reduces limiting.
  */
-function resolveSafeIntegratedLufs(requestedLufs, ctx) {
+function resolveSafeIntegratedLufs(requestedLufs, ctx, adaptiveTransparency = null) {
   const requested = clamp(requestedLufs, -16, -9)
+  const material = Boolean(adaptiveTransparency?.material)
+  const softWindow = computeSoftLoudnessWindow(requested, adaptiveTransparency)
   const reasons = []
   let backoff = 0
 
@@ -552,16 +782,31 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
       backoff += 0.2
       reasons.push(`streamingLargeGap=${(requested - integrated).toFixed(1)}LU`)
     }
-    backoff += 0.65
-    reasons.push("transparentStreamingSlack")
+    if (material) {
+      backoff += Math.min(
+        softWindow.undershootBudgetLu,
+        1.2 + (adaptiveTransparency?.score ?? 0.5) * 1.8
+      )
+      reasons.push("materialTransparentUndershoot")
+    } else if (isTransparentLoudnessMode(requested, adaptiveTransparency)) {
+      backoff += 0.65
+      reasons.push("softStreamingTarget")
+    }
     const crestEarly = estimateCrestDb(ctx)
-    if (crestEarly != null && crestEarly < 9.5) {
-      backoff += 0.4
-      reasons.push(`transientHeavy=crest${crestEarly.toFixed(1)}dB`)
+    if (crestEarly != null && crestEarly >= MATERIAL_TRANSPARENT_MIN_CREST_DB) {
+      backoff += 0.55
+      reasons.push(`highCrest=${crestEarly.toFixed(1)}dB`)
+    } else if (crestEarly != null && crestEarly < 9.5) {
+      backoff += 0.35
+      reasons.push(`denseCrest=${crestEarly.toFixed(1)}dB`)
     }
     if (integrated != null && requested - integrated > 4) {
-      backoff += 0.4
-      reasons.push(`streamingGap=${(requested - integrated).toFixed(1)}LU`)
+      backoff += material ? 0.55 : 0.4
+      reasons.push(`gap=${(requested - integrated).toFixed(1)}LU`)
+    }
+    if (integrated != null && requested - integrated >= MATERIAL_TRANSPARENT_MIN_LIFT_LU) {
+      backoff += 0.45
+      reasons.push(`largeLift=${(requested - integrated).toFixed(1)}LU`)
     }
     if (requested >= -11.5 && requested <= -10.5) {
       backoff += 0.3
@@ -572,8 +817,9 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
       backoff += dynRelax.relaxationLu
       reasons.push(...dynRelax.reasons)
     }
-    backoff = Math.min(backoff, 3.2)
-    let resolved = Math.max(requested - backoff, -16)
+    backoff = Math.min(backoff, material ? 3.8 : 3.2)
+    let resolved = Math.max(requested - backoff, softWindow.acceptableMin, -16)
+    resolved = Math.min(resolved, softWindow.acceptableMax)
     const maxRec = maxLoudnormRecoveryLu(requested)
     if (integrated != null && resolved > integrated + maxRec) {
       resolved = integrated + maxRec
@@ -581,11 +827,13 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
     }
     return {
       requested,
-      resolved,
+      resolved: Number(resolved.toFixed(2)),
       backoffLu: Number(backoff.toFixed(2)),
       limiterReductionEstimateDb: Number(backoff.toFixed(2)),
       maxRecoveryLu: maxRec,
       dynamicRelaxationLu: dynRelax.relaxationLu,
+      softTargetWindow: softWindow,
+      materialTransparent: material,
       transientProtection: { active: true, reasons, preserveTransients: true },
     }
   }
@@ -646,11 +894,16 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
     reasons.push(...dynRelaxHot.reasons)
   }
 
-  const maxBackoff = 2.8
+  if (material) {
+    backoff += Math.min(softWindow.undershootBudgetLu, 1.5)
+    reasons.push("materialTransparentClub")
+  }
+
+  const maxBackoff = material ? 3.2 : 2.8
   backoff = Math.min(backoff, maxBackoff)
   let resolved = requested - backoff
-  resolved = Math.max(resolved, -11)
-  resolved = Math.min(resolved, requested)
+  resolved = Math.max(resolved, softWindow.floorMin, -11)
+  resolved = Math.min(resolved, softWindow.acceptableMax)
 
   const maxRec = maxLoudnormRecoveryLu(requested)
   if (integrated != null && resolved > integrated + maxRec) {
@@ -662,11 +915,13 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
 
   return {
     requested,
-    resolved,
+    resolved: Number(resolved.toFixed(2)),
     backoffLu: Number(backoff.toFixed(2)),
     limiterReductionEstimateDb,
     maxRecoveryLu: maxRec,
     dynamicRelaxationLu: dynRelaxHot.relaxationLu,
+    softTargetWindow: softWindow,
+    materialTransparent: material,
     transientProtection: {
       active: backoff > 0.05,
       reasons,
@@ -679,13 +934,19 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
  * Minimal pregain — loudnorm handles level; avoid stacking gain before it.
  * Streaming: max ~+3 dB. Club: max ~+1.25 dB.
  */
-function computeAdaptivePregain(resolvedLufs, ctx, pregainScale = 1, requestedLufs = -14) {
+function computeAdaptivePregain(
+  resolvedLufs,
+  ctx,
+  pregainScale = 1,
+  requestedLufs = -14,
+  adaptiveTransparency = null
+) {
   const integrated = ctx.integratedLufs
   if (integrated == null || !Number.isFinite(integrated)) {
     return { pregainDb: 0, factors: {}, maxGainCap: 0 }
   }
 
-  const transparent = isTransparentLoudnessMode(requestedLufs)
+  const transparent = isTransparentLoudnessMode(requestedLufs, adaptiveTransparency)
   const gap = resolvedLufs - integrated
   const gapFloor = transparent ? 1.75 : 1.15
   if (gap <= gapFloor) return { pregainDb: 0, factors: { gap, note: "nearTarget", transparent }, maxGainCap: 0 }
@@ -1107,13 +1368,16 @@ function assessTransparencyGuardrails({
   requestedLufs,
   pregainDb = 0,
   limiterGrEstimateDb = 0,
+  adaptiveTransparency = null,
 }) {
-  const transparent = isTransparentLoudnessMode(requestedLufs)
+  const transparent = isTransparentLoudnessMode(requestedLufs, adaptiveTransparency)
+  const material = Boolean(adaptiveTransparency?.material)
+  const scalars = transparentProcessingScalars(adaptiveTransparency)
   const streaming = isStreamingProfile(requestedLufs)
   const triggers = []
-  let extraPursuitSlackLu = transparent ? 0.3 : 0
-  let offsetCap = transparent ? 0.75 : 1.75
-  let limiterIntensity = transparent ? 0.42 : streaming ? 0.72 : 1
+  let extraPursuitSlackLu = transparent ? scalars.extraPursuitSlackLu : 0
+  let offsetCap = transparent ? scalars.offsetCap : 1.75
+  let limiterIntensity = transparent ? scalars.limiterIntensity : streaming ? 0.72 : 1
   let skipPass2Offset = false
   let compScale = 1
   let pregainScale = 1
@@ -1238,6 +1502,12 @@ function clubProtectionFilters(style, requestedLufs) {
 function logAdaptiveLoudness(payload) {
   if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
     console.log("[master] adaptive loudness", payload)
+  }
+}
+
+function logLoudnessPhilosophy(payload) {
+  if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
+    console.log("[master] loudness philosophy", payload)
   }
 }
 
@@ -1529,7 +1799,7 @@ export async function masterTrack({
   const chainStages = activeChainMode?.stages ?? CHAIN_DEBUG_MODES.E.stages
   const chainDebugModeId = activeChainMode?.id ?? "E"
   const chainSweepForcedByEnv = CHAIN_SWEEP_FORCED_BY_ENV
-  const chainSweep = chainSweepForcedByEnv || isChainDebugSweepRequested(chainDebugSweepIn)
+  const chainSweep = chainSweepForcedByEnv
   if (chainSweepForcedByEnv) {
     console.log("[master] chain sweep forced by env")
   }
@@ -1611,8 +1881,19 @@ export async function masterTrack({
   const ebuInputIntegrated = await measureIntegratedLufsEbur128(input)
 
   const headroomCtxInitial = headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated)
-  let adaptiveLoudness = resolveSafeIntegratedLufs(requestedLufs, headroomCtxInitial)
+  let adaptiveTransparency = resolveAdaptiveTransparency(
+    headroomCtxInitial,
+    null,
+    requestedLufs
+  )
+  let softLoudnessWindow = computeSoftLoudnessWindow(requestedLufs, adaptiveTransparency)
+  let adaptiveLoudness = resolveSafeIntegratedLufs(
+    requestedLufs,
+    headroomCtxInitial,
+    adaptiveTransparency
+  )
   let safeIntegratedLufs = adaptiveLoudness.resolved
+  let loudnessPhilosophyScore = null
 
   if (rawChainIsolation) {
     safeIntegratedLufs = requestedLufs
@@ -1624,15 +1905,28 @@ export async function masterTrack({
     }
   }
 
-  const transparentLoudnorm = rawChainIsolation ? false : isTransparentLoudnessMode(requestedLufs)
+  const transparentLoudnorm = rawChainIsolation
+    ? false
+    : isTransparentLoudnessMode(requestedLufs, adaptiveTransparency)
+  const transparentScalars = transparentProcessingScalars(adaptiveTransparency)
   let stagingDb = 0
-  let adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, headroomCtxInitial, 1, requestedLufs)
+  let adaptiveGain = computeAdaptivePregain(
+    safeIntegratedLufs,
+    headroomCtxInitial,
+    1,
+    requestedLufs,
+    adaptiveTransparency
+  )
   let autoPreGainDb = adaptiveGain.pregainDb
   let compIntensity = 1
-  let loudnormOffsetCap = transparentLoudnorm ? 0.8 : 1.75
-  let limiterIntensity = transparentLoudnorm ? 0.42 : isStreamingProfile(requestedLufs) ? 0.72 : 1
-  let extraPursuitSlackLu = transparentLoudnorm ? 0.3 : 0
-  let skipPass2Offset = transparentLoudnorm
+  let loudnormOffsetCap = transparentLoudnorm ? transparentScalars.offsetCap : 1.75
+  let limiterIntensity = transparentLoudnorm
+    ? transparentScalars.limiterIntensity
+    : isStreamingProfile(requestedLufs)
+      ? 0.72
+      : 1
+  let extraPursuitSlackLu = transparentLoudnorm ? transparentScalars.extraPursuitSlackLu : 0
+  let skipPass2Offset = transparentLoudnorm && transparentScalars.skipPass2Offset
   let staticLoudnormMode = transparentLoudnorm
   let loudnormLinear = !staticLoudnormMode
   let staticSafetyMeta = null
@@ -1670,8 +1964,13 @@ export async function masterTrack({
     skipPass2Offset = true
   }
   if (!isHotLoudnessTarget(requestedLufs)) {
-    compIntensity =
+    const baseComp =
       requestedLufs >= -11.5 && requestedLufs <= -10.5 ? 0.32 : transparentLoudnorm ? 0.36 : 0.5
+    compIntensity = adaptiveTransparency.material
+      ? baseComp * transparentScalars.compScale
+      : transparentLoudnorm
+        ? baseComp * Math.max(0.55, transparentScalars.compScale + 0.2)
+        : baseComp
   }
   if (headroomCtxInitial.dynamicRange != null && headroomCtxInitial.dynamicRange > 10) {
     compIntensity *= 0.8
@@ -1694,7 +1993,8 @@ export async function masterTrack({
       safeIntegratedLufs,
       headroomCtxInitial,
       transientSafety.pregainScale,
-      requestedLufs
+      requestedLufs,
+      adaptiveTransparency
     )
     autoPreGainDb = adaptiveGain.pregainDb
     compIntensity = transientSafety.compIntensity
@@ -1715,7 +2015,14 @@ export async function masterTrack({
     isHotLoudnessTarget(requestedLufs) &&
     (style === "CLUB" || style === "FESTIVAL" || (style === "LOUD" && requestedLufs >= -10.5))
 
-  let loudnormTargetPlan = loudnessTargetForLoudnorm(safeIntegratedLufs, requestedLufs, headroomCtxInitial)
+  let loudnormTargetPlan = loudnessTargetForLoudnorm(
+    safeIntegratedLufs,
+    requestedLufs,
+    headroomCtxInitial,
+    extraPursuitSlackLu,
+    adaptiveTransparency,
+    softLoudnessWindow
+  )
   let loudnormI = loudnormTargetPlan.loudnormI
 
   logTransientSafety({
@@ -1743,9 +2050,13 @@ export async function masterTrack({
     loudnormOffsetCap,
     limiterIntensity,
     extraPursuitSlackLu,
-    philosophy: transparentLoudnorm
-      ? "static-transparent-loudness"
-      : "transient-first-minimal-pregain",
+    adaptiveTransparency,
+    softTargetWindow: softLoudnessWindow,
+    philosophy: adaptiveTransparency.material
+      ? "material-transparent-loudness"
+      : transparentLoudnorm
+        ? "soft-target-streaming"
+        : "transient-first-minimal-pregain",
   })
 
   if (chainDebugActive) {
@@ -1769,7 +2080,9 @@ export async function masterTrack({
   ) {
     const lraVal = lraForStyleAndTarget(style, resolvedLufs, requestedLufs)
     const streaming = isStreamingProfile(requestedLufs)
-    const transparent = rawIsolation ? false : isTransparentLoudnessMode(requestedLufs)
+    const transparent = rawIsolation
+      ? false
+      : isTransparentLoudnessMode(requestedLufs, adaptiveTransparency)
     let lufsForLoudnorm
     let targetPlan
     if (rawIsolation) {
@@ -1782,7 +2095,14 @@ export async function masterTrack({
         recoveryCap: { capped: false },
       }
     } else {
-      targetPlan = loudnessTargetForLoudnorm(resolvedLufs, requestedLufs, ctx, extraPursuitSlackLu)
+      targetPlan = loudnessTargetForLoudnorm(
+        resolvedLufs,
+        requestedLufs,
+        ctx,
+        extraPursuitSlackLu,
+        adaptiveTransparency,
+        softLoudnessWindow
+      )
       lufsForLoudnorm = targetPlan.loudnormI
     }
     const tpVal = rawIsolation ? -2 : truePeakForLoudnormTarget(resolvedLufs, requestedLufs)
@@ -1800,7 +2120,7 @@ export async function masterTrack({
     const volumeStaging = stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
     const autoPreVol =
       stages.pregain && pregainDb > 0 ? `volume=${pregainDb.toFixed(2)}dB,` : ""
-    const compBypass = rawIsolation || chainDebugModeId === "D" ? 0 : transparent ? 0.58 : 0.48
+    const compBypass = rawIsolation || chainDebugModeId === "D" ? 0 : transparent ? 0.62 : 0.48
     const compStage =
       stages.comp && compInt >= compBypass ? formatAcompressorFilter(compVal) : ""
     const limiterStage = stages.limiter
@@ -2170,20 +2490,51 @@ export async function masterTrack({
       pregainDb: autoPreGainDb,
     })
     const limiterGrPass1 = estimateLimiterGainReductionDb(loudnormPass1Json, tp)
+    adaptiveTransparency = resolveAdaptiveTransparency(
+      ctxPass1,
+      loudnormPass1Json,
+      requestedLufs
+    )
+    softLoudnessWindow = computeSoftLoudnessWindow(requestedLufs, adaptiveTransparency)
     transparencyGuard = assessTransparencyGuardrails({
       ctx: ctxPass1,
       pass1Json: loudnormPass1Json,
       requestedLufs,
       pregainDb: autoPreGainDb,
       limiterGrEstimateDb: limiterGrPass1,
+      adaptiveTransparency,
     })
-    const refinedAdaptive = resolveSafeIntegratedLufs(requestedLufs, ctxPass1)
+    const refinedAdaptive = resolveSafeIntegratedLufs(
+      requestedLufs,
+      ctxPass1,
+      adaptiveTransparency
+    )
     const targetDrop =
       refinedAdaptive.resolved < safeIntegratedLufs - 0.2 ||
       pass1Safety.adjustedResolved < safeIntegratedLufs - 0.15
+    loudnessPhilosophyScore = scoreLoudnessPhilosophy({
+      ctx: ctxPass1,
+      pass1Json: loudnormPass1Json,
+      measuredLufs: parseLoudnormJsonNum(loudnormPass1Json, "output_i"),
+      softWindow: softLoudnessWindow,
+    })
+    logLoudnessPhilosophy({ phase: "pass1", ...loudnessPhilosophyScore, softWindow: softLoudnessWindow })
+    const musicalTargetDrop =
+      targetDrop &&
+      adaptiveTransparency.material &&
+      lufsWithinSoftWindow(refinedAdaptive.resolved, softLoudnessWindow)
     const needsRerun =
       (!chainDebugActive || chainDebugModeId === "E") &&
-      (pass1Safety.active || antiPumping.active || transparencyGuard.active || targetDrop)
+      (pass1Safety.active ||
+        antiPumping.active ||
+        transparencyGuard.active ||
+        (targetDrop && !musicalTargetDrop)) &&
+      !(
+        adaptiveTransparency.material &&
+        !pass1Safety.loudnormOverDriven &&
+        (antiPumping.pumpingRisk ?? 0) < 0.35 &&
+        musicalTargetDrop
+      )
 
     if (needsRerun) {
       if (refinedAdaptive.resolved < safeIntegratedLufs) {
@@ -2238,10 +2589,18 @@ export async function masterTrack({
         safeIntegratedLufs,
         ctxPass1,
         combinedPregainScale,
-        requestedLufs
+        requestedLufs,
+        adaptiveTransparency
       )
       autoPreGainDb = adaptiveGain.pregainDb
-      loudnormTargetPlan = loudnessTargetForLoudnorm(safeIntegratedLufs, requestedLufs, ctxPass1)
+      loudnormTargetPlan = loudnessTargetForLoudnorm(
+        safeIntegratedLufs,
+        requestedLufs,
+        ctxPass1,
+        extraPursuitSlackLu,
+        adaptiveTransparency,
+        softLoudnessWindow
+      )
 
       logAntiPumping({
         phase: "pass1-refine",
@@ -2442,7 +2801,7 @@ export async function masterTrack({
     const inputMovementProbe = await probeMomentaryLufsSeries(file, "")
     const outputMovementProbe = await probeMomentaryLufsSeries(outputPath, "")
     postRenderMovement = assessPostRenderMovement(inputMovementProbe, outputMovementProbe)
-    if (postRenderMovement.needsRerun) {
+    if (postRenderMovement.needsRerun && !adaptiveTransparency.material) {
       logStaticLoudnormSafety({ phase: "post-render-movement", ...postRenderMovement })
       safeIntegratedLufs = Math.max(
         isHotLoudnessTarget(requestedLufs) ? -11 : -16.5,
@@ -2456,7 +2815,9 @@ export async function masterTrack({
         safeIntegratedLufs,
         requestedLufs,
         headroomCtxInitial,
-        extraPursuitSlackLu
+        extraPursuitSlackLu,
+        adaptiveTransparency,
+        softLoudnessWindow
       )
       ;({
         audioFilterFinal,
@@ -2651,12 +3012,31 @@ export async function masterTrack({
     }
   }
 
+  const crestBefore = estimateCrestDb(headroomCtxInitial)
+  const crestAfter =
+    analysisAfter?.peakDb != null && analysisAfter?.lufs != null
+      ? analysisAfter.peakDb - analysisAfter.lufs
+      : null
+  loudnessPhilosophyScore = scoreLoudnessPhilosophy({
+    ctx: headroomCtxInitial,
+    pass1Json: loudnormPass1Json,
+    measuredLufs: analysisAfter?.lufs ?? authorityEbuIntegrated,
+    softWindow: softLoudnessWindow,
+    crestDelta:
+      crestBefore != null && crestAfter != null
+        ? Number((crestAfter - crestBefore).toFixed(2))
+        : null,
+  })
+
   const masteringInsights = buildMasteringInsights({
     requestedLufs,
     appliedLufs: safeIntegratedLufs,
     adaptiveLoudness,
     style,
     hotClubProtection,
+    adaptiveTransparency,
+    softLoudnessWindow,
+    loudnessPhilosophyScore,
   })
   if (analysisAfter) {
     analysisAfter = attachMasteringInsightsToAnalysis(analysisAfter, masteringInsights)
@@ -2702,6 +3082,9 @@ export async function masterTrack({
       clarityPresence,
       chainDebugMode: chainDebugModeId,
       chainDiagnostics,
+      adaptiveTransparency,
+      softLoudnessWindow,
+      loudnessPhilosophyScore,
     }
   }
   if (LUFS_TRACE) {
@@ -2721,6 +3104,9 @@ export async function masterTrack({
       authorityEbuIntegrated,
       analysisAfterLufs: analysisAfter?.lufs ?? null,
       analysisAfterHasRmsProxy: analysisAfter?.lufsRmsProxy != null,
+      adaptiveTransparency,
+      softLoudnessWindow,
+      loudnessPhilosophyScore,
     }
     console.log(
       "[LUFS_TRACE] AUTHORITY_MASTER_RETURN_FINAL analysisAfter.lufs=",

@@ -518,7 +518,8 @@ export default function MasterResultClient() {
   const loudnessCardSubtitle = smartLoudnessSubtitle(
     targetLufs,
     masteringInsights.appliedLufs,
-    masteringInsights.adaptiveApplied
+    masteringInsights.adaptiveApplied,
+    masteringInsights.materialTransparent
   )
 
   const trackMeta = useMemo(() => {

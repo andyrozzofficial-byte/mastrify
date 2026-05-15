@@ -86,8 +86,8 @@ export function resolveChainDebugMode(optsMode, envMode = process.env.MASTRIFY_C
   return parseChainDebugMode(optsMode) ?? parseChainDebugMode(envMode) ?? null
 }
 
-export function isChainDebugSweepRequested(raw) {
-  if (raw === true || raw === 1 || raw === "1" || raw === "true") return true
+/** Full A–E sweep runs only when MASTRIFY_CHAIN_SWEEP=1 (internal debug). */
+export function isChainDebugSweepRequested() {
   return process.env.MASTRIFY_CHAIN_SWEEP === "1"
 }
 

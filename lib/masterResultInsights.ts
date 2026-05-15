@@ -7,6 +7,7 @@ export type MasteringInsightsInput = {
   adaptiveApplied?: boolean
   backoffLu?: number
   transientProtection?: boolean
+  materialTransparent?: boolean
   style?: MasterStylePreset | string
 }
 
@@ -21,6 +22,7 @@ export type AnalysisMetrics = {
   adaptiveApplied?: unknown
   adaptiveBackoffLu?: unknown
   transientProtectionActive?: unknown
+  materialTransparent?: unknown
 }
 
 const LOUDNESS_PROFILES: { lufs: number; title: string; subtitle: string }[] = [
@@ -59,9 +61,13 @@ export function smartLoudnessTitle(requestedLufs: number, adaptiveApplied?: bool
 export function smartLoudnessSubtitle(
   requestedLufs: number,
   appliedLufs?: number | null,
-  adaptiveApplied?: boolean
+  adaptiveApplied?: boolean,
+  materialTransparent?: boolean
 ): string {
   const profile = nearestProfile(requestedLufs)
+  if (materialTransparent) {
+    return "Transparent loudness — transients and dynamics preserved"
+  }
   if (adaptiveApplied && appliedLufs != null) {
     return "Preserved punch and dynamics"
   }
@@ -99,11 +105,13 @@ export function mergeInsightsFromAnalysis(
     backoffLu: backoff ?? 0,
     transientProtection:
       analysisAfter?.transientProtectionActive === true || adaptiveApplied,
+    materialTransparent: analysisAfter?.materialTransparent === true,
     style,
   }
 }
 
 export function adaptiveStatusMessage(insights: MasteringInsightsInput): string | null {
+  if (insights.materialTransparent) return "Transparent loudness — musicality over exact LUFS"
   if (!insights.adaptiveApplied) return null
   if (insights.transientProtection) return "Transient-safe loudness — punch preserved"
   return "Adaptive loudness protection applied"
