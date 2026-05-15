@@ -96,49 +96,17 @@ export default function MasterUploadHero({
 
           <MasterFlowStepRail phase="upload" className="mt-8 justify-start md:mt-9" />
 
-          <motion.div className="mt-8 w-full max-w-[29.5rem] lg:max-w-none">
+          <motion.div className="mt-6 w-full max-w-[29.5rem] lg:max-w-none">
             <MasterUploadCard
               file={file}
               fileInputRef={fileInputRef}
               onFileSelected={onFileSelected}
               onChooseClick={onChooseClick}
+              onContinue={onContinue}
             />
           </motion.div>
 
-          <motion.div
-            className="mt-6 w-full max-w-[29.5rem] lg:max-w-none"
-            initial={reduce ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2, ease: EASE }}
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <button
-              type="button"
-              disabled={!file}
-              onClick={onContinue}
-              className="group relative inline-flex min-h-[50px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-35 sm:w-auto sm:min-w-[220px]"
-            >
-              <span
-                className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%] group-disabled:translate-x-[-120%]"
-                aria-hidden
-              />
-              <span className="relative z-[1]">Continue to settings</span>
-            </button>
-            <Link
-              href="/analyze"
-              className="inline-flex min-h-[50px] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.03] px-6 text-[13px] font-semibold text-white/55 transition hover:border-white/[0.14] hover:text-white/78"
-            >
-              Analyze mix first
-            </Link>
-            </div>
-            <p className="mt-2.5 text-[11px] leading-snug text-muted sm:text-[12px]">
-              Pay only for masters you export
-              <span className="text-muted-soft"> · </span>
-              Typically 30–60 seconds per render
-            </p>
-          </motion.div>
-
-          <div className="mt-6 grid gap-2 sm:grid-cols-3 sm:gap-2.5">
+          <div className="mt-5 grid gap-2 sm:grid-cols-3 sm:gap-2.5">
             {FEATURES.map((item, i) => (
               <motion.div
                 key={item.title}

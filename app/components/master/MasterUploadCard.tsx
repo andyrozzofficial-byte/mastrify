@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useState, type RefObject } from "react"
 import CinematicWaveform from "../audio/CinematicWaveform"
@@ -12,6 +13,7 @@ type Props = {
   fileInputRef: RefObject<HTMLInputElement | null>
   onFileSelected: (file: File) => void
   onChooseClick: () => void
+  onContinue: () => void
 }
 
 export default function MasterUploadCard({
@@ -19,6 +21,7 @@ export default function MasterUploadCard({
   fileInputRef,
   onFileSelected,
   onChooseClick,
+  onContinue,
 }: Props) {
   const reduce = useReducedMotion()
   const [dragging, setDragging] = useState(false)
@@ -78,7 +81,7 @@ export default function MasterUploadCard({
 
         <motion.div
           className="pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden"
-          animate={{ height: loaded ? "52%" : "40%", opacity: loaded ? 0.22 : 0.1 }}
+          animate={{ height: loaded ? "48%" : "38%", opacity: loaded ? 0.22 : 0.1 }}
           transition={{ duration: 0.55, ease: EASE }}
           aria-hidden
         >
@@ -99,7 +102,7 @@ export default function MasterUploadCard({
                 mode="processing"
                 audioSrc={file}
                 activeStep={0}
-                height={56}
+                height={48}
                 className="opacity-90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
               />
             </motion.div>
@@ -113,7 +116,7 @@ export default function MasterUploadCard({
           aria-hidden
         />
 
-        <div className="relative p-6 sm:p-7 md:p-8">
+        <div className="relative flex flex-col p-5 sm:p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={loaded ? "loaded" : dragging ? "drag" : "idle"}
@@ -121,14 +124,14 @@ export default function MasterUploadCard({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.35, ease: EASE }}
-              className={`relative overflow-hidden rounded-xl border border-dashed px-6 text-center transition-colors duration-300 sm:px-8 ${
-                loaded ? "border-emerald-400/25 bg-emerald-950/[0.08] py-8 sm:py-9" : "border-white/[0.1] bg-black/[0.35] py-10 sm:py-12"
+              className={`relative overflow-hidden rounded-xl border border-dashed px-5 text-center transition-colors duration-300 sm:px-6 ${
+                loaded ? "border-emerald-400/25 bg-emerald-950/[0.08] py-6 sm:py-7" : "border-white/[0.1] bg-black/[0.35] py-7 sm:py-8"
               }`}
             >
               {loaded ? (
                 <>
                   <motion.span
-                    className="mx-auto mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200/75"
+                    className="mx-auto mb-2.5 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200/75"
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.4, ease: EASE }}
@@ -136,17 +139,17 @@ export default function MasterUploadCard({
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80 shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
                     Mix loaded
                   </motion.span>
-                  <p className="text-[1.05rem] font-semibold tracking-[-0.02em] text-white/92">Ready for mastering</p>
-                  <p className="mx-auto mt-2 max-w-[18rem] truncate text-[12px] text-white/68 sm:text-[13px]">{file?.name}</p>
+                  <p className="text-[1rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.05rem]">Ready for mastering</p>
+                  <p className="mx-auto mt-1.5 max-w-[18rem] truncate text-[12px] text-white/68">{file?.name}</p>
                 </>
               ) : (
                 <>
                   <motion.div
-                    className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] ring-1 ring-white/[0.08]"
+                    className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] ring-1 ring-white/[0.08]"
                     animate={reduce ? undefined : { y: [0, -3, 0] }}
                     transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <svg className="h-7 w-7 text-violet-200/70" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <svg className="h-6 w-6 text-violet-200/70" viewBox="0 0 24 24" fill="none" aria-hidden>
                       <path
                         stroke="currentColor"
                         strokeLinecap="round"
@@ -156,10 +159,10 @@ export default function MasterUploadCard({
                       />
                     </svg>
                   </motion.div>
-                  <p className="text-[1.05rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.12rem]">
+                  <p className="text-[1rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.05rem]">
                     {dragging ? "Release your mix" : "Drop your mix here"}
                   </p>
-                  <p className="mx-auto mt-2.5 max-w-[18rem] text-[12px] leading-relaxed text-white/64 sm:text-[13px]">
+                  <p className="mx-auto mt-2 max-w-[18rem] text-[12px] leading-relaxed text-white/64">
                     WAV, AIFF, FLAC, MP3 — up to 500MB
                   </p>
                 </>
@@ -167,11 +170,27 @@ export default function MasterUploadCard({
             </motion.div>
           </AnimatePresence>
 
-          <div className="relative z-[2] mt-6 flex flex-col items-center gap-3">
+          <motion.div
+            className="relative z-[2] mt-4 flex flex-col items-stretch gap-2 border-t border-white/[0.06] pt-4"
+            layout
+          >
+            <button
+              type="button"
+              disabled={!loaded}
+              onClick={onContinue}
+              className="group relative flex min-h-[46px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-6 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              <span
+                className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%] group-disabled:translate-x-[-120%]"
+                aria-hidden
+              />
+              <span className="relative z-[1]">Continue to settings</span>
+            </button>
+
             <button
               type="button"
               onClick={onChooseClick}
-              className="group relative w-full overflow-hidden rounded-xl border border-white/[0.1] bg-white/[0.04] px-8 py-3.5 text-[14px] font-semibold text-white/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
+              className="group relative w-full overflow-hidden rounded-xl border border-white/[0.1] bg-white/[0.04] px-6 py-3 text-[13px] font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
             >
               <span
                 className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.1] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
@@ -179,8 +198,22 @@ export default function MasterUploadCard({
               />
               <span className="relative z-[1]">{loaded ? "Choose a different file" : "Choose file"}</span>
             </button>
-            {!loaded ? <p className="text-[11px] text-white/58">or drag and drop</p> : null}
-          </div>
+
+            {!loaded ? <p className="text-center text-[11px] text-white/58">or drag and drop</p> : null}
+
+            <Link
+              href="/analyze"
+              className="flex min-h-[40px] items-center justify-center rounded-xl text-[12px] font-medium text-white/50 transition hover:bg-white/[0.03] hover:text-white/75"
+            >
+              Analyze mix first
+            </Link>
+
+            <p className="pt-0.5 text-center text-[11px] leading-snug text-muted sm:text-[12px]">
+              Pay only for masters you export
+              <span className="text-muted-soft"> · </span>
+              Typically 30–60 seconds per render
+            </p>
+          </motion.div>
         </div>
       </motion.div>
     </motion.div>
