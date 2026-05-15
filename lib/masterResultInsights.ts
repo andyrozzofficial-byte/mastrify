@@ -1,5 +1,11 @@
 export type MasterStylePreset = "STREAM" | "CLUB" | "LOUD" | "WARM" | "FESTIVAL"
 
+export type MasteringConfidenceMessage = {
+  id?: string
+  level?: string
+  text: string
+}
+
 export type MasteringInsightsInput = {
   requestedLufs?: number | null
   appliedLufs?: number | null
@@ -8,6 +14,8 @@ export type MasteringInsightsInput = {
   backoffLu?: number
   transientProtection?: boolean
   materialTransparent?: boolean
+  materialProfile?: string | null
+  confidenceMessages?: MasteringConfidenceMessage[]
   style?: MasterStylePreset | string
 }
 
@@ -23,6 +31,8 @@ export type AnalysisMetrics = {
   adaptiveBackoffLu?: unknown
   transientProtectionActive?: unknown
   materialTransparent?: unknown
+  materialProfile?: unknown
+  confidenceMessages?: unknown
 }
 
 const LOUDNESS_PROFILES: { lufs: number; title: string; subtitle: string }[] = [
@@ -106,6 +116,13 @@ export function mergeInsightsFromAnalysis(
     transientProtection:
       analysisAfter?.transientProtectionActive === true || adaptiveApplied,
     materialTransparent: analysisAfter?.materialTransparent === true,
+    materialProfile:
+      typeof analysisAfter?.materialProfile === "string"
+        ? analysisAfter.materialProfile
+        : null,
+    confidenceMessages: Array.isArray(analysisAfter?.confidenceMessages)
+      ? (analysisAfter.confidenceMessages as MasteringConfidenceMessage[])
+      : [],
     style,
   }
 }
@@ -118,10 +135,20 @@ export function adaptiveStatusMessage(insights: MasteringInsightsInput): string 
 }
 
 export function adaptiveDetailLines(insights: MasteringInsightsInput): string[] {
-  if (!insights.adaptiveApplied) return []
+  const fromConfidence =
+    insights.confidenceMessages
+      ?.filter((m) => m?.text && m.level !== "hint")
+      .map((m) => m.text) ?? []
+  if (fromConfidence.length > 0) {
+    return [...new Set(fromConfidence)].slice(0, 4)
+  }
+  if (!insights.adaptiveApplied && !insights.materialTransparent) return []
   const lines = ["Preserved punch and dynamics"]
   if (insights.backoffLu != null && insights.backoffLu > 0.05) {
     lines.push("Smart loudness shaping for your mix")
+  }
+  if (insights.materialProfile === "pre_limited") {
+    lines.push("Minimal processing on an already-limited mix")
   }
   return lines
 }
@@ -237,6 +264,12 @@ export function buildQualityTags(
   const bass = toFiniteNumber(after?.bassWeight)
   const stereo = toFiniteNumber(after?.stereoWidth)
 
+  if (insights.materialProfile === "pre_limited") tags.push("Minimal touch")
+  if (insights.materialProfile === "acoustic" || insights.materialProfile === "cinematic") {
+    tags.push("Open dynamics")
+  }
+  if (insights.materialProfile === "ambient") tags.push("Spacious")
+  if (insights.materialTransparent) tags.push("Transparent")
   if (insights.adaptiveApplied) tags.push("Transient-safe")
   if (dr != null && dr >= 8) tags.push("Dynamic")
   if (dr != null && dr >= 6.5 && dr < 8) tags.push("Punchy")

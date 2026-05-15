@@ -20,6 +20,7 @@ export function buildMasteringInsights({
   adaptiveTransparency,
   softLoudnessWindow,
   loudnessPhilosophyScore,
+  masteringDecisions,
 }) {
   const requested = finiteNum(requestedLufs, -14)
   const applied = finiteNum(appliedLufs, requested)
@@ -27,7 +28,8 @@ export function buildMasteringInsights({
   const adaptiveApplied = backoff > 0.05
   const transientProtection = Boolean(adaptiveLoudness?.transientProtection?.active)
   const materialTransparent = Boolean(adaptiveTransparency?.material)
-  const softTargetActive = Boolean(softLoudnessWindow?.philosophy !== "exact")
+  const profile = masteringDecisions?.materialProfile?.profile ?? null
+  const confidenceMessages = masteringDecisions?.confidenceMessages ?? []
 
   return {
     requestedLufs: requested,
@@ -50,6 +52,14 @@ export function buildMasteringInsights({
       : null,
     loudnessPhilosophyScore: loudnessPhilosophyScore?.score ?? null,
     prioritizeTransients: loudnessPhilosophyScore?.prioritizeTransients ?? true,
+    materialProfile: profile,
+    limiterCharacter: masteringDecisions?.limiterCharacter?.transientType ?? null,
+    confidenceMessages: confidenceMessages.map((m) => ({
+      id: m.id,
+      level: m.level,
+      text: m.text,
+    })),
+    referenceSpectralMatch: Boolean(masteringDecisions?.referencePlan?.active),
   }
 }
 
@@ -66,6 +76,8 @@ export function attachMasteringInsightsToAnalysis(analysis, insights) {
     adaptiveTransparentMode: insights.adaptiveTransparentMode,
     softTargetWindow: insights.softTargetWindow,
     loudnessPhilosophyScore: insights.loudnessPhilosophyScore,
+    materialProfile: insights.materialProfile,
+    confidenceMessages: insights.confidenceMessages,
   }
 }
 
@@ -88,6 +100,10 @@ export function serializeMasteringInsightsForJson(raw) {
     ...(raw.softTargetWindow ? { softTargetWindow: raw.softTargetWindow } : {}),
     ...(raw.loudnessPhilosophyScore != null
       ? { loudnessPhilosophyScore: raw.loudnessPhilosophyScore }
+      : {}),
+    ...(raw.materialProfile ? { materialProfile: raw.materialProfile } : {}),
+    ...(Array.isArray(raw.confidenceMessages)
+      ? { confidenceMessages: raw.confidenceMessages }
       : {}),
   }
 }

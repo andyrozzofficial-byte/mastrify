@@ -10,6 +10,11 @@ import {
   attachMasteringInsightsToAnalysis,
 } from "./masterInsightsPayload.js"
 import {
+  buildMasteringDecisions,
+  applyPerceptualToneToBase,
+  mergeProcessingIntensity,
+} from "./masteringDecisions.js"
+import {
   MASTRIFY_LUFS_TRACE as LUFS_TRACE,
   MASTRIFY_MASTER_DEBUG as MASTER_DEBUG,
   MASTRIFY_PIPELINE_DEBUG as PIPELINE_DEBUG,
@@ -41,7 +46,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-adaptive-transparent-loudness"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-musical-decisions"
 
 /** Material transparent mode — transient/dynamic mixes; musicality over exact LUFS. */
 const MATERIAL_TRANSPARENT_MIN_CREST_DB = 11
@@ -749,6 +754,9 @@ function headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated, pass1Json 
     dynamicRange: typeof preAnalysis?.dynamicRange === "number" ? preAnalysis.dynamicRange : null,
     peakDb: typeof preAnalysis?.peakDb === "number" ? preAnalysis.peakDb : null,
     bassWeight: typeof preAnalysis?.bassWeight === "number" ? preAnalysis.bassWeight : null,
+    brightness: typeof preAnalysis?.brightness === "number" ? preAnalysis.brightness : null,
+    stereoWidth: typeof preAnalysis?.stereoWidth === "number" ? preAnalysis.stereoWidth : null,
+    energy: preAnalysis?.energy ?? null,
     pass1InputTp: pass1Json ? num(pass1Json.input_tp) : null,
     pass1InputLra: pass1Json ? num(pass1Json.input_lra) : null,
     pass1OutputLra: pass1Json ? num(pass1Json.output_lra) : null,
@@ -1341,9 +1349,25 @@ function lowEndPreLoudnessFilters(ctx) {
  * Peak containment — slow attack / long release; transparent streaming uses minimal GR only.
  * @param {number} intensity 0 = bypass, 1 = full gentle peak catch
  */
-function peakContainmentLimiter(streaming = false, transparent = false, intensity = 1) {
+function peakContainmentLimiter(
+  streaming = false,
+  transparent = false,
+  intensity = 1,
+  limiterCharacter = null
+) {
   const i = clamp(intensity, 0, 1)
   if (i < 0.1) return ""
+  if (limiterCharacter && (transparent || streaming || i < 0.85)) {
+    const attack = Math.round(limiterCharacter.attack + (1 - i) * 14)
+    const release = Math.round(limiterCharacter.release + (1 - i) * 60)
+    const limitVal = Number(
+      (limiterCharacter.limit - (1 - i) * 0.004).toFixed(4)
+    )
+    const levelOut = Number(
+      (limiterCharacter.levelOut - (1 - i) * 0.003).toFixed(4)
+    )
+    return `alimiter=level_in=1:level_out=${levelOut}:limit=${limitVal}:attack=${attack}:release=${release}:asc=0,`
+  }
   if (transparent || streaming) {
     const attack = Math.round(32 + (1 - i) * 22)
     const release = Math.round(300 + (1 - i) * 120)
@@ -1824,14 +1848,12 @@ export async function masterTrack({
   if (!Number.isFinite(parsedClient)) parsedClient = NaN
 
   let targetLufs
-  if (referenceAnalysis?.lufs != null && Number.isFinite(referenceAnalysis.lufs)) {
-    targetLufs = referenceAnalysis.lufs
-  } else if (Number.isFinite(parsedClient)) {
+  if (Number.isFinite(parsedClient)) {
     targetLufs = clamp(parsedClient, -16, -9)
   } else if (!reference) {
     targetLufs = styleDefaultLufs[style] ?? -14
   } else {
-    targetLufs = -14
+    targetLufs = styleDefaultLufs[style] ?? -14
   }
 
   targetLufs = parseFloat(targetLufs)
@@ -1844,7 +1866,7 @@ export async function masterTrack({
       stamp: LUFS_TRACE_BUILD_STAMP,
       incomingTargetLufsRaw: targetLufsIn,
       parsedClient,
-      referenceBranch: Boolean(reference && referenceAnalysis?.lufs != null),
+      referenceSpectralOnly: Boolean(reference && referenceAnalysis),
       targetLufsResolved: targetLufs,
       requestedLufs,
     })
@@ -1894,6 +1916,24 @@ export async function masterTrack({
   )
   let safeIntegratedLufs = adaptiveLoudness.resolved
   let loudnessPhilosophyScore = null
+  let masteringDecisions = null
+  if (!rawChainIsolation && preAnalysis) {
+    masteringDecisions = buildMasteringDecisions({
+      analysis: preAnalysis,
+      ctx: headroomCtxInitial,
+      adaptiveTransparency,
+      referenceAnalysis,
+      stereoEnhance,
+    })
+    if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
+      console.log("[master] musical decisions", {
+        profile: masteringDecisions.materialProfile.profile,
+        intensity: masteringDecisions.materialProfile.processingIntensity,
+        limiterType: masteringDecisions.limiterCharacter.transientType,
+        confidence: masteringDecisions.confidenceMessages.map((m) => m.text),
+      })
+    }
+  }
 
   if (rawChainIsolation) {
     safeIntegratedLufs = requestedLufs
@@ -1978,6 +2018,21 @@ export async function masterTrack({
   }
   if (headroomCtxInitial.bassWeight != null && headroomCtxInitial.bassWeight > 0.4) {
     compIntensity *= 0.68
+  }
+  if (masteringDecisions && !rawChainIsolation) {
+    compIntensity = mergeProcessingIntensity(
+      compIntensity,
+      masteringDecisions.materialProfile,
+      masteringDecisions
+    )
+    limiterIntensity = Math.min(
+      limiterIntensity,
+      masteringDecisions.materialProfile.limiterPressureCap
+    )
+    if (masteringDecisions.materialProfile.profile === "pre_limited") {
+      compIntensity = Math.min(compIntensity, 0.14)
+      limiterIntensity = Math.min(limiterIntensity, 0.12)
+    }
   }
 
   let transientSafety = rawChainIsolation
@@ -2108,8 +2163,32 @@ export async function masterTrack({
     }
     const tpVal = rawIsolation ? -2 : truePeakForLoudnormTarget(resolvedLufs, requestedLufs)
     const compVal = compressorForStyleAndTarget(style, resolvedLufs, compInt, requestedLufs)
-    const tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
-    const stereoStage = buildStereoStage(stereoEnhance, style, hotClubProtection)
+    let tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
+    if (!rawIsolation && masteringDecisions) {
+      tone = applyPerceptualToneToBase(tone, masteringDecisions.perceptualTone)
+    }
+    const stereoSlider =
+      !rawIsolation && masteringDecisions
+        ? clamp(
+            masteringDecisions.stereoPlan.effectiveStereoEnhance +
+              (masteringDecisions.referencePlan.stereoEnhanceBias ?? 0),
+            0,
+            100
+          )
+        : stereoEnhance
+    const stereoStage = buildStereoStage(stereoSlider, style, hotClubProtection)
+    const perceptualEq =
+      !rawIsolation && masteringDecisions?.perceptualTone?.filters
+        ? `${masteringDecisions.perceptualTone.filters},`
+        : ""
+    const referenceEq =
+      !rawIsolation && masteringDecisions?.referencePlan?.filters
+        ? `${masteringDecisions.referencePlan.filters},`
+        : ""
+    const stereoEq =
+      !rawIsolation && masteringDecisions?.stereoPlan?.filters
+        ? masteringDecisions.stereoPlan.filters
+        : ""
     const styleTail = styleCharacterFilters(style)
     const clubProt = clubProtectionFilters(style, requestedLufs)
     const lowEndGuard = rawIsolation
@@ -2127,7 +2206,12 @@ export async function masterTrack({
     const limiterStage = stages.limiter
       ? rawIsolation
         ? peakContainmentLimiter(streaming, false, 1)
-        : peakContainmentLimiter(streaming, transparent, limiterIntensity)
+        : peakContainmentLimiter(
+            streaming,
+            transparent,
+            limiterIntensity,
+            masteringDecisions?.limiterCharacter ?? null
+          )
       : ""
 
     const mud = tone.mudGain.toFixed(3)
@@ -2142,7 +2226,10 @@ export async function masterTrack({
       `highpass=f=45,` +
       volumeStaging +
       stereoStage +
+      stereoEq +
       kickSubGuard.filters +
+      perceptualEq +
+      referenceEq +
       `equalizer=f=200:t=q:w=1:g=${mud},` +
       `equalizer=f=320:t=q:w=1:g=${mudW},` +
       `equalizer=f=${tone.lowHz}:t=q:w=0.92:g=${lowG},` +
@@ -3037,6 +3124,7 @@ export async function masterTrack({
     adaptiveTransparency,
     softLoudnessWindow,
     loudnessPhilosophyScore,
+    masteringDecisions,
   })
   if (analysisAfter) {
     analysisAfter = attachMasteringInsightsToAnalysis(analysisAfter, masteringInsights)
@@ -3085,6 +3173,7 @@ export async function masterTrack({
       adaptiveTransparency,
       softLoudnessWindow,
       loudnessPhilosophyScore,
+      masteringDecisions,
     }
   }
   if (LUFS_TRACE) {
