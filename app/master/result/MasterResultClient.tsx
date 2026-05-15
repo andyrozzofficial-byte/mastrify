@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
@@ -86,6 +86,29 @@ function isIOSSafari() {
   return isWebKit && !isCriOS && !isFxiOS
 }
 
+/** Non-empty playback URL only — never pass "" to <audio src>. */
+function normalizePlaybackUrl(raw: unknown): string | null {
+  if (typeof raw !== "string") return null
+  const t = raw.trim()
+  return t.length > 0 ? t : null
+}
+
+function isPlayableMediaUrl(url: string | null): url is string {
+  if (!url) return false
+  return /^https?:\/\//i.test(url) || url.startsWith("blob:")
+}
+
+function logPreview(message: string, detail?: Record<string, unknown>) {
+  if (detail) console.log(`[preview] ${message}`, detail)
+  else console.log(`[preview] ${message}`)
+}
+
+function resolveMasteredPlaybackUrl(mp3: string | null, wav: string | null): { url: string | null; via: "mp3" | "wav" | null } {
+  if (mp3) return { url: mp3, via: "mp3" }
+  if (wav) return { url: wav, via: "wav" }
+  return { url: null, via: null }
+}
+
 export default function MasterResultClient() {
   const {
     file,
@@ -154,9 +177,59 @@ export default function MasterResultClient() {
     setIsPaid(typeof window !== "undefined" && localStorage.getItem("paid") === "true")
   }, [])
 
-  const masteredPreviewUrl = isIOSSafari() && masteredPreviewMp3Url ? masteredPreviewMp3Url : masteredUrl
-  const masteredMobilePreviewUrl = masteredPreviewMp3Url || ""
-  const mobileSelectedUrl = selectedSource === "mastered" ? masteredMobilePreviewUrl : audioUrl
+  const originalPreviewUrl = useMemo(() => normalizePlaybackUrl(audioUrl), [audioUrl])
+  const masteredWavUrl = useMemo(() => normalizePlaybackUrl(masteredUrl), [masteredUrl])
+  const masteredMp3Url = useMemo(() => normalizePlaybackUrl(masteredPreviewMp3Url), [masteredPreviewMp3Url])
+
+  const masteredPlayback = useMemo(
+    () => resolveMasteredPlaybackUrl(masteredMp3Url, masteredWavUrl),
+    [masteredMp3Url, masteredWavUrl]
+  )
+
+  const masteredPlaybackUrl = masteredPlayback.url
+
+  /** iOS Safari: prefer MP3 when present; otherwise same MP3→WAV fallback as desktop. */
+  const desktopMasteredPlaybackUrl = useMemo(() => {
+    if (isIOSSafari() && masteredMp3Url) return masteredMp3Url
+    return masteredPlaybackUrl
+  }, [masteredMp3Url, masteredPlaybackUrl])
+
+  const mobilePlaybackUrl = useMemo(() => {
+    return selectedSource === "mastered" ? masteredPlaybackUrl : originalPreviewUrl
+  }, [selectedSource, masteredPlaybackUrl, originalPreviewUrl])
+
+  useEffect(() => {
+    if (!originalPreviewUrl) {
+      logPreview("original preview URL missing", { audioUrl: audioUrl || null })
+    }
+    if (!masteredMp3Url && !masteredWavUrl) {
+      logPreview("mastered preview URLs missing (MP3 and WAV)", {
+        masteredPreviewMp3Url: masteredPreviewMp3Url || null,
+        masteredUrl: masteredUrl || null,
+      })
+    } else if (!masteredMp3Url && masteredWavUrl) {
+      logPreview("MP3 preview missing — will use mastered WAV", { masteredWavUrl })
+    }
+  }, [originalPreviewUrl, masteredMp3Url, masteredWavUrl, audioUrl, masteredPreviewMp3Url, masteredUrl])
+
+  useEffect(() => {
+    if (masteredPlayback.via === "wav" && masteredMp3Url == null && masteredWavUrl) {
+      logPreview("fallback to mastered WAV playback", { url: masteredWavUrl })
+    }
+    if (masteredPlayback.via === "mp3" && masteredMp3Url) {
+      logPreview("using MP3 preview URL", { url: masteredMp3Url })
+    }
+  }, [masteredPlayback.via, masteredMp3Url, masteredWavUrl])
+
+  useEffect(() => {
+    if (!isMobileClient) return
+    const label = selectedSource === "mastered" ? "mastered" : "original"
+    if (mobilePlaybackUrl) {
+      logPreview("mobile preview URL selected", { source: label, url: mobilePlaybackUrl })
+    } else {
+      logPreview("mobile preview URL missing for selected source", { source: label })
+    }
+  }, [isMobileClient, selectedSource, mobilePlaybackUrl])
 
   const safePreviewTimeForEl = (el: HTMLAudioElement | null) => {
     const dur = el?.duration
@@ -210,7 +283,7 @@ export default function MasterResultClient() {
     if (isMobileClient) return
     const original = originalAudioRef.current
     const mastered = masteredAudioRef.current
-    if (!original || !mastered) return
+    if (!original && !mastered) return
 
     const attach = (el: HTMLAudioElement, label: "original" | "mastered") => {
       const isSelected = () => selectedSourceRef.current === label
@@ -246,13 +319,13 @@ export default function MasterResultClient() {
       }
     }
 
-    const d1 = attach(original, "original")
-    const d2 = attach(mastered, "mastered")
+    const cleanups: Array<() => void> = []
+    if (original) cleanups.push(attach(original, "original"))
+    if (mastered) cleanups.push(attach(mastered, "mastered"))
     return () => {
-      d1()
-      d2()
+      for (const fn of cleanups) fn()
     }
-  }, [audioUrl, masteredPreviewUrl, isMobileClient])
+  }, [originalPreviewUrl, desktopMasteredPlaybackUrl, isMobileClient])
 
   useEffect(() => {
     if (!isMobileClient) return
@@ -305,8 +378,8 @@ export default function MasterResultClient() {
   }, [isMobileClient, selectedSource, mobileAudioKey])
 
   const selectSource = (next: "original" | "mastered") => {
-    if (next === "mastered" && !masteredUrl) return
-    if (next === "original" && !audioUrl) return
+    if (next === "mastered" && !masteredPlaybackUrl) return
+    if (next === "original" && !originalPreviewUrl) return
     if (next === selectedSource) return
     pauseAll()
     setPlayProgress(0)
@@ -338,8 +411,11 @@ export default function MasterResultClient() {
       setIsPlaying(false)
       const el = mobileAudioRef.current
       if (!el) return
-      const nextSrc = mobileSelectedUrl
-      if (!nextSrc) return
+      const nextSrc = mobilePlaybackUrl
+      if (!isPlayableMediaUrl(nextSrc)) {
+        logPreview("mobile play aborted — no valid preview URL", { selectedSource })
+        return
+      }
       el.pause()
       if (el.src !== nextSrc) el.src = nextSrc
       el.load()
@@ -363,15 +439,22 @@ export default function MasterResultClient() {
     isStartingPlaybackRef.current = true
     try {
       if (selectedSourceRef.current === "mastered") {
-        if (!masteredUrl || !/^https:\/\//i.test(masteredUrl)) {
+        const playUrl = desktopMasteredPlaybackUrl
+        if (!isPlayableMediaUrl(playUrl)) {
+          logPreview("desktop mastered play aborted — no valid preview URL", {
+            desktopMasteredPlaybackUrl: playUrl,
+            masteredMp3Url,
+            masteredWavUrl,
+          })
           setIsPlaying(false)
           return
         }
+        logPreview("desktop mastered preview URL selected", { url: playUrl, via: masteredPlayback.via })
         originalAudioRef.current?.pause()
         const masteredEl = masteredAudioRef.current
         if (masteredEl) {
-          if (masteredEl.src !== masteredUrl) {
-            masteredEl.src = masteredUrl
+          if (masteredEl.src !== playUrl) {
+            masteredEl.src = playUrl
             masteredEl.load()
           }
           await waitForReady(masteredEl)
@@ -464,7 +547,7 @@ export default function MasterResultClient() {
 
   if (!mounted) return null
 
-  if (!masteredUrl) {
+  if (!masteredWavUrl) {
     return (
       <div className="mx-auto max-w-md px-6 py-24 text-center text-white/60">
         <p>No master in this session.</p>
@@ -654,7 +737,7 @@ export default function MasterResultClient() {
           </button>
         ) : (
           <a
-            href={masteredUrl ? `${masteredUrl}?download=1` : "#"}
+            href={masteredWavUrl ? `${masteredWavUrl}?download=1` : "#"}
             download="master.wav"
             className="inline-flex min-h-[54px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-9 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99]"
           >
@@ -689,16 +772,22 @@ export default function MasterResultClient() {
         </button>
       </motion.div>
 
-      <audio ref={originalAudioRef} src={audioUrl} playsInline preload="auto" className="hidden" />
-      <audio ref={masteredAudioRef} src={masteredPreviewUrl} playsInline preload="auto" className="hidden" />
-      <audio
-        ref={mobileAudioRef}
-        key={mobileAudioKey}
-        src={isMobileClient ? mobileSelectedUrl : ""}
-        playsInline
-        preload="auto"
-        className="hidden"
-      />
+      {originalPreviewUrl ? (
+        <audio ref={originalAudioRef} src={originalPreviewUrl} playsInline preload="auto" className="hidden" />
+      ) : null}
+      {desktopMasteredPlaybackUrl ? (
+        <audio ref={masteredAudioRef} src={desktopMasteredPlaybackUrl} playsInline preload="auto" className="hidden" />
+      ) : null}
+      {isMobileClient && isPlayableMediaUrl(mobilePlaybackUrl) ? (
+        <audio
+          ref={mobileAudioRef}
+          key={mobileAudioKey}
+          src={mobilePlaybackUrl}
+          playsInline
+          preload="auto"
+          className="hidden"
+        />
+      ) : null}
     </div>
   )
 }
