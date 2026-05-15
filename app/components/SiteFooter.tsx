@@ -9,7 +9,6 @@ const product = [
   { href: "/analyze", label: "Analyze" },
   { href: "/master", label: "Master" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/blog", label: "Blog" },
 ] as const
 
 const support = [

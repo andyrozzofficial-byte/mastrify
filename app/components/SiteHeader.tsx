@@ -8,8 +8,13 @@ const links = [
   { href: "/master", label: "Master" },
   { href: "/how-it-works", label: "Why Mastrify" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/blog", label: "Blog" },
-]
+] as const
+
+const navCtaClass =
+  "rounded-lg border border-white/[0.09] bg-white/[0.03] px-3.5 py-1.5 text-[12px] font-medium text-white/82 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white md:px-4 md:py-2 md:text-[13px]"
+
+const loginClass =
+  "text-[12px] font-medium text-muted-soft transition hover:text-muted-strong md:text-[13px]"
 
 export default function SiteHeader() {
   const pathname = usePathname()
@@ -20,22 +25,16 @@ export default function SiteHeader() {
         <div className="flex items-center justify-between md:contents">
           <Link
             href="/"
-            className="shrink-0 text-lg font-bold tracking-tight text-transparent md:text-xl bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text drop-shadow-[0_0_14px_rgba(139,92,246,0.22)]"
+            className="shrink-0 bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text text-lg font-bold tracking-tight text-transparent drop-shadow-[0_0_14px_rgba(139,92,246,0.22)] md:text-xl"
           >
             Mastrify
           </Link>
-          <div className="flex items-center gap-3 md:hidden">
-            <Link
-              href="/pricing"
-              className="text-[13px] font-medium text-muted-strong transition hover:text-white/90"
-            >
+          <div className="flex items-center gap-3.5 md:hidden">
+            <Link href="/pricing" className={loginClass}>
               Log in
             </Link>
-            <Link
-              href="/pricing"
-              className="rounded-lg bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-3 py-2 text-[12px] font-semibold text-white shadow-[0_0_17px_rgba(124,58,237,0.28),0_8px_24px_rgba(0,0,0,0.35)] transition hover:brightness-110"
-            >
-              Sign up
+            <Link href="/master" className={navCtaClass}>
+              Start mastering
             </Link>
           </div>
         </div>
@@ -60,18 +59,12 @@ export default function SiteHeader() {
           })}
         </nav>
 
-        <div className="hidden shrink-0 items-center gap-4 md:flex">
-          <Link
-            href="/pricing"
-            className="text-[13px] font-medium text-muted-strong transition hover:text-white/90"
-          >
+        <div className="hidden shrink-0 items-center gap-3.5 md:flex">
+          <Link href="/pricing" className={loginClass}>
             Log in
           </Link>
-          <Link
-            href="/pricing"
-            className="rounded-lg bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] px-4 py-2 text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.26),0_8px_28px_rgba(0,0,0,0.38)] transition hover:brightness-110"
-          >
-            Sign up
+          <Link href="/master" className={navCtaClass}>
+            Start mastering
           </Link>
         </div>
       </div>
