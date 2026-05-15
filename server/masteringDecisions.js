@@ -487,6 +487,8 @@ export function buildMasteringConfidenceMessages({
   adaptiveTransparency,
   referencePlan,
   perceptualTone,
+  emotionalMovement,
+  processingLedger,
 }) {
   const messages = []
   const profile = materialProfile?.profile
@@ -551,7 +553,194 @@ export function buildMasteringConfidenceMessages({
     })
   }
 
+  if (emotionalMovement?.protectArrangement) {
+    messages.push({
+      id: "emotional_contrast",
+      level: "positive",
+      text: "Emotional contrast protected — chorus lift and breakdown openness retained",
+    })
+  }
+
+  if (processingLedger?.overBudget) {
+    messages.push({
+      id: "cumulative_cap",
+      level: "info",
+      text: "Cumulative processing capped — avoiding stacked EQ, stereo, and limiter fatigue",
+    })
+  }
+
+  if (processingLedger?.trustMix) {
+    messages.push({
+      id: "trust_mix",
+      level: "positive",
+      text: "Trusting the mix — tonal and spatial corrections held back",
+    })
+  }
+
   return messages.filter((m) => !m.hidden)
+}
+
+/**
+ * Emotional contrast / arrangement movement — avoid flattening song structure.
+ */
+export function assessEmotionalMovement(analysis, ctx = {}) {
+  const dr = num(analysis?.dynamicRange) ?? num(ctx?.dynamicRange)
+  const crest = estimateCrestFromAnalysis(analysis, ctx?.integratedLufs)
+  const stereo = num(analysis?.stereoWidth) ?? num(ctx?.stereoWidth)
+  const signals = []
+  let score = 0
+
+  if (dr != null && dr > 10) {
+    score += 0.32
+    signals.push("dynamicArrangement")
+  }
+  if (dr != null && dr > 13) {
+    score += 0.18
+    signals.push("breakdownOpenness")
+  }
+  if (crest != null && crest >= 9.5) {
+    score += 0.28
+    signals.push("transientContrast")
+  }
+  if (stereo != null && stereo > 0.44) {
+    score += 0.14
+    signals.push("stereoMotion")
+  }
+
+  const emotionalContrastScore = Number(clamp(score, 0, 1).toFixed(2))
+  const protectArrangement = emotionalContrastScore >= 0.42
+
+  return {
+    emotionalContrastScore,
+    protectArrangement,
+    signals,
+    philosophy: protectArrangement
+      ? "preserve-chorus-lift-and-transitions"
+      : "neutral",
+  }
+}
+
+/**
+ * Microdynamics priority — vocal articulation, kick/snare, groove, motion.
+ */
+export function assessMicrodynamicPriority(analysis, materialProfile) {
+  const dr = num(analysis?.dynamicRange)
+  const crest = estimateCrestFromAnalysis(analysis)
+  const bright = num(analysis?.brightness)
+  const bass = num(analysis?.bassWeight)
+  const weight = materialProfile?.confidenceWeight ?? 0.5
+
+  let priority = 0.45
+  if (crest != null && crest >= 9) priority += 0.22
+  if (dr != null && dr > 9) priority += 0.16
+  if (bright != null && bright > 0.22 && bright < 0.52) priority += 0.1
+  if (bass != null && bass > 0.32 && bass < 0.54) priority += 0.1
+  priority *= 0.65 + weight * 0.35
+
+  return {
+    priority: Number(clamp(priority, 0, 1).toFixed(2)),
+    preserveVocalArticulation: bright != null && bright > 0.22 && bright < 0.52,
+    preserveKickSnare: crest != null && crest >= 8.5,
+    preserveGroove: bass != null && bass > 0.32,
+    preserveStereoMotion: num(analysis?.stereoWidth) != null && num(analysis.stereoWidth) > 0.4,
+  }
+}
+
+/**
+ * Shared cumulative budget — EQ + stereo + limiter + loudness must not stack into fatigue.
+ */
+export function computeCumulativeProcessingLedger({
+  materialProfile,
+  perceptualTone,
+  stereoPlan,
+  limiterCharacter,
+  referencePlan,
+  emotionalMovement,
+  microdynamic,
+}) {
+  const weight = materialProfile?.confidenceWeight ?? 0.5
+  const preserve =
+    materialProfile?.preserveMix || emotionalMovement?.protectArrangement
+
+  const eqCost =
+    (perceptualTone?.active ? 0.2 : 0) +
+    (perceptualTone?.filters ? 0.08 : 0) +
+    (referencePlan?.active ? 0.12 : 0)
+  const stereoDelta = Math.abs((stereoPlan?.effectiveStereoEnhance ?? 50) - 50)
+  const stereoCost = (stereoPlan?.filters ? 0.1 : 0) + stereoDelta / 140
+  const limiterCost = (limiterCharacter?.pressure ?? 0.25) * 0.38
+
+  const rawTotalImpact = eqCost + stereoCost + limiterCost
+  const maxAllowedImpact = preserve ? 0.34 : 0.28 + weight * 0.32
+  const overBudget = rawTotalImpact > maxAllowedImpact
+  const masterScale =
+    overBudget && rawTotalImpact > 0
+      ? maxAllowedImpact / rawTotalImpact
+      : 1
+
+  const emotionalScale = emotionalMovement?.protectArrangement ? 0.84 : 1
+  const microScale = 1 - (microdynamic?.priority ?? 0.5) * 0.16
+  const combined = Number((masterScale * emotionalScale * microScale).toFixed(3))
+
+  return {
+    rawTotalImpact: Number(rawTotalImpact.toFixed(3)),
+    maxAllowedImpact: Number(maxAllowedImpact.toFixed(3)),
+    overBudget,
+    masterScale: combined,
+    stages: {
+      eq: Number((combined * (preserve ? 0.75 : 0.92)).toFixed(3)),
+      stereo: Number((combined * 0.88).toFixed(3)),
+      limiter: Number((combined * 0.82).toFixed(3)),
+      loudness: Number((combined * 0.9).toFixed(3)),
+      compression: Number((combined * 0.86).toFixed(3)),
+    },
+    trustMix: preserve || weight < 0.38,
+    philosophy: overBudget
+      ? "cumulative-impact-capped"
+      : "stages-balanced-for-flow",
+  }
+}
+
+function applyLedgerToDecisionStages(ledger, perceptualTone, stereoPlan, limiterCharacter, referencePlan) {
+  if (!ledger) return
+  const eqScale = ledger.stages?.eq ?? 1
+  const stereoScale = ledger.stages?.stereo ?? 1
+  const limScale = ledger.stages?.limiter ?? 1
+
+  if (perceptualTone) {
+    perceptualTone.weight = Number(((perceptualTone.weight ?? 0.5) * eqScale).toFixed(3))
+    if (eqScale < 0.42 || ledger.trustMix) {
+      perceptualTone.filters = ""
+      perceptualTone.active = false
+      perceptualTone.tone = {}
+    }
+  }
+  if (referencePlan && (eqScale < 0.45 || ledger.trustMix)) {
+    referencePlan.active = false
+    referencePlan.filters = ""
+    referencePlan.stereoEnhanceBias = 0
+  }
+  if (stereoPlan) {
+    if (stereoScale < 0.42 || ledger.trustMix) {
+      stereoPlan.filters = ""
+      stereoPlan.notes = [...(stereoPlan.notes ?? []), "stereoTrustSource"]
+    }
+    const base = stereoPlan.effectiveStereoEnhance ?? 50
+    stereoPlan.effectiveStereoEnhance = Math.round(50 + (base - 50) * stereoScale)
+  }
+  if (limiterCharacter) {
+    limiterCharacter.pressure = Number(
+      ((limiterCharacter.pressure ?? 0.3) * limScale).toFixed(3)
+    )
+    if (microdynamicPreserve(limiterCharacter)) {
+      limiterCharacter.attack = Math.round(limiterCharacter.attack + (1 - limScale) * 8)
+      limiterCharacter.release = Math.round(limiterCharacter.release + (1 - limScale) * 40)
+    }
+  }
+}
+
+function microdynamicPreserve(limiterCharacter) {
+  return limiterCharacter?.microdynamicPreserve === true
 }
 
 /**
@@ -566,7 +755,20 @@ export function buildMasteringDecisions({
   requestedLufs = -14,
   style = "STREAM",
 }) {
+  const emotionalMovement = assessEmotionalMovement(analysis, ctx)
   const materialProfile = classifyMaterialProfile(analysis, ctx, { requestedLufs, style })
+
+  if (emotionalMovement.protectArrangement) {
+    if (materialProfile.decisionConfidence < 0.65) {
+      materialProfile.preserveMix = true
+      materialProfile.philosophy = "preserve-arrangement-trust-mix"
+    }
+    materialProfile.processingIntensity = Number(
+      (materialProfile.processingIntensity * 0.88).toFixed(3)
+    )
+  }
+
+  const microdynamic = assessMicrodynamicPriority(analysis, materialProfile)
   const perceptualTone = buildPerceptualToneAdjustments(analysis, materialProfile)
   const stereoPlan = buildAdaptiveStereoPlan(analysis, materialProfile, stereoEnhance)
   const limiterCharacter = buildLimiterCharacter(analysis, materialProfile)
@@ -575,22 +777,56 @@ export function buildMasteringDecisions({
     referenceAnalysis,
     materialProfile
   )
-  const confidenceMessages = buildMasteringConfidenceMessages({
-    materialProfile,
-    adaptiveTransparency,
-    referencePlan,
-    perceptualTone,
-  })
 
-  return {
+  const processingLedger = computeCumulativeProcessingLedger({
     materialProfile,
     perceptualTone,
     stereoPlan,
     limiterCharacter,
     referencePlan,
+    emotionalMovement,
+    microdynamic,
+  })
+
+  applyLedgerToDecisionStages(
+    processingLedger,
+    perceptualTone,
+    stereoPlan,
+    limiterCharacter,
+    referencePlan
+  )
+
+  const confidenceMessages = buildMasteringConfidenceMessages({
+    materialProfile,
+    adaptiveTransparency,
+    referencePlan,
+    perceptualTone,
+    emotionalMovement,
+    processingLedger,
+  })
+
+  return {
+    materialProfile,
+    emotionalMovement,
+    microdynamic,
+    perceptualTone,
+    stereoPlan,
+    limiterCharacter,
+    referencePlan,
+    processingLedger,
     confidenceMessages,
-    globalWeight: materialProfile.confidenceWeight,
-    philosophy: materialProfile.philosophy,
+    globalWeight: Number(
+      ((materialProfile.confidenceWeight ?? 0.5) * processingLedger.masterScale).toFixed(3)
+    ),
+    philosophy: processingLedger.trustMix
+      ? "trust-source-preservation"
+      : materialProfile.philosophy,
+    humanPerceptionGoals: [
+      "emotional_flow",
+      "perceived_punch",
+      "listener_fatigue_avoidance",
+      "depth_and_width_stability",
+    ],
     sectionAware: { enabled: false, note: "future: verse/chorus/drop intensity" },
   }
 }
@@ -611,15 +847,33 @@ export function applyPerceptualToneToBase(tone, perceptualTone) {
   }
 }
 
-export function mergeProcessingIntensity(baseIntensity, materialProfile) {
+export function mergeProcessingIntensity(baseIntensity, materialProfile, processingLedger = null) {
   const materialScale = materialProfile?.processingIntensity ?? 0.4
   const density = materialProfile?.compDensityBias ?? 0.4
   const weight = materialProfile?.confidenceWeight ?? 0.5
   const blend = materialProfile?.fingerprintBlend ?? 1
-  const underProcessBias = 0.88
+  const ledgerScale = processingLedger?.stages?.compression ?? processingLedger?.masterScale ?? 1
+  const underProcessBias = 0.86
   return clamp(
-    baseIntensity * materialScale * (0.5 + density * 0.35) * weight * blend * underProcessBias,
+    baseIntensity *
+      materialScale *
+      (0.5 + density * 0.35) *
+      weight *
+      blend *
+      underProcessBias *
+      ledgerScale,
     0.05,
-    0.72
+    0.68
   )
+}
+
+/** Scale loudness pursuit slack from cumulative ledger (arrangement-safe). */
+export function loudnessSlackFromLedger(processingLedger, emotionalMovement) {
+  let slack = 0
+  if (processingLedger?.masterScale != null && processingLedger.masterScale < 0.85) {
+    slack += (1 - processingLedger.masterScale) * 0.35
+  }
+  if (emotionalMovement?.protectArrangement) slack += 0.2
+  if (processingLedger?.trustMix) slack += 0.15
+  return Number(slack.toFixed(2))
 }

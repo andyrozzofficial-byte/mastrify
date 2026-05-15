@@ -16,6 +16,7 @@ export type MasteringInsightsInput = {
   materialTransparent?: boolean
   materialProfile?: string | null
   confidenceMessages?: MasteringConfidenceMessage[]
+  trustMix?: boolean
   style?: MasterStylePreset | string
 }
 
@@ -123,6 +124,7 @@ export function mergeInsightsFromAnalysis(
     confidenceMessages: Array.isArray(analysisAfter?.confidenceMessages)
       ? (analysisAfter.confidenceMessages as MasteringConfidenceMessage[])
       : [],
+    trustMix: analysisAfter?.trustMix === true,
     style,
   }
 }
@@ -271,6 +273,7 @@ export function buildQualityTags(
     tags.push("Open dynamics")
   }
   if (insights.materialProfile === "ambient") tags.push("Spacious")
+  if (insights.trustMix) tags.push("Mix trusted")
   if (insights.materialTransparent) tags.push("Transparent")
   if (insights.adaptiveApplied) tags.push("Transient-safe")
   if (dr != null && dr >= 8) tags.push("Dynamic")

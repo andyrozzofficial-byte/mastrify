@@ -63,6 +63,10 @@ export function buildMasteringInsights({
       text: m.text,
     })),
     referenceSpectralMatch: Boolean(masteringDecisions?.referencePlan?.active),
+    emotionalContrastScore:
+      masteringDecisions?.emotionalMovement?.emotionalContrastScore ?? null,
+    cumulativeProcessingCapped: Boolean(masteringDecisions?.processingLedger?.overBudget),
+    trustMix: Boolean(masteringDecisions?.processingLedger?.trustMix),
   }
 }
 
@@ -83,6 +87,9 @@ export function attachMasteringInsightsToAnalysis(analysis, insights) {
     decisionConfidence: insights.decisionConfidence,
     preserveMix: insights.preserveMix,
     confidenceMessages: insights.confidenceMessages,
+    emotionalContrastScore: insights.emotionalContrastScore,
+    cumulativeProcessingCapped: insights.cumulativeProcessingCapped,
+    trustMix: insights.trustMix,
   }
 }
 
@@ -110,5 +117,6 @@ export function serializeMasteringInsightsForJson(raw) {
     ...(Array.isArray(raw.confidenceMessages)
       ? { confidenceMessages: raw.confidenceMessages }
       : {}),
+    trustMix: Boolean(raw.trustMix),
   }
 }

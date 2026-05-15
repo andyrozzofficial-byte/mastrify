@@ -13,6 +13,7 @@ import {
   buildMasteringDecisions,
   applyPerceptualToneToBase,
   mergeProcessingIntensity,
+  loudnessSlackFromLedger,
 } from "./masteringDecisions.js"
 import {
   MASTRIFY_LUFS_TRACE as LUFS_TRACE,
@@ -46,7 +47,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-confidence-subtle"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-human-perception-ledger"
 
 /** Material transparent mode — transient/dynamic mixes; musicality over exact LUFS. */
 const MATERIAL_TRANSPARENT_MIN_CREST_DB = 11
@@ -1937,6 +1938,8 @@ export async function masterTrack({
         fingerprintBlend: masteringDecisions.materialProfile.fingerprintBlend,
         limiterType: masteringDecisions.limiterCharacter.transientType,
         philosophy: masteringDecisions.philosophy,
+        emotionalContrast: masteringDecisions.emotionalMovement?.emotionalContrastScore,
+        processingLedger: masteringDecisions.processingLedger,
         confidence: masteringDecisions.confidenceMessages.map((m) => m.text),
       })
     }
@@ -2027,11 +2030,21 @@ export async function masterTrack({
     compIntensity *= 0.68
   }
   if (masteringDecisions && !rawChainIsolation) {
-    compIntensity = mergeProcessingIntensity(compIntensity, masteringDecisions.materialProfile)
+    const ledger = masteringDecisions.processingLedger
+    compIntensity = mergeProcessingIntensity(
+      compIntensity,
+      masteringDecisions.materialProfile,
+      ledger
+    )
     limiterIntensity = Math.min(
       limiterIntensity,
       masteringDecisions.materialProfile.limiterPressureCap *
         (masteringDecisions.limiterCharacter.pressure ?? 1)
+    )
+    limiterIntensity *= ledger?.stages?.limiter ?? 1
+    extraPursuitSlackLu += loudnessSlackFromLedger(
+      ledger,
+      masteringDecisions.emotionalMovement
     )
     if (masteringDecisions.materialProfile.preserveMix) {
       compIntensity = Math.min(compIntensity, 0.22)
