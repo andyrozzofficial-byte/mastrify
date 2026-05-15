@@ -5,6 +5,10 @@ import fs from "fs"
 import { spawn } from "child_process"
 import { analyzeTrack } from "./analyze.js"
 import {
+  buildMasteringInsights,
+  attachMasteringInsightsToAnalysis,
+} from "./masterInsightsPayload.js"
+import {
   MASTRIFY_LUFS_TRACE as LUFS_TRACE,
   MASTRIFY_MASTER_DEBUG as MASTER_DEBUG,
   MASTRIFY_PIPELINE_DEBUG as PIPELINE_DEBUG,
@@ -1051,10 +1055,22 @@ export async function masterTrack({
     }
   }
 
+  const masteringInsights = buildMasteringInsights({
+    requestedLufs,
+    appliedLufs: safeIntegratedLufs,
+    adaptiveLoudness,
+    style,
+    hotClubProtection,
+  })
+  if (analysisAfter) {
+    analysisAfter = attachMasteringInsightsToAnalysis(analysisAfter, masteringInsights)
+  }
+
   const out = {
     path: outputPath,
     analysisBefore,
     analysisAfter,
+    masteringInsights,
   }
   if (MASTER_DEBUG) {
     out.debugInfo = {

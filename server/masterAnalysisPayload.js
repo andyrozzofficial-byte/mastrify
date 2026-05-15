@@ -38,6 +38,8 @@ export function serializeMasterAnalysisForJson(raw, label = "analysis") {
 
   const lufsRmsProxy = finiteNum(raw.lufsRmsProxy, NaN)
   const targetLufsApplied = finiteNum(raw.targetLufsApplied, NaN)
+  const targetLufsRequested = finiteNum(raw.targetLufsRequested, NaN)
+  const adaptiveBackoffLu = finiteNum(raw.adaptiveBackoffLu, NaN)
 
   return {
     bpm: finiteNum(raw.bpm, 120),
@@ -46,6 +48,10 @@ export function serializeMasterAnalysisForJson(raw, label = "analysis") {
     targetLufs: finiteNum(raw.targetLufs, -14),
     ...(Number.isFinite(lufsRmsProxy) ? { lufsRmsProxy } : {}),
     ...(Number.isFinite(targetLufsApplied) ? { targetLufsApplied } : {}),
+    ...(Number.isFinite(targetLufsRequested) ? { targetLufsRequested } : {}),
+    ...(raw.adaptiveApplied === true ? { adaptiveApplied: true } : {}),
+    ...(Number.isFinite(adaptiveBackoffLu) ? { adaptiveBackoffLu } : {}),
+    ...(raw.transientProtectionActive === true ? { transientProtectionActive: true } : {}),
     lufsAdjustment: finiteNum(raw.lufsAdjustment, 0),
     peakDb: finiteNum(raw.peakDb, -60),
     headroomStatus: typeof raw.headroomStatus === "string" ? raw.headroomStatus : "OK",

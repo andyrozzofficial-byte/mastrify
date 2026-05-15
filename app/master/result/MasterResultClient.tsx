@@ -9,6 +9,18 @@ import {
   MASTRIFY_CLIENT_PREVIEW_DEBUG,
 } from "../../../lib/mastrifyDebug"
 import { useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
+import {
+  adaptiveDetailLines,
+  adaptiveStatusMessage,
+  approximateLufsLabel,
+  buildMasterDescriptor,
+  buildQualityMetricRows,
+  buildQualityTags,
+  mergeInsightsFromAnalysis,
+  smartLoudnessSubtitle,
+  smartLoudnessTitle,
+  toFiniteNumber,
+} from "../../../lib/masterResultInsights"
 
 const PREVIEW_START = 60
 const PREVIEW_DURATION = 30
@@ -22,55 +34,6 @@ const STYLE_LABELS: Record<MasterStylePreset, string> = {
   LOUD: "Punchy",
   CLUB: "Club",
   FESTIVAL: "Open",
-}
-
-const LOUDNESS_OPTIONS = [
-  { lufs: -14, label: "Streaming" },
-  { lufs: -13, label: "YouTube" },
-  { lufs: -11, label: "Spotify Loud" },
-  { lufs: -9, label: "CD / Club" },
-]
-
-function loudnessLabel(lufs: number): string {
-  const row = LOUDNESS_OPTIONS.find((r) => r.lufs === lufs)
-  return row ? `${row.label} (${lufs} LUFS)` : `${lufs} LUFS`
-}
-
-/** JSON / proxies sometimes deliver numerics as strings; strict typeof checks hid real metrics in the UI. */
-function toFiniteNumber(v: unknown): number | null {
-  if (typeof v === "number" && Number.isFinite(v)) return v
-  if (typeof v === "string") {
-    const t = v.trim()
-    if (t === "") return null
-    const n = Number(t)
-    if (Number.isFinite(n)) return n
-  }
-  return null
-}
-
-function formatLufs(v: unknown): string {
-  const n = toFiniteNumber(v)
-  return n !== null ? n.toFixed(1) : "—"
-}
-
-function formatDr(v: unknown): string {
-  const n = toFiniteNumber(v)
-  return n !== null ? n.toFixed(1) : "—"
-}
-
-function formatPct(v: unknown): string {
-  const n = toFiniteNumber(v)
-  return n !== null ? `${Math.round(n * 100)}%` : "—"
-}
-
-function clarityWord(a: Record<string, unknown> | null | undefined): string {
-  if (!a) return "—"
-  const b = toFiniteNumber(a.brightness) ?? 0
-  const s = toFiniteNumber(a.stereoWidth) ?? 0
-  const blend = b * 0.55 + s * 0.45
-  if (blend < 0.22) return "Low"
-  if (blend < 0.42) return "Medium"
-  return "High"
 }
 
 function fmtClock(sec: number): string {
@@ -527,29 +490,35 @@ export default function MasterResultClient() {
   const playHeadSec = windowStart + (playProgress / 100) * windowLen
   const windowEndSec = windowStart + windowLen
 
-  const afterLufsMeasured = toFiniteNumber(analysisAfter?.lufs)
-  const afterLufsDisplay = afterLufsMeasured !== null ? formatLufs(afterLufsMeasured) : "—"
-  const appliedLufs = toFiniteNumber(analysisAfter?.targetLufsApplied)
-  const lufsAfterCell =
-    afterLufsMeasured !== null &&
-    appliedLufs !== null &&
-    Math.abs(appliedLufs - afterLufsMeasured) > 1.25 ? (
-      <span className="inline-flex flex-col items-end gap-0.5">
-        <span>{afterLufsDisplay}</span>
-        <span className="text-[10px] font-normal leading-none text-white/40">Target {formatLufs(appliedLufs)}</span>
-      </span>
-    ) : (
-      afterLufsDisplay
-    )
+  const masteringInsights = useMemo(
+    () => mergeInsightsFromAnalysis(targetLufs, stylePreset, analysisAfter ?? undefined),
+    [targetLufs, stylePreset, analysisAfter]
+  )
 
-  const metricRows = [
-    { label: "LUFS", before: formatLufs(analysisBefore?.lufs), after: lufsAfterCell },
-    { label: "Dynamic range", before: formatDr(analysisBefore?.dynamicRange), after: formatDr(analysisAfter?.dynamicRange) },
-    { label: "Stereo width", before: formatPct(analysisBefore?.stereoWidth), after: formatPct(analysisAfter?.stereoWidth) },
-    { label: "Clarity", before: clarityWord(analysisBefore), after: clarityWord(analysisAfter) },
-    { label: "Low end", before: formatPct(analysisBefore?.bassWeight), after: formatPct(analysisAfter?.bassWeight) },
-    { label: "Highs", before: formatPct(analysisBefore?.brightness), after: formatPct(analysisAfter?.brightness) },
-  ]
+  const masterDescriptor = useMemo(
+    () => buildMasterDescriptor(stylePreset, analysisAfter ?? undefined, masteringInsights),
+    [stylePreset, analysisAfter, masteringInsights]
+  )
+
+  const qualityTags = useMemo(
+    () => buildQualityTags(analysisAfter ?? undefined, masteringInsights),
+    [analysisAfter, masteringInsights]
+  )
+
+  const metricRows = useMemo(
+    () => buildQualityMetricRows(analysisBefore ?? undefined, analysisAfter ?? undefined, masteringInsights),
+    [analysisBefore, analysisAfter, masteringInsights]
+  )
+
+  const adaptiveMessage = adaptiveStatusMessage(masteringInsights)
+  const adaptiveDetails = adaptiveDetailLines(masteringInsights)
+  const measuredApprox = approximateLufsLabel(masteringInsights.measuredLufs)
+  const loudnessCardTitle = smartLoudnessTitle(targetLufs, masteringInsights.adaptiveApplied)
+  const loudnessCardSubtitle = smartLoudnessSubtitle(
+    targetLufs,
+    masteringInsights.appliedLufs,
+    masteringInsights.adaptiveApplied
+  )
 
   if (!mounted) return null
 
@@ -575,13 +544,50 @@ export default function MasterResultClient() {
         <h1 className="text-[1.7rem] font-semibold leading-[1.12] tracking-[-0.02em] text-white sm:text-[1.95rem] md:text-[2.1rem]">
           Your master is ready!
         </h1>
-        <div
+        <p className="mx-auto mt-2 max-w-lg text-[15px] font-medium tracking-[-0.01em] text-violet-100/88 sm:text-base">
+          {masterDescriptor}
+        </p>
+        <motion.div
           className="mx-auto mt-2.5 h-px w-12 bg-gradient-to-r from-transparent via-violet-400/35 to-transparent sm:w-16 sm:via-violet-400/30"
           aria-hidden
         />
         <p className="mx-auto mt-2.5 max-w-md text-[13px] leading-snug text-white/42 md:text-[14px] md:leading-relaxed">
-          Here&apos;s how your track improved.
+          Smart mastering tuned for punch, clarity, and your loudness goal.
         </p>
+        {adaptiveMessage ? (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-auto mt-3 flex max-w-md flex-col items-center gap-1.5"
+          >
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/[0.08] px-3 py-1 text-[11px] font-medium text-emerald-200/90">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80" aria-hidden />
+              {adaptiveMessage}
+            </span>
+            {adaptiveDetails.map((line) => (
+              <span key={line} className="text-[11px] text-white/38">
+                {line}
+              </span>
+            ))}
+          </motion.div>
+        ) : null}
+        {qualityTags.length > 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.08 }}
+            className="mx-auto mt-3 flex max-w-md flex-wrap justify-center gap-1.5"
+          >
+            {qualityTags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-white/[0.07] bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-white/50"
+              >
+                {tag}
+              </span>
+            ))}
+          </motion.div>
+        ) : null}
         {file?.name ? (
           <p className="mx-auto mt-2 max-w-lg truncate px-2 text-[11px] text-white/30 md:text-xs">{file.name}</p>
         ) : null}
@@ -596,27 +602,33 @@ export default function MasterResultClient() {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-stretch lg:gap-10 xl:gap-11">
           {/* Before / After metrics */}
           <div className="flex min-w-0 flex-col">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/28">Comparison</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/28">Sound profile</p>
+            <p className="mt-1 text-[11px] leading-snug text-white/32">How your master feels — not just the numbers.</p>
             <div className="mt-3 flex-1 overflow-hidden rounded-xl border border-white/[0.05] bg-black/[0.26] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
               <table className="w-full table-fixed border-collapse text-left text-[12px] md:text-[13px]">
                 <thead>
                   <tr className="border-b border-white/[0.045] bg-white/[0.02]">
-                    <th className="w-[38%] px-3 py-2.5 pl-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/28 md:px-4 md:py-3" />
-                    <th className="w-[31%] px-3 py-2.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/36 md:px-4 md:py-3">
+                    <th className="w-[34%] px-3 py-2.5 pl-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/28 md:px-4 md:py-3" />
+                    <th className="w-[33%] px-3 py-2.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/32 md:px-4 md:py-3">
                       Before
                     </th>
-                    <th className="w-[31%] px-3 py-2.5 pr-4 text-right text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-200/55 md:px-4 md:py-3 md:text-left">
-                      After
+                    <th className="w-[33%] px-3 py-2.5 pr-4 text-right text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-200/50 md:px-4 md:py-3 md:text-left">
+                      Master
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
                   {metricRows.map((row) => (
                     <tr key={row.label} className="transition-colors duration-150 hover:bg-white/[0.015]">
-                      <td className="px-3 py-3.5 pl-4 font-medium text-white/48 md:px-4 md:py-4">{row.label}</td>
-                      <td className="px-3 py-3.5 tabular-nums text-white/28 md:px-4 md:py-4">{row.before}</td>
-                      <td className="px-3 py-3.5 pr-4 text-right tabular-nums text-[13px] font-semibold tracking-tight text-emerald-200/[0.92] md:px-4 md:py-4 md:text-left md:text-[14px]">
-                        {row.after}
+                      <td className="px-3 py-3.5 pl-4 font-medium text-white/45 md:px-4 md:py-4">{row.label}</td>
+                      <td className="px-3 py-3.5 text-[12px] text-white/26 md:px-4 md:py-4">{row.before}</td>
+                      <td className="px-3 py-3.5 pr-4 text-right md:px-4 md:py-4 md:text-left">
+                        <span className="block text-[13px] font-semibold leading-snug tracking-tight text-emerald-200/[0.92] md:text-[14px]">
+                          {row.after}
+                        </span>
+                        {row.afterDetail ? (
+                          <span className="mt-0.5 block text-[10px] font-normal tabular-nums text-white/32">{row.afterDetail}</span>
+                        ) : null}
                       </td>
                     </tr>
                   ))}
@@ -716,8 +728,12 @@ export default function MasterResultClient() {
                 <p className="mt-1 text-[13px] font-medium leading-snug text-teal-200/75 md:text-sm">{STYLE_LABELS[stylePreset]}</p>
               </div>
               <div className="flex flex-col justify-center rounded-xl border border-white/[0.05] bg-black/[0.26] px-4 py-3 md:px-4 md:py-3.5">
-                <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/28">Loudness target</p>
-                <p className="mt-1 text-[13px] font-medium leading-snug text-teal-200/75 md:text-sm">{loudnessLabel(targetLufs)}</p>
+                <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/28">Loudness profile</p>
+                <p className="mt-1 text-[13px] font-medium leading-snug text-teal-200/80 md:text-sm">{loudnessCardTitle}</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-white/38">{loudnessCardSubtitle}</p>
+                {measuredApprox ? (
+                  <p className="mt-1.5 text-[10px] tabular-nums text-white/28">{measuredApprox}</p>
+                ) : null}
               </div>
             </div>
           </div>

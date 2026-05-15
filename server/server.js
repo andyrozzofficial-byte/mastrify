@@ -7,6 +7,7 @@ import { fileURLToPath } from "url"
 import { analyzeTrack } from "./analyze.js"
 import { masterTrack, measureIntegratedLufsEbur128 } from "./master.js"
 import { serializeMasterAnalysisForJson } from "./masterAnalysisPayload.js"
+import { serializeMasteringInsightsForJson } from "./masterInsightsPayload.js"
 import { MASTRIFY_LUFS_TRACE as LUFS_TRACE, MASTRIFY_PIPELINE_DEBUG as PIPELINE_DEBUG } from "./mastrifyDebug.js"
 import ffmpegPath from "ffmpeg-static"
 import ffprobeStatic from "ffprobe-static"
@@ -951,13 +952,17 @@ app.post("/master",
         }
         if (ebu != null && Number.isFinite(ebu)) {
           const prev = rawAfter.lufs
-          const parsedT = parseFloat(String(targetLufs ?? "").trim())
-          const applied = Number.isFinite(parsedT) ? Math.min(-9, Math.max(-16, parsedT)) : null
+          const appliedFromMaster =
+            rawAfter.targetLufsApplied ??
+            masterResult?.masteringInsights?.appliedLufs ??
+            null
           rawAfter = {
             ...rawAfter,
             lufs: ebu,
             lufsRmsProxy: prev,
-            ...(applied != null ? { targetLufsApplied: applied } : {}),
+            ...(appliedFromMaster != null && Number.isFinite(Number(appliedFromMaster))
+              ? { targetLufsApplied: Number(appliedFromMaster) }
+              : {}),
           }
         }
       }
@@ -1004,6 +1009,10 @@ app.post("/master",
         })
       }
 
+      const masteringInsights = serializeMasteringInsightsForJson(
+        masterResult?.masteringInsights ?? rawAfter
+      )
+
       const resPayload = {
         success: true,
         before,
@@ -1013,6 +1022,7 @@ app.post("/master",
         fullUrl: `${baseUrl}${after}`,
         analysisBefore,
         analysisAfter,
+        ...(masteringInsights ? { masteringInsights } : {}),
       }
       if (masterResult?.debugInfo) {
         resPayload.masterDebug = masterResult.debugInfo
