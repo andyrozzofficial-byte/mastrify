@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
+import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import MasteringEngineVisual from "./MasteringEngineVisual"
 import ProcessingStageList, { PROCESSING_STEPS } from "./ProcessingStageList"
 import { appendHistory } from "../../../lib/history"
@@ -20,6 +21,7 @@ export default function MasterProcessingPage() {
   const router = useRouter()
   const {
     file,
+    audioUrl,
     sessionHydrated,
     setMasteredUrl,
     setMasteredPreviewMp3Url,
@@ -196,6 +198,23 @@ export default function MasterProcessingPage() {
         >
           <MasteringEngineVisual activeStep={activeStep} />
         </motion.div>
+
+        {(audioUrl || file) && (
+          <motion.div
+            className="relative mt-5 w-full max-w-lg px-1 md:mt-6 md:max-w-xl"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <CinematicWaveform
+              mode="processing"
+              audioSrc={file ?? audioUrl}
+              activeStep={activeStep}
+              height={72}
+              className="shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_rgba(0,0,0,0.35)]"
+            />
+          </motion.div>
+        )}
 
         <motion.div
           className="relative mt-2 w-full max-w-md md:mt-4 md:max-w-lg"

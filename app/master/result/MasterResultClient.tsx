@@ -22,6 +22,7 @@ import {
   toFiniteNumber,
 } from "../../../lib/masterResultInsights"
 import { parseTrackDisplayName } from "../../../lib/parseTrackDisplayName"
+import CinematicWaveform from "../../components/audio/CinematicWaveform"
 
 const PREVIEW_START = 60
 const PREVIEW_DURATION = 30
@@ -490,6 +491,24 @@ export default function MasterResultClient() {
   const windowLen = isMobileClient && selectedSource === "mastered" ? MOBILE_MASTERED_DURATION : PREVIEW_DURATION
   const playHeadSec = windowStart + (playProgress / 100) * windowLen
   const windowEndSec = windowStart + windowLen
+  const previewProgress = playProgress / 100
+
+  const seekPreview = (progress: number) => {
+    const p = Math.max(0, Math.min(1, progress))
+    const targetTime = windowStart + p * windowLen
+    const el = isMobileClient
+      ? mobileAudioRef.current
+      : selectedSource === "mastered"
+        ? masteredAudioRef.current
+        : originalAudioRef.current
+    if (!el) return
+    try {
+      el.currentTime = targetTime
+    } catch {
+      /* ignore */
+    }
+    setPlayProgress(p * 100)
+  }
 
   const masteringInsights = useMemo(
     () => mergeInsightsFromAnalysis(targetLufs, stylePreset, analysisAfter ?? undefined),
@@ -683,17 +702,28 @@ export default function MasterResultClient() {
                 </button>
               </div>
 
-              <div className="relative mt-3 overflow-hidden rounded-lg bg-gradient-to-b from-white/[0.04] to-black/[0.2] ring-1 ring-white/[0.04]">
-                <div className="flex h-9 items-end justify-center gap-px px-2.5 pb-2 pt-2.5 opacity-[0.34] sm:h-10 sm:px-3">
-                  {Array.from({ length: 64 }).map((_, i) => (
-                    <span
-                      key={i}
-                      className="w-0.5 rounded-full bg-gradient-to-t from-violet-400/25 to-slate-400/35"
-                      style={{ height: `${20 + (i % 6) * 9}%` }}
-                    />
-                  ))}
-                </div>
-              </div>
+              <CinematicWaveform
+                mode="result"
+                audioSrc={originalPreviewUrl}
+                secondaryAudioSrc={masteredPlaybackUrl}
+                blend={selectedSource === "mastered" ? 1 : 0}
+                variant={selectedSource}
+                progress={previewProgress}
+                isPlaying={isPlaying}
+                windowStartSec={windowStart}
+                windowDurationSec={windowLen}
+                isMobileMastered={isMobileClient && selectedSource === "mastered"}
+                interactive={Boolean(
+                  isMobileClient
+                    ? mobilePlaybackUrl
+                    : selectedSource === "mastered"
+                      ? desktopMasteredPlaybackUrl
+                      : originalPreviewUrl
+                )}
+                onSeek={seekPreview}
+                height={88}
+                className="mt-3"
+              />
 
               <div className="mt-3.5 flex items-center gap-3 sm:mt-4">
                 <button
