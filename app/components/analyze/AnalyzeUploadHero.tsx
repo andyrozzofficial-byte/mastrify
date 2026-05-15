@@ -20,8 +20,6 @@ const TRUST = [
 type Props = {
   phase: AnalyzePhase
   file: File | null
-  loading: boolean
-  loadingStep: string | null
   fileInputRef: RefObject<HTMLInputElement | null>
   onFileInputChange: (file: File) => void
   onUploadClick: () => void
@@ -30,8 +28,6 @@ type Props = {
 export default function AnalyzeUploadHero({
   phase,
   file,
-  loading,
-  loadingStep,
   fileInputRef,
   onFileInputChange,
   onUploadClick,
@@ -97,8 +93,6 @@ export default function AnalyzeUploadHero({
           <div className="mt-8 w-full max-w-[29.5rem] lg:max-w-none">
             <AnalyzeUploadCard
               file={file}
-              loading={loading}
-              loadingStep={loadingStep}
               fileInputRef={fileInputRef}
               onFileInputChange={onFileInputChange}
               onUploadClick={onUploadClick}

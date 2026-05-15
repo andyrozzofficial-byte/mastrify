@@ -8,8 +8,6 @@ const EASE = [0.22, 1, 0.36, 1] as const
 
 type Props = {
   file: File | null
-  loading: boolean
-  loadingStep: string | null
   fileInputRef: RefObject<HTMLInputElement | null>
   onFileInputChange: (file: File) => void
   onUploadClick: () => void
@@ -17,8 +15,6 @@ type Props = {
 
 export default function AnalyzeUploadCard({
   file,
-  loading,
-  loadingStep,
   fileInputRef,
   onFileInputChange,
   onUploadClick,
@@ -124,9 +120,8 @@ export default function AnalyzeUploadCard({
           <motion.div className="mt-6 flex flex-col items-center gap-3">
             <button
               type="button"
-              disabled={loading}
               onClick={onUploadClick}
-              className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] disabled:cursor-wait disabled:opacity-70"
+              className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
             >
               <span
                 className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
@@ -137,9 +132,6 @@ export default function AnalyzeUploadCard({
             <p className="text-[11px] text-white/26">or drag and drop</p>
             {file ? (
               <p className="max-w-full truncate px-2 text-xs text-cyan-200/55">{file.name}</p>
-            ) : null}
-            {loading ? (
-              <p className="font-mono text-[11px] text-violet-200/70">{loadingStep || "Analyzing your mix…"}</p>
             ) : null}
           </motion.div>
         </motion.div>

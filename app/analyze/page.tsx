@@ -3,8 +3,13 @@
 import { supabase } from "../../lib/supabase"
 import { useState, useRef } from "react"
 import axios from "axios"
-import { motion, useReducedMotion } from "framer-motion"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useRouter } from "next/navigation"
+import {
+  ANALYSIS_STEP_DELAYS_MS,
+  ANALYSIS_STEPS,
+} from "../components/analyze/AnalysisStageList"
+import AnalyzeProcessingView from "../components/analyze/AnalyzeProcessingView"
 import AnalyzeStepRail from "../components/analyze/AnalyzeStepRail"
 import AnalyzeUploadHero from "../components/analyze/AnalyzeUploadHero"
 import CinematicBackground from "../components/CinematicBackground"
@@ -201,9 +206,9 @@ export default function AnalyzePage() {
   const [showWaitlist, setShowWaitlist] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [processing, setProcessing] = useState(false)
+  const [analysisStep, setAnalysisStep] = useState(0)
   const [result, setResult] = useState<any>(null)
-  const [loadingStep, setLoadingStep] = useState<string | null>(null)
   const [waitlistEmail, setWaitlistEmail] = useState("")
   const [waitlistLoading, setWaitlistLoading] = useState(false)
   const [waitlistSuccess, setWaitlistSuccess] = useState(false)
@@ -271,75 +276,75 @@ export default function AnalyzePage() {
   const reduce = useReducedMotion()
 
   const handleUpload = async (uploadFile?: File) => {
-  const f = uploadFile ?? file
-  if (!f) return
-  if (uploadFile) setFile(uploadFile)
+    const f = uploadFile ?? file
+    if (!f) return
+    if (uploadFile) setFile(uploadFile)
 
-  if (!f.type.startsWith("audio")) {
-    alert("Please upload an audio file (.wav, .mp3, .m4a)")
-    return
-  }
+    if (!f.type.startsWith("audio")) {
+      alert("Please upload an audio file (.wav, .mp3, .m4a)")
+      return
+    }
 
-  
-  
-  
+    setProcessing(true)
+    setAnalysisStep(0)
+    setResult(null)
 
-  setLoading(true)
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-  const formData = new FormData()
-  // Backend expects multer field name: "file"
-  formData.append("file", f)
-  formData.append("mode", "mix")
+    const formData = new FormData()
+    formData.append("file", f)
+    formData.append("mode", "mix")
 
-  try {
+    let apiData: Record<string, unknown> | null = null
+    let apiError: unknown = null
 
     const uploadUrl = publicBackendUrl("/upload")
+    const apiPromise = axios
+      .post(uploadUrl, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((res) => {
+        apiData = res.data
+      })
+      .catch((err) => {
+        apiError = err
+      })
 
-    const res = await axios.post(uploadUrl, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    })
+    try {
+      for (let i = 0; i < ANALYSIS_STEPS.length; i++) {
+        setAnalysisStep(i)
+        await sleep(ANALYSIS_STEP_DELAYS_MS[i] ?? 850)
+      }
 
-    let steps = [
-      "Analyzing your mix...",
-      "Checking low end...",
-      "Analyzing stereo width...",
-      "Scanning dynamics..."
-    ]
+      await apiPromise
 
-    setLoadingStep(steps[0])
-    let i = 1
+      if (apiError) {
+        throw apiError
+      }
 
-    const interval = setInterval(() => {
-      setLoadingStep(steps[i])
-      i++
-      if (i >= steps.length) clearInterval(interval)
-    }, 1000)
+      setAnalysisStep(ANALYSIS_STEPS.length - 1)
+      await sleep(520)
 
-    setTimeout(() => {
-      setLoadingStep("Finalizing analysis...")
-    }, 3200)
-
-    setTimeout(() => {
-      setResult(res.data)
+      const data = apiData as Record<string, unknown>
+      setResult(data)
       appendHistory({
         kind: "analysis",
-        name: f?.name || "Audio",
-        mixQuality: typeof res.data.mixQuality === "number" ? res.data.mixQuality : undefined,
-        lufs: typeof res.data.lufs === "number" ? res.data.lufs : undefined,
+        name: f.name || "Audio",
+        mixQuality: typeof data.mixQuality === "number" ? data.mixQuality : undefined,
+        lufs: typeof data.lufs === "number" ? data.lufs : undefined,
       })
-      setLoading(false)
-      setLoadingStep("")
-    }, 4200)
-
-  } catch (err: any) {
-
-    console.error("UPLOAD ERROR:", err?.response?.data || err.message)
-
-    setLoading(false)
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message?: string }).message)
+          : "Upload failed"
+      console.error("UPLOAD ERROR:", err)
+      alert(message.includes("Network") ? "Analysis failed — check your connection." : "Analysis failed. Please try again.")
+    } finally {
+      setProcessing(false)
+      setAnalysisStep(0)
+    }
   }
-}
 
 
 
@@ -359,30 +364,46 @@ export default function AnalyzePage() {
       />
       <motion.div
         className={`relative mx-auto w-full px-5 pb-12 pt-6 md:px-10 md:pb-16 md:pt-8 ${
-          result ? "max-w-6xl md:max-w-7xl" : "max-w-[1080px]"
+          result && !processing ? "max-w-6xl md:max-w-7xl" : "max-w-[1080px]"
         }`}
       >
-        {!result && (
-          <AnalyzeUploadHero
-            phase={loading ? "analyzing" : "upload"}
-            file={file}
-            loading={loading}
-            loadingStep={loadingStep}
-            fileInputRef={fileInputRef}
-            onFileInputChange={(selected) => void handleUpload(selected)}
-            onUploadClick={() => {
-              if (!file) fileInputRef.current?.click()
-              else void handleUpload()
-            }}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {!result && !processing && (
+            <motion.div
+              key="upload"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, filter: "blur(4px)" }}
+              transition={{ duration: 0.4 }}
+            >
+              <AnalyzeUploadHero
+                phase="upload"
+                file={file}
+                fileInputRef={fileInputRef}
+                onFileInputChange={(selected) => void handleUpload(selected)}
+                onUploadClick={() => {
+                  if (!file) fileInputRef.current?.click()
+                  else void handleUpload()
+                }}
+              />
+            </motion.div>
+          )}
 
-      {/* RESULT */}
-      {result && (
+          {processing && (
+            <AnalyzeProcessingView
+              key="processing"
+              activeStep={analysisStep}
+              file={file}
+              fileName={file?.name}
+            />
+          )}
+
+          {result && !processing && (
         <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
+          key="results"
+          initial={{ opacity: 0, filter: "blur(10px)", y: 16 }}
+          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
           className="mx-auto mt-2 w-full space-y-3 pb-3 md:space-y-4"
         >
           <AnalyzeStepRail phase="results" className="mx-auto" />
@@ -392,8 +413,8 @@ export default function AnalyzePage() {
               type="button"
               onClick={() => {
                 setResult(null)
-                setLoading(false)
-                setLoadingStep(null)
+                setProcessing(false)
+                setAnalysisStep(0)
               }}
               className="z-10 shrink-0 text-left text-[11px] font-medium text-white/38 transition hover:text-white/65 md:text-xs"
             >
@@ -415,7 +436,12 @@ export default function AnalyzePage() {
           </header>
 
           {/* Hero analysis card */}
-          <div className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_56px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:rounded-[1.25rem] md:p-5">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_56px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:rounded-[1.25rem] md:p-5"
+          >
             <div className="flex flex-col items-stretch gap-4 md:flex-row md:items-center md:justify-between md:gap-6">
               <div className="min-w-0 flex-1 text-center md:max-w-xl md:text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/32">Release readiness</p>
@@ -497,11 +523,16 @@ export default function AnalyzePage() {
                 </div>
               </div>
 
-              <div className="flex shrink-0 justify-center md:pr-1">
+              <motion.div
+                className="flex shrink-0 justify-center md:pr-1"
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.75, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              >
                 <ScoreRing value={result.mixQuality != null ? result.mixQuality : 0} size={168} variant="percent" />
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Metrics */}
           <section aria-labelledby="mix-metrics-heading">
@@ -674,8 +705,8 @@ export default function AnalyzePage() {
             </section>
           )}
         </motion.div>
-)}
-
+          )}
+        </AnimatePresence>
       </motion.div>
 
 {/* 🔥 WAITLIST POPUP */}
