@@ -3,7 +3,7 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
 import MasteringEngineVisual from "../master/processing/MasteringEngineVisual"
 
@@ -78,6 +78,22 @@ const TRUST = [
   "Material-aware decisions",
 ] as const
 
+const HERO_WAVE_BAR_COUNT = 72
+
+/** Deterministic heights — identical on server and first client paint */
+const HERO_WAVE_BAR_HEIGHTS: readonly number[] = Array.from({ length: HERO_WAVE_BAR_COUNT }, (_, i) => {
+  const t = Math.sin(i * 0.35) * 0.5 + 0.5
+  return Math.round((22 + t * 58) * 100) / 100
+})
+
+function useMounted() {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  return mounted
+}
+
 function SectionLabel({ children }: { children: string }) {
   return (
     <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-200/50">{children}</p>
@@ -109,35 +125,58 @@ function Reveal({
 
 function HeroWaveBackdrop() {
   const reduce = useReducedMotion()
-  const bars = 72
+  const mounted = useMounted()
+  const barRefs = useRef<(HTMLSpanElement | null)[]>([])
+
+  useEffect(() => {
+    if (!mounted || reduce) return
+
+    let raf = 0
+    const start = performance.now()
+
+    const tick = (now: number) => {
+      const phase = (now - start) / 1000
+      for (let i = 0; i < HERO_WAVE_BAR_HEIGHTS.length; i++) {
+        const el = barRefs.current[i]
+        if (!el) continue
+        const wobble = 1 + Math.sin(phase * 2.15 + i * 0.17) * (0.05 + (i % 5) * 0.004)
+        const shimmer = 0.34 + (Math.sin(phase * 1.35 + i * 0.11) * 0.5 + 0.5) * 0.28
+        el.style.transform = `scaleY(${wobble})`
+        el.style.opacity = String(shimmer)
+      }
+      raf = requestAnimationFrame(tick)
+    }
+
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [mounted, reduce])
+
   return (
     <motion.div
       className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] overflow-hidden opacity-[0.14]"
       aria-hidden
     >
-      <div className="flex h-full items-end justify-center gap-[3px] px-6">
-        {Array.from({ length: bars }).map((_, i) => (
-          <motion.span
+      <motion.div
+        className="flex h-full items-end justify-center gap-[3px] px-6"
+        initial={false}
+        animate={mounted && !reduce ? { opacity: [0.12, 0.16, 0.12] } : undefined}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+      >
+        {HERO_WAVE_BAR_HEIGHTS.map((heightPct, i) => (
+          <span
             key={i}
-            className="w-[2px] rounded-full bg-gradient-to-t from-violet-500/40 via-indigo-300/35 to-cyan-300/25"
-            style={{ height: `${22 + (Math.sin(i * 0.35) * 0.5 + 0.5) * 58}%` }}
-            animate={
-              reduce
-                ? {}
-                : {
-                    scaleY: [1, 1.08 + (i % 5) * 0.02, 1],
-                    opacity: [0.35, 0.65, 0.35],
-                  }
-            }
-            transition={{
-              duration: 2.8 + (i % 7) * 0.15,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.03,
+            ref={(el) => {
+              barRefs.current[i] = el
+            }}
+            className="w-[2px] origin-bottom rounded-full bg-gradient-to-t from-violet-500/40 via-indigo-300/35 to-cyan-300/25 will-change-transform"
+            style={{
+              height: `${heightPct}%`,
+              opacity: 0.42,
+              transform: "scaleY(1)",
             }}
           />
         ))}
-      </div>
+      </motion.div>
     </motion.div>
   )
 }
