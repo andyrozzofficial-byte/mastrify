@@ -253,7 +253,7 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
             />
           </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
 
       {/* Scan line — analyzing feel */}
       <motion.div

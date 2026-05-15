@@ -188,7 +188,12 @@ export default function MasterProcessingPage() {
           </p>
         </motion.div>
 
-        <div className="relative mt-8 w-full md:mt-10">
+        <motion.div
+          className="relative mt-8 w-full md:mt-10"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+        >
           <MasteringEngineVisual activeStep={activeStep} />
         </motion.div>
 
@@ -224,7 +229,7 @@ export default function MasterProcessingPage() {
         >
           Typically 30–60 seconds · Do not close this window
         </motion.p>
-      </motion.div>
+      </div>
     </motion.div>
   )
 }

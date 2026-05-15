@@ -132,6 +132,6 @@ export default function ProcessingStageList({ activeStep }: Props) {
           )
         })}
       </ul>
-    </motion.div>
+    </div>
   )
 }
