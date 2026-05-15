@@ -128,7 +128,9 @@ export function mergeInsightsFromAnalysis(
 }
 
 export function adaptiveStatusMessage(insights: MasteringInsightsInput): string | null {
-  if (insights.materialTransparent) return "Transparent loudness — musicality over exact LUFS"
+  if (insights.materialTransparent) {
+    return "Transparent loudness — arrangement movement and transients preserved"
+  }
   if (!insights.adaptiveApplied) return null
   if (insights.transientProtection) return "Transient-safe loudness — punch preserved"
   return "Adaptive loudness protection applied"

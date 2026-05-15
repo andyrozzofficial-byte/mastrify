@@ -53,6 +53,9 @@ export function buildMasteringInsights({
     loudnessPhilosophyScore: loudnessPhilosophyScore?.score ?? null,
     prioritizeTransients: loudnessPhilosophyScore?.prioritizeTransients ?? true,
     materialProfile: profile,
+    decisionConfidence: masteringDecisions?.materialProfile?.decisionConfidence ?? null,
+    preserveMix: Boolean(masteringDecisions?.materialProfile?.preserveMix),
+    masteringPhilosophy: masteringDecisions?.philosophy ?? null,
     limiterCharacter: masteringDecisions?.limiterCharacter?.transientType ?? null,
     confidenceMessages: confidenceMessages.map((m) => ({
       id: m.id,
@@ -77,6 +80,8 @@ export function attachMasteringInsightsToAnalysis(analysis, insights) {
     softTargetWindow: insights.softTargetWindow,
     loudnessPhilosophyScore: insights.loudnessPhilosophyScore,
     materialProfile: insights.materialProfile,
+    decisionConfidence: insights.decisionConfidence,
+    preserveMix: insights.preserveMix,
     confidenceMessages: insights.confidenceMessages,
   }
 }

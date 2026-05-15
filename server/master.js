@@ -46,7 +46,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-musical-decisions"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-confidence-subtle"
 
 /** Material transparent mode — transient/dynamic mixes; musicality over exact LUFS. */
 const MATERIAL_TRANSPARENT_MIN_CREST_DB = 11
@@ -1924,12 +1924,19 @@ export async function masterTrack({
       adaptiveTransparency,
       referenceAnalysis,
       stereoEnhance,
+      requestedLufs,
+      style,
     })
     if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
       console.log("[master] musical decisions", {
         profile: masteringDecisions.materialProfile.profile,
         intensity: masteringDecisions.materialProfile.processingIntensity,
+        decisionConfidence: masteringDecisions.materialProfile.decisionConfidence,
+        confidenceWeight: masteringDecisions.materialProfile.confidenceWeight,
+        preserveMix: masteringDecisions.materialProfile.preserveMix,
+        fingerprintBlend: masteringDecisions.materialProfile.fingerprintBlend,
         limiterType: masteringDecisions.limiterCharacter.transientType,
+        philosophy: masteringDecisions.philosophy,
         confidence: masteringDecisions.confidenceMessages.map((m) => m.text),
       })
     }
@@ -2020,18 +2027,19 @@ export async function masterTrack({
     compIntensity *= 0.68
   }
   if (masteringDecisions && !rawChainIsolation) {
-    compIntensity = mergeProcessingIntensity(
-      compIntensity,
-      masteringDecisions.materialProfile,
-      masteringDecisions
-    )
+    compIntensity = mergeProcessingIntensity(compIntensity, masteringDecisions.materialProfile)
     limiterIntensity = Math.min(
       limiterIntensity,
-      masteringDecisions.materialProfile.limiterPressureCap
+      masteringDecisions.materialProfile.limiterPressureCap *
+        (masteringDecisions.limiterCharacter.pressure ?? 1)
     )
+    if (masteringDecisions.materialProfile.preserveMix) {
+      compIntensity = Math.min(compIntensity, 0.22)
+      limiterIntensity = Math.min(limiterIntensity, 0.18)
+    }
     if (masteringDecisions.materialProfile.profile === "pre_limited") {
-      compIntensity = Math.min(compIntensity, 0.14)
-      limiterIntensity = Math.min(limiterIntensity, 0.12)
+      compIntensity = Math.min(compIntensity, 0.1)
+      limiterIntensity = Math.min(limiterIntensity, 0.08)
     }
   }
 
