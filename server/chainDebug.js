@@ -389,13 +389,26 @@ export async function runFullChainSweepExport({
     const filter = resolved?.audioFilter ?? ""
     const wavFileName = fileNameForMode(modeId)
     const wavPath = path.join(outputDir, wavFileName)
-    const encodeOk = await encodeWav(filter, wavPath, modeId)
-    if (!encodeOk) {
+    let encodeError = null
+    try {
+      await encodeWav(filter, wavPath, modeId, resolved?.comp ?? null)
+    } catch (err) {
+      encodeError = err.chainSweepDebug ?? {
+        mode: modeId,
+        filter,
+        ffmpegExitCode: null,
+        stderr: err.message,
+        outputBytes: 0,
+        comp: resolved?.comp ?? null,
+      }
+      console.error("[master] chain sweep render failed", encodeError)
       renders.push({
         mode: modeId,
         label: modeDef?.label,
         error: "encode_failed",
+        encodeDebug: encodeError,
         wavPath: null,
+        audioFilter: filter,
       })
       continue
     }

@@ -299,6 +299,61 @@ function compressorForStyle(style) {
   return { threshold: -19.2, ratio: 1.28, attack: 38, release: 300 }
 }
 
+/** Validate ffmpeg -af chain before spawn (sweep diagnostics). */
+function validateAudioFilterString(filterAf, mode = null) {
+  const issues = []
+  const filter = String(filterAf ?? "").trim()
+  if (!filter) issues.push("empty filter string")
+  if (/NaN|undefined|Infinity/.test(filter)) issues.push("invalid numeric token (NaN/undefined/Infinity)")
+  if (/,,/.test(filter)) issues.push("duplicate commas")
+  const stripped = filter.replace(/,\s*$/, "")
+  const segments = stripped.split(",").map((s) => s.trim()).filter(Boolean)
+  if (!segments.length) issues.push("no filter segments after split")
+  for (const seg of segments) {
+    if (!seg.includes("=")) issues.push(`segment missing '=': ${seg}`)
+  }
+  const comp = segments.find((s) => s.startsWith("acompressor="))
+  if (comp) {
+    if (/makeup=0(?:[,:]|$)/.test(comp)) issues.push("acompressor makeup=0 is invalid (ffmpeg range 1–64)")
+    if (!/ratio=/.test(comp)) issues.push("acompressor missing ratio")
+    if (!/attack=/.test(comp)) issues.push("acompressor missing attack")
+    if (!/release=/.test(comp)) issues.push("acompressor missing release")
+    if (!/threshold=/.test(comp)) issues.push("acompressor missing threshold")
+  }
+  const lim = segments.find((s) => s.startsWith("alimiter="))
+  if (lim && /makeup=/.test(lim)) issues.push("alimiter must not use makeup param")
+  if (issues.length) {
+    const label = mode ? `mode ${mode}` : "filter"
+    throw new Error(`${label} validation failed: ${issues.join("; ")}`)
+  }
+  return stripped
+}
+
+function throwChainSweepEncodeError({ mode, filter, ffmpegExitCode, stderr, outputBytes, destPath, comp }) {
+  const payload = {
+    mode,
+    filter,
+    ffmpegExitCode,
+    stderr: stderr ?? "",
+    outputBytes,
+    destPath,
+    comp: comp ?? null,
+  }
+  console.error("[master] chain sweep encode failure", payload)
+  if (destPath && fs.existsSync(destPath)) {
+    try {
+      fs.unlinkSync(destPath)
+    } catch {
+      /* ignore */
+    }
+  }
+  const err = new Error(
+    `Chain sweep encode failed (${mode}): exit=${ffmpegExitCode} bytes=${outputBytes}`
+  )
+  err.chainSweepDebug = payload
+  throw err
+}
+
 /** FFmpeg acompressor — makeup must be 1–64 (0 is invalid and fails the filter). */
 function formatAcompressorFilter(comp) {
   const threshold = Number(comp?.threshold)
@@ -1908,25 +1963,55 @@ export async function masterTrack({
       ln.loudnormPass1Json != null
         ? loudnormMeasuredToOpts(ln.loudnormPass1Json, 1.75, false, false)
         : null
+    const pipe = buildColorPipeline(requestedLufs, pregain, compInt, headroomCtxInitial, stages, true)
+    if (modeId === "D" || modeId === "E") {
+      console.log("[master] chain sweep filter built", {
+        mode: modeId,
+        compressionBypassed: pipe.compressionBypassed,
+        comp: pipe.comp,
+        compStage: pipe.compressionBypassed
+          ? null
+          : formatAcompressorFilter(pipe.comp),
+        limiterBypassed: pipe.limiterBypassed,
+        loudnormTwoPass: ln.usedTwoPass,
+        audioFilter: ln.audioFilterFinal,
+      })
+    }
     return {
       audioFilter: ln.audioFilterFinal,
       loudnorm: buildLoudnormGainReport(ln.loudnormPass1Json, measured),
       usedTwoPass: ln.usedTwoPass,
+      comp: pipe.comp,
+      compressionBypassed: pipe.compressionBypassed,
     }
   }
 
-  async function encodeFilterToWav(filterAf, destPath, sweepModeId = null) {
-    const logDetail = rawChainIsolation && (sweepModeId === "D" || sweepModeId === "E")
-    if (logDetail || rawChainIsolation) {
-      console.log("[master] chain sweep encode", {
-        mode: sweepModeId ?? "?",
+  async function encodeFilterToWav(filterAf, destPath, sweepModeId = null, compParams = null) {
+    const mode = sweepModeId ?? "?"
+    let validatedFilter
+    try {
+      validatedFilter = validateAudioFilterString(filterAf, mode)
+    } catch (valErr) {
+      throwChainSweepEncodeError({
+        mode,
+        filter: filterAf,
+        ffmpegExitCode: null,
+        stderr: valErr.message,
+        outputBytes: 0,
         destPath,
-        audioFilter: filterAf,
-        compSegment: filterAf.includes("acompressor")
-          ? filterAf.match(/acompressor=[^,]+/)?.[0] ?? null
-          : null,
+        comp: compParams,
       })
     }
+
+    console.log("[master] chain sweep encode start", {
+      mode,
+      destPath,
+      filter: validatedFilter,
+      comp: compParams,
+      compSegment: validatedFilter.match(/acompressor=[^,]+/)?.[0] ?? null,
+      limiterSegment: validatedFilter.match(/alimiter=[^,]+/)?.[0] ?? null,
+    })
+
     const encodeArgs = [
       "-y",
       "-i",
@@ -1941,32 +2026,51 @@ export async function masterTrack({
       "-f",
       "wav",
       "-af",
-      filterAf,
+      validatedFilter,
       destPath,
     ]
-    const enc = await runFfmpegCapture(encodeArgs, `chain-sweep-encode-${sweepModeId ?? "x"}`)
-    if (enc.code !== 0) {
-      if (logDetail || rawChainIsolation) {
-        console.error("[master] chain sweep ffmpeg failed", {
-          mode: sweepModeId,
-          exitCode: enc.code,
-          stderrTail: enc.stderr?.slice(-5000) ?? "",
-        })
-      }
-      return false
-    }
-    await waitForMasterOutputReady(destPath)
+    const enc = await runFfmpegCapture(encodeArgs, `chain-sweep-encode-${mode}`)
     const bytes = fs.existsSync(destPath) ? fs.statSync(destPath).size : 0
-    if (bytes < 1000) {
-      const msg = `Chain sweep mode ${sweepModeId ?? "?"} produced empty WAV (${bytes} bytes): ${destPath}`
-      console.error("[master] chain sweep empty output", {
-        mode: sweepModeId,
-        bytes,
-        audioFilter: filterAf,
-        stderrTail: enc.stderr?.slice(-3000) ?? "",
+
+    if (enc.code !== 0 || bytes < 1000) {
+      console.error("[master] chain sweep ffmpeg stderr (full)", {
+        mode,
+        ffmpegExitCode: enc.code,
+        outputBytes: bytes,
+        stderr: enc.stderr ?? "",
       })
-      throw new Error(msg)
+      throwChainSweepEncodeError({
+        mode,
+        filter: validatedFilter,
+        ffmpegExitCode: enc.code,
+        stderr: enc.stderr ?? "",
+        outputBytes: bytes,
+        destPath,
+        comp: compParams,
+      })
     }
+
+    await waitForMasterOutputReady(destPath)
+    const finalBytes = fs.existsSync(destPath) ? fs.statSync(destPath).size : 0
+    if (finalBytes < 1000) {
+      console.error("[master] chain sweep ffmpeg stderr after wait (full)", {
+        mode,
+        ffmpegExitCode: enc.code,
+        outputBytes: finalBytes,
+        stderr: enc.stderr ?? "",
+      })
+      throwChainSweepEncodeError({
+        mode,
+        filter: validatedFilter,
+        ffmpegExitCode: enc.code,
+        stderr: enc.stderr ?? "",
+        outputBytes: finalBytes,
+        destPath,
+        comp: compParams,
+      })
+    }
+
+    console.log("[master] chain sweep encode ok", { mode, destPath, outputBytes: finalBytes })
     return true
   }
 
