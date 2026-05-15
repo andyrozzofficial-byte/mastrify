@@ -21,6 +21,7 @@ import {
   smartLoudnessTitle,
   toFiniteNumber,
 } from "../../../lib/masterResultInsights"
+import { parseTrackDisplayName } from "../../../lib/parseTrackDisplayName"
 
 const PREVIEW_START = 60
 const PREVIEW_DURATION = 30
@@ -520,6 +521,11 @@ export default function MasterResultClient() {
     masteringInsights.adaptiveApplied
   )
 
+  const trackMeta = useMemo(() => {
+    if (!file?.name) return null
+    return parseTrackDisplayName(file.name)
+  }, [file?.name])
+
   if (!mounted) return null
 
   if (!masteredWavUrl) {
@@ -534,7 +540,7 @@ export default function MasterResultClient() {
   }
 
   return (
-    <motion.div className="mx-auto w-full max-w-[1080px] px-5 pb-8 pt-5 sm:px-6 md:px-10 md:pb-10 md:pt-6 lg:px-12">
+    <motion.div className="mx-auto w-full max-w-[1080px] px-5 pb-3 pt-5 sm:px-6 md:px-10 md:pb-4 md:pt-6 lg:px-12">
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -544,14 +550,14 @@ export default function MasterResultClient() {
         <h1 className="text-[1.7rem] font-semibold leading-[1.12] tracking-[-0.02em] text-white sm:text-[1.95rem] md:text-[2.1rem]">
           Your master is ready!
         </h1>
-        <p className="mx-auto mt-2 max-w-lg text-[15px] font-medium tracking-[-0.01em] text-violet-100/88 sm:text-base">
+        <p className="mx-auto mt-3 max-w-lg text-[15px] font-medium tracking-[-0.01em] text-violet-100/88 sm:mt-3.5 sm:text-base">
           {masterDescriptor}
         </p>
-        <motion.div
-          className="mx-auto mt-2.5 h-px w-12 bg-gradient-to-r from-transparent via-violet-400/35 to-transparent sm:w-16 sm:via-violet-400/30"
+        <div
+          className="mx-auto mt-3 h-px w-12 bg-gradient-to-r from-transparent via-violet-400/35 to-transparent sm:mt-3.5 sm:w-16 sm:via-violet-400/30"
           aria-hidden
         />
-        <p className="mx-auto mt-2.5 max-w-md text-[13px] leading-snug text-white/42 md:text-[14px] md:leading-relaxed">
+        <p className="mx-auto mt-3 max-w-md text-[13px] leading-snug text-white/40 md:mt-3.5 md:text-[14px] md:leading-relaxed">
           Smart mastering tuned for punch, clarity, and your loudness goal.
         </p>
         {adaptiveMessage ? (
@@ -588,8 +594,17 @@ export default function MasterResultClient() {
             ))}
           </motion.div>
         ) : null}
-        {file?.name ? (
-          <p className="mx-auto mt-2 max-w-lg truncate px-2 text-[11px] text-white/30 md:text-xs">{file.name}</p>
+        {trackMeta ? (
+          <div className="mx-auto mt-6 max-w-md px-2 text-center sm:mt-7">
+            <p className="text-[17px] font-semibold leading-snug tracking-[-0.02em] text-white/78 sm:text-[18px]">
+              {trackMeta.title}
+            </p>
+            {trackMeta.artist ? (
+              <p className="mt-1.5 text-[12px] font-medium leading-snug tracking-[0.01em] text-white/36 sm:text-[13px]">
+                {trackMeta.artist}
+              </p>
+            ) : null}
+          </div>
         ) : null}
       </motion.header>
 
@@ -744,7 +759,7 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1 }}
-        className="mx-auto mt-7 flex w-full max-w-[28rem] flex-col gap-3 sm:mt-8 sm:flex-row sm:justify-center sm:gap-4"
+        className="mx-auto mt-5 flex w-full max-w-[28rem] flex-col gap-3 sm:mt-6 sm:flex-row sm:justify-center sm:gap-4"
       >
         {!isPaid ? (
           <button
@@ -776,7 +791,7 @@ export default function MasterResultClient() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="mx-auto mt-7 max-w-md text-center md:mt-8"
+        className="mx-auto mt-4 max-w-md pb-1 text-center md:mt-5"
       >
         <p className="text-[12px] leading-relaxed text-white/34 md:text-[13px]">Happy with the result? Share your master!</p>
         <button
