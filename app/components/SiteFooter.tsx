@@ -60,21 +60,36 @@ function FooterColumn({
   )
 }
 
-function SocialIcon({
+const socialLinks = [
+  {
+    href: "https://www.instagram.com/mastrify.app?igsh=YzNxNzg1Ynh5cmsx&utm_source=qr",
+    label: "Mastrify on Instagram",
+  },
+  {
+    href: "https://www.tiktok.com/@mastrify.app?_r=1&_t=ZN-96NwDmGznjK",
+    label: "Mastrify on TikTok",
+  },
+] as const
+
+function SocialLink({
+  href,
   label,
   children,
 }: {
+  href: string
   label: string
   children: ReactNode
 }) {
   return (
-    <button
-      type="button"
-      className="flex h-8 w-8 items-center justify-center rounded-full border border-transparent text-muted-soft transition hover:border-white/[0.08] hover:bg-white/[0.04] hover:text-muted-strong"
-      aria-label={`${label} (coming soon)`}
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      className="flex h-8 w-8 items-center justify-center rounded-full border border-transparent text-muted-soft transition duration-300 hover:border-white/[0.1] hover:bg-white/[0.05] hover:text-white/82 hover:shadow-[0_0_18px_rgba(99,102,241,0.1)]"
     >
       {children}
-    </button>
+    </a>
   )
 }
 
@@ -199,24 +214,19 @@ export default function SiteFooter() {
             </a>
           </p>
 
-          <div className="order-2 flex items-center justify-center gap-0.5 md:order-none md:justify-end">
-            <SocialIcon label="Instagram">
+          <div className="order-2 flex items-center justify-center gap-1 md:order-none md:justify-end">
+            <SocialLink href={socialLinks[0].href} label={socialLinks[0].label}>
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                 <rect x="3" y="3" width="18" height="18" rx="5" />
                 <circle cx="12" cy="12" r="3.5" />
                 <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
               </svg>
-            </SocialIcon>
-            <SocialIcon label="TikTok">
+            </SocialLink>
+            <SocialLink href={socialLinks[1].href} label={socialLinks[1].label}>
               <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.69V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 011.14.23V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.14-5.1v-7a8.16 8.16 0 004.45 1.33V7.95a5.7 5.7 0 01-4-.26z" />
               </svg>
-            </SocialIcon>
-            <SocialIcon label="X">
-              <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-            </SocialIcon>
+            </SocialLink>
           </div>
         </motion.div>
       </motion.div>
