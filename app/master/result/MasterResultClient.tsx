@@ -565,7 +565,7 @@ export default function MasterResultClient() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1080px] px-5 pb-12 pt-5 sm:px-6 md:px-10 md:pb-14 md:pt-6 lg:px-12">
+    <motion.div className="mx-auto w-full max-w-[1080px] px-5 pb-8 pt-5 sm:px-6 md:px-10 md:pb-10 md:pt-6 lg:px-12">
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -728,7 +728,7 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1 }}
-        className="mx-auto mt-9 flex w-full max-w-[28rem] flex-col gap-3.5 sm:mt-10 sm:flex-row sm:justify-center sm:gap-4"
+        className="mx-auto mt-7 flex w-full max-w-[28rem] flex-col gap-3 sm:mt-8 sm:flex-row sm:justify-center sm:gap-4"
       >
         {!isPaid ? (
           <button
@@ -760,13 +760,13 @@ export default function MasterResultClient() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="mx-auto mt-11 max-w-md text-center md:mt-12"
+        className="mx-auto mt-7 max-w-md text-center md:mt-8"
       >
         <p className="text-[12px] leading-relaxed text-white/34 md:text-[13px]">Happy with the result? Share your master!</p>
         <button
           type="button"
           onClick={handleShare}
-          className="mt-3.5 inline-flex items-center gap-2 rounded-full border border-white/[0.07] bg-black/[0.28] px-4 py-2 text-[11px] font-medium text-white/68 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.1] hover:bg-white/[0.04] hover:text-white/85 active:scale-[0.98] md:mt-4 md:px-5 md:text-xs"
+          className="mt-2.5 inline-flex items-center gap-2 rounded-full border border-white/[0.07] bg-black/[0.28] px-4 py-2 text-[11px] font-medium text-white/68 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.1] hover:bg-white/[0.04] hover:text-white/85 active:scale-[0.98] md:mt-3 md:px-5 md:text-xs"
         >
           <svg className="h-3.5 w-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.935-2.186 2.25 2.25 0 00-3.935 2.186z" />
@@ -791,6 +791,6 @@ export default function MasterResultClient() {
           className="hidden"
         />
       ) : null}
-    </div>
+    </motion.div>
   )
 }

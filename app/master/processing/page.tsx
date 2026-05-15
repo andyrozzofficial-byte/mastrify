@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
+import MasteringOrbIcon from "./MasteringOrbIcon"
 import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
@@ -23,27 +24,6 @@ const UI_STEPS = [
 
 const STEP_DELAYS_MS = [480, 620, 620, 720, 400] as const
 
-function AudioWaveIcon({ className }: { className?: string }) {
-  const heightsPx = [14, 24, 32, 22, 17]
-  return (
-    <div className={`flex h-14 w-14 items-end justify-center gap-[5px] md:h-16 md:w-16 ${className ?? ""}`} aria-hidden>
-      {heightsPx.map((h, i) => (
-        <motion.div
-          key={i}
-          className="w-[5px] rounded-full bg-gradient-to-t from-violet-400 via-purple-400 to-fuchsia-300/95"
-          style={{ height: h, transformOrigin: "bottom" }}
-          animate={{ scaleY: [0.88, 1.06, 0.9, 1.04, 0.88] }}
-          transition={{
-            duration: 1.45 + i * 0.06,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 0.1,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
 
 export default function MasterProcessingPage() {
   const router = useRouter()
@@ -172,7 +152,7 @@ export default function MasterProcessingPage() {
   ])
 
   return (
-    <div className="relative flex w-full flex-col items-center overflow-hidden px-5 py-8 text-white md:px-8 md:py-10">
+    <motion.div className="relative flex min-h-[min(100dvh,880px)] w-full flex-col items-center justify-center overflow-hidden px-5 py-6 text-white md:min-h-[min(100dvh,920px)] md:px-8 md:py-8">
       <CinematicBackground intensity="strong" />
 
       <div className="relative z-10 flex w-full max-w-lg flex-col items-center text-center">
@@ -198,7 +178,7 @@ export default function MasterProcessingPage() {
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}
-          className="relative mt-12 flex w-[min(17.5rem,78vw)] shrink-0 items-center justify-center md:mt-14 md:w-[min(19rem,72vw)]"
+          className="relative mt-9 flex w-[min(17.5rem,78vw)] shrink-0 items-center justify-center md:mt-10 md:w-[min(19rem,72vw)]"
         >
           <motion.div
             className="pointer-events-none absolute inset-[-18%] rounded-full bg-gradient-to-tr from-violet-600/25 via-indigo-500/12 to-sky-500/20 blur-3xl"
@@ -226,14 +206,20 @@ export default function MasterProcessingPage() {
                 transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
               >
                 <motion.div
-                  className="absolute inset-[18%] rounded-full bg-gradient-to-b from-violet-500/12 to-transparent blur-xl"
-                  animate={{ opacity: [0.4, 0.65, 0.4] }}
+                  className="absolute inset-[14%] rounded-full bg-gradient-to-b from-violet-500/16 via-indigo-500/8 to-transparent blur-xl"
+                  animate={{ opacity: [0.45, 0.72, 0.45] }}
                   transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
                   aria-hidden
                 />
-                <div className="relative z-[1] flex items-center justify-center">
-                  <AudioWaveIcon />
-                </div>
+                <motion.div
+                  className="pointer-events-none absolute inset-[8%] rounded-full border border-violet-400/10"
+                  animate={{ opacity: [0.25, 0.5, 0.25] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  aria-hidden
+                />
+                <motion.div className="relative z-[1] flex items-center justify-center">
+                  <MasteringOrbIcon />
+                </motion.div>
               </motion.div>
             </div>
           </div>
@@ -244,7 +230,7 @@ export default function MasterProcessingPage() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
-          className="mt-12 w-full max-w-[22rem] rounded-2xl border border-white/[0.07] bg-black/[0.42] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-xl md:mt-14 md:max-w-md md:px-6 md:py-6"
+          className="mt-8 w-full max-w-[22rem] rounded-2xl border border-white/[0.07] bg-black/[0.42] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-xl md:mt-9 md:max-w-md md:px-6 md:py-6"
         >
           <ul className="flex flex-col gap-4 text-left">
             {UI_STEPS.map((label, i) => {
@@ -289,6 +275,6 @@ export default function MasterProcessingPage() {
           </ul>
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   )
 }
