@@ -25,7 +25,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260211b"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-adaptive"
 
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n))
@@ -99,18 +99,25 @@ export async function measureIntegratedLufsEbur128(filePath) {
   return v
 }
 
+/** Hot integrated targets (club/CD) where adaptive protection applies. */
+function isHotLoudnessTarget(requestedLufs) {
+  return typeof requestedLufs === "number" && Number.isFinite(requestedLufs) && requestedLufs >= -10
+}
+
 /** Stereo width — `extrastereo` m≈1 is neutral; wider >1, narrower <1. */
-function buildStereoStage(stereoEnhance, style) {
+function buildStereoStage(stereoEnhance, style, hotClubProtection = false) {
   let se = clamp(parseIntSlider(stereoEnhance, 50), 0, 100)
-  if (style === "FESTIVAL") se = Math.min(100, se + 10)
+  if (style === "FESTIVAL" && !hotClubProtection) se = Math.min(100, se + 10)
   if (style === "WARM") se = Math.max(0, se - 6)
-  if (style === "LOUD") se = Math.min(100, se + 4)
+  if (style === "LOUD" && !hotClubProtection) se = Math.min(100, se + 4)
+  if (hotClubProtection) se = Math.max(0, se - 14)
 
   if (se >= 47 && se <= 53) return ""
 
   if (se > 53) {
     const t = (se - 53) / 47
-    const m = 1 + t * 0.26
+    const widen = hotClubProtection ? 0.14 : 0.26
+    const m = 1 + t * widen
     return `extrastereo=m=${m.toFixed(4)},`
   }
   const t = (47 - se) / 47
@@ -134,35 +141,44 @@ function compressorForStyle(style) {
   return { threshold: -18, ratio: 1.52, attack: 30, release: 240 }
 }
 
-/** Softer bus compression for hotter integrated targets so loudnorm can reach I=… */
+/** Softer bus compression — preserve transients on hot club targets. */
 function compressorForStyleAndTarget(style, integratedTarget) {
   const base = compressorForStyle(style)
   const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
+  if ((style === "CLUB" || style === "FESTIVAL") && t >= -10.5) {
+    return { threshold: -16.8, ratio: 1.22, attack: 38, release: 300 }
+  }
+  if (style === "LOUD" && t >= -10.5) {
+    return { threshold: -17.2, ratio: 1.35, attack: 34, release: 270 }
+  }
   if (t >= -10.5) {
     return {
       threshold: base.threshold + 2.8,
       ratio: Math.max(1.1, base.ratio - 0.38),
-      attack: base.attack + 5,
-      release: Math.min(380, base.release + 55),
+      attack: base.attack + 8,
+      release: Math.min(400, base.release + 65),
     }
   }
   if (t >= -12.5) {
     return {
       threshold: base.threshold + 1.5,
       ratio: Math.max(1.15, base.ratio - 0.22),
-      attack: base.attack + 3,
-      release: Math.min(340, base.release + 35),
+      attack: base.attack + 4,
+      release: Math.min(340, base.release + 40),
     }
   }
   return base
 }
 
-/** True-peak ceiling (dBFS TP) — slightly looser for louder masters so I= can be met. */
-function truePeakForLoudnormTarget(integratedTarget) {
+/** True-peak ceiling — more headroom when we back off hot targets (punch > exact LUFS). */
+function truePeakForLoudnormTarget(integratedTarget, requestedTarget) {
   const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
-  if (t >= -9.5) return -0.5
-  if (t >= -10.5) return -0.7
-  if (t >= -11.5) return -1
+  const req =
+    typeof requestedTarget === "number" && Number.isFinite(requestedTarget) ? requestedTarget : t
+  if (req >= -10 && t < req - 0.3) return -1.05
+  if (t >= -9.5) return -0.85
+  if (t >= -10.5) return -1
+  if (t >= -11.5) return -1.25
   if (t >= -13.5) return -1.5
   return -2
 }
@@ -173,6 +189,191 @@ function lraForStyle(style) {
   if (style === "CLUB") return 8
   if (style === "FESTIVAL") return 9
   return 10
+}
+
+function lraForStyleAndTarget(style, integratedTarget, requestedTarget) {
+  const base = lraForStyle(style)
+  const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
+  const req =
+    typeof requestedTarget === "number" && Number.isFinite(requestedTarget) ? requestedTarget : t
+  if (isHotLoudnessTarget(req) && (style === "CLUB" || style === "FESTIVAL" || style === "LOUD")) {
+    return Math.max(base, 10.5)
+  }
+  if (req - t > 0.35) return Math.min(base + 1.5, 12)
+  return base
+}
+
+function headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated, pass1Json = null) {
+  const num = (v) => {
+    const n = parseFloat(String(v ?? "").replace(/"/g, "").trim())
+    return Number.isFinite(n) ? n : null
+  }
+  return {
+    integratedLufs:
+      ebuInputIntegrated != null && Number.isFinite(ebuInputIntegrated)
+        ? ebuInputIntegrated
+        : typeof preAnalysis?.lufs === "number"
+          ? preAnalysis.lufs
+          : null,
+    dynamicRange: typeof preAnalysis?.dynamicRange === "number" ? preAnalysis.dynamicRange : null,
+    peakDb: typeof preAnalysis?.peakDb === "number" ? preAnalysis.peakDb : null,
+    bassWeight: typeof preAnalysis?.bassWeight === "number" ? preAnalysis.bassWeight : null,
+    pass1InputTp: pass1Json ? num(pass1Json.input_tp) : null,
+    pass1InputLra: pass1Json ? num(pass1Json.input_lra) : null,
+    pass1OutputLra: pass1Json ? num(pass1Json.output_lra) : null,
+  }
+}
+
+/**
+ * Back off hot targets when the mix cannot safely reach requested LUFS.
+ * Quieter resolved target (e.g. -10 vs -9) preserves punch and reduces limiting.
+ */
+function resolveSafeIntegratedLufs(requestedLufs, ctx) {
+  const requested = clamp(requestedLufs, -16, -9)
+  const reasons = []
+  if (!isHotLoudnessTarget(requested)) {
+    return {
+      requested,
+      resolved: requested,
+      backoffLu: 0,
+      limiterReductionEstimateDb: 0,
+      transientProtection: { active: false, reasons },
+    }
+  }
+
+  let backoff = 0
+  const dr = ctx.dynamicRange
+  if (dr != null && dr > 9) {
+    backoff += 0.25
+    reasons.push(`dynamicRange=${dr.toFixed(1)}dB`)
+  }
+  if (dr != null && dr > 12.5) {
+    backoff += 0.35
+    reasons.push(`highDR=${dr.toFixed(1)}dB`)
+  }
+
+  const peak = ctx.peakDb
+  if (peak != null && peak > -2.5) {
+    backoff += 0.35
+    reasons.push(`hotPeak=${peak.toFixed(1)}dBFS`)
+  }
+  if (peak != null && peak > -1.2) {
+    backoff += 0.25
+    reasons.push(`nearClipPeak=${peak.toFixed(1)}dBFS`)
+  }
+
+  const bass = ctx.bassWeight
+  if (bass != null && bass > 0.4) {
+    backoff += 0.3
+    reasons.push(`bassWeight=${(bass * 100).toFixed(0)}%`)
+  }
+  if (bass != null && bass > 0.52) {
+    backoff += 0.25
+    reasons.push(`heavyLowEnd=${(bass * 100).toFixed(0)}%`)
+  }
+
+  const integrated = ctx.integratedLufs
+  if (integrated != null && requested - integrated > 7) {
+    backoff += 0.35
+    reasons.push(`largeLufsGap=${(requested - integrated).toFixed(1)}LU`)
+  }
+
+  const inputTp = ctx.pass1InputTp
+  if (inputTp != null && inputTp > -2) {
+    backoff += 0.35
+    reasons.push(`pass1InputTp=${inputTp.toFixed(1)}dBTP`)
+  }
+
+  const inputLra = ctx.pass1InputLra
+  if (inputLra != null && inputLra > 11) {
+    backoff += 0.25
+    reasons.push(`pass1LRA=${inputLra.toFixed(1)}LU`)
+  }
+
+  const maxBackoff = 1.5
+  backoff = Math.min(backoff, maxBackoff)
+  let resolved = requested - backoff
+  resolved = Math.max(resolved, -10.5)
+  resolved = Math.min(resolved, requested)
+
+  const limiterReductionEstimateDb = Number((requested - resolved).toFixed(2))
+
+  return {
+    requested,
+    resolved,
+    backoffLu: Number(backoff.toFixed(2)),
+    limiterReductionEstimateDb,
+    transientProtection: {
+      active: backoff > 0.05,
+      reasons,
+      preserveTransients: true,
+    },
+  }
+}
+
+/** Scale pregain from headroom — less boost when DR/crest/bass are high or target is hot. */
+function computeAdaptivePregain(resolvedLufs, ctx) {
+  const integrated = ctx.integratedLufs
+  if (integrated == null || !Number.isFinite(integrated)) return { pregainDb: 0, factors: {} }
+
+  const gap = resolvedLufs - integrated
+  if (gap <= 0.55) return { pregainDb: 0, factors: { gap } }
+
+  const hot = isHotLoudnessTarget(resolvedLufs)
+  let factor = hot ? 0.38 : 0.58
+  const factors = { gap, hot, baseFactor: factor }
+
+  const dr = ctx.dynamicRange
+  if (dr != null && dr > 8) {
+    factor *= 0.82
+    factors.drScale = 0.82
+  }
+  if (dr != null && dr > 11.5) {
+    factor *= 0.72
+    factors.drScaleHigh = 0.72
+  }
+
+  const bass = ctx.bassWeight
+  if (bass != null && bass > 0.38) {
+    factor *= 0.78
+    factors.bassScale = 0.78
+  }
+  if (bass != null && bass > 0.5) {
+    factor *= 0.7
+    factors.bassScaleHeavy = 0.7
+  }
+
+  if (ctx.peakDb != null && ctx.peakDb > -2) {
+    factor *= 0.72
+    factors.peakScale = 0.72
+  }
+
+  const maxGain = hot ? 4.25 : 6.5
+  let pregainDb = gap * factor
+  pregainDb = Math.min(pregainDb, maxGain)
+  pregainDb = Math.max(0, pregainDb)
+
+  return { pregainDb: Number(pregainDb.toFixed(2)), factors }
+}
+
+/** CLUB/CD: tighten lows + gentle soft clip before loudnorm. */
+function clubProtectionFilters(style, requestedLufs) {
+  if (!isHotLoudnessTarget(requestedLufs)) return ""
+  if (style !== "CLUB" && style !== "FESTIVAL" && !(style === "LOUD" && requestedLufs >= -10.5)) {
+    return ""
+  }
+  return (
+    `equalizer=f=48:t=q:w=0.82:g=-0.52,` +
+    `equalizer=f=110:t=q:w=0.9:g=-0.32,` +
+    `equalizer=f=220:t=q:w=1:g=-0.18,` +
+    `asoftclip=type=tanh:param=0.62,`
+  )
+}
+
+function logAdaptiveLoudness(payload) {
+  if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
+    console.log("[master] adaptive loudness", payload)
+  }
 }
 
 /** Per-preset EQ “character” before loudnorm (distinct but still hi-fi). */
@@ -451,9 +652,7 @@ export async function masterTrack({
   targetLufs = parseFloat(targetLufs)
   if (!Number.isFinite(targetLufs)) targetLufs = -14
 
-  /** Cap loudest integrated target (streaming-safe ceiling). */
-  const safeIntegratedLufs = Math.min(targetLufs, -9)
-  const lra = lraForStyle(style)
+  const requestedLufs = Math.min(targetLufs, -9)
 
   if (LUFS_TRACE) {
     console.log("[LUFS_TRACE] masterTrack target resolution", {
@@ -462,8 +661,7 @@ export async function masterTrack({
       parsedClient,
       referenceBranch: Boolean(reference && referenceAnalysis?.lufs != null),
       targetLufsResolved: targetLufs,
-      safeIntegratedLufs,
-      lra,
+      requestedLufs,
     })
   }
 
@@ -497,14 +695,15 @@ export async function masterTrack({
 
   const ebuInputIntegrated = await measureIntegratedLufsEbur128(input)
 
+  const headroomCtxInitial = headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated)
+  let adaptiveLoudness = resolveSafeIntegratedLufs(requestedLufs, headroomCtxInitial)
+  let safeIntegratedLufs = adaptiveLoudness.resolved
+
   let stagingDb = 0
-  let autoPreGainDb = 0
-  if (ebuInputIntegrated != null && Number.isFinite(ebuInputIntegrated)) {
-    const gap = safeIntegratedLufs - ebuInputIntegrated
-    if (gap > 0.65) {
-      autoPreGainDb = Math.min(9, gap * 0.72)
-    }
-  } else if (preAnalysis) {
+  let adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, headroomCtxInitial)
+  let autoPreGainDb = adaptiveGain.pregainDb
+
+  if (ebuInputIntegrated == null && preAnalysis) {
     try {
       const raw = typeof preAnalysis.lufs === "number" ? preAnalysis.lufs : -18
       const stagingTarget = -15
@@ -515,69 +714,167 @@ export async function masterTrack({
     }
   }
 
-  let tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
-  const comp = compressorForStyleAndTarget(style, safeIntegratedLufs)
-  const stereoStage = buildStereoStage(stereoEnhance, style)
-  const styleTail = styleCharacterFilters(style)
-  const tp = truePeakForLoudnormTarget(safeIntegratedLufs)
+  const hotClubProtection =
+    isHotLoudnessTarget(requestedLufs) &&
+    (style === "CLUB" || style === "FESTIVAL" || (style === "LOUD" && requestedLufs >= -10.5))
 
-  const volumeStaging = stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
-  const autoPreVol = autoPreGainDb > 0 ? `volume=${autoPreGainDb.toFixed(2)}dB,` : ""
+  logAdaptiveLoudness({
+    phase: "pre-pass1",
+    style,
+    requestedLufs,
+    safeIntegratedLufs,
+    backoffLu: adaptiveLoudness.backoffLu,
+    limiterReductionEstimateDb: adaptiveLoudness.limiterReductionEstimateDb,
+    pregainAppliedDb: autoPreGainDb,
+    pregainFactors: adaptiveGain.factors,
+    transientProtection: adaptiveLoudness.transientProtection,
+    hotClubProtection,
+    ebuInputIntegrated,
+    headroom: headroomCtxInitial,
+  })
 
-  const mud = tone.mudGain.toFixed(3)
-  const mudW = tone.mudWideGain.toFixed(3)
-  const lowG = tone.lowGain.toFixed(3)
-  const airG = tone.airGain.toFixed(3)
-  const dipG = tone.dipAboveAirGain.toFixed(3)
-  const hi9 = tone.highShelf9k.toFixed(3)
-  const pr = tone.presenceDb.toFixed(3)
+  function buildColorPipeline(integratedLufs, pregainDb) {
+    const lraVal = lraForStyleAndTarget(style, integratedLufs, requestedLufs)
+    const compVal = compressorForStyleAndTarget(style, integratedLufs)
+    const tpVal = truePeakForLoudnormTarget(integratedLufs, requestedLufs)
+    const tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
+    const stereoStage = buildStereoStage(stereoEnhance, style, hotClubProtection)
+    const styleTail = styleCharacterFilters(style)
+    const clubProt = clubProtectionFilters(style, requestedLufs)
+    const volumeStaging = stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
+    const autoPreVol = pregainDb > 0 ? `volume=${pregainDb.toFixed(2)}dB,` : ""
 
-  const colorBase =
-    `highpass=f=25,` +
-    volumeStaging +
-    stereoStage +
-    `equalizer=f=200:t=q:w=1:g=${mud},` +
-    `equalizer=f=320:t=q:w=1:g=${mudW},` +
-    `equalizer=f=${tone.lowHz}:t=q:w=0.92:g=${lowG},` +
-    `equalizer=f=9800:t=q:w=1:g=${hi9},` +
-    `equalizer=f=4200:t=q:w=0.92:g=${pr},` +
-    `acompressor=threshold=${comp.threshold}dB:ratio=${comp.ratio}:attack=${comp.attack}:release=${comp.release},` +
-    `equalizer=f=${tone.airHz}:t=q:w=1.15:g=${airG},` +
-    `equalizer=f=${tone.dipAboveAirHz}:t=q:w=1:g=${dipG},` +
-    styleTail +
-    autoPreVol
+    const mud = tone.mudGain.toFixed(3)
+    const mudW = tone.mudWideGain.toFixed(3)
+    const lowG = tone.lowGain.toFixed(3)
+    const airG = tone.airGain.toFixed(3)
+    const dipG = tone.dipAboveAirGain.toFixed(3)
+    const hi9 = tone.highShelf9k.toFixed(3)
+    const pr = tone.presenceDb.toFixed(3)
 
-  const loudnormStem = `I=${safeIntegratedLufs}:LRA=${lra}:TP=${tp}`
+    const colorBase =
+      `highpass=f=25,` +
+      volumeStaging +
+      stereoStage +
+      `equalizer=f=200:t=q:w=1:g=${mud},` +
+      `equalizer=f=320:t=q:w=1:g=${mudW},` +
+      `equalizer=f=${tone.lowHz}:t=q:w=0.92:g=${lowG},` +
+      `equalizer=f=9800:t=q:w=1:g=${hi9},` +
+      `equalizer=f=4200:t=q:w=0.92:g=${pr},` +
+      `acompressor=threshold=${compVal.threshold}dB:ratio=${compVal.ratio}:attack=${compVal.attack}:release=${compVal.release},` +
+      `equalizer=f=${tone.airHz}:t=q:w=1.15:g=${airG},` +
+      `equalizer=f=${tone.dipAboveAirHz}:t=q:w=1:g=${dipG},` +
+      styleTail +
+      clubProt +
+      autoPreVol
 
-  let loudnormPass1Json = null
-  let usedTwoPass = false
-  let audioFilterFinal = ""
-  let pass1ExitCode = null
-
-  const pass1Af = `${colorBase}loudnorm=${loudnormStem}:linear=true:print_format=json`
-  const pass1Args = ["-hide_banner", "-nostats", "-i", file, "-vn", "-ar", "44100", "-ac", "2", "-af", pass1Af, "-f", "null", "-"]
-
-  try {
-    const r1 = await runFfmpegCapture(pass1Args, "loudnorm-pass1")
-    pass1ExitCode = r1.code
-    if (r1.code === 0) {
-      loudnormPass1Json = extractLoudnormJsonFromStderr(r1.stderr)
-    }
-    const measured = loudnormMeasuredToOpts(loudnormPass1Json)
-    if (measured) {
-      audioFilterFinal =
-        `${colorBase}loudnorm=${loudnormStem}:measured_I=${measured.measured_I}:measured_LRA=${measured.measured_LRA}:measured_TP=${measured.measured_TP}:measured_thresh=${measured.measured_thresh}:offset=${measured.offset}:linear=true`
-      usedTwoPass = true
-    }
-  } catch (e) {
-    if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
-      console.warn("[master] loudnorm pass1 error:", e?.message || e)
+    return {
+      colorBase,
+      loudnormStem: `I=${integratedLufs}:LRA=${lraVal}:TP=${tpVal}`,
+      lra: lraVal,
+      tp: tpVal,
+      comp: compVal,
     }
   }
 
-  if (!audioFilterFinal) {
-    audioFilterFinal = `${colorBase}loudnorm=${loudnormStem}:linear=true`
-    usedTwoPass = false
+  async function runLoudnormPasses(integratedLufs, pregainDb) {
+    const pipe = buildColorPipeline(integratedLufs, pregainDb)
+    const stem = pipe.loudnormStem
+    let pass1Json = null
+    let filterFinal = ""
+    let twoPass = false
+    let exitCode = null
+
+    const pass1Af = `${pipe.colorBase}loudnorm=${stem}:linear=true:print_format=json`
+    const pass1Args = [
+      "-hide_banner",
+      "-nostats",
+      "-i",
+      file,
+      "-vn",
+      "-ar",
+      "44100",
+      "-ac",
+      "2",
+      "-af",
+      pass1Af,
+      "-f",
+      "null",
+      "-",
+    ]
+
+    try {
+      const r1 = await runFfmpegCapture(pass1Args, "loudnorm-pass1")
+      exitCode = r1.code
+      if (r1.code === 0) {
+        pass1Json = extractLoudnormJsonFromStderr(r1.stderr)
+      }
+      const measured = loudnormMeasuredToOpts(pass1Json)
+      if (measured) {
+        filterFinal =
+          `${pipe.colorBase}loudnorm=${stem}:measured_I=${measured.measured_I}:measured_LRA=${measured.measured_LRA}:measured_TP=${measured.measured_TP}:measured_thresh=${measured.measured_thresh}:offset=${measured.offset}:linear=true`
+        twoPass = true
+      }
+    } catch (e) {
+      if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
+        console.warn("[master] loudnorm pass1 error:", e?.message || e)
+      }
+    }
+
+    if (!filterFinal) {
+      filterFinal = `${pipe.colorBase}loudnorm=${stem}:linear=true`
+      twoPass = false
+    }
+
+    return {
+      audioFilterFinal: filterFinal,
+      loudnormPass1Json: pass1Json,
+      usedTwoPass: twoPass,
+      pass1ExitCode: exitCode,
+      lra: pipe.lra,
+      tp: pipe.tp,
+    }
+  }
+
+  let {
+    audioFilterFinal,
+    loudnormPass1Json,
+    usedTwoPass,
+    pass1ExitCode,
+    lra,
+    tp,
+  } = await runLoudnormPasses(safeIntegratedLufs, autoPreGainDb)
+
+  if (loudnormPass1Json && isHotLoudnessTarget(requestedLufs)) {
+    const ctxPass1 = headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated, loudnormPass1Json)
+    const refinedAdaptive = resolveSafeIntegratedLufs(requestedLufs, ctxPass1)
+    if (refinedAdaptive.resolved < safeIntegratedLufs - 0.24) {
+      safeIntegratedLufs = refinedAdaptive.resolved
+      adaptiveLoudness = refinedAdaptive
+      adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, ctxPass1)
+      autoPreGainDb = adaptiveGain.pregainDb
+      logAdaptiveLoudness({
+        phase: "pass1-refine",
+        style,
+        requestedLufs,
+        safeIntegratedLufs,
+        backoffLu: adaptiveLoudness.backoffLu,
+        limiterReductionEstimateDb: adaptiveLoudness.limiterReductionEstimateDb,
+        pregainAppliedDb: autoPreGainDb,
+        pregainFactors: adaptiveGain.factors,
+        transientProtection: adaptiveLoudness.transientProtection,
+        pass1_input_tp: loudnormPass1Json.input_tp,
+        pass1_input_lra: loudnormPass1Json.input_lra,
+      })
+      ;({
+        audioFilterFinal,
+        loudnormPass1Json,
+        usedTwoPass,
+        pass1ExitCode,
+        lra,
+        tp,
+      } = await runLoudnormPasses(safeIntegratedLufs, autoPreGainDb))
+    }
   }
 
   if (LUFS_TRACE) {
@@ -588,6 +885,8 @@ export async function masterTrack({
       pass1HasInputI: Boolean(loudnormPass1Json?.input_i),
       pass1OutputI: loudnormPass1Json?.output_i ?? null,
       fallbackOnePassOnly: !usedTwoPass,
+      requestedLufs,
+      safeIntegratedLufs,
     })
   }
 
@@ -596,6 +895,7 @@ export async function masterTrack({
       style,
       targetLufsClient: Number.isFinite(parsedClient) ? parsedClient : null,
       targetLufsResolved: targetLufs,
+      requestedLufs,
       loudnormI: safeIntegratedLufs,
       loudnormLRA: lra,
       loudnormTP: tp,
@@ -603,6 +903,8 @@ export async function masterTrack({
       ebuInputIntegrated,
       gainStagingDb: stagingDb,
       autoPreGainBeforeLoudnormDb: autoPreGainDb,
+      adaptiveBackoffLu: adaptiveLoudness.backoffLu,
+      limiterReductionEstimateDb: adaptiveLoudness.limiterReductionEstimateDb,
       pass1_input_i: loudnormPass1Json?.input_i,
       pass1_output_i: loudnormPass1Json?.output_i,
       pass1_input_tp: loudnormPass1Json?.input_tp,
@@ -757,6 +1059,7 @@ export async function masterTrack({
   if (MASTER_DEBUG) {
     out.debugInfo = {
       audioFilter: audioFilterFinal,
+      requestedLufs,
       loudnormI: safeIntegratedLufs,
       loudnormLRA: lra,
       loudnormTP: tp,
@@ -764,6 +1067,9 @@ export async function masterTrack({
       loudnormPass1: loudnormPass1Json,
       gainStagingDb: stagingDb,
       autoPreGainBeforeLoudnormDb: autoPreGainDb,
+      adaptiveLoudness,
+      adaptivePregainFactors: adaptiveGain.factors,
+      hotClubProtection,
       ebuInputIntegrated,
       measuredEbuAfter: analysisAfter?.lufs ?? null,
       authorityEbuIntegrated,
@@ -779,7 +1085,12 @@ export async function masterTrack({
       incomingTargetLufsRaw: targetLufsIn,
       parsedClient: Number.isFinite(parsedClient) ? parsedClient : null,
       targetLufsResolved: targetLufs,
+      requestedLufs,
       safeIntegratedLufs,
+      adaptiveBackoffLu: adaptiveLoudness.backoffLu,
+      limiterReductionEstimateDb: adaptiveLoudness.limiterReductionEstimateDb,
+      pregainAppliedDb: autoPreGainDb,
+      transientProtection: adaptiveLoudness.transientProtection,
       loudnormTwoPass: usedTwoPass,
       pass1HasJson: Boolean(loudnormPass1Json?.input_i),
       authorityEbuIntegrated,
