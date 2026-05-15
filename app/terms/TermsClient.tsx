@@ -53,6 +53,7 @@ const SECTIONS = [
   },
   {
     title: "Provided “as is”",
+    narrow: true,
     body: (
       <p>
         The service is provided on an “as is” and “as available” basis. To the extent permitted by law, we disclaim

@@ -23,59 +23,84 @@ export default function ContactClient() {
         aria-hidden
       />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-[640px] flex-col px-5 pb-14 pt-8 md:px-10 md:pb-16 md:pt-10">
+      <main className="relative z-10 mx-auto flex w-full max-w-[600px] flex-col px-5 pb-20 pt-10 md:px-8 md:pb-24 md:pt-12">
         <motion.header
           initial={reduce ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE }}
-          className="text-center"
+          className="mx-auto max-w-[34rem] text-center"
         >
           <span className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70">
             Support
           </span>
-          <h1 className="mt-5 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white/95 sm:text-[2.25rem]">
+          <h1 className="mt-6 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white/95 sm:text-[2.35rem]">
             Contact
           </h1>
-          <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-muted md:text-[16px]">
-            Questions about mastering, exports, or your account? We are here to help — typically within one business day.
+          <p className="mx-auto mt-5 text-[16px] leading-[1.7] text-muted md:text-[17px] md:leading-[1.75]">
+            Questions about mastering, exports, or billing? We typically reply within one business day.
           </p>
         </motion.header>
 
         <motion.div
-          className="mt-10 rounded-xl border border-white/[0.09] bg-gradient-to-b from-white/[0.04] to-black/[0.4] p-6 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_48px_rgba(0,0,0,0.35)] backdrop-blur-md md:mt-12 md:p-8"
-          initial={reduce ? false : { opacity: 0, y: 10 }}
+          className="relative mx-auto mt-12 w-full max-w-[26rem] md:mt-14"
+          initial={reduce ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.08, ease: EASE }}
+          transition={{ duration: 0.65, delay: 0.06, ease: EASE }}
         >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-label-strong">Email</p>
-          <a
-            href="mailto:support@mastrify.com"
-            className="mt-3 inline-block text-[1.1rem] font-medium tracking-[-0.01em] text-white/90 transition hover:text-violet-200/90"
-          >
-            support@mastrify.com
-          </a>
-          <p className="mx-auto mt-4 max-w-sm text-[13px] leading-relaxed text-muted">
-            Include your track name and a short description of the issue. For export or payment questions, mention when
-            you completed your master.
-          </p>
+          <div
+            className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/18 via-transparent to-cyan-500/10 opacity-60 blur-sm"
+            aria-hidden
+          />
+          <div className="relative overflow-hidden rounded-[1.35rem] border border-white/[0.11] bg-gradient-to-b from-white/[0.05] to-black/[0.78] px-6 py-8 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(167,139,250,0.1),0_24px_56px_rgba(0,0,0,0.48)] backdrop-blur-2xl md:px-8 md:py-9">
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/28 to-transparent"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-violet-600/[0.07] blur-3xl"
+              aria-hidden
+            />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-label-strong">Email</p>
+            <a
+              href="mailto:hello@mastrify.com"
+              className="group/email mt-4 inline-block text-[1.2rem] font-medium tracking-[-0.02em] text-white/92 transition duration-300 hover:text-violet-200/90 sm:text-[1.35rem]"
+            >
+              <span className="relative">
+                hello@mastrify.com
+                <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-violet-300/60 transition-all duration-300 group-hover/email:w-full" />
+              </span>
+            </a>
+            <p className="mx-auto mt-5 max-w-[16rem] text-[14px] leading-[1.7] text-muted">
+              Include your track name and a short note. For export or payment help, mention when you completed your
+              master.
+            </p>
+          </div>
         </motion.div>
 
         <motion.div
-          className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
-          initial={reduce ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
+          className="mx-auto mt-12 flex w-full max-w-[22rem] flex-col items-stretch gap-3 md:mt-14"
+          initial={reduce ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.12, ease: EASE }}
         >
-          <PremiumButton href="/master" className="w-full sm:w-auto sm:min-w-[200px]">
+          <PremiumButton href="/master" className="w-full min-h-[52px]">
             Start mastering
           </PremiumButton>
           <Link
             href="/pricing"
-            className="text-[13px] text-muted-strong underline-offset-2 transition hover:text-white/85 hover:underline"
+            className="flex min-h-[48px] w-full items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.03] text-[14px] font-medium text-muted-strong shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-white/[0.04] transition duration-300 hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white/88"
           >
             View pricing
           </Link>
         </motion.div>
+
+        <p className="mx-auto mt-14 max-w-sm text-center text-[11px] leading-relaxed text-white/36 md:mt-16">
+          Prefer to explore first?{" "}
+          <Link href="/how-it-works" className="text-white/48 underline-offset-2 hover:text-violet-200/70 hover:underline">
+            See how Mastrify works
+          </Link>
+          .
+        </p>
       </main>
     </motion.div>
   )
