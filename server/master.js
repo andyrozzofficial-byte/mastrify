@@ -29,7 +29,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-transient-first"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-stable-dynamics"
 
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n))
@@ -147,7 +147,7 @@ function compressorForStyle(style) {
 
 /** Scale bus compression — 1 = full, lower = gentler (transient safety). */
 function scaleCompressorIntensity(comp, intensity) {
-  const i = clamp(intensity, 0.35, 1)
+  const i = clamp(intensity, 0.28, 1)
   if (i >= 0.98) return comp
   const ratio = 1 + (comp.ratio - 1) * i
   return {
@@ -164,37 +164,44 @@ function compressorForStyleAndTarget(style, integratedTarget, compIntensity = 1)
   const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
   let comp = base
   if ((style === "CLUB" || style === "FESTIVAL") && t >= -10.5) {
-    comp = { threshold: -17.8, ratio: 1.12, attack: 44, release: 340 }
+    comp = { threshold: -16.2, ratio: 1.08, attack: 48, release: 380 }
   } else if (style === "LOUD" && t >= -10.5) {
-    comp = { threshold: -18.2, ratio: 1.18, attack: 40, release: 310 }
+    comp = { threshold: -16.8, ratio: 1.1, attack: 46, release: 360 }
   } else if (t >= -10.5) {
     comp = {
-      threshold: base.threshold + 3.5,
-      ratio: Math.max(1.08, base.ratio - 0.28),
-      attack: base.attack + 12,
-      release: Math.min(400, base.release + 70),
+      threshold: base.threshold + 4.5,
+      ratio: Math.max(1.06, base.ratio - 0.32),
+      attack: base.attack + 16,
+      release: Math.min(420, base.release + 85),
     }
   } else if (t >= -12.5) {
     comp = {
-      threshold: base.threshold + 2,
-      ratio: Math.max(1.1, base.ratio - 0.15),
-      attack: base.attack + 6,
-      release: Math.min(360, base.release + 45),
+      threshold: base.threshold + 3.5,
+      ratio: Math.max(1.06, base.ratio - 0.22),
+      attack: base.attack + 10,
+      release: Math.min(400, base.release + 60),
+    }
+  } else {
+    comp = {
+      threshold: base.threshold + 4,
+      ratio: Math.max(1.05, base.ratio - 0.25),
+      attack: base.attack + 12,
+      release: Math.min(420, base.release + 70),
     }
   }
   return scaleCompressorIntensity(comp, compIntensity)
 }
 
-/** True-peak ceiling — more headroom when we back off hot targets (punch > exact LUFS). */
+/** Looser TP ceiling — less brick-wall limiting inside loudnorm (reduces pumping). */
 function truePeakForLoudnormTarget(integratedTarget, requestedTarget) {
   const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
   const req =
     typeof requestedTarget === "number" && Number.isFinite(requestedTarget) ? requestedTarget : t
-  if (req >= -10 && t < req - 0.3) return -1.05
-  if (t >= -9.5) return -0.85
-  if (t >= -10.5) return -1
-  if (t >= -11.5) return -1.25
-  if (t >= -13.5) return -1.5
+  if (req >= -10 && t < req - 0.3) return -1.35
+  if (t >= -9.5) return -1.15
+  if (t >= -10.5) return -1.25
+  if (t >= -11.5) return -1.45
+  if (t >= -13.5) return -1.65
   return -2
 }
 
@@ -212,11 +219,36 @@ function lraForStyleAndTarget(style, integratedTarget, requestedTarget) {
   const req =
     typeof requestedTarget === "number" && Number.isFinite(requestedTarget) ? requestedTarget : t
   if (isHotLoudnessTarget(req) && (style === "CLUB" || style === "FESTIVAL" || style === "LOUD")) {
-    return Math.max(base, 11)
+    return Math.max(base, 13)
   }
-  if (t <= -12) return Math.max(base, 11)
-  if (req - t > 0.35) return Math.min(base + 1.5, 12)
-  return base
+  if (t <= -12) return Math.max(base, 13)
+  if (req - t > 0.35) return Math.min(base + 2, 14)
+  return Math.max(base, 12)
+}
+
+/** Ask loudnorm for slightly lower I= than resolved target — less gain-riding, stable dynamics. */
+function loudnessTargetForLoudnorm(resolvedLufs, requestedLufs, ctx) {
+  let slack = isHotLoudnessTarget(requestedLufs) ? 0.65 : 0.5
+  const dr = ctx?.dynamicRange
+  const bass = ctx?.bassWeight
+  if (dr != null && dr > 9.5) slack += 0.25
+  if (dr != null && dr > 12) slack += 0.2
+  if (bass != null && bass > 0.4) slack += 0.2
+  if (bass != null && bass > 0.5) slack += 0.15
+  const floor = isHotLoudnessTarget(requestedLufs) ? -11.5 : -16
+  const loudnormI = Math.max(resolvedLufs - slack, floor)
+  return {
+    loudnormI: Number(loudnormI.toFixed(2)),
+    pursuitSlackLu: Number(slack.toFixed(2)),
+  }
+}
+
+function softenLoudnormOffsetDb(offsetDb, cap = 2) {
+  if (!Number.isFinite(offsetDb)) return offsetDb
+  const sign = Math.sign(offsetDb) || 1
+  const abs = Math.abs(offsetDb)
+  if (abs <= cap) return offsetDb
+  return sign * (cap + (abs - cap) * 0.22)
 }
 
 function headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated, pass1Json = null) {
@@ -265,16 +297,25 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
       backoff += 0.2
       reasons.push(`streamingLargeGap=${(requested - integrated).toFixed(1)}LU`)
     }
-    backoff = Math.min(backoff, 0.75)
+    backoff += 0.35
+    reasons.push("streamingStabilitySlack")
+    if (integrated != null && requested - integrated > 4) {
+      backoff += 0.25
+      reasons.push(`streamingGap=${(requested - integrated).toFixed(1)}LU`)
+    }
+    backoff = Math.min(backoff, 1.25)
     const resolved = Math.max(requested - backoff, -16)
     return {
       requested,
       resolved,
       backoffLu: Number(backoff.toFixed(2)),
       limiterReductionEstimateDb: Number(backoff.toFixed(2)),
-      transientProtection: { active: backoff > 0.05, reasons, preserveTransients: true },
+      transientProtection: { active: true, reasons, preserveTransients: true },
     }
   }
+
+  backoff += 0.4
+  reasons.push("clubStabilitySlack")
   const dr = ctx.dynamicRange
   if (dr != null && dr > 9) {
     backoff += 0.25
@@ -323,10 +364,10 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
     reasons.push(`pass1LRA=${inputLra.toFixed(1)}LU`)
   }
 
-  const maxBackoff = 1.5
+  const maxBackoff = 2
   backoff = Math.min(backoff, maxBackoff)
   let resolved = requested - backoff
-  resolved = Math.max(resolved, -10.5)
+  resolved = Math.max(resolved, -11)
   resolved = Math.min(resolved, requested)
 
   const limiterReductionEstimateDb = Number((requested - resolved).toFixed(2))
@@ -358,7 +399,7 @@ function computeAdaptivePregain(resolvedLufs, ctx, pregainScale = 1) {
   if (gap <= 1.15) return { pregainDb: 0, factors: { gap, note: "nearTarget" }, maxGainCap: 0 }
 
   const hot = isHotLoudnessTarget(resolvedLufs)
-  const maxGain = hot ? 1.25 : 3
+  const maxGain = hot ? 0.85 : 2.5
   let factor = hot ? 0.1 : 0.2
   const factors = { gap, hot, baseFactor: factor, maxGainCap: maxGain }
 
@@ -377,9 +418,13 @@ function computeAdaptivePregain(resolvedLufs, ctx, pregainScale = 1) {
   }
 
   const bass = ctx.bassWeight
-  if (bass != null && bass > 0.4) {
-    factor *= 0.7
-    factors.bassScale = 0.7
+  if (bass != null && bass > 0.38) {
+    factor *= 0.55
+    factors.bassScale = 0.55
+  }
+  if (bass != null && bass > 0.5) {
+    factor *= 0.5
+    factors.bassScaleHeavy = 0.5
   }
 
   if (ctx.peakDb != null && ctx.peakDb > -2.5) {
@@ -431,9 +476,24 @@ function assessTransientSafety({
   let targetBackoffLu = 0
   let loudnormOverDriven = false
   let estimatedGainReductionDb = 0
+  let transientSuppressionRisk = 0
+  const lowEndProtectionTriggers = []
 
   const crest = estimateCrestDb(ctx)
   const dr = ctx.dynamicRange
+  const bass = ctx.bassWeight
+
+  if (bass != null && bass > 0.42) {
+    lowEndProtectionTriggers.push(`heavyBass=${(bass * 100).toFixed(0)}%`)
+    compIntensity *= 0.72
+    transientSuppressionRisk += 0.22
+  }
+  if (bass != null && bass > 0.5) {
+    lowEndProtectionTriggers.push(`subDominant=${(bass * 100).toFixed(0)}%`)
+    compIntensity *= 0.68
+    targetBackoffLu += 0.25
+    transientSuppressionRisk += 0.18
+  }
 
   if (crest != null && crest < 8) {
     triggers.push(`lowCrest=${crest.toFixed(1)}dB`)
@@ -486,11 +546,18 @@ function assessTransientSafety({
       targetBackoffLu += 0.3
       loudnormOverDriven = true
     }
-    if (offset != null && Math.abs(offset) > 4.5) {
+    if (offset != null && Math.abs(offset) > 2.2) {
       triggers.push(`pass1LoudnormOffset=${offset.toFixed(1)}dB`)
-      pregainScale *= 0.4
-      compIntensity *= 0.85
-      loudnormOverDriven = true
+      transientSuppressionRisk += Math.min(0.45, Math.abs(offset) / 8)
+      if (Math.abs(offset) > 3.2) {
+        pregainScale *= 0.35
+        compIntensity *= 0.8
+        targetBackoffLu += 0.35
+        loudnormOverDriven = true
+      } else {
+        pregainScale *= 0.55
+        compIntensity *= 0.88
+      }
       estimatedGainReductionDb = Math.max(estimatedGainReductionDb, Math.abs(offset))
     }
     if (inputI != null && outputI != null && outputI - inputI > 2.2) {
@@ -500,9 +567,10 @@ function assessTransientSafety({
     }
   }
 
-  targetBackoffLu = Math.min(targetBackoffLu, 1.25)
+  targetBackoffLu = Math.min(targetBackoffLu, 1.75)
   pregainScale = Math.max(0, Math.min(1, pregainScale))
-  compIntensity = Math.max(0.35, Math.min(1, compIntensity))
+  compIntensity = Math.max(0.28, Math.min(1, compIntensity))
+  transientSuppressionRisk = Math.min(1, Number(transientSuppressionRisk.toFixed(2)))
 
   const active = triggers.length > 0
   let adjustedResolved = resolvedLufs
@@ -520,17 +588,70 @@ function assessTransientSafety({
     adjustedResolved: Number(adjustedResolved.toFixed(2)),
     loudnormOverDriven,
     estimatedGainReductionDb: Number(estimatedGainReductionDb.toFixed(2)),
+    transientSuppressionRisk,
+    lowEndProtectionTriggers,
     crestDb: crest != null ? Number(crest.toFixed(2)) : null,
   }
 }
 
-/** Light low-end balance only — no clipper (avoids stacked limiting before loudnorm). */
+/** Sub HP + low-mid tighten so limiter/loudnorm sees less sub-driven ducking. */
+function lowEndProtectionFilters(ctx, requestedLufs) {
+  const bass = ctx?.bassWeight
+  const hot = isHotLoudnessTarget(requestedLufs)
+  const heavy = bass != null && bass > 0.38
+  if (!heavy && !hot) return { filters: "", triggers: [] }
+
+  const triggers = []
+  if (heavy) triggers.push(`bassWeight=${((bass ?? 0) * 100).toFixed(0)}%`)
+  if (hot) triggers.push("hotTarget")
+
+  const filters =
+    `equalizer=f=62:t=q:w=0.8:g=-0.42,` +
+    `equalizer=f=98:t=q:w=0.92:g=-0.28,` +
+    `equalizer=f=165:t=q:w=1:g=-0.14,` +
+    (heavy ? `equalizer=f=42:t=q:w=0.7:g=-0.35,` : "")
+
+  return { filters, triggers }
+}
+
+/** Final sub tighten immediately before ceiling/loudnorm. */
+function lowEndPreLoudnessFilters(ctx) {
+  const bass = ctx?.bassWeight
+  if (bass == null || bass < 0.35) {
+    return `equalizer=f=88:t=q:w=0.95:g=-0.12,`
+  }
+  return (
+    `equalizer=f=78:t=q:w=0.88:g=-0.22,` +
+    `equalizer=f=130:t=q:w=1:g=-0.14,`
+  )
+}
+
+/** Slow ceiling — catches peaks without fast gain-riding (reduces kick pumping). */
+function gentleCeilingLimiter() {
+  return `alimiter=level_in=1:level_out=0.93:limit=0.94:attack=18:release=240:asc=0,`
+}
+
+function estimateLimiterGainReductionDb(pass1Json, tpCeiling) {
+  const offset = pass1Json ? parseLoudnormJsonNum(pass1Json, "target_offset") : null
+  if (offset == null && pass1Json) {
+    const alt = parseLoudnormJsonNum(pass1Json, "offset")
+    if (alt != null) return Math.abs(alt)
+  }
+  const inputTp = pass1Json ? parseLoudnormJsonNum(pass1Json, "input_tp") : null
+  let gr = offset != null ? Math.abs(offset) : 0
+  if (inputTp != null && tpCeiling != null && inputTp > tpCeiling) {
+    gr = Math.max(gr, inputTp - tpCeiling)
+  }
+  return Number(gr.toFixed(2))
+}
+
+/** Light low-end balance for club presets. */
 function clubProtectionFilters(style, requestedLufs) {
   if (!isHotLoudnessTarget(requestedLufs)) return ""
   if (style !== "CLUB" && style !== "FESTIVAL" && !(style === "LOUD" && requestedLufs >= -10.5)) {
     return ""
   }
-  return `equalizer=f=52:t=q:w=0.85:g=-0.28,` + `equalizer=f=120:t=q:w=0.92:g=-0.15,`
+  return `equalizer=f=52:t=q:w=0.85:g=-0.22,`
 }
 
 function logAdaptiveLoudness(payload) {
@@ -542,6 +663,12 @@ function logAdaptiveLoudness(payload) {
 function logTransientSafety(payload) {
   if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
     console.log("[master] transient safety", payload)
+  }
+}
+
+function logDynamicsMastering(payload) {
+  if (MASTER_DEBUG || PIPELINE_DEBUG || LUFS_TRACE) {
+    console.log("[master] dynamics mastering", payload)
   }
 }
 
@@ -712,18 +839,22 @@ function extractLoudnormJsonFromStderr(stderr) {
   return null
 }
 
-function loudnormMeasuredToOpts(j) {
+function loudnormMeasuredToOpts(j, offsetCap = 2) {
   if (!j || j.input_i == null) return null
   const qn = (v) => {
     const n = parseFloat(String(v).replace(/"/g, "").trim())
     return Number.isFinite(n) ? n.toFixed(4) : "0.0000"
   }
+  const rawOffset = parseFloat(String(j.target_offset ?? j.offset ?? "").replace(/"/g, "").trim())
+  const softened = Number.isFinite(rawOffset) ? softenLoudnormOffsetDb(rawOffset, offsetCap) : 0
   return {
     measured_I: qn(j.input_i),
     measured_LRA: qn(j.input_lra),
     measured_TP: qn(j.input_tp),
     measured_thresh: qn(j.input_thresh),
-    offset: qn(j.target_offset),
+    offset: softened.toFixed(4),
+    offsetRaw: Number.isFinite(rawOffset) ? rawOffset.toFixed(4) : null,
+    offsetSoftened: Number.isFinite(rawOffset) && Math.abs(rawOffset - softened) > 0.05,
   }
 }
 
@@ -872,6 +1003,13 @@ export async function masterTrack({
   let adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, headroomCtxInitial, 1)
   let autoPreGainDb = adaptiveGain.pregainDb
   let compIntensity = 1
+  if (!isHotLoudnessTarget(requestedLufs)) compIntensity = 0.7
+  if (headroomCtxInitial.dynamicRange != null && headroomCtxInitial.dynamicRange > 10) {
+    compIntensity *= 0.82
+  }
+  if (headroomCtxInitial.bassWeight != null && headroomCtxInitial.bassWeight > 0.4) {
+    compIntensity *= 0.74
+  }
 
   let transientSafety = assessTransientSafety({
     requestedLufs,
@@ -905,6 +1043,9 @@ export async function masterTrack({
     isHotLoudnessTarget(requestedLufs) &&
     (style === "CLUB" || style === "FESTIVAL" || (style === "LOUD" && requestedLufs >= -10.5))
 
+  let loudnormTargetPlan = loudnessTargetForLoudnorm(safeIntegratedLufs, requestedLufs, headroomCtxInitial)
+  let loudnormI = loudnormTargetPlan.loudnormI
+
   logTransientSafety({
     phase: "pre-pass1",
     ...transientSafety,
@@ -929,16 +1070,23 @@ export async function masterTrack({
     philosophy: "transient-first-minimal-pregain",
   })
 
-  function buildColorPipeline(integratedLufs, pregainDb, compInt = compIntensity) {
-    const lraVal = lraForStyleAndTarget(style, integratedLufs, requestedLufs)
-    const compVal = compressorForStyleAndTarget(style, integratedLufs, compInt)
-    const tpVal = truePeakForLoudnormTarget(integratedLufs, requestedLufs)
+  function buildColorPipeline(resolvedLufs, pregainDb, compInt = compIntensity, ctx = headroomCtxInitial) {
+    const targetPlan = loudnessTargetForLoudnorm(resolvedLufs, requestedLufs, ctx)
+    const lufsForLoudnorm = targetPlan.loudnormI
+    const lraVal = lraForStyleAndTarget(style, resolvedLufs, requestedLufs)
+    const compVal = compressorForStyleAndTarget(style, resolvedLufs, compInt)
+    const tpVal = truePeakForLoudnormTarget(resolvedLufs, requestedLufs)
     const tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
     const stereoStage = buildStereoStage(stereoEnhance, style, hotClubProtection)
     const styleTail = styleCharacterFilters(style)
     const clubProt = clubProtectionFilters(style, requestedLufs)
+    const lowEndGuard = lowEndProtectionFilters(ctx, requestedLufs)
     const volumeStaging = stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
     const autoPreVol = pregainDb > 0 ? `volume=${pregainDb.toFixed(2)}dB,` : ""
+    const compStage =
+      compInt < 0.52
+        ? ""
+        : `acompressor=threshold=${compVal.threshold}dB:ratio=${compVal.ratio}:attack=${compVal.attack}:release=${compVal.release},`
 
     const mud = tone.mudGain.toFixed(3)
     const mudW = tone.mudWideGain.toFixed(3)
@@ -949,32 +1097,39 @@ export async function masterTrack({
     const pr = tone.presenceDb.toFixed(3)
 
     const colorBase =
-      `highpass=f=25,` +
+      `highpass=f=40,` +
       volumeStaging +
       stereoStage +
       `equalizer=f=200:t=q:w=1:g=${mud},` +
       `equalizer=f=320:t=q:w=1:g=${mudW},` +
       `equalizer=f=${tone.lowHz}:t=q:w=0.92:g=${lowG},` +
+      lowEndGuard.filters +
       `equalizer=f=9800:t=q:w=1:g=${hi9},` +
       `equalizer=f=4200:t=q:w=0.92:g=${pr},` +
-      `acompressor=threshold=${compVal.threshold}dB:ratio=${compVal.ratio}:attack=${compVal.attack}:release=${compVal.release},` +
+      compStage +
       `equalizer=f=${tone.airHz}:t=q:w=1.15:g=${airG},` +
       `equalizer=f=${tone.dipAboveAirHz}:t=q:w=1:g=${dipG},` +
       styleTail +
       clubProt +
+      lowEndPreLoudnessFilters(ctx) +
+      gentleCeilingLimiter() +
       autoPreVol
 
     return {
       colorBase,
-      loudnormStem: `I=${integratedLufs}:LRA=${lraVal}:TP=${tpVal}`,
+      loudnormStem: `I=${lufsForLoudnorm}:LRA=${lraVal}:TP=${tpVal}`,
       lra: lraVal,
       tp: tpVal,
       comp: compVal,
+      loudnormI: lufsForLoudnorm,
+      pursuitSlackLu: targetPlan.pursuitSlackLu,
+      lowEndProtectionTriggers: lowEndGuard.triggers,
+      compressionBypassed: compInt < 0.52,
     }
   }
 
-  async function runLoudnormPasses(integratedLufs, pregainDb, compInt = compIntensity) {
-    const pipe = buildColorPipeline(integratedLufs, pregainDb, compInt)
+  async function runLoudnormPasses(resolvedLufs, pregainDb, compInt = compIntensity, ctx = headroomCtxInitial) {
+    const pipe = buildColorPipeline(resolvedLufs, pregainDb, compInt, ctx)
     const stem = pipe.loudnormStem
     let pass1Json = null
     let filterFinal = ""
@@ -1029,6 +1184,8 @@ export async function masterTrack({
       pass1ExitCode: exitCode,
       lra: pipe.lra,
       tp: pipe.tp,
+      loudnormI: pipe.loudnormI,
+      pursuitSlackLu: pipe.pursuitSlackLu,
     }
   }
 
@@ -1039,7 +1196,11 @@ export async function masterTrack({
     pass1ExitCode,
     lra,
     tp,
+    loudnormI: passLoudnormI,
+    pursuitSlackLu: passPursuitSlack,
   } = await runLoudnormPasses(safeIntegratedLufs, autoPreGainDb)
+  loudnormI = passLoudnormI ?? loudnormTargetPlan.loudnormI
+  if (passPursuitSlack != null) loudnormTargetPlan = { ...loudnormTargetPlan, pursuitSlackLu: passPursuitSlack }
 
   if (loudnormPass1Json) {
     const ctxPass1 = headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated, loudnormPass1Json)
@@ -1072,6 +1233,27 @@ export async function masterTrack({
         pass1Safety.pregainScale
       )
       autoPreGainDb = adaptiveGain.pregainDb
+      loudnormTargetPlan = loudnessTargetForLoudnorm(safeIntegratedLufs, requestedLufs, ctxPass1)
+
+      const limiterGr = estimateLimiterGainReductionDb(loudnormPass1Json, tp)
+      logDynamicsMastering({
+        phase: "pass1-refine",
+        pregainBeforeLoudnormDb: autoPreGainDb,
+        loudnormI: loudnormTargetPlan.loudnormI,
+        resolvedSafeLufs: safeIntegratedLufs,
+        pursuitSlackLu: loudnormTargetPlan.pursuitSlackLu,
+        loudnormOffsetRaw: parseLoudnormJsonNum(loudnormPass1Json, "target_offset"),
+        loudnormOffsetSoftened: loudnormMeasuredToOpts(loudnormPass1Json)?.offsetSoftened ?? null,
+        limiterGainReductionEstimateDb: limiterGr,
+        transientSuppressionRisk: pass1Safety.transientSuppressionRisk,
+        lowEndProtectionTriggers: [
+          ...(pass1Safety.lowEndProtectionTriggers ?? []),
+          ...(buildColorPipeline(safeIntegratedLufs, autoPreGainDb, compIntensity, ctxPass1)
+            .lowEndProtectionTriggers ?? []),
+        ],
+        compressionIntensity: compIntensity,
+        loudnormOverDriven: pass1Safety.loudnormOverDriven,
+      })
 
       logTransientSafety({
         phase: "pass1-refine",
@@ -1100,9 +1282,34 @@ export async function masterTrack({
         pass1ExitCode,
         lra,
         tp,
-      } = await runLoudnormPasses(safeIntegratedLufs, autoPreGainDb, compIntensity))
+        loudnormI: passLoudnormI,
+        pursuitSlackLu: passPursuitSlack,
+      } = await runLoudnormPasses(safeIntegratedLufs, autoPreGainDb, compIntensity, ctxPass1))
+      loudnormI = passLoudnormI ?? loudnormTargetPlan.loudnormI
+      if (passPursuitSlack != null) {
+        loudnormTargetPlan = { ...loudnormTargetPlan, pursuitSlackLu: passPursuitSlack }
+      }
     }
   }
+
+  const finalLimiterGr = estimateLimiterGainReductionDb(loudnormPass1Json, tp)
+  logDynamicsMastering({
+    phase: "final",
+    pregainBeforeLoudnormDb: autoPreGainDb,
+    loudnormI,
+    resolvedSafeLufs: safeIntegratedLufs,
+    requestedLufs,
+    pursuitSlackLu: loudnormTargetPlan.pursuitSlackLu,
+    loudnormOffsetCorrection: loudnormPass1Json
+      ? parseLoudnormJsonNum(loudnormPass1Json, "target_offset")
+      : null,
+    limiterGainReductionEstimateDb: finalLimiterGr,
+    transientSuppressionRisk: transientSafety?.transientSuppressionRisk ?? 0,
+    transientSafetyTriggers: transientSafety?.triggers ?? [],
+    lowEndProtectionTriggers: transientSafety?.lowEndProtectionTriggers ?? [],
+    compressionIntensity: compIntensity,
+    loudnormOverDriven: transientSafety?.loudnormOverDriven ?? false,
+  })
 
   if (LUFS_TRACE) {
     console.log("[LUFS_TRACE] loudnorm path", {
@@ -1123,7 +1330,9 @@ export async function masterTrack({
       targetLufsClient: Number.isFinite(parsedClient) ? parsedClient : null,
       targetLufsResolved: targetLufs,
       requestedLufs,
-      loudnormI: safeIntegratedLufs,
+      resolvedSafeLufs: safeIntegratedLufs,
+      loudnormI,
+      pursuitSlackLu: loudnormTargetPlan.pursuitSlackLu,
       loudnormLRA: lra,
       loudnormTP: tp,
       loudnormTwoPass: usedTwoPass,
@@ -1131,7 +1340,10 @@ export async function masterTrack({
       gainStagingDb: stagingDb,
       autoPreGainBeforeLoudnormDb: autoPreGainDb,
       compressionIntensity: compIntensity,
+      limiterGainReductionEstimateDb: finalLimiterGr,
+      transientSuppressionRisk: transientSafety?.transientSuppressionRisk ?? null,
       transientSafetyTriggers: transientSafety?.triggers ?? [],
+      lowEndProtectionTriggers: transientSafety?.lowEndProtectionTriggers ?? [],
       loudnormOverDriven: transientSafety?.loudnormOverDriven ?? false,
       estimatedGainReductionDb: transientSafety?.estimatedGainReductionDb ?? null,
       adaptiveBackoffLu: adaptiveLoudness.backoffLu,
@@ -1271,7 +1483,8 @@ export async function masterTrack({
       console.log("[pipeline] masterTrack analyzed file", {
         analyzedPath: outputPath,
         bytes: sz,
-        loudnormI: safeIntegratedLufs,
+        resolvedSafeLufs: safeIntegratedLufs,
+        loudnormI,
         integratedLufs: analysisAfter.lufs,
         lufsRmsProxy: analysisAfter.lufsRmsProxy ?? null,
         stereoWidth: analysisAfter.stereoWidth,
@@ -1303,13 +1516,18 @@ export async function masterTrack({
     out.debugInfo = {
       audioFilter: audioFilterFinal,
       requestedLufs,
-      loudnormI: safeIntegratedLufs,
+      resolvedSafeLufs: safeIntegratedLufs,
+      loudnormI,
+      pursuitSlackLu: loudnormTargetPlan.pursuitSlackLu,
       loudnormLRA: lra,
       loudnormTP: tp,
       loudnormTwoPass: usedTwoPass,
       loudnormPass1: loudnormPass1Json,
       gainStagingDb: stagingDb,
       autoPreGainBeforeLoudnormDb: autoPreGainDb,
+      limiterGainReductionEstimateDb: finalLimiterGr,
+      transientSuppressionRisk: transientSafety?.transientSuppressionRisk,
+      lowEndProtectionTriggers: transientSafety?.lowEndProtectionTriggers,
       adaptiveLoudness,
       adaptivePregainFactors: adaptiveGain.factors,
       transientSafety,
