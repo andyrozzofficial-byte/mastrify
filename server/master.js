@@ -1930,6 +1930,7 @@ export async function masterTrack({
   let staticLoudnormMode = transparentLoudnorm
   let loudnormLinear = !staticLoudnormMode
   let staticSafetyMeta = null
+  let postRenderMovement = null
   if (rawChainIsolation) {
     skipPass2Offset = false
     staticLoudnormMode = false
@@ -2796,7 +2797,6 @@ export async function masterTrack({
 
   await encodeMasterWav(audioFilterFinal)
 
-  let postRenderMovement = null
   if (!chainDebugActive) {
     const inputMovementProbe = await probeMomentaryLufsSeries(file, "")
     const outputMovementProbe = await probeMomentaryLufsSeries(outputPath, "")
