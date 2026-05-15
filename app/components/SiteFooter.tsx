@@ -9,7 +9,7 @@ const product = [
 ] as const
 
 const support = [
-  { href: "/how-it-works", label: "FAQ" },
+  { href: "/how-it-works", label: "Why Mastrify" },
   { href: "mailto:support@mastrify.com", label: "Contact" },
   { href: "#privacy", label: "Privacy" },
 ] as const
@@ -158,6 +158,13 @@ export default function SiteFooter() {
             <p className="text-[11px] text-white/38 md:text-xs">© {year} Mastrify. All rights reserved.</p>
           </div>
         </div>
+
+        <p className="mt-6 border-t border-white/[0.04] pt-5 text-center text-[10px] font-medium tracking-[0.16em] text-white/22 md:text-left">
+          Designed &amp; engineered by{" "}
+          <span className="text-white/30 transition duration-300 hover:text-violet-200/50 hover:drop-shadow-[0_0_10px_rgba(167,139,250,0.18)]">
+            Lunov
+          </span>
+        </p>
       </div>
     </footer>
   )

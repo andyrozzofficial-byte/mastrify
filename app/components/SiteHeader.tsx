@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 const links = [
   { href: "/analyze", label: "Analyze" },
   { href: "/master", label: "Master" },
+  { href: "/how-it-works", label: "Why Mastrify" },
   { href: "/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
 ]
