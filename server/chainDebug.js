@@ -389,7 +389,7 @@ export async function runFullChainSweepExport({
     const filter = resolved?.audioFilter ?? ""
     const wavFileName = fileNameForMode(modeId)
     const wavPath = path.join(outputDir, wavFileName)
-    const encodeOk = await encodeWav(filter, wavPath)
+    const encodeOk = await encodeWav(filter, wavPath, modeId)
     if (!encodeOk) {
       renders.push({
         mode: modeId,

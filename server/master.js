@@ -299,6 +299,25 @@ function compressorForStyle(style) {
   return { threshold: -19.2, ratio: 1.28, attack: 38, release: 300 }
 }
 
+/** FFmpeg acompressor — makeup must be 1–64 (0 is invalid and fails the filter). */
+function formatAcompressorFilter(comp) {
+  const threshold = Number(comp?.threshold)
+  const ratio = Number(comp?.ratio)
+  const attack = Math.max(1, Math.round(Number(comp?.attack)))
+  const release = Math.max(1, Math.round(Number(comp?.release)))
+  if (!Number.isFinite(threshold) || !Number.isFinite(ratio)) {
+    throw new Error(`Invalid compressor parameters: ${JSON.stringify(comp)}`)
+  }
+  const ratioSafe = Math.max(1.01, Math.min(20, ratio))
+  return (
+    `acompressor=threshold=${threshold.toFixed(2)}dB` +
+    `:ratio=${ratioSafe.toFixed(2)}` +
+    `:attack=${attack}` +
+    `:release=${release}` +
+    `:makeup=1,`
+  )
+}
+
 /** Scale bus compression — lower intensity = gentler ratio, higher threshold, faster recovery. */
 function scaleCompressorIntensity(comp, intensity, streaming = false) {
   const i = clamp(intensity, 0.22, 1)
@@ -1728,9 +1747,7 @@ export async function masterTrack({
       stages.pregain && pregainDb > 0 ? `volume=${pregainDb.toFixed(2)}dB,` : ""
     const compBypass = rawIsolation || chainDebugModeId === "D" ? 0 : transparent ? 0.58 : 0.48
     const compStage =
-      stages.comp && compInt >= compBypass
-        ? `acompressor=threshold=${compVal.threshold}dB:ratio=${compVal.ratio}:attack=${compVal.attack}:release=${compVal.release}:makeup=0,`
-        : ""
+      stages.comp && compInt >= compBypass ? formatAcompressorFilter(compVal) : ""
     const limiterStage = stages.limiter
       ? rawIsolation
         ? peakContainmentLimiter(streaming, false, 1)
@@ -1898,7 +1915,18 @@ export async function masterTrack({
     }
   }
 
-  async function encodeFilterToWav(filterAf, destPath) {
+  async function encodeFilterToWav(filterAf, destPath, sweepModeId = null) {
+    const logDetail = rawChainIsolation && (sweepModeId === "D" || sweepModeId === "E")
+    if (logDetail || rawChainIsolation) {
+      console.log("[master] chain sweep encode", {
+        mode: sweepModeId ?? "?",
+        destPath,
+        audioFilter: filterAf,
+        compSegment: filterAf.includes("acompressor")
+          ? filterAf.match(/acompressor=[^,]+/)?.[0] ?? null
+          : null,
+      })
+    }
     const encodeArgs = [
       "-y",
       "-i",
@@ -1916,10 +1944,30 @@ export async function masterTrack({
       filterAf,
       destPath,
     ]
-    const enc = await runFfmpegCapture(encodeArgs, "chain-sweep-encode")
-    if (enc.code !== 0) return false
+    const enc = await runFfmpegCapture(encodeArgs, `chain-sweep-encode-${sweepModeId ?? "x"}`)
+    if (enc.code !== 0) {
+      if (logDetail || rawChainIsolation) {
+        console.error("[master] chain sweep ffmpeg failed", {
+          mode: sweepModeId,
+          exitCode: enc.code,
+          stderrTail: enc.stderr?.slice(-5000) ?? "",
+        })
+      }
+      return false
+    }
     await waitForMasterOutputReady(destPath)
-    return fs.existsSync(destPath) && fs.statSync(destPath).size > 1000
+    const bytes = fs.existsSync(destPath) ? fs.statSync(destPath).size : 0
+    if (bytes < 1000) {
+      const msg = `Chain sweep mode ${sweepModeId ?? "?"} produced empty WAV (${bytes} bytes): ${destPath}`
+      console.error("[master] chain sweep empty output", {
+        mode: sweepModeId,
+        bytes,
+        audioFilter: filterAf,
+        stderrTail: enc.stderr?.slice(-3000) ?? "",
+      })
+      throw new Error(msg)
+    }
+    return true
   }
 
   if (rawChainIsolation) {
