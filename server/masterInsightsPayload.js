@@ -66,7 +66,13 @@ export function buildMasteringInsights({
     emotionalContrastScore:
       masteringDecisions?.emotionalMovement?.emotionalContrastScore ?? null,
     cumulativeProcessingCapped: Boolean(masteringDecisions?.processingLedger?.overBudget),
-    trustMix: Boolean(masteringDecisions?.processingLedger?.trustMix),
+    trustMix: Boolean(
+      masteringDecisions?.trustTheMix?.active ?? masteringDecisions?.processingLedger?.trustMix
+    ),
+    earnedProcessing: Boolean(masteringDecisions?.earnedProcessing?.earned),
+    protectEmotionalMovement: Boolean(
+      masteringDecisions?.processingLedger?.preserveEmotionalMovement
+    ),
   }
 }
 
@@ -90,6 +96,8 @@ export function attachMasteringInsightsToAnalysis(analysis, insights) {
     emotionalContrastScore: insights.emotionalContrastScore,
     cumulativeProcessingCapped: insights.cumulativeProcessingCapped,
     trustMix: insights.trustMix,
+    earnedProcessing: insights.earnedProcessing,
+    protectEmotionalMovement: insights.protectEmotionalMovement,
   }
 }
 

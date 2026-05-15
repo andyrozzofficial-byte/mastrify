@@ -14,6 +14,7 @@ import {
   applyPerceptualToneToBase,
   mergeProcessingIntensity,
   loudnessSlackFromLedger,
+  shouldApplyStyleCharacter,
 } from "./masteringDecisions.js"
 import {
   MASTRIFY_LUFS_TRACE as LUFS_TRACE,
@@ -47,7 +48,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-human-perception-ledger"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-trust-and-emotional-movement"
 
 /** Material transparent mode — transient/dynamic mixes; musicality over exact LUFS. */
 const MATERIAL_TRANSPARENT_MIN_CREST_DB = 11
@@ -2034,7 +2035,8 @@ export async function masterTrack({
     compIntensity = mergeProcessingIntensity(
       compIntensity,
       masteringDecisions.materialProfile,
-      ledger
+      ledger,
+      masteringDecisions.earnedProcessing
     )
     limiterIntensity = Math.min(
       limiterIntensity,
@@ -2044,7 +2046,8 @@ export async function masterTrack({
     limiterIntensity *= ledger?.stages?.limiter ?? 1
     extraPursuitSlackLu += loudnessSlackFromLedger(
       ledger,
-      masteringDecisions.emotionalMovement
+      masteringDecisions.emotionalMovement,
+      masteringDecisions.trustTheMix
     )
     if (masteringDecisions.materialProfile.preserveMix) {
       compIntensity = Math.min(compIntensity, 0.22)
@@ -2210,7 +2213,12 @@ export async function masterTrack({
       !rawIsolation && masteringDecisions?.stereoPlan?.filters
         ? masteringDecisions.stereoPlan.filters
         : ""
-    const styleTail = styleCharacterFilters(style)
+    const styleTail =
+      !rawIsolation &&
+      masteringDecisions &&
+      shouldApplyStyleCharacter(masteringDecisions.trustTheMix, masteringDecisions.processingLedger)
+        ? styleCharacterFilters(style)
+        : ""
     const clubProt = clubProtectionFilters(style, requestedLufs)
     const lowEndGuard = rawIsolation
       ? { filters: "", triggers: [] }

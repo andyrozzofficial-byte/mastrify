@@ -17,6 +17,8 @@ export type MasteringInsightsInput = {
   materialProfile?: string | null
   confidenceMessages?: MasteringConfidenceMessage[]
   trustMix?: boolean
+  earnedProcessing?: boolean
+  protectEmotionalMovement?: boolean
   style?: MasterStylePreset | string
 }
 
@@ -125,6 +127,8 @@ export function mergeInsightsFromAnalysis(
       ? (analysisAfter.confidenceMessages as MasteringConfidenceMessage[])
       : [],
     trustMix: analysisAfter?.trustMix === true,
+    earnedProcessing: analysisAfter?.earnedProcessing === true,
+    protectEmotionalMovement: analysisAfter?.protectEmotionalMovement === true,
     style,
   }
 }
@@ -274,6 +278,8 @@ export function buildQualityTags(
   }
   if (insights.materialProfile === "ambient") tags.push("Spacious")
   if (insights.trustMix) tags.push("Mix trusted")
+  if (insights.protectEmotionalMovement) tags.push("Movement preserved")
+  if (insights.earnedProcessing) tags.push("Earned processing")
   if (insights.materialTransparent) tags.push("Transparent")
   if (insights.adaptiveApplied) tags.push("Transient-safe")
   if (dr != null && dr >= 8) tags.push("Dynamic")

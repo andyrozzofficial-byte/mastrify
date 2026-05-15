@@ -28,8 +28,8 @@ function estimateCrestFromAnalysis(analysis, integratedLufs) {
   return num(analysis?.dynamicRange)
 }
 
-/** Deterministic per-mix spread so same LUFS target ≠ same mastering path. */
-function materialFingerprintBlend(analysis, ctx) {
+/** Deterministic per-mix spread — same LUFS/genre still diverges in depth, density, movement. */
+function materialFingerprintBlend(analysis, ctx, opts = {}) {
   const parts = [
     num(analysis?.dynamicRange),
     num(analysis?.bassWeight),
@@ -37,12 +37,47 @@ function materialFingerprintBlend(analysis, ctx) {
     num(analysis?.stereoWidth),
     estimateCrestFromAnalysis(analysis, ctx?.integratedLufs),
     num(ctx?.integratedLufs),
+    num(analysis?.bpm),
+    String(analysis?.energy ?? "m"),
+    String(opts?.style ?? "s"),
+    num(opts?.requestedLufs),
   ]
-    .map((v) => (v != null ? Math.round(v * 20) : -999))
+    .map((v) => (typeof v === "number" ? Math.round(v * 20) : String(v)))
     .join("|")
   let h = 0
   for (let i = 0; i < parts.length; i++) h = (Math.imul(31, h) + parts.charCodeAt(i)) | 0
-  return Number((0.9 + ((Math.abs(h) % 21) / 21) * 0.14).toFixed(3))
+  const spread = (Math.abs(h) % 29) / 29
+  return Number((0.86 + spread * 0.2).toFixed(3))
+}
+
+/** Processing is earned — high confidence + clear profile margin required for full intervention. */
+export function assessEarnedProcessing(materialProfile) {
+  const conf = materialProfile?.decisionConfidence ?? 0
+  const margin = materialProfile?.profileMargin ?? 0
+  const earned = conf >= 0.62 && margin >= 0.16 && !materialProfile?.preserveMix
+  return {
+    earned,
+    confidence: conf,
+    margin,
+    intensityCap: earned ? 1 : conf >= 0.52 ? 0.55 : 0.32,
+    philosophy: earned ? "earned-intervention" : "preservation-first",
+  }
+}
+
+/** Core Mastrify identity — when uncertain, protect what already works. */
+export function resolveTrustTheMix(materialProfile, emotionalMovement, processingLedger) {
+  const trust =
+    Boolean(materialProfile?.preserveMix) ||
+    Boolean(emotionalMovement?.protectArrangement) ||
+    Boolean(processingLedger?.trustMix) ||
+    (materialProfile?.confidenceWeight ?? 1) < 0.36
+  return {
+    active: trust,
+    avoidTonalNormalization: trust,
+    avoidStereoShaping: trust,
+    avoidLoudnessChase: trust,
+    philosophy: "protect-what-already-works",
+  }
 }
 
 /**
@@ -142,8 +177,9 @@ export function classifyMaterialProfile(analysis, ctx = {}, opts = {}) {
     clamp(0.32 + margin * 2.1 + Math.min(signals.length, 5) * 0.035, 0.32, 0.96).toFixed(2)
   )
   const confidenceWeight = resolveConfidenceWeight(decisionConfidence)
-  const preserveMix = decisionConfidence < 0.48 || margin < 0.12
-  const fingerprintBlend = materialFingerprintBlend(analysis, ctx)
+  const preserveMix = decisionConfidence < 0.52 || margin < 0.14
+  const fingerprintBlend = materialFingerprintBlend(analysis, ctx, opts)
+  const earnedProcessing = decisionConfidence >= 0.62 && margin >= 0.16 && !preserveMix
 
   const intensityByProfile = {
     pre_limited: 0.1,
@@ -201,7 +237,13 @@ export function classifyMaterialProfile(analysis, ctx = {}, opts = {}) {
     ),
     crestDb: crest != null ? Number(crest.toFixed(2)) : null,
     dynamicRange: dr,
-    philosophy: preserveMix ? "preserve-mix-low-confidence" : "confidence-weighted-subtle",
+    earnedProcessing,
+    individualityBlend: fingerprintBlend,
+    philosophy: preserveMix
+      ? "preserve-mix-trust-source"
+      : earnedProcessing
+        ? "earned-subtle-processing"
+        : "confidence-weighted-preservation",
   }
 }
 
@@ -489,6 +531,9 @@ export function buildMasteringConfidenceMessages({
   perceptualTone,
   emotionalMovement,
   processingLedger,
+  trustTheMix,
+  earned,
+  microdynamic,
 }) {
   const messages = []
   const profile = materialProfile?.profile
@@ -569,11 +614,35 @@ export function buildMasteringConfidenceMessages({
     })
   }
 
-  if (processingLedger?.trustMix) {
+  if (processingLedger?.trustMix || trustTheMix?.active) {
     messages.push({
       id: "trust_mix",
       level: "positive",
-      text: "Trusting the mix — tonal and spatial corrections held back",
+      text: "Protecting what already works — no corrective tonal or stereo shaping",
+    })
+  }
+
+  if (earned && !earned.earned) {
+    messages.push({
+      id: "earned_gate",
+      level: "info",
+      text: "Processing earned only when confident — preservation chosen over polish",
+    })
+  }
+
+  if (processingLedger?.preserveEmotionalMovement) {
+    messages.push({
+      id: "anti_flatten",
+      level: "positive",
+      text: "Song structure protected — chorus lift and breakdown contrast retained",
+    })
+  }
+
+  if (microdynamic?.dimensionalFeel != null && microdynamic.dimensionalFeel > 0.5) {
+    messages.push({
+      id: "microdynamic",
+      level: "positive",
+      text: "Microdynamics prioritized — groove, transients, and stereo breathing preserved",
     })
   }
 
@@ -587,35 +656,55 @@ export function assessEmotionalMovement(analysis, ctx = {}) {
   const dr = num(analysis?.dynamicRange) ?? num(ctx?.dynamicRange)
   const crest = estimateCrestFromAnalysis(analysis, ctx?.integratedLufs)
   const stereo = num(analysis?.stereoWidth) ?? num(ctx?.stereoWidth)
+  const energy = analysis?.energy
   const signals = []
   let score = 0
 
   if (dr != null && dr > 10) {
-    score += 0.32
+    score += 0.28
     signals.push("dynamicArrangement")
   }
   if (dr != null && dr > 13) {
-    score += 0.18
+    score += 0.2
     signals.push("breakdownOpenness")
   }
+  if (dr != null && dr >= 8 && dr <= 13 && energy === "high") {
+    score += 0.18
+    signals.push("chorusImpact")
+  }
   if (crest != null && crest >= 9.5) {
-    score += 0.28
-    signals.push("transientContrast")
+    score += 0.24
+    signals.push("transientContrastTension")
+  }
+  if (crest != null && crest >= 11) {
+    score += 0.1
+    signals.push("releaseHeadroom")
   }
   if (stereo != null && stereo > 0.44) {
-    score += 0.14
-    signals.push("stereoMotion")
+    score += 0.12
+    signals.push("stereoBreathing")
+  }
+  if (dr != null && dr > 11 && stereo != null && stereo > 0.38) {
+    score += 0.12
+    signals.push("perceivedScale")
+  }
+  if (dr != null && dr > 9 && dr < 14 && crest != null && crest >= 8.5) {
+    score += 0.08
+    signals.push("arrangementContrast")
   }
 
   const emotionalContrastScore = Number(clamp(score, 0, 1).toFixed(2))
-  const protectArrangement = emotionalContrastScore >= 0.42
+  const protectArrangement = emotionalContrastScore >= 0.38
+  const collapseStructureRisk = dr != null && dr > 9 && protectArrangement
 
   return {
     emotionalContrastScore,
     protectArrangement,
+    collapseStructureRisk,
+    antiFlattening: protectArrangement,
     signals,
     philosophy: protectArrangement
-      ? "preserve-chorus-lift-and-transitions"
+      ? "preserve-emotional-movement-over-static-polish"
       : "neutral",
   }
 }
@@ -630,19 +719,29 @@ export function assessMicrodynamicPriority(analysis, materialProfile) {
   const bass = num(analysis?.bassWeight)
   const weight = materialProfile?.confidenceWeight ?? 0.5
 
-  let priority = 0.45
+  let priority = 0.42
   if (crest != null && crest >= 9) priority += 0.22
-  if (dr != null && dr > 9) priority += 0.16
-  if (bright != null && bright > 0.22 && bright < 0.52) priority += 0.1
-  if (bass != null && bass > 0.32 && bass < 0.54) priority += 0.1
-  priority *= 0.65 + weight * 0.35
+  if (dr != null && dr > 9) priority += 0.18
+  if (bright != null && bright > 0.22 && bright < 0.52) priority += 0.12
+  if (bass != null && bass > 0.32 && bass < 0.54) priority += 0.12
+  const stereoW = num(analysis?.stereoWidth)
+  if (stereoW != null && stereoW > 0.38 && stereoW < 0.72) priority += 0.08
+  priority *= 0.62 + weight * 0.38
+
+  const dimensionalFeel = Number(
+    clamp(priority * (0.7 + (dr != null && dr > 10 ? 0.2 : 0)), 0, 1).toFixed(2)
+  )
 
   return {
     priority: Number(clamp(priority, 0, 1).toFixed(2)),
+    dimensionalFeel,
     preserveVocalArticulation: bright != null && bright > 0.22 && bright < 0.52,
     preserveKickSnare: crest != null && crest >= 8.5,
     preserveGroove: bass != null && bass > 0.32,
-    preserveStereoMotion: num(analysis?.stereoWidth) != null && num(analysis.stereoWidth) > 0.4,
+    preserveRhythmicMotion: bass != null && bass > 0.3 && crest != null && crest >= 8,
+    preserveStereoMotion: stereoW != null && stereoW > 0.38,
+    limiterSlowdown: priority >= 0.55,
+    philosophy: "alive-dimensional-microdynamics",
   }
 }
 
@@ -671,33 +770,46 @@ export function computeCumulativeProcessingLedger({
   const limiterCost = (limiterCharacter?.pressure ?? 0.25) * 0.38
 
   const rawTotalImpact = eqCost + stereoCost + limiterCost
-  const maxAllowedImpact = preserve ? 0.34 : 0.28 + weight * 0.32
+  const maxAllowedImpact = preserve ? 0.3 : 0.24 + weight * 0.28
   const overBudget = rawTotalImpact > maxAllowedImpact
-  const masterScale =
-    overBudget && rawTotalImpact > 0
-      ? maxAllowedImpact / rawTotalImpact
-      : 1
+  let masterScale =
+    overBudget && rawTotalImpact > 0 ? maxAllowedImpact / rawTotalImpact : 1
 
-  const emotionalScale = emotionalMovement?.protectArrangement ? 0.84 : 1
-  const microScale = 1 - (microdynamic?.priority ?? 0.5) * 0.16
-  const combined = Number((masterScale * emotionalScale * microScale).toFixed(3))
+  const emotionalScale = emotionalMovement?.protectArrangement ? 0.8 : 1
+  const microScale = 1 - (microdynamic?.priority ?? 0.5) * 0.2
+  const fatigueGuard = rawTotalImpact > maxAllowedImpact * 0.72 ? 0.92 : 1
+  let combined = Number((masterScale * emotionalScale * microScale * fatigueGuard).toFixed(3))
+
+  if (emotionalMovement?.collapseStructureRisk) {
+    combined = Number((combined * 0.88).toFixed(3))
+  }
+  if (microdynamic?.dimensionalFeel != null && microdynamic.dimensionalFeel > 0.55) {
+    combined = Number((combined * 0.94).toFixed(3))
+  }
+
+  const trustMix = preserve || weight < 0.4 || emotionalMovement?.protectArrangement
 
   return {
     rawTotalImpact: Number(rawTotalImpact.toFixed(3)),
     maxAllowedImpact: Number(maxAllowedImpact.toFixed(3)),
     overBudget,
     masterScale: combined,
+    fatigueGuard: fatigueGuard < 1,
+    preserveEmotionalMovement: Boolean(emotionalMovement?.protectArrangement),
     stages: {
-      eq: Number((combined * (preserve ? 0.75 : 0.92)).toFixed(3)),
-      stereo: Number((combined * 0.88).toFixed(3)),
-      limiter: Number((combined * 0.82).toFixed(3)),
-      loudness: Number((combined * 0.9).toFixed(3)),
-      compression: Number((combined * 0.86).toFixed(3)),
+      eq: Number((combined * (trustMix ? 0.68 : 0.88)).toFixed(3)),
+      stereo: Number((combined * (trustMix ? 0.72 : 0.84)).toFixed(3)),
+      limiter: Number((combined * (trustMix ? 0.7 : 0.78)).toFixed(3)),
+      loudness: Number((combined * (emotionalMovement?.protectArrangement ? 0.82 : 0.86)).toFixed(3)),
+      compression: Number((combined * 0.8).toFixed(3)),
     },
-    trustMix: preserve || weight < 0.38,
-    philosophy: overBudget
-      ? "cumulative-impact-capped"
-      : "stages-balanced-for-flow",
+    trustMix,
+    antiCompliance: true,
+    philosophy: trustMix
+      ? "holistic-trust-source"
+      : overBudget
+        ? "cumulative-perception-capped"
+        : "human-perception-over-technical-optimization",
   }
 }
 
@@ -758,13 +870,22 @@ export function buildMasteringDecisions({
   const emotionalMovement = assessEmotionalMovement(analysis, ctx)
   const materialProfile = classifyMaterialProfile(analysis, ctx, { requestedLufs, style })
 
+  const earned = assessEarnedProcessing(materialProfile)
+
   if (emotionalMovement.protectArrangement) {
-    if (materialProfile.decisionConfidence < 0.65) {
-      materialProfile.preserveMix = true
-      materialProfile.philosophy = "preserve-arrangement-trust-mix"
+    materialProfile.preserveMix =
+      materialProfile.preserveMix || materialProfile.decisionConfidence < 0.68
+    if (materialProfile.preserveMix) {
+      materialProfile.philosophy = "preserve-emotional-movement-trust-mix"
     }
     materialProfile.processingIntensity = Number(
-      (materialProfile.processingIntensity * 0.88).toFixed(3)
+      (materialProfile.processingIntensity * 0.82).toFixed(3)
+    )
+  }
+
+  if (!earned.earned) {
+    materialProfile.processingIntensity = Number(
+      (materialProfile.processingIntensity * earned.intensityCap).toFixed(3)
     )
   }
 
@@ -796,6 +917,16 @@ export function buildMasteringDecisions({
     referencePlan
   )
 
+  if (microdynamic.limiterSlowdown && limiterCharacter) {
+    limiterCharacter.attack = Math.round(limiterCharacter.attack + 6)
+    limiterCharacter.release = Math.round(limiterCharacter.release + 35)
+    limiterCharacter.pressure = Number(
+      (limiterCharacter.pressure * 0.92).toFixed(3)
+    )
+  }
+
+  const trustTheMix = resolveTrustTheMix(materialProfile, emotionalMovement, processingLedger)
+
   const confidenceMessages = buildMasteringConfidenceMessages({
     materialProfile,
     adaptiveTransparency,
@@ -803,10 +934,15 @@ export function buildMasteringDecisions({
     perceptualTone,
     emotionalMovement,
     processingLedger,
+    trustTheMix,
+    earned,
+    microdynamic,
   })
 
   return {
     materialProfile,
+    earnedProcessing: earned,
+    trustTheMix,
     emotionalMovement,
     microdynamic,
     perceptualTone,
@@ -818,15 +954,23 @@ export function buildMasteringDecisions({
     globalWeight: Number(
       ((materialProfile.confidenceWeight ?? 0.5) * processingLedger.masterScale).toFixed(3)
     ),
-    philosophy: processingLedger.trustMix
-      ? "trust-source-preservation"
-      : materialProfile.philosophy,
+    philosophy: trustTheMix.active
+      ? "protect-what-already-works"
+      : processingLedger.trustMix
+        ? "trust-source-preservation"
+        : materialProfile.philosophy,
     humanPerceptionGoals: [
-      "emotional_flow",
-      "perceived_punch",
+      "emotional_impact",
       "listener_fatigue_avoidance",
-      "depth_and_width_stability",
+      "dimensionality_and_depth",
+      "punch_perception",
+      "translation_and_realism",
     ],
+    antiCompliance: {
+      avoidTargetConformity: true,
+      avoidSpectralSameness: true,
+      avoidStaticLoudness: Boolean(emotionalMovement?.protectArrangement),
+    },
     sectionAware: { enabled: false, note: "future: verse/chorus/drop intensity" },
   }
 }
@@ -847,33 +991,49 @@ export function applyPerceptualToneToBase(tone, perceptualTone) {
   }
 }
 
-export function mergeProcessingIntensity(baseIntensity, materialProfile, processingLedger = null) {
+export function mergeProcessingIntensity(
+  baseIntensity,
+  materialProfile,
+  processingLedger = null,
+  earnedProcessing = null
+) {
   const materialScale = materialProfile?.processingIntensity ?? 0.4
   const density = materialProfile?.compDensityBias ?? 0.4
   const weight = materialProfile?.confidenceWeight ?? 0.5
-  const blend = materialProfile?.fingerprintBlend ?? 1
+  const blend = materialProfile?.individualityBlend ?? materialProfile?.fingerprintBlend ?? 1
   const ledgerScale = processingLedger?.stages?.compression ?? processingLedger?.masterScale ?? 1
-  const underProcessBias = 0.86
+  const earnedCap = earnedProcessing?.intensityCap ?? 1
+  const underProcessBias = 0.84
   return clamp(
     baseIntensity *
       materialScale *
-      (0.5 + density * 0.35) *
+      (0.48 + density * 0.32) *
       weight *
       blend *
       underProcessBias *
-      ledgerScale,
-    0.05,
-    0.68
+      ledgerScale *
+      earnedCap,
+    0.04,
+    0.62
   )
 }
 
 /** Scale loudness pursuit slack from cumulative ledger (arrangement-safe). */
-export function loudnessSlackFromLedger(processingLedger, emotionalMovement) {
+export function loudnessSlackFromLedger(processingLedger, emotionalMovement, trustTheMix) {
   let slack = 0
-  if (processingLedger?.masterScale != null && processingLedger.masterScale < 0.85) {
-    slack += (1 - processingLedger.masterScale) * 0.35
+  if (processingLedger?.masterScale != null && processingLedger.masterScale < 0.88) {
+    slack += (1 - processingLedger.masterScale) * 0.4
   }
-  if (emotionalMovement?.protectArrangement) slack += 0.2
-  if (processingLedger?.trustMix) slack += 0.15
-  return Number(slack.toFixed(2))
+  if (emotionalMovement?.protectArrangement) slack += 0.28
+  if (emotionalMovement?.collapseStructureRisk) slack += 0.12
+  if (processingLedger?.trustMix || trustTheMix?.active) slack += 0.22
+  if (processingLedger?.antiCompliance) slack += 0.08
+  return Number(Math.min(slack, 1.15).toFixed(2))
+}
+
+/** When trusting the source, skip preset style EQ color that homogenizes genres. */
+export function shouldApplyStyleCharacter(trustTheMix, processingLedger) {
+  if (trustTheMix?.active) return false
+  if (processingLedger?.trustMix) return false
+  return true
 }
