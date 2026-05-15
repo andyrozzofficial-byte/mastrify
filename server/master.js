@@ -2,6 +2,7 @@ import ffmpeg from "fluent-ffmpeg"
 import ffmpegPath from "ffmpeg-static"
 import ffprobePath from "ffprobe-static"
 import fs from "fs"
+import path from "path"
 import { spawn } from "child_process"
 import { analyzeTrack } from "./analyze.js"
 import {
