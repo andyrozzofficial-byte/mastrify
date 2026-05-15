@@ -12,7 +12,18 @@ import {
   MASTRIFY_LUFS_TRACE as LUFS_TRACE,
   MASTRIFY_MASTER_DEBUG as MASTER_DEBUG,
   MASTRIFY_PIPELINE_DEBUG as PIPELINE_DEBUG,
+  MASTRIFY_CHAIN_DEBUG as CHAIN_DEBUG_ENV,
 } from "./mastrifyDebug.js"
+import {
+  CHAIN_DEBUG_MODES,
+  resolveChainDebugMode,
+  isChainDebugSweepRequested,
+  probeMomentaryLufsSeries,
+  summarizeGainMovement,
+  buildLoudnormGainReport,
+  runChainIsolationSweep,
+  logChainDebug,
+} from "./chainDebug.js"
 
 if (ffmpegPath) {
   ffmpeg.setFfmpegPath(ffmpegPath)
@@ -29,7 +40,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-static-transparent"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-chain-isolation"
 
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n))
@@ -1227,6 +1238,8 @@ async function runFfmpegCapture(args, label) {
  * @param {number|string} [opts.stereoEnhance] - 0–100
  * @param {number|string} [opts.lowEndControl] - 0–100
  * @param {number|string} [opts.clarityPresence] - 0–100
+ * @param {string} [opts.chainDebugMode] - A|B|C|D|E (eq-only … full chain) for isolation
+ * @param {boolean|string} [opts.chainDebugSweep] - probe all modes A–E and rank movement
  */
 export async function masterTrack({
   file,
@@ -1238,6 +1251,8 @@ export async function masterTrack({
   stereoEnhance: stereoEnhanceIn,
   lowEndControl: lowEndControlIn,
   clarityPresence: clarityPresenceIn,
+  chainDebugMode: chainDebugModeIn,
+  chainDebugSweep: chainDebugSweepIn,
 }) {
   if (!file) throw new Error("File missing")
 
@@ -1247,6 +1262,12 @@ export async function masterTrack({
   const stereoEnhance = parseIntSlider(stereoEnhanceIn, 50)
   const lowEndControl = parseIntSlider(lowEndControlIn, 50)
   const clarityPresence = parseIntSlider(clarityPresenceIn, 50)
+
+  const activeChainMode = resolveChainDebugMode(chainDebugModeIn)
+  const chainDebugActive = Boolean(activeChainMode) || CHAIN_DEBUG_ENV
+  const chainStages = activeChainMode?.stages ?? CHAIN_DEBUG_MODES.E.stages
+  const chainDebugModeId = activeChainMode?.id ?? "E"
+  const chainSweep = isChainDebugSweepRequested(chainDebugSweepIn)
 
   let referenceAnalysis = null
   if (reference) {
@@ -1335,6 +1356,9 @@ export async function masterTrack({
   let limiterIntensity = transparentLoudnorm ? 0.42 : isStreamingProfile(requestedLufs) ? 0.72 : 1
   let extraPursuitSlackLu = transparentLoudnorm ? 0.3 : 0
   let skipPass2Offset = transparentLoudnorm
+  if (chainDebugActive && chainDebugModeId === "B") {
+    skipPass2Offset = false
+  }
   if (!isHotLoudnessTarget(requestedLufs)) {
     compIntensity =
       requestedLufs >= -11.5 && requestedLufs <= -10.5 ? 0.32 : transparentLoudnorm ? 0.36 : 0.5
@@ -1412,7 +1436,24 @@ export async function masterTrack({
       : "transient-first-minimal-pregain",
   })
 
-  function buildColorPipeline(resolvedLufs, pregainDb, compInt = compIntensity, ctx = headroomCtxInitial) {
+  if (chainDebugActive) {
+    logChainDebug({
+      phase: "init",
+      chainDebugMode: chainDebugModeId,
+      label: activeChainMode?.label ?? CHAIN_DEBUG_MODES.E.label,
+      stages: chainStages,
+      chainSweep,
+      requestedLufs,
+    })
+  }
+
+  function buildColorPipeline(
+    resolvedLufs,
+    pregainDb,
+    compInt = compIntensity,
+    ctx = headroomCtxInitial,
+    stages = chainStages
+  ) {
     const targetPlan = loudnessTargetForLoudnorm(resolvedLufs, requestedLufs, ctx, extraPursuitSlackLu)
     const lufsForLoudnorm = targetPlan.loudnormI
     const lraVal = lraForStyleAndTarget(style, resolvedLufs, requestedLufs)
@@ -1427,12 +1468,16 @@ export async function masterTrack({
     const lowEndGuard = lowEndProtectionFilters(ctx, requestedLufs)
     const kickSubGuard = kickSubTransparencyFilters(ctx)
     const volumeStaging = stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
-    const autoPreVol = pregainDb > 0 ? `volume=${pregainDb.toFixed(2)}dB,` : ""
-    const compBypass = transparent ? 0.58 : 0.48
+    const autoPreVol =
+      stages.pregain && pregainDb > 0 ? `volume=${pregainDb.toFixed(2)}dB,` : ""
+    const compBypass =
+      chainDebugModeId === "D" ? 0 : transparent ? 0.58 : 0.48
     const compStage =
-      compInt < compBypass
-        ? ""
-        : `acompressor=threshold=${compVal.threshold}dB:ratio=${compVal.ratio}:attack=${compVal.attack}:release=${compVal.release}:makeup=0,`
+      stages.comp && compInt >= compBypass
+        ? `acompressor=threshold=${compVal.threshold}dB:ratio=${compVal.ratio}:attack=${compVal.attack}:release=${compVal.release}:makeup=0,`
+        : ""
+    const limiterStage =
+      stages.limiter ? peakContainmentLimiter(streaming, transparent, limiterIntensity) : ""
 
     const mud = tone.mudGain.toFixed(3)
     const mudW = tone.mudWideGain.toFixed(3)
@@ -1459,11 +1504,12 @@ export async function masterTrack({
       styleTail +
       clubProt +
       lowEndPreLoudnessFilters(ctx) +
-      peakContainmentLimiter(streaming, transparent, limiterIntensity) +
+      limiterStage +
       autoPreVol
 
     return {
       colorBase,
+      chainStages: stages,
       loudnormStem: `I=${lufsForLoudnorm}:LRA=${lraVal}:TP=${tpVal}`,
       lra: lraVal,
       tp: tpVal,
@@ -1473,14 +1519,38 @@ export async function masterTrack({
       extraSlackAppliedLu: targetPlan.extraSlackAppliedLu,
       transparentMode: targetPlan.transparentMode ?? transparent,
       lowEndProtectionTriggers: [...lowEndGuard.triggers, ...kickSubGuard.triggers],
-      compressionBypassed: compInt < compBypass,
+      compressionBypassed: !stages.comp || compInt < compBypass,
+      limiterBypassed: !stages.limiter,
       limiterIntensity,
       staticPass2Offset: skipPass2Offset,
     }
   }
 
-  async function runLoudnormPasses(resolvedLufs, pregainDb, compInt = compIntensity, ctx = headroomCtxInitial) {
-    const pipe = buildColorPipeline(resolvedLufs, pregainDb, compInt, ctx)
+  async function runLoudnormPasses(
+    resolvedLufs,
+    pregainDb,
+    compInt = compIntensity,
+    ctx = headroomCtxInitial,
+    stages = chainStages,
+    pass2Skip = skipPass2Offset
+  ) {
+    const pipe = buildColorPipeline(resolvedLufs, pregainDb, compInt, ctx, stages)
+    const colorOnly = pipe.colorBase.replace(/,\s*$/, "")
+
+    if (!stages.loudnorm) {
+      return {
+        audioFilterFinal: colorOnly || "anull",
+        loudnormPass1Json: null,
+        usedTwoPass: false,
+        pass1ExitCode: null,
+        lra: pipe.lra,
+        tp: pipe.tp,
+        loudnormI: pipe.loudnormI,
+        pursuitSlackLu: pipe.pursuitSlackLu,
+        chainStages: stages,
+      }
+    }
+
     const stem = pipe.loudnormStem
     let pass1Json = null
     let filterFinal = ""
@@ -1515,7 +1585,7 @@ export async function masterTrack({
         pass1Json,
         loudnormOffsetCap,
         transparentLoudnorm,
-        skipPass2Offset
+        pass2Skip
       )
       if (measured) {
         filterFinal =
@@ -1542,6 +1612,36 @@ export async function masterTrack({
       tp: pipe.tp,
       loudnormI: pipe.loudnormI,
       pursuitSlackLu: pipe.pursuitSlackLu,
+      chainStages: stages,
+    }
+  }
+
+  async function resolveAudioFilterForChainMode(modeId) {
+    const modeDef = CHAIN_DEBUG_MODES[modeId] ?? CHAIN_DEBUG_MODES.E
+    const stages = modeDef.stages
+    const pass2ForMode =
+      modeId === "B" ? false : modeId === "E" ? skipPass2Offset : true
+    const ln = await runLoudnormPasses(
+      safeIntegratedLufs,
+      autoPreGainDb,
+      compIntensity,
+      headroomCtxInitial,
+      stages,
+      pass2ForMode
+    )
+    const measured =
+      ln.loudnormPass1Json != null
+        ? loudnormMeasuredToOpts(
+            ln.loudnormPass1Json,
+            loudnormOffsetCap,
+            transparentLoudnorm,
+            pass2ForMode
+          )
+        : null
+    return {
+      audioFilter: ln.audioFilterFinal,
+      loudnorm: buildLoudnormGainReport(ln.loudnormPass1Json, measured),
+      usedTwoPass: ln.usedTwoPass,
     }
   }
 
@@ -1600,7 +1700,8 @@ export async function masterTrack({
       refinedAdaptive.resolved < safeIntegratedLufs - 0.2 ||
       pass1Safety.adjustedResolved < safeIntegratedLufs - 0.15
     const needsRerun =
-      pass1Safety.active || antiPumping.active || transparencyGuard.active || targetDrop
+      (!chainDebugActive || chainDebugModeId === "E") &&
+      (pass1Safety.active || antiPumping.active || transparencyGuard.active || targetDrop)
 
     if (needsRerun) {
       if (refinedAdaptive.resolved < safeIntegratedLufs) {
@@ -1716,6 +1817,15 @@ export async function masterTrack({
   }
 
   const finalLimiterGr = estimateLimiterGainReductionDb(loudnormPass1Json, tp)
+  const finalMeasuredOpts = loudnormPass1Json
+    ? loudnormMeasuredToOpts(
+        loudnormPass1Json,
+        loudnormOffsetCap,
+        transparentLoudnorm,
+        skipPass2Offset
+      )
+    : null
+
   logDynamicsMastering({
     phase: "final",
     pregainBeforeLoudnormDb: autoPreGainDb,
@@ -1809,6 +1919,62 @@ export async function masterTrack({
   }
 
   await waitForMasterOutputReady(outputPath)
+
+  let chainDiagnostics = null
+  if (chainDebugActive || chainSweep) {
+    const inputProbe = await probeMomentaryLufsSeries(file, "")
+    const outputProbe = await probeMomentaryLufsSeries(outputPath, "")
+    const inputMom = summarizeGainMovement(inputProbe.momentary)
+    const outputMom = summarizeGainMovement(outputProbe.momentary)
+    chainDiagnostics = {
+      stamp: LUFS_TRACE_BUILD_STAMP,
+      activeMode: chainDebugModeId,
+      activeLabel: activeChainMode?.label ?? CHAIN_DEBUG_MODES.E.label,
+      stages: chainStages,
+      audioFilter: audioFilterFinal,
+      gainMovement: {
+        input: {
+          momentary: inputMom,
+          shortTerm: summarizeGainMovement(inputProbe.shortTerm),
+        },
+        output: {
+          momentary: outputMom,
+          shortTerm: summarizeGainMovement(outputProbe.shortTerm),
+        },
+        addedOnOutput: {
+          momentarySwingLu:
+            inputMom && outputMom
+              ? Number((outputMom.swingLu - inputMom.swingLu).toFixed(2))
+              : null,
+        },
+      },
+      loudnorm: buildLoudnormGainReport(loudnormPass1Json, finalMeasuredOpts),
+      limiter: {
+        intensity: limiterIntensity,
+        bypassed: !chainStages.limiter,
+        estimatedGainReductionDb: finalLimiterGr,
+      },
+      compressor: {
+        bypassed: !chainStages.comp,
+        intensity: compIntensity,
+        settings: buildColorPipeline(safeIntegratedLufs, autoPreGainDb, compIntensity).comp,
+      },
+      pregainDb: autoPreGainDb,
+    }
+    if (chainSweep) {
+      chainDiagnostics.sweep = await runChainIsolationSweep({
+        file,
+        resolveFilterForMode: resolveAudioFilterForChainMode,
+      })
+      logChainDebug({ phase: "sweep", ranking: chainDiagnostics.sweep.ranking })
+    }
+    logChainDebug({
+      phase: "movement",
+      activeMode: chainDebugModeId,
+      outputSwingLu: outputMom?.swingLu,
+      likelySuspect: chainDiagnostics.sweep?.likelySuspect ?? null,
+    })
+  }
 
   /** Single post-render EBU measurement — authoritative integrated loudness of the WAV on disk. */
   const authorityEbuIntegrated = await measureIntegratedLufsEbur128(outputPath)
@@ -1970,6 +2136,8 @@ export async function masterTrack({
       stereoEnhance,
       lowEndControl,
       clarityPresence,
+      chainDebugMode: chainDebugModeId,
+      chainDiagnostics,
     }
   }
   if (LUFS_TRACE) {

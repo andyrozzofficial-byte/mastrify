@@ -882,6 +882,8 @@ app.post("/master",
       const stereoEnhance = body.stereoEnhance
       const lowEndControl = body.lowEndControl
       const clarityPresence = body.clarityPresence
+      const chainDebugMode = body.chainDebugMode ?? body.chainMode
+      const chainDebugSweep = body.chainDebugSweep
 
       if (LUFS_TRACE) {
         console.log("[LUFS_TRACE] POST /master incoming (req.body after multer)", {
@@ -890,6 +892,8 @@ app.post("/master",
           stereoEnhance,
           lowEndControl,
           clarityPresence,
+          chainDebugMode,
+          chainDebugSweep,
         })
       }
 
@@ -901,6 +905,8 @@ app.post("/master",
         stereoEnhance,
         lowEndControl,
         clarityPresence,
+        chainDebugMode,
+        chainDebugSweep,
       })
 
       if (LUFS_TRACE) {
@@ -1026,6 +1032,9 @@ app.post("/master",
       }
       if (masterResult?.debugInfo) {
         resPayload.masterDebug = masterResult.debugInfo
+      }
+      if (masterResult?.chainDiagnostics) {
+        resPayload.chainDiagnostics = masterResult.chainDiagnostics
       }
       if (PIPELINE_DEBUG) {
         resPayload.pipelineDebug = {
