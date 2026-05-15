@@ -34,7 +34,12 @@ body {
     margin-inline: auto;
     width: 100%;
     max-width: 1080px;
-    padding-inline: 1.25rem;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .page-container {
+      padding-inline: 1.25rem;
+    }
   }
   @media (min-width: 768px) {
     .page-container {
@@ -42,8 +47,14 @@ body {
     }
   }
   .page-hero-pad {
-    padding-top: 3.5rem;
-    padding-bottom: 2rem;
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+  @media (min-width: 640px) {
+    .page-hero-pad {
+      padding-top: 2rem;
+      padding-bottom: 1.5rem;
+    }
   }
   @media (min-width: 768px) {
     .page-hero-pad {

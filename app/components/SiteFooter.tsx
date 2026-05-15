@@ -103,13 +103,13 @@ export default function SiteFooter() {
       />
 
       <motion.div
-        className="relative mx-auto w-full max-w-[1180px] px-5 pt-14 pb-10 md:px-10 md:pt-16 md:pb-12"
+        className="relative mx-auto w-full max-w-[1180px] px-4 pt-10 pb-8 sm:px-5 sm:pt-12 md:px-10 md:pt-16 md:pb-12"
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-x-12 xl:gap-x-14">
+        <div className="grid items-start gap-8 sm:gap-10 lg:grid-cols-12 lg:gap-12 lg:gap-x-12 xl:gap-x-14">
           {/* Brand */}
           <motion.div
             className="lg:col-span-4"
@@ -183,7 +183,7 @@ export default function SiteFooter() {
         >
           <p className="order-1 text-[11px] text-muted-soft md:order-none">© {year} Mastrify</p>
 
-          <p className="order-3 text-center text-[9px] font-normal uppercase tracking-[0.26em] text-muted-faint md:order-none md:flex-1 md:px-4">
+          <p className="order-3 px-1 text-center text-[8px] font-normal uppercase leading-relaxed tracking-[0.2em] text-muted-faint sm:text-[9px] sm:tracking-[0.24em] md:order-none md:flex-1 md:px-4 md:tracking-[0.26em]">
             Designed &amp; engineered by{" "}
             <a
               href="https://lunov.dev"

@@ -51,9 +51,9 @@ export default function Landing() {
       />
 
       {/* Hero */}
-      <section className="page-container page-hero-pad relative z-10 pb-10 md:pb-12">
+      <section className="page-container page-hero-pad relative z-10 pb-8 sm:pb-10 md:pb-12">
         <motion.div
-          className="relative grid items-center gap-12 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-14 xl:gap-16"
+          className="relative grid items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-14 xl:gap-16"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
@@ -68,7 +68,7 @@ export default function Landing() {
               Intelligent mastering engine
             </span>
 
-            <h1 className="mt-6 text-[2.1rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:text-[2.65rem] md:text-[3.1rem] md:leading-[1.08] lg:mt-7">
+            <h1 className="mt-4 text-[1.65rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2.1rem] md:text-[3.1rem] md:leading-[1.08] lg:mt-7 lg:text-[2.65rem]">
               Music shaped for release
               <span className="mt-2 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
                 with musical depth
@@ -92,15 +92,15 @@ export default function Landing() {
             </ul>
 
             <motion.div
-              className="mx-auto mt-10 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center lg:mx-0 lg:justify-start"
+              className="mx-auto mt-6 flex w-full max-w-[16rem] flex-col gap-2.5 sm:mt-8 sm:max-w-none sm:flex-row sm:justify-center sm:gap-3 lg:mx-0 lg:justify-start"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
             >
-              <PremiumButton href="/master" className="flex-1 sm:flex-none sm:px-9">
+              <PremiumButton href="/master" className="w-full sm:w-auto sm:px-9">
                 Start mastering
               </PremiumButton>
-              <PremiumButton href="/analyze" variant="secondary" className="flex-1 sm:flex-none sm:px-9">
+              <PremiumButton href="/analyze" variant="secondary" className="w-full sm:w-auto sm:px-9">
                 Analyze your mix
               </PremiumButton>
             </motion.div>
@@ -117,10 +117,10 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <div className="relative mx-auto flex w-full max-w-[26rem] justify-center lg:max-w-none lg:justify-end">
-            <LandingHeroAtmosphere />
+          <motion.div className="relative mx-auto flex w-full max-w-[14rem] justify-center max-lg:max-h-[12rem] max-lg:overflow-hidden sm:max-w-[18rem] lg:max-h-none lg:max-w-none lg:justify-end">
+            <LandingHeroAtmosphere compact />
             <motion.div
-              className="relative w-full max-w-[min(24rem,92vw)] lg:max-w-[28rem]"
+              className="relative w-full max-w-[min(14rem,78vw)] sm:max-w-[18rem] lg:max-w-[28rem]"
               initial={reduce ? false : { opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.85, delay: 0.12, ease: EASE }}
@@ -153,10 +153,10 @@ export default function Landing() {
               </motion.div>
               <MasteringEngineVisual
                 activeStep={engineStep}
-                className="relative z-[1] mx-auto w-[min(22rem,88vw)] max-w-[26rem] md:w-[min(24rem,42vw)] md:max-w-[28rem]"
+                className="relative z-[1] mx-auto w-[min(12rem,72vw)] max-w-[14rem] sm:w-[min(16rem,76vw)] sm:max-w-[18rem] md:w-[min(24rem,42vw)] md:max-w-[28rem]"
               />
             </motion.div>
-          </div>
+          </motion.div>
         </motion.div>
       </section>
 

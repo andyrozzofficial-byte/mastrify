@@ -48,7 +48,7 @@ export default function MasterUploadHero({
   }, [loaded, reduce])
 
   return (
-    <section className="relative w-full">
+    <section className="relative w-full overflow-x-hidden">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
@@ -57,46 +57,50 @@ export default function MasterUploadHero({
       />
 
       <motion.div
-        className="relative grid gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
+        className="relative grid gap-6 max-lg:grid-cols-1 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
       >
-        <div className="flex flex-col">
-          <span className="inline-flex w-fit rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70 backdrop-blur-md">
+        {/* Copy + upload — primary column on mobile */}
+        <div className="flex min-w-0 flex-col max-lg:order-1">
+          <span className="inline-flex w-fit rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-0.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-violet-200/70 backdrop-blur-md sm:px-3.5 sm:py-1 sm:text-[10px] sm:tracking-[0.26em]">
             Spatial mastering engine
           </span>
 
-          <h1 className="mt-6 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:text-[2.35rem] md:text-[2.65rem]">
+          <h1 className="mt-3 text-[1.55rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
             Release-ready masters
-            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+            <span className="mt-0.5 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent sm:mt-1">
               with musical depth
             </span>
           </h1>
 
-          <p className="mt-6 max-w-lg text-[15px] leading-[1.65] text-white/74 md:text-[16px] md:leading-[1.7]">
-            Hand your mix to an intelligent mastering engine that listens with restraint — shaping loudness, space,
-            and tone while preserving what makes your music feel alive.
+          <p className="mt-3 max-w-lg text-[14px] leading-[1.6] text-white/74 sm:mt-4 sm:text-[15px] md:mt-6 md:text-[16px] md:leading-[1.7]">
+            <span className="lg:hidden">Intelligent mastering that preserves punch, space, and tone — shaped for release.</span>
+            <span className="hidden lg:inline">
+              Hand your mix to an intelligent mastering engine that listens with restraint — shaping loudness, space,
+              and tone while preserving what makes your music feel alive.
+            </span>
           </p>
 
-          <ul className="mt-6 space-y-2.5 text-[14px] text-white/70">
+          <ul className="mt-4 hidden space-y-2 text-[13px] text-white/70 sm:block sm:space-y-2.5 sm:text-[14px] md:mt-6">
             <li className="flex gap-2.5">
               <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
               Perceptual processing tuned to your mix, not a one-size chain
             </li>
-            <li className="flex gap-2.5">
+            <li className="flex gap-2.5 max-md:hidden">
               <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
               Style and loudness goals you control before the final render
             </li>
-            <li className="flex gap-2.5">
+            <li className="flex gap-2.5 max-lg:hidden">
               <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
               The same cinematic engine that powers processing and results
             </li>
           </ul>
 
-          <MasterFlowStepRail phase="upload" className="mt-8 justify-start md:mt-9" />
+          <MasterFlowStepRail phase="upload" className="mt-4 justify-start sm:mt-5 md:mt-8" />
 
-          <motion.div className="mt-6 w-full max-w-[29.5rem] lg:max-w-none">
+          <motion.div className="mt-4 w-full max-w-[29.5rem] sm:mt-5 lg:max-w-none">
             <MasterUploadCard
               file={file}
               fileInputRef={fileInputRef}
@@ -106,7 +110,7 @@ export default function MasterUploadHero({
             />
           </motion.div>
 
-          <div className="mt-5 grid gap-2 sm:grid-cols-3 sm:gap-2.5">
+          <motion.div className="hidden gap-2 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-2.5 lg:mt-6">
             {FEATURES.map((item, i) => (
               <motion.div
                 key={item.title}
@@ -119,74 +123,36 @@ export default function MasterUploadHero({
                 <p className="mt-0.5 text-[10px] text-white/60">{item.sub}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          <p className="mt-5 text-[11px] text-white/60">
+          <p className="mt-4 text-[10px] leading-relaxed text-white/58 sm:mt-5 sm:text-[11px]">
             <Link href="/how-it-works" className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline">
               Why Mastrify
             </Link>
-            <span className="mx-2 text-white/48">·</span>
+            <span className="mx-1.5 text-white/48 sm:mx-2">·</span>
             <Link href="/pricing" className="text-white/60 underline-offset-2 transition hover:text-white/75 hover:underline">
               Pricing
-            </Link>
-            <span className="mx-2 text-white/48">·</span>
-            <Link href="/flow" className="text-white/60 underline-offset-2 transition hover:text-white/75 hover:underline">
-              One-page master
             </Link>
           </p>
         </div>
 
+        {/* Orb visual — compact accent on mobile, full column on desktop */}
         <motion.div
-          className="relative mx-auto flex w-full max-w-[26rem] justify-center lg:sticky lg:top-20 lg:max-w-none lg:justify-end"
+          className="relative mx-auto flex w-full max-w-[14rem] justify-center overflow-hidden max-lg:order-2 max-lg:max-h-[11.5rem] max-lg:py-1 sm:max-w-[16rem] sm:max-h-[13rem] lg:sticky lg:top-20 lg:max-h-none lg:max-w-none lg:justify-end lg:py-0"
           initial={reduce ? false : { opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
         >
-          <LandingHeroAtmosphere />
+          <LandingHeroAtmosphere compact />
           <motion.div
-            className="relative w-full max-w-[min(24rem,92vw)] lg:max-w-[28rem]"
+            className="relative w-full max-w-[min(14rem,78vw)] sm:max-w-[16rem] lg:max-w-[28rem]"
             animate={loaded ? { scale: 1.02 } : { scale: 1 }}
             transition={{ duration: 0.55, ease: EASE }}
           >
-            <HeroWaveBackdrop heightClass="h-[40%]" className={loaded ? "opacity-[0.26]" : "opacity-[0.2]"} />
-            <motion.div
-              className="pointer-events-none absolute inset-x-[8%] bottom-[4%] h-[34%] opacity-[0.12]"
-              aria-hidden
-              animate={reduce ? undefined : { opacity: loaded ? [0.12, 0.22, 0.12] : [0.08, 0.16, 0.08] }}
-              transition={{ duration: loaded ? 4 : 5, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <svg viewBox="0 0 400 80" className="h-full w-full" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="masterHeroSpec" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="rgba(139,92,246,0)" />
-                    <stop offset="40%" stopColor="rgba(139,92,246,0.45)" />
-                    <stop offset="70%" stopColor="rgba(56,189,248,0.4)" />
-                    <stop offset="100%" stopColor="rgba(56,189,248,0)" />
-                  </linearGradient>
-                </defs>
-                <motion.path
-                  fill="none"
-                  stroke="url(#masterHeroSpec)"
-                  strokeWidth="1.5"
-                  d="M0,42 Q50,28 100,40 T200,38 T300,44 T400,36"
-                  animate={
-                    reduce
-                      ? undefined
-                      : {
-                          d: [
-                            "M0,42 Q50,28 100,40 T200,38 T300,44 T400,36",
-                            "M0,40 Q50,34 100,38 T200,42 T300,40 T400,38",
-                            "M0,42 Q50,28 100,40 T200,38 T300,44 T400,36",
-                          ],
-                        }
-                  }
-                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                />
-              </svg>
-            </motion.div>
+            <HeroWaveBackdrop heightClass="h-[32%] lg:h-[40%]" className={loaded ? "opacity-[0.2] lg:opacity-[0.26]" : "opacity-[0.14] lg:opacity-[0.2]"} />
             <MasteringEngineVisual
               activeStep={engineStep}
-              className="relative z-[1] mx-auto w-[min(20rem,88vw)] max-w-[24rem] md:w-[min(22rem,40vw)] md:max-w-[26rem]"
+              className="relative z-[1] mx-auto w-[min(11.5rem,72vw)] max-w-[14rem] sm:w-[min(13rem,76vw)] sm:max-w-[16rem] md:w-[min(18rem,40vw)] md:max-w-[22rem] lg:w-[min(22rem,40vw)] lg:max-w-[26rem]"
             />
           </motion.div>
         </motion.div>

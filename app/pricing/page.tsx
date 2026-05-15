@@ -34,7 +34,7 @@ export default function Pricing() {
         transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <main className="relative z-10 mx-auto w-full max-w-[1080px] px-5 pb-20 pt-10 md:px-10 md:pb-24 md:pt-14">
+      <main className="page-container relative z-10 pb-12 pt-6 sm:pb-16 sm:pt-8 md:pb-24 md:pt-14">
         <PricingPageHero />
 
         <motion.div

@@ -23,7 +23,7 @@ export default function ContactClient() {
         aria-hidden
       />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-[600px] flex-col px-5 pb-24 pt-12 md:px-8 md:pb-28 md:pt-16">
+      <main className="page-container relative z-10 mx-auto flex w-full max-w-[600px] flex-col pb-16 pt-8 sm:pb-20 sm:pt-10 md:pb-28 md:pt-16">
         <motion.header
           initial={reduce ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

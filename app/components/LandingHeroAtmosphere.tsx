@@ -12,14 +12,16 @@ const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
 
 type Props = {
   className?: string
+  /** Tighter glow bounds for mobile hero columns */
+  compact?: boolean
 }
 
-export default function LandingHeroAtmosphere({ className = "" }: Props) {
+export default function LandingHeroAtmosphere({ className = "", compact = false }: Props) {
   const reduce = useReducedMotion()
 
   return (
     <motion.div
-      className={`pointer-events-none absolute inset-[-20%] ${className}`}
+      className={`pointer-events-none absolute ${compact ? "inset-[-6%]" : "inset-[-20%]"} ${className}`}
       aria-hidden
     >
       <motion.div
