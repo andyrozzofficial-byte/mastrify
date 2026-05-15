@@ -9,12 +9,6 @@ import PricingUnlockCard from "../components/pricing/PricingUnlockCard"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
-function handleUnlock() {
-  localStorage.setItem("unlocked", "true")
-  localStorage.setItem("paid", "true")
-  window.location.href = "/master"
-}
-
 export default function Pricing() {
   const reduce = useReducedMotion()
 
@@ -53,12 +47,12 @@ export default function Pricing() {
             className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(320px,50vh)] w-[min(520px,90vw)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_50%_40%_at_50%_50%,rgba(109,40,217,0.09),transparent_68%)] opacity-80 blur-3xl"
             aria-hidden
           />
-          <PricingUnlockCard onUnlock={handleUnlock} className="relative z-[1]" />
+          <PricingUnlockCard className="relative z-[1]" />
         </motion.div>
 
         <motion.div className="mt-12 md:mt-14">
           <p className="mb-6 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/60">
-            What you unlock
+            What you get
           </p>
           <PricingTrustRow />
         </motion.div>
@@ -72,7 +66,7 @@ export default function Pricing() {
         >
           <CinematicDivider />
           <p className="mt-8 text-center text-[12px] leading-relaxed text-white/58 md:text-[13px]">
-            Studio-quality master. One simple unlock — more value than the price suggests.
+            Studio-quality master. One simple price — more value than the cost suggests.
           </p>
         </motion.div>
       </main>

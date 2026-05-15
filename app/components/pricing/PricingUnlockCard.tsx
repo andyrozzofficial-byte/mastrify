@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -8,14 +9,14 @@ const INCLUDED = [
   "Full quality WAV export",
   "Release-ready loudness",
   "Ready for Spotify & streaming",
+  "Pay only after your master is ready",
 ] as const
 
 type Props = {
-  onUnlock: () => void
   className?: string
 }
 
-export default function PricingUnlockCard({ onUnlock, className = "" }: Props) {
+export default function PricingUnlockCard({ className = "" }: Props) {
   const reduce = useReducedMotion()
 
   return (
@@ -47,14 +48,14 @@ export default function PricingUnlockCard({ onUnlock, className = "" }: Props) {
 
         <div className="relative text-center">
           <span className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70">
-            Full export unlock
+            Simple pricing
           </span>
 
           <h2 className="mt-5 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/95 sm:text-[1.5rem]">
             Studio-quality master
           </h2>
-          <p className="mx-auto mt-2.5 max-w-[16rem] text-[13px] leading-relaxed text-muted sm:text-[14px]">
-            Pay only for the master you export. One simple unlock.
+          <p className="mx-auto mt-2.5 max-w-[18rem] text-[13px] leading-relaxed text-muted sm:text-[14px]">
+            Master first, pay when your export is ready — no subscription.
           </p>
 
           <div className="relative mt-8 md:mt-9">
@@ -74,7 +75,7 @@ export default function PricingUnlockCard({ onUnlock, className = "" }: Props) {
             </p>
           </div>
 
-          <ul className="mx-auto mt-8 max-w-[15rem] space-y-2.5 text-left text-[13px] text-muted-strong sm:text-[14px]">
+          <ul className="mx-auto mt-8 max-w-[17rem] space-y-2.5 text-left text-[13px] text-muted-strong sm:text-[14px]">
             {INCLUDED.map((item) => (
               <li key={item} className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-400/70" aria-hidden />
@@ -83,19 +84,18 @@ export default function PricingUnlockCard({ onUnlock, className = "" }: Props) {
             ))}
           </ul>
 
-          <button
-            type="button"
-            onClick={onUnlock}
-            className="group/btn relative mt-8 w-full overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-4 text-[15px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_40px_rgba(0,0,0,0.4)] ring-1 ring-white/[0.1] transition-[filter,box-shadow] duration-300 hover:brightness-[1.05] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_18px_44px_rgba(0,0,0,0.42),0_0_28px_rgba(99,102,241,0.14)] md:mt-9"
+          <Link
+            href="/master"
+            className="group/btn relative mt-8 flex min-h-[50px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 text-[15px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_40px_rgba(0,0,0,0.4)] ring-1 ring-white/[0.1] transition-[filter,box-shadow] duration-300 hover:brightness-[1.05] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_18px_44px_rgba(0,0,0,0.42),0_0_28px_rgba(99,102,241,0.14)] md:mt-9"
           >
             <span
               className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.14] to-transparent transition-transform duration-700 ease-out group-hover/btn:translate-x-[120%]"
               aria-hidden
             />
-            <span className="relative z-[1]">Pay &amp; unlock</span>
-          </button>
+            <span className="relative z-[1]">Start mastering</span>
+          </Link>
 
-          <p className="mt-4 text-[11px] text-muted-soft">Test mode — no real payment yet</p>
+          <p className="mt-4 text-[11px] text-muted-soft">Payment is collected on the results screen after your master is generated.</p>
         </div>
       </div>
     </motion.div>

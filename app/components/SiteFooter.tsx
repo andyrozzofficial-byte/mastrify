@@ -15,8 +15,9 @@ const product = [
 
 const support = [
   { href: "/how-it-works", label: "Why Mastrify" },
-  { href: "mailto:support@mastrify.com", label: "Contact" },
-  { href: "#privacy", label: "Privacy" },
+  { href: "/contact", label: "Contact" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
 ] as const
 
 function WaveMark({ className = "" }: { className?: string }) {
@@ -107,10 +108,6 @@ export default function SiteFooter() {
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <span id="privacy" className="sr-only">
-          Privacy policy — placeholder anchor for footer Privacy link until a dedicated page exists.
-        </span>
-
         <div className="grid items-start gap-10 lg:grid-cols-12 lg:gap-x-10 xl:gap-x-14">
           {/* Brand */}
           <motion.div
@@ -132,7 +129,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="grid grid-cols-2 gap-8 sm:gap-12 lg:col-span-4 lg:gap-10"
+            className="grid grid-cols-2 gap-x-8 gap-y-7 sm:gap-x-10 lg:col-span-4"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -163,7 +160,7 @@ export default function SiteFooter() {
                   Ready to master your track?
                 </h2>
                 <p className="mt-2 text-[12px] leading-relaxed text-muted sm:text-[13px]">
-                  Studio-grade loudness and tone — pay only for the master you export.
+                  Studio-grade loudness and tone — pay when your export is ready.
                 </p>
                 <PremiumButton
                   href="/master"

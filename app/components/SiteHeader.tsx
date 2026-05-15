@@ -30,7 +30,7 @@ export default function SiteHeader() {
             Mastrify
           </Link>
           <div className="flex items-center gap-3.5 md:hidden">
-            <Link href="/pricing" className={loginClass}>
+            <Link href="/master" className={loginClass}>
               Log in
             </Link>
             <Link href="/master" className={navCtaClass}>
@@ -60,7 +60,7 @@ export default function SiteHeader() {
         </nav>
 
         <div className="hidden shrink-0 items-center gap-3.5 md:flex">
-          <Link href="/pricing" className={loginClass}>
+          <Link href="/master" className={loginClass}>
             Log in
           </Link>
           <Link href="/master" className={navCtaClass}>

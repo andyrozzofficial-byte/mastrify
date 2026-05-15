@@ -16,7 +16,6 @@ export default function AppLegacyRedirect() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("unlocked", "true")
-      localStorage.setItem("paid", "true")
     }
     const id = window.setTimeout(() => router.replace("/master"), 900)
     return () => window.clearTimeout(id)

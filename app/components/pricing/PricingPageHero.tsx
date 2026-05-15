@@ -10,9 +10,9 @@ import MasteringEngineVisual from "../../master/processing/MasteringEngineVisual
 const EASE = [0.22, 1, 0.36, 1] as const
 
 const BULLETS = [
-  "Pay per export — no subscriptions or hidden tiers",
-  "Full-quality WAV mastered with the same intelligent engine",
-  "Streaming-ready loudness with dynamics preserved",
+  "Pay per export — only after your master is ready",
+  "No subscriptions or hidden tiers",
+  "Full-quality WAV with streaming-ready loudness",
 ] as const
 
 export default function PricingPageHero() {
@@ -53,8 +53,8 @@ export default function PricingPageHero() {
           </h1>
 
           <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/74 md:text-[16px]">
-            Release-ready mastering without subscriptions — unlock a professional export when your mix is ready,
-            powered by the same cinematic engine as the rest of Mastrify.
+            Release-ready mastering without subscriptions — master your track first, then pay when you are ready to
+            export, powered by the same cinematic engine as the rest of Mastrify.
           </p>
 
           <ul className="mt-6 space-y-2.5 text-[14px] text-white/70">
