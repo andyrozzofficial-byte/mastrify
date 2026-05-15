@@ -6,10 +6,8 @@ import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
 import CinematicDivider from "../components/CinematicDivider"
 import CinematicReveal from "../components/CinematicReveal"
-import HeroWaveBackdrop from "../components/HeroWaveBackdrop"
-import LandingHeroAtmosphere from "../components/LandingHeroAtmosphere"
+import HeroEngineOrb from "../components/HeroEngineOrb"
 import PremiumButton from "../components/PremiumButton"
-import MasteringEngineVisual from "../master/processing/MasteringEngineVisual"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -117,46 +115,7 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <motion.div className="relative mx-auto flex w-full max-w-[14rem] justify-center max-lg:max-h-[12rem] max-lg:overflow-hidden sm:max-w-[18rem] lg:max-h-none lg:max-w-none lg:justify-end">
-            <LandingHeroAtmosphere compact />
-            <motion.div
-              className="relative w-full max-w-[min(14rem,78vw)] sm:max-w-[18rem] lg:max-w-[28rem]"
-              initial={reduce ? false : { opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.85, delay: 0.12, ease: EASE }}
-            >
-              <HeroWaveBackdrop heightClass="h-[42%]" className="opacity-[0.22]" />
-              <motion.div
-                className="pointer-events-none absolute inset-x-[6%] bottom-[2%] h-[38%] opacity-[0.14]"
-                aria-hidden
-                animate={reduce ? undefined : { opacity: [0.1, 0.18, 0.1] }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <svg viewBox="0 0 400 80" className="h-full w-full" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="landingSpec" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="rgba(139,92,246,0)" />
-                      <stop offset="35%" stopColor="rgba(139,92,246,0.5)" />
-                      <stop offset="65%" stopColor="rgba(56,189,248,0.45)" />
-                      <stop offset="100%" stopColor="rgba(56,189,248,0)" />
-                    </linearGradient>
-                  </defs>
-                  <motion.path
-                    fill="none"
-                    stroke="url(#landingSpec)"
-                    strokeWidth="1.5"
-                    d="M0,42 Q50,28 100,40 T200,38 T300,44 T400,36"
-                    animate={reduce ? undefined : { d: ["M0,42 Q50,28 100,40 T200,38 T300,44 T400,36", "M0,40 Q50,34 100,38 T200,42 T300,40 T400,38", "M0,42 Q50,28 100,40 T200,38 T300,44 T400,36"] }}
-                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                </svg>
-              </motion.div>
-              <MasteringEngineVisual
-                activeStep={engineStep}
-                className="relative z-[1] mx-auto w-[min(12rem,72vw)] max-w-[14rem] sm:w-[min(16rem,76vw)] sm:max-w-[18rem] md:w-[min(24rem,42vw)] md:max-w-[28rem]"
-              />
-            </motion.div>
-          </motion.div>
+          <HeroEngineOrb activeStep={engineStep} compactAtmosphere className="lg:justify-self-end" />
         </motion.div>
       </section>
 

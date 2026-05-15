@@ -3,9 +3,7 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState } from "react"
-import HeroWaveBackdrop from "../HeroWaveBackdrop"
-import LandingHeroAtmosphere from "../LandingHeroAtmosphere"
-import MasteringEngineVisual from "../../master/processing/MasteringEngineVisual"
+import HeroEngineOrb from "../HeroEngineOrb"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -83,56 +81,7 @@ export default function PricingPageHero() {
           </p>
         </motion.div>
 
-        <motion.div
-          className="relative mx-auto flex w-full max-w-[24rem] justify-center lg:max-w-none lg:justify-end"
-          initial={reduce ? false : { opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.85, delay: 0.08, ease: EASE }}
-        >
-          <LandingHeroAtmosphere />
-          <motion.div className="relative w-full max-w-[min(22rem,88vw)] lg:max-w-[26rem]">
-            <HeroWaveBackdrop heightClass="h-[38%]" className="opacity-[0.2]" />
-            <motion.div
-              className="pointer-events-none absolute inset-x-[8%] bottom-[4%] h-[32%] opacity-[0.12]"
-              aria-hidden
-              animate={reduce ? undefined : { opacity: [0.08, 0.16, 0.08] }}
-              transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <svg viewBox="0 0 400 80" className="h-full w-full" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="pricingHeroSpec" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="rgba(139,92,246,0)" />
-                    <stop offset="45%" stopColor="rgba(139,92,246,0.45)" />
-                    <stop offset="75%" stopColor="rgba(56,189,248,0.4)" />
-                    <stop offset="100%" stopColor="rgba(56,189,248,0)" />
-                  </linearGradient>
-                </defs>
-                <motion.path
-                  fill="none"
-                  stroke="url(#pricingHeroSpec)"
-                  strokeWidth="1.5"
-                  d="M0,42 Q50,28 100,40 T200,38 T300,44 T400,36"
-                  animate={
-                    reduce
-                      ? undefined
-                      : {
-                          d: [
-                            "M0,42 Q50,28 100,40 T200,38 T300,44 T400,36",
-                            "M0,40 Q50,34 100,38 T200,42 T300,40 T400,38",
-                            "M0,42 Q50,28 100,40 T200,38 T300,44 T400,36",
-                          ],
-                        }
-                  }
-                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                />
-              </svg>
-            </motion.div>
-            <MasteringEngineVisual
-              activeStep={engineStep}
-              className="relative z-[1] mx-auto w-[min(19rem,85vw)] max-w-[22rem] md:w-[min(21rem,38vw)] md:max-w-[24rem]"
-            />
-          </motion.div>
-        </motion.div>
+        <HeroEngineOrb activeStep={engineStep} className="lg:justify-self-end" />
       </motion.div>
     </section>
   )

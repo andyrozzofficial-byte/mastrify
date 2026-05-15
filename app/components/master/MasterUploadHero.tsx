@@ -3,9 +3,7 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState, type RefObject } from "react"
-import HeroWaveBackdrop from "../HeroWaveBackdrop"
-import LandingHeroAtmosphere from "../LandingHeroAtmosphere"
-import MasteringEngineVisual from "../../master/processing/MasteringEngineVisual"
+import HeroEngineOrb from "../HeroEngineOrb"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import MasterUploadCard from "./MasterUploadCard"
 
@@ -48,7 +46,7 @@ export default function MasterUploadHero({
   }, [loaded, reduce])
 
   return (
-    <section className="relative w-full overflow-x-hidden">
+    <section className="relative w-full overflow-visible">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
@@ -136,26 +134,11 @@ export default function MasterUploadHero({
           </p>
         </div>
 
-        {/* Orb visual — compact accent on mobile, full column on desktop */}
-        <motion.div
-          className="relative mx-auto flex w-full max-w-[14rem] justify-center overflow-hidden max-lg:order-2 max-lg:max-h-[11.5rem] max-lg:py-1 sm:max-w-[16rem] sm:max-h-[13rem] lg:sticky lg:top-20 lg:max-h-none lg:max-w-none lg:justify-end lg:py-0"
-          initial={reduce ? false : { opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
-        >
-          <LandingHeroAtmosphere compact />
-          <motion.div
-            className="relative w-full max-w-[min(14rem,78vw)] sm:max-w-[16rem] lg:max-w-[28rem]"
-            animate={loaded ? { scale: 1.02 } : { scale: 1 }}
-            transition={{ duration: 0.55, ease: EASE }}
-          >
-            <HeroWaveBackdrop heightClass="h-[32%] lg:h-[40%]" className={loaded ? "opacity-[0.2] lg:opacity-[0.26]" : "opacity-[0.14] lg:opacity-[0.2]"} />
-            <MasteringEngineVisual
-              activeStep={engineStep}
-              className="relative z-[1] mx-auto w-[min(11.5rem,72vw)] max-w-[14rem] sm:w-[min(13rem,76vw)] sm:max-w-[16rem] md:w-[min(18rem,40vw)] md:max-w-[22rem] lg:w-[min(22rem,40vw)] lg:max-w-[26rem]"
-            />
-          </motion.div>
-        </motion.div>
+        <HeroEngineOrb
+          activeStep={engineStep}
+          compactAtmosphere
+          className="max-lg:order-2 lg:sticky lg:top-20 lg:justify-self-end"
+        />
       </motion.div>
     </section>
   )
