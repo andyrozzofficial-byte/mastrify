@@ -1045,7 +1045,9 @@ app.post("/master",
           if (r.url) r.fullUrl = `${baseUrl}${r.url}`
         }
         resPayload.chainSweepReport = sweep
-        resPayload.culpritSummary = sweep.culpritSummary
+        resPayload.culpritSummary = masterResult.culpritSummary ?? sweep.culpritSummary
+        resPayload.likelySuspect =
+          masterResult.likelySuspect ?? sweep.culpritSummary?.mostLikely ?? sweep.mostMovement ?? null
         resPayload.chainSweepConsole = sweep.consoleReport
       }
       if (PIPELINE_DEBUG) {

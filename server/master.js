@@ -43,6 +43,9 @@ const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
 const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-raw-chain-sweep"
 
+/** Local dev: MASTRIFY_CHAIN_SWEEP=1 forces raw A–E sweep on every /master call. */
+const CHAIN_SWEEP_FORCED_BY_ENV = process.env.MASTRIFY_CHAIN_SWEEP === "1"
+
 /** Max integrated lift loudnorm may pursue above measured input. */
 const LOUDNORM_MAX_RECOVERY_STREAMING_LU = 6
 const LOUDNORM_MAX_RECOVERY_LOUD_LU = 8
@@ -1450,7 +1453,11 @@ export async function masterTrack({
   const chainDebugActive = Boolean(activeChainMode) || CHAIN_DEBUG_ENV
   const chainStages = activeChainMode?.stages ?? CHAIN_DEBUG_MODES.E.stages
   const chainDebugModeId = activeChainMode?.id ?? "E"
-  const chainSweep = isChainDebugSweepRequested(chainDebugSweepIn)
+  const chainSweepForcedByEnv = CHAIN_SWEEP_FORCED_BY_ENV
+  const chainSweep = chainSweepForcedByEnv || isChainDebugSweepRequested(chainDebugSweepIn)
+  if (chainSweepForcedByEnv) {
+    console.log("[master] chain sweep forced by env")
+  }
   /** Raw A–E sweep: no adaptive reruns, no transparent/static safety — pure stage isolation. */
   const rawChainIsolation = chainSweep
 
@@ -1958,8 +1965,12 @@ export async function masterTrack({
         hotClubProtection: false,
       }),
       chainSweepReport,
+      culpritSummary: chainSweepReport.culpritSummary,
+      likelySuspect:
+        chainSweepReport.culpritSummary?.mostLikely ?? chainSweepReport.mostMovement ?? null,
       chainDiagnostics: { sweep: chainSweepReport, rawIsolation: true },
       rawChainIsolation: true,
+      chainSweepForcedByEnv,
     }
   }
 
