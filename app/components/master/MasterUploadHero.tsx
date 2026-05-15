@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState, type RefObject } from "react"
-import CinematicDivider from "../CinematicDivider"
 import HeroWaveBackdrop from "../HeroWaveBackdrop"
 import LandingHeroAtmosphere from "../LandingHeroAtmosphere"
 import MasteringEngineVisual from "../../master/processing/MasteringEngineVisual"
@@ -107,11 +106,12 @@ export default function MasterUploadHero({
           </motion.div>
 
           <motion.div
-            className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center"
+            className="mt-6 w-full max-w-[29.5rem] lg:max-w-none"
             initial={reduce ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: EASE }}
           >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <button
               type="button"
               disabled={!file}
@@ -130,9 +130,15 @@ export default function MasterUploadHero({
             >
               Analyze mix first
             </Link>
+            </div>
+            <p className="mt-2.5 text-[11px] leading-snug text-muted sm:text-[12px]">
+              Pay only for masters you export
+              <span className="text-muted-soft"> · </span>
+              Typically 30–60 seconds per render
+            </p>
           </motion.div>
 
-          <div className="mt-8 grid gap-2 sm:grid-cols-3 sm:gap-2.5">
+          <div className="mt-6 grid gap-2 sm:grid-cols-3 sm:gap-2.5">
             {FEATURES.map((item, i) => (
               <motion.div
                 key={item.title}
@@ -147,7 +153,7 @@ export default function MasterUploadHero({
             ))}
           </div>
 
-          <p className="mt-6 text-[11px] text-white/60">
+          <p className="mt-5 text-[11px] text-white/60">
             <Link href="/how-it-works" className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline">
               Why Mastrify
             </Link>
@@ -216,23 +222,6 @@ export default function MasterUploadHero({
             />
           </motion.div>
         </motion.div>
-      </motion.div>
-
-      <motion.div
-        className="relative mt-14 md:mt-16"
-        initial={reduce ? false : { opacity: 0 }}
-        whileInView={reduce ? undefined : { opacity: 1 }}
-        viewport={{ once: true, margin: "-40px" }}
-        transition={{ duration: 0.7 }}
-      >
-        <CinematicDivider />
-        <motion.p
-          className="mt-8 text-center text-[12px] leading-relaxed text-white/58 md:text-[13px]"
-          animate={reduce ? undefined : { opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        >
-          Pay only for masters you export · Typically 30–60 seconds per render
-        </motion.p>
       </motion.div>
     </section>
   )
