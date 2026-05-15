@@ -29,7 +29,7 @@ if (!fs.existsSync(mastersDir)) {
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
-const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-kick-sub-transparent"
+const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260515-transparent-loudness"
 
 function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n))
@@ -114,6 +114,11 @@ function isStreamingProfile(requestedLufs) {
   return r <= -10.5 && r >= -14.5
 }
 
+/** Transparent loudness — minimal intervention; punch over exact LUFS. */
+function isTransparentLoudnessMode(requestedLufs) {
+  return isStreamingProfile(requestedLufs)
+}
+
 /** Stereo width — `extrastereo` m≈1 is neutral; wider >1, narrower <1. */
 function buildStereoStage(stereoEnhance, style, hotClubProtection = false) {
   let se = clamp(parseIntSlider(stereoEnhance, 50), 0, 100)
@@ -192,11 +197,15 @@ function compressorForStyleAndTarget(style, integratedTarget, compIntensity = 1,
   return scaleCompressorIntensity(comp, compIntensity, streaming)
 }
 
-/** Looser TP ceiling — less brick-wall limiting inside loudnorm (reduces pumping). */
+/** Looser TP ceiling — transparent streaming uses maximum headroom inside loudnorm. */
 function truePeakForLoudnormTarget(integratedTarget, requestedTarget) {
   const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
   const req =
     typeof requestedTarget === "number" && Number.isFinite(requestedTarget) ? requestedTarget : t
+  if (isTransparentLoudnessMode(req)) {
+    if (req >= -11.5 && req <= -10.5) return -1.85
+    return -1.95
+  }
   if (req >= -10 && t < req - 0.3) return -1.35
   if (t >= -9.5) return -1.15
   if (t >= -10.5) return -1.25
@@ -218,6 +227,7 @@ function lraForStyleAndTarget(style, integratedTarget, requestedTarget) {
   const t = typeof integratedTarget === "number" && Number.isFinite(integratedTarget) ? integratedTarget : -14
   const req =
     typeof requestedTarget === "number" && Number.isFinite(requestedTarget) ? requestedTarget : t
+  if (isTransparentLoudnessMode(req)) return 15
   if (isHotLoudnessTarget(req) && (style === "CLUB" || style === "FESTIVAL" || style === "LOUD")) {
     return Math.max(base, 13)
   }
@@ -226,24 +236,31 @@ function lraForStyleAndTarget(style, integratedTarget, requestedTarget) {
   return Math.max(base, 12)
 }
 
-/** Ask loudnorm for slightly lower I= than resolved target — less gain-riding, stable dynamics. */
+/**
+ * Ask loudnorm for lower I= than resolved — transparent streaming chases level loosely, not tightly.
+ */
 function loudnessTargetForLoudnorm(resolvedLufs, requestedLufs, ctx) {
-  let slack = isHotLoudnessTarget(requestedLufs) ? 0.65 : 0.55
-  if (isStreamingProfile(requestedLufs)) slack += 0.2
-  if (requestedLufs >= -11.5 && requestedLufs <= -10.5) slack += 0.15
+  const transparent = isTransparentLoudnessMode(requestedLufs)
+  let slack = isHotLoudnessTarget(requestedLufs) ? 0.7 : transparent ? 0.95 : 0.55
+  if (transparent) slack += 0.4
+  if (transparent && requestedLufs >= -11.5 && requestedLufs <= -10.5) slack += 0.45
   const dr = ctx?.dynamicRange
   const bass = ctx?.bassWeight
   const crest = estimateCrestDb(ctx)
-  if (dr != null && dr > 9.5) slack += 0.25
-  if (dr != null && dr > 12) slack += 0.2
-  if (bass != null && bass > 0.4) slack += 0.25
-  if (bass != null && bass > 0.5) slack += 0.2
-  if (crest != null && crest < 9 && bass != null && bass > 0.38) slack += 0.25
+  if (dr != null && dr > 8) slack += transparent ? 0.35 : 0.25
+  if (dr != null && dr > 11) slack += transparent ? 0.25 : 0.2
+  if (bass != null && bass > 0.38) slack += transparent ? 0.4 : 0.25
+  if (bass != null && bass > 0.5) slack += transparent ? 0.3 : 0.2
+  if (crest != null && crest < 9.5) slack += transparent ? 0.35 : 0.2
+  if (crest != null && crest < 8 && bass != null && bass > 0.35) slack += 0.3
+  const maxSlack = transparent ? 3 : isHotLoudnessTarget(requestedLufs) ? 2.1 : 1.9
+  slack = Math.min(slack, maxSlack)
   const floor = isHotLoudnessTarget(requestedLufs) ? -11.5 : -16
   const loudnormI = Math.max(resolvedLufs - slack, floor)
   return {
     loudnormI: Number(loudnormI.toFixed(2)),
     pursuitSlackLu: Number(slack.toFixed(2)),
+    transparentMode: transparent,
   }
 }
 
@@ -252,7 +269,18 @@ function softenLoudnormOffsetDb(offsetDb, cap = 1.65) {
   const sign = Math.sign(offsetDb) || 1
   const abs = Math.abs(offsetDb)
   if (abs <= cap) return offsetDb
-  return sign * (cap + (abs - cap) * 0.15)
+  return sign * (cap + (abs - cap) * 0.1)
+}
+
+/** Pass-2 offset — cap hard, then attenuate micro-corrections in transparent mode. */
+function applyTransparentLoudnormOffset(offsetDb, cap, transparent = false) {
+  if (!Number.isFinite(offsetDb)) return offsetDb
+  let o = softenLoudnormOffsetDb(offsetDb, cap)
+  if (!transparent) return o
+  const sign = Math.sign(o) || 1
+  const abs = Math.abs(o)
+  if (abs < 0.45) return 0
+  return sign * abs * 0.5
 }
 
 function headroomContextFromAnalysis(preAnalysis, ebuInputIntegrated, pass1Json = null) {
@@ -301,13 +329,17 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
       backoff += 0.2
       reasons.push(`streamingLargeGap=${(requested - integrated).toFixed(1)}LU`)
     }
-    backoff += 0.35
-    reasons.push("streamingStabilitySlack")
+    backoff += 0.5
+    reasons.push("transparentStreamingSlack")
     if (integrated != null && requested - integrated > 4) {
-      backoff += 0.25
+      backoff += 0.35
       reasons.push(`streamingGap=${(requested - integrated).toFixed(1)}LU`)
     }
-    backoff = Math.min(backoff, 1.25)
+    if (requested >= -11.5 && requested <= -10.5) {
+      backoff += 0.25
+      reasons.push("spotifyLoudTierSlack")
+    }
+    backoff = Math.min(backoff, 1.65)
     const resolved = Math.max(requested - backoff, -16)
     return {
       requested,
@@ -393,19 +425,21 @@ function resolveSafeIntegratedLufs(requestedLufs, ctx) {
  * Minimal pregain — loudnorm handles level; avoid stacking gain before it.
  * Streaming: max ~+3 dB. Club: max ~+1.25 dB.
  */
-function computeAdaptivePregain(resolvedLufs, ctx, pregainScale = 1) {
+function computeAdaptivePregain(resolvedLufs, ctx, pregainScale = 1, requestedLufs = -14) {
   const integrated = ctx.integratedLufs
   if (integrated == null || !Number.isFinite(integrated)) {
     return { pregainDb: 0, factors: {}, maxGainCap: 0 }
   }
 
+  const transparent = isTransparentLoudnessMode(requestedLufs)
   const gap = resolvedLufs - integrated
-  if (gap <= 1.15) return { pregainDb: 0, factors: { gap, note: "nearTarget" }, maxGainCap: 0 }
+  const gapFloor = transparent ? 1.45 : 1.15
+  if (gap <= gapFloor) return { pregainDb: 0, factors: { gap, note: "nearTarget", transparent }, maxGainCap: 0 }
 
   const hot = isHotLoudnessTarget(resolvedLufs)
-  const maxGain = hot ? 0.85 : 2.5
-  let factor = hot ? 0.1 : 0.2
-  const factors = { gap, hot, baseFactor: factor, maxGainCap: maxGain }
+  const maxGain = hot ? 0.75 : transparent ? 1.05 : 2.5
+  let factor = hot ? 0.08 : transparent ? 0.1 : 0.2
+  const factors = { gap, hot, transparent, baseFactor: factor, maxGainCap: maxGain }
 
   const dr = ctx.dynamicRange
   if (dr != null && dr > 9) {
@@ -605,7 +639,7 @@ function assessAntiPumping({ ctx, pass1Json, resolvedLufs, requestedLufs, pregai
   const triggers = []
   let pregainScale = 1
   let compIntensity = 1
-  let offsetCap = isStreamingProfile(requestedLufs) ? 1.55 : 1.75
+  let offsetCap = isTransparentLoudnessMode(requestedLufs) ? 1.05 : 1.75
   let pumpingRisk = 0
 
   if (!pass1Json) {
@@ -629,12 +663,19 @@ function assessAntiPumping({ ctx, pass1Json, resolvedLufs, requestedLufs, pregai
     pumpingRisk += 0.35
   }
 
-  if (offset != null && Math.abs(offset) > 1.65) {
+  const offsetTrip = isStreamingProfile(requestedLufs) ? 1.15 : 1.65
+  if (offset != null && Math.abs(offset) > offsetTrip) {
     triggers.push(`gainRidingOffset=${offset.toFixed(1)}dB`)
-    pregainScale *= offset > 0 ? 0.5 : 0.65
-    compIntensity *= 0.72
-    offsetCap = Math.min(offsetCap, 1.1)
+    pregainScale *= offset > 0 ? 0.45 : 0.6
+    compIntensity *= 0.68
+    offsetCap = Math.min(offsetCap, isStreamingProfile(requestedLufs) ? 0.85 : 1.05)
     pumpingRisk += Math.min(0.4, Math.abs(offset) / 6)
+  }
+  if (offset != null && isStreamingProfile(requestedLufs) && Math.abs(offset) > 0.55) {
+    triggers.push(`microOffset=${offset.toFixed(2)}dB`)
+    offsetCap = Math.min(offsetCap, 0.75)
+    pregainScale *= 0.55
+    pumpingRisk += 0.18
   }
 
   if (inputI != null && outputI != null && Math.abs(outputI - inputI) > 1.35) {
@@ -757,10 +798,11 @@ function lowEndPreLoudnessFilters(ctx) {
   )
 }
 
-/** Ceiling limiter — faster recovery on streaming to avoid post-kick swell. */
-function gentleCeilingLimiter(streaming = false) {
+/** Ceiling limiter — omitted in transparent streaming (loudnorm-only stabilization). */
+function gentleCeilingLimiter(streaming = false, transparent = false) {
+  if (transparent) return ""
   if (streaming) {
-    return `alimiter=level_in=1:level_out=0.945:limit=0.96:attack=7:release=98:asc=0,`
+    return `alimiter=level_in=1:level_out=0.95:limit=0.97:attack=9:release=110:asc=0,`
   }
   return `alimiter=level_in=1:level_out=0.935:limit=0.95:attack=10:release=140:asc=0,`
 }
@@ -979,14 +1021,16 @@ function extractLoudnormJsonFromStderr(stderr) {
   return null
 }
 
-function loudnormMeasuredToOpts(j, offsetCap = 1.65) {
+function loudnormMeasuredToOpts(j, offsetCap = 1.65, transparent = false) {
   if (!j || j.input_i == null) return null
   const qn = (v) => {
     const n = parseFloat(String(v).replace(/"/g, "").trim())
     return Number.isFinite(n) ? n.toFixed(4) : "0.0000"
   }
   const rawOffset = parseFloat(String(j.target_offset ?? j.offset ?? "").replace(/"/g, "").trim())
-  const softened = Number.isFinite(rawOffset) ? softenLoudnormOffsetDb(rawOffset, offsetCap) : 0
+  const softened = Number.isFinite(rawOffset)
+    ? applyTransparentLoudnormOffset(rawOffset, offsetCap, transparent)
+    : 0
   return {
     measured_I: qn(j.input_i),
     measured_LRA: qn(j.input_lra),
@@ -994,7 +1038,9 @@ function loudnormMeasuredToOpts(j, offsetCap = 1.65) {
     measured_thresh: qn(j.input_thresh),
     offset: softened.toFixed(4),
     offsetRaw: Number.isFinite(rawOffset) ? rawOffset.toFixed(4) : null,
-    offsetSoftened: Number.isFinite(rawOffset) && Math.abs(rawOffset - softened) > 0.05,
+    offsetSoftened:
+      Number.isFinite(rawOffset) && Math.abs(rawOffset - softened) > 0.04,
+    transparentOffset: transparent,
   }
 }
 
@@ -1139,13 +1185,15 @@ export async function masterTrack({
   let adaptiveLoudness = resolveSafeIntegratedLufs(requestedLufs, headroomCtxInitial)
   let safeIntegratedLufs = adaptiveLoudness.resolved
 
+  const transparentLoudnorm = isTransparentLoudnessMode(requestedLufs)
   let stagingDb = 0
-  let adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, headroomCtxInitial, 1)
+  let adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, headroomCtxInitial, 1, requestedLufs)
   let autoPreGainDb = adaptiveGain.pregainDb
   let compIntensity = 1
-  let loudnormOffsetCap = isStreamingProfile(requestedLufs) ? 1.55 : 1.75
+  let loudnormOffsetCap = transparentLoudnorm ? 1.05 : 1.75
   if (!isHotLoudnessTarget(requestedLufs)) {
-    compIntensity = requestedLufs >= -11.5 && requestedLufs <= -10.5 ? 0.48 : 0.55
+    compIntensity =
+      requestedLufs >= -11.5 && requestedLufs <= -10.5 ? 0.38 : transparentLoudnorm ? 0.42 : 0.5
   }
   if (headroomCtxInitial.dynamicRange != null && headroomCtxInitial.dynamicRange > 10) {
     compIntensity *= 0.8
@@ -1165,7 +1213,8 @@ export async function masterTrack({
     adaptiveGain = computeAdaptivePregain(
       safeIntegratedLufs,
       headroomCtxInitial,
-      transientSafety.pregainScale
+      transientSafety.pregainScale,
+      requestedLufs
     )
     autoPreGainDb = adaptiveGain.pregainDb
     compIntensity = transientSafety.compIntensity
@@ -1210,7 +1259,11 @@ export async function masterTrack({
     ebuInputIntegrated,
     headroom: headroomCtxInitial,
     compressionIntensity: compIntensity,
-    philosophy: "transient-first-minimal-pregain",
+    transparentLoudnormMode: transparentLoudnorm,
+    loudnormOffsetCap,
+    philosophy: transparentLoudnorm
+      ? "transparent-loudness-stabilization"
+      : "transient-first-minimal-pregain",
   })
 
   function buildColorPipeline(resolvedLufs, pregainDb, compInt = compIntensity, ctx = headroomCtxInitial) {
@@ -1218,6 +1271,7 @@ export async function masterTrack({
     const lufsForLoudnorm = targetPlan.loudnormI
     const lraVal = lraForStyleAndTarget(style, resolvedLufs, requestedLufs)
     const streaming = isStreamingProfile(requestedLufs)
+    const transparent = isTransparentLoudnessMode(requestedLufs)
     const compVal = compressorForStyleAndTarget(style, resolvedLufs, compInt, requestedLufs)
     const tpVal = truePeakForLoudnormTarget(resolvedLufs, requestedLufs)
     const tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
@@ -1228,8 +1282,9 @@ export async function masterTrack({
     const kickSubGuard = kickSubTransparencyFilters(ctx)
     const volumeStaging = stagingDb === 0 ? "" : `volume=${stagingDb.toFixed(2)}dB,`
     const autoPreVol = pregainDb > 0 ? `volume=${pregainDb.toFixed(2)}dB,` : ""
+    const compBypass = transparent ? 0.52 : 0.48
     const compStage =
-      compInt < 0.48
+      compInt < compBypass
         ? ""
         : `acompressor=threshold=${compVal.threshold}dB:ratio=${compVal.ratio}:attack=${compVal.attack}:release=${compVal.release}:makeup=0,`
 
@@ -1258,7 +1313,7 @@ export async function masterTrack({
       styleTail +
       clubProt +
       lowEndPreLoudnessFilters(ctx) +
-      gentleCeilingLimiter(streaming) +
+      gentleCeilingLimiter(streaming, transparent) +
       autoPreVol
 
     return {
@@ -1269,8 +1324,10 @@ export async function masterTrack({
       comp: compVal,
       loudnormI: lufsForLoudnorm,
       pursuitSlackLu: targetPlan.pursuitSlackLu,
+      transparentMode: targetPlan.transparentMode ?? transparent,
       lowEndProtectionTriggers: [...lowEndGuard.triggers, ...kickSubGuard.triggers],
-      compressionBypassed: compInt < 0.48,
+      compressionBypassed: compInt < compBypass,
+      ceilingLimiterBypassed: transparent,
     }
   }
 
@@ -1306,7 +1363,7 @@ export async function masterTrack({
       if (r1.code === 0) {
         pass1Json = extractLoudnormJsonFromStderr(r1.stderr)
       }
-      const measured = loudnormMeasuredToOpts(pass1Json, loudnormOffsetCap)
+      const measured = loudnormMeasuredToOpts(pass1Json, loudnormOffsetCap, transparentLoudnorm)
       if (measured) {
         filterFinal =
           `${pipe.colorBase}loudnorm=${stem}:measured_I=${measured.measured_I}:measured_LRA=${measured.measured_LRA}:measured_TP=${measured.measured_TP}:measured_thresh=${measured.measured_thresh}:offset=${measured.offset}:linear=true`
@@ -1384,7 +1441,12 @@ export async function masterTrack({
       compIntensity = Math.min(pass1Safety.compIntensity, antiPumping.compIntensity)
       const combinedPregainScale = pass1Safety.pregainScale * antiPumping.pregainScale
       loudnormOffsetCap = Math.min(loudnormOffsetCap, antiPumping.offsetCap)
-      adaptiveGain = computeAdaptivePregain(safeIntegratedLufs, ctxPass1, combinedPregainScale)
+      adaptiveGain = computeAdaptivePregain(
+        safeIntegratedLufs,
+        ctxPass1,
+        combinedPregainScale,
+        requestedLufs
+      )
       autoPreGainDb = adaptiveGain.pregainDb
       loudnormTargetPlan = loudnessTargetForLoudnorm(safeIntegratedLufs, requestedLufs, ctxPass1)
 
@@ -1403,7 +1465,10 @@ export async function masterTrack({
         resolvedSafeLufs: safeIntegratedLufs,
         pursuitSlackLu: loudnormTargetPlan.pursuitSlackLu,
         loudnormOffsetRaw: parseLoudnormJsonNum(loudnormPass1Json, "target_offset"),
-        loudnormOffsetSoftened: loudnormMeasuredToOpts(loudnormPass1Json, loudnormOffsetCap)?.offsetSoftened ?? null,
+        loudnormOffsetSoftened:
+          loudnormMeasuredToOpts(loudnormPass1Json, loudnormOffsetCap, transparentLoudnorm)?.offsetSoftened ??
+          null,
+        transparentLoudnormMode: transparentLoudnorm,
         antiPumpingRisk: antiPumping.pumpingRisk,
         antiPumpingTriggers: antiPumping.triggers,
         limiterGainReductionEstimateDb: limiterGr,
@@ -1471,6 +1536,7 @@ export async function masterTrack({
     lowEndProtectionTriggers: transientSafety?.lowEndProtectionTriggers ?? [],
     compressionIntensity: compIntensity,
     loudnormOffsetCap,
+    transparentLoudnormMode: transparentLoudnorm,
     loudnormOverDriven: transientSafety?.loudnormOverDriven ?? false,
     antiPumpingRisk: antiPumping?.pumpingRisk ?? null,
   })
