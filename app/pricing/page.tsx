@@ -11,7 +11,8 @@ const EASE = [0.22, 1, 0.36, 1] as const
 
 function handleUnlock() {
   localStorage.setItem("unlocked", "true")
-  window.location.href = "/app"
+  localStorage.setItem("paid", "true")
+  window.location.href = "/master"
 }
 
 export default function Pricing() {
