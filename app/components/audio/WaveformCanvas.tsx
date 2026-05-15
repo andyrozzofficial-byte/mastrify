@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react"
 import {
   getStageVisualState,
+  getVariantVisual,
   lerpPeaks,
-  type StageVisualState,
   type WaveformPeakSet,
 } from "./waveform.utils"
 
@@ -30,13 +30,19 @@ type AnimState = {
   blend: number
   scaleX: number
   scaleY: number
+  polish: number
+  fieldWidth: number
   energy: number
+  playT: number
+  hoverT: number
+  liftY: number
 }
 
-const COLORS = {
-  glow: "rgba(139,92,246,0.35)",
-  playhead: "rgba(245,243,255,0.92)",
-}
+type Spark = { x: number; y: number; life: number; size: number }
+
+const LERP_PEAKS = 0.13
+const LERP_PLAY = 0.16
+const LERP_HOVER = 0.22
 
 function drawWavePath(
   ctx: CanvasRenderingContext2D,
@@ -44,41 +50,105 @@ function drawWavePath(
   stereo: Float32Array,
   width: number,
   height: number,
+  midY: number,
   scaleX: number,
   scaleY: number,
-  stereoBoost: number
+  stereoBoost: number,
+  ampScale: number
 ) {
-  const mid = height / 2
-  const maxH = (height * 0.42) * scaleY
+  const maxH = height * 0.42 * scaleY * ampScale
   const n = peaks.length
   const step = width / (n - 1)
   const offsetX = (width - width * scaleX) / 2
 
   ctx.beginPath()
   for (let i = 0; i < n; i++) {
-    const spread = 1 + stereo[i] * stereoBoost * 0.12
+    const spread = 1 + stereo[i] * stereoBoost * 0.14
     const amp = peaks[i] * maxH * spread
     const x = offsetX + i * step * scaleX
-    const y = mid - amp
+    const y = midY - amp
     if (i === 0) ctx.moveTo(x, y)
     else ctx.lineTo(x, y)
   }
   for (let i = n - 1; i >= 0; i--) {
-    const spread = 1 + stereo[i] * stereoBoost * 0.12
+    const spread = 1 + stereo[i] * stereoBoost * 0.14
     const amp = peaks[i] * maxH * spread
     const x = offsetX + i * step * scaleX
-    const y = mid + amp
+    const y = midY + amp
     ctx.lineTo(x, y)
   }
   ctx.closePath()
 }
 
-function fillGradient(ctx: CanvasRenderingContext2D, width: number, height: number, alpha = 1) {
-  const g = ctx.createLinearGradient(0, height * 0.2, width, height * 0.8)
-  g.addColorStop(0, `rgba(196,181,253,${0.55 * alpha})`)
-  g.addColorStop(0.45, `rgba(165,180,252,${0.72 * alpha})`)
-  g.addColorStop(1, `rgba(125,211,252,${0.5 * alpha})`)
+function fillGradient(ctx: CanvasRenderingContext2D, width: number, height: number, alpha: number, cool: boolean) {
+  const g = ctx.createLinearGradient(0, height * 0.15, width, height * 0.85)
+  if (cool) {
+    g.addColorStop(0, `rgba(196,181,253,${0.5 * alpha})`)
+    g.addColorStop(0.45, `rgba(165,180,252,${0.78 * alpha})`)
+    g.addColorStop(1, `rgba(125,211,252,${0.55 * alpha})`)
+  } else {
+    g.addColorStop(0, `rgba(196,181,253,${0.38 * alpha})`)
+    g.addColorStop(0.5, `rgba(148,163,184,${0.42 * alpha})`)
+    g.addColorStop(1, `rgba(148,163,184,${0.28 * alpha})`)
+  }
   return g
+}
+
+function applyLivePeaks(
+  out: Float32Array,
+  source: Float32Array,
+  phase: number,
+  playT: number,
+  isPlaying: boolean,
+  energy: number,
+  stability: number
+) {
+  const motion = isPlaying ? 1 : 0.35
+  const damp = 0.012 * motion * (1 - stability * 0.65)
+  for (let i = 0; i < source.length; i++) {
+    const t = i / source.length
+    const nearPlay = Math.max(0, 1 - Math.abs(t - playT) * 5)
+    const micro = Math.sin(phase * 2.4 + i * 0.17) * damp * (1 + energy * 0.8)
+    const ripple = Math.sin(phase * 0.85 + t * 6.5) * damp * 0.65
+    const reactive = nearPlay * energy * 0.035 * motion
+    out[i] = Math.max(0, Math.min(1, source[i] * (1 + micro + ripple + reactive)))
+  }
+}
+
+function drawDepthLayers(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  glowMul: number,
+  polish: number,
+  isPlaying: boolean
+) {
+  const cx = w * 0.5
+  const cy = h * 0.52
+
+  const bloom = ctx.createRadialGradient(cx, cy, 0, cx, cy, w * 0.55)
+  bloom.addColorStop(0, `rgba(99,102,241,${0.1 * glowMul})`)
+  bloom.addColorStop(0.45, `rgba(79,70,229,${0.05 * glowMul})`)
+  bloom.addColorStop(1, "rgba(0,0,0,0)")
+  ctx.fillStyle = bloom
+  ctx.fillRect(0, 0, w, h)
+
+  const inner = ctx.createRadialGradient(cx, cy, w * 0.08, cx, cy, w * 0.42)
+  inner.addColorStop(0, `rgba(167,139,250,${0.06 * glowMul * (isPlaying ? 1.15 : 1)})`)
+  inner.addColorStop(1, "rgba(0,0,0,0)")
+  ctx.fillStyle = inner
+  ctx.fillRect(0, 0, w, h)
+
+  const vignette = ctx.createLinearGradient(0, 0, 0, h)
+  vignette.addColorStop(0, `rgba(0,0,0,${0.22 + polish * 0.06})`)
+  vignette.addColorStop(0.35, "rgba(0,0,0,0)")
+  vignette.addColorStop(0.72, "rgba(0,0,0,0)")
+  vignette.addColorStop(1, `rgba(0,0,0,${0.35 + polish * 0.08})`)
+  ctx.fillStyle = vignette
+  ctx.fillRect(0, 0, w, h)
+
+  ctx.fillStyle = "rgba(0,0,0,0.18)"
+  ctx.fillRect(0, h * 0.78, w, h * 0.22)
 }
 
 export default function WaveformCanvas({
@@ -97,7 +167,18 @@ export default function WaveformCanvas({
 }: WaveformCanvasRenderProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const propsRef = useRef({ peaks, altPeaks, blend, progress, hoverProgress, isPlaying, mode, activeStep, variant, reducedMotion })
+  const propsRef = useRef({
+    peaks,
+    altPeaks,
+    blend,
+    progress,
+    hoverProgress,
+    isPlaying,
+    mode,
+    activeStep,
+    variant,
+    reducedMotion,
+  })
   const animRef = useRef<AnimState>({
     phase: 0,
     shimmer: 0.5,
@@ -105,12 +186,33 @@ export default function WaveformCanvas({
     blend: 0,
     scaleX: 1,
     scaleY: 1,
+    polish: 0,
+    fieldWidth: 1,
     energy: 0,
+    playT: 0,
+    hoverT: 0,
+    liftY: 0,
   })
   const blendPeaksRef = useRef<Float32Array | null>(null)
+  const smoothPeaksRef = useRef<Float32Array | null>(null)
+  const livePeaksRef = useRef<Float32Array | null>(null)
+  const sparksRef = useRef<Spark[]>([])
+  const lastSparkIdxRef = useRef(-1)
+  const stereoBlendRef = useRef<Float32Array | null>(null)
   const rafRef = useRef<number | null>(null)
 
-  propsRef.current = { peaks, altPeaks, blend, progress, hoverProgress, isPlaying, mode, activeStep, variant, reducedMotion }
+  propsRef.current = {
+    peaks,
+    altPeaks,
+    blend,
+    progress,
+    hoverProgress,
+    isPlaying,
+    mode,
+    activeStep,
+    variant,
+    reducedMotion,
+  }
 
   useEffect(() => {
     const container = containerRef.current
@@ -136,12 +238,7 @@ export default function WaveformCanvas({
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null
     ro?.observe(container)
 
-    const stageTarget = (): StageVisualState =>
-      propsRef.current.mode === "processing"
-        ? getStageVisualState(propsRef.current.activeStep ?? 0)
-        : { scaleX: 1, scaleY: 1, shimmer: propsRef.current.isPlaying ? 0.55 : 0.25, stability: 1, breathe: 0.5 }
-
-    const draw = (time: number) => {
+    const draw = () => {
       const p = propsRef.current
       const w = container.clientWidth
       const h = height
@@ -151,21 +248,50 @@ export default function WaveformCanvas({
       }
 
       const anim = animRef.current
-      const target = stageTarget()
-      const dt = reducedMotion ? 0 : 0.016
+      const reduced = p.reducedMotion
+      const dt = reduced ? 0 : 0.016
 
-      if (!reducedMotion) {
-        anim.phase += dt * (p.isPlaying ? 1.1 : 0.55)
-        anim.shimmer += (target.shimmer - anim.shimmer) * 0.04
-        anim.breathe += dt * (p.isPlaying ? 1.4 : 0.7)
-        anim.blend += (p.blend - anim.blend) * 0.08
-        anim.scaleX += (target.scaleX - anim.scaleX) * 0.06
-        anim.scaleY += (target.scaleY - anim.scaleY) * 0.06
+      const stage =
+        p.mode === "processing"
+          ? getStageVisualState(p.activeStep ?? 0)
+          : {
+              scaleX: 1,
+              scaleY: 1,
+              shimmer: p.isPlaying ? 0.58 : 0.22,
+              stability: 0.85,
+              breathe: p.isPlaying ? 0.62 : 0.35,
+              polish: p.variant === "mastered" ? 0.85 : 0.35,
+              fieldWidth: 1,
+            }
+
+      const variantVis = getVariantVisual(
+        p.mode === "result" ? anim.blend : 0.22 + anim.polish * 0.15
+      )
+
+      if (!reduced) {
+        anim.phase += dt * (p.isPlaying ? 1.25 : 0.5)
+        anim.shimmer += (stage.shimmer - anim.shimmer) * 0.045
+        anim.breathe += dt * (p.isPlaying ? 1.5 : 0.65)
+        anim.blend += (p.blend - anim.blend) * 0.07
+        anim.scaleX += (stage.scaleX * stage.fieldWidth - anim.scaleX) * 0.055
+        anim.scaleY += (stage.scaleY - anim.scaleY) * 0.055
+        anim.polish += (stage.polish - anim.polish) * 0.05
+        anim.fieldWidth += (stage.fieldWidth - anim.fieldWidth) * 0.05
+
+        const targetPlay = Math.max(0, Math.min(1, p.progress))
+        const playLerp = p.isPlaying ? LERP_PLAY : 0.28
+        anim.playT += (targetPlay - anim.playT) * playLerp
+
+        const targetHover = p.hoverProgress ?? anim.playT
+        anim.hoverT += (targetHover - anim.hoverT) * (p.hoverProgress != null ? LERP_HOVER : 0.12)
       } else {
-        anim.shimmer = target.shimmer
+        anim.shimmer = stage.shimmer
         anim.blend = p.blend
-        anim.scaleX = target.scaleX
-        anim.scaleY = target.scaleY
+        anim.scaleX = stage.scaleX * stage.fieldWidth
+        anim.scaleY = stage.scaleY
+        anim.polish = stage.polish
+        anim.playT = p.progress
+        anim.hoverT = p.hoverProgress ?? p.progress
       }
 
       ctx.clearRect(0, 0, w, h)
@@ -185,88 +311,219 @@ export default function WaveformCanvas({
           blendPeaksRef.current = new Float32Array(base.bars.length)
         }
         bars = lerpPeaks(base.bars, p.altPeaks.bars, anim.blend, blendPeaksRef.current)
-        stereo = p.altPeaks.stereoSpread
+        if (!stereoBlendRef.current || stereoBlendRef.current.length !== base.stereoSpread.length) {
+          stereoBlendRef.current = new Float32Array(base.stereoSpread.length)
+        }
+        stereo = lerpPeaks(base.stereoSpread, p.altPeaks.stereoSpread, anim.blend, stereoBlendRef.current)
       }
 
-      const stereoBoost = p.mode === "processing" && (p.activeStep ?? 0) === 3 ? 1.35 : p.variant === "mastered" ? 0.85 : 0.55
-      const breatheMod = reducedMotion ? 1 : 1 + Math.sin(anim.breathe) * 0.04 * target.breathe
+      if (!smoothPeaksRef.current || smoothPeaksRef.current.length !== bars.length) {
+        smoothPeaksRef.current = new Float32Array(bars.length)
+        smoothPeaksRef.current.set(bars)
+      } else {
+        for (let i = 0; i < bars.length; i++) {
+          smoothPeaksRef.current[i] += (bars[i] - smoothPeaksRef.current[i]) * LERP_PEAKS
+        }
+      }
 
-      ctx.save()
-      ctx.filter = "blur(14px)"
-      ctx.globalAlpha = 0.35 + anim.shimmer * 0.12
-      drawWavePath(ctx, bars, stereo, w, h, anim.scaleX, anim.scaleY * breatheMod, stereoBoost)
-      ctx.fillStyle = COLORS.glow
-      ctx.fill()
-      ctx.restore()
+      if (!livePeaksRef.current || livePeaksRef.current.length !== bars.length) {
+        livePeaksRef.current = new Float32Array(bars.length)
+      }
 
-      const playT = Math.max(0, Math.min(1, p.progress))
-      const hoverT = p.hoverProgress != null ? Math.max(0, Math.min(1, p.hoverProgress)) : null
+      const playIdx = Math.floor(anim.playT * (bars.length - 1))
+      const localEnergy = smoothPeaksRef.current[playIdx] ?? 0
+      anim.energy += (localEnergy - anim.energy) * 0.14
+
+      applyLivePeaks(
+        livePeaksRef.current,
+        smoothPeaksRef.current,
+        anim.phase,
+        anim.playT,
+        p.isPlaying,
+        anim.energy,
+        stage.stability
+      )
+
+      const stereoBoost =
+        (p.mode === "processing" && (p.activeStep ?? 0) === 3 ? 1.28 : 1) *
+        variantVis.stereoMul *
+        anim.fieldWidth
+      const breatheMod = reduced ? 1 : 1 + Math.sin(anim.breathe) * 0.035 * stage.breathe
+      const liftTarget = p.isPlaying ? -anim.energy * 2.2 * (1 - stage.stability * 0.5) : 0
+      anim.liftY += (liftTarget - anim.liftY) * 0.1
+      const midY = h / 2 + anim.liftY
+
+      drawDepthLayers(ctx, w, h, variantVis.glowMul, anim.polish, p.isPlaying)
+
+      const drawGlowLayer = (blur: number, alpha: number) => {
+        ctx.save()
+        ctx.filter = `blur(${blur}px)`
+        ctx.globalAlpha = alpha * variantVis.glowMul
+        drawWavePath(
+          ctx,
+          livePeaksRef.current!,
+          stereo,
+          w,
+          h,
+          midY,
+          anim.scaleX,
+          anim.scaleY * breatheMod,
+          stereoBoost,
+          variantVis.ampScale
+        )
+        ctx.fillStyle = "rgba(139,92,246,0.4)"
+        ctx.fill()
+        ctx.restore()
+      }
+
+      drawGlowLayer(22, 0.22 + anim.shimmer * 0.08)
+      drawGlowLayer(10, 0.28 + anim.shimmer * 0.1)
+
+      const playT = anim.playT
+      const hoverT = p.hoverProgress != null ? anim.hoverT : null
       const splitX = playT * w
+      const isMasteredTone = variantVis.glowMul > 0.52
 
       ctx.save()
-      drawWavePath(ctx, bars, stereo, w, h, anim.scaleX, anim.scaleY * breatheMod, stereoBoost)
+      ctx.globalAlpha = variantVis.opacity
+      drawWavePath(
+        ctx,
+        livePeaksRef.current!,
+        stereo,
+        w,
+        h,
+        midY,
+        anim.scaleX,
+        anim.scaleY * breatheMod,
+        stereoBoost,
+        variantVis.ampScale
+      )
       ctx.clip()
-      ctx.fillStyle = fillGradient(ctx, w, h, 0.85)
+      ctx.fillStyle = fillGradient(ctx, w, h, 0.82, isMasteredTone)
       ctx.fill()
       ctx.restore()
 
       if (splitX > 0.5) {
         ctx.save()
-        drawWavePath(ctx, bars, stereo, w, h, anim.scaleX, anim.scaleY * breatheMod, stereoBoost)
+        ctx.globalAlpha = Math.min(1, variantVis.opacity + 0.12)
+        drawWavePath(
+          ctx,
+          livePeaksRef.current!,
+          stereo,
+          w,
+          h,
+          midY,
+          anim.scaleX,
+          anim.scaleY * breatheMod,
+          stereoBoost,
+          variantVis.ampScale
+        )
         ctx.beginPath()
         ctx.rect(0, 0, splitX, h)
         ctx.clip()
-        ctx.fillStyle = fillGradient(ctx, w, h, 1)
+        ctx.fillStyle = fillGradient(ctx, w, h, 1, true)
         ctx.fill()
         ctx.restore()
       }
 
-      drawWavePath(ctx, bars, stereo, w, h, anim.scaleX, anim.scaleY * breatheMod, stereoBoost)
-      ctx.strokeStyle = "rgba(255,255,255,0.08)"
-      ctx.lineWidth = 1
-      ctx.stroke()
-
-      if (p.isPlaying && !reducedMotion) {
-        const shimmerX = ((Math.sin(anim.phase * 0.9) * 0.5 + 0.5) * 0.85 + 0.05) * w
-        const g = ctx.createLinearGradient(shimmerX - 60, 0, shimmerX + 60, 0)
-        g.addColorStop(0, "rgba(255,255,255,0)")
-        g.addColorStop(0.5, `rgba(196,181,253,${0.12 * anim.shimmer})`)
-        g.addColorStop(1, "rgba(255,255,255,0)")
-        ctx.fillStyle = g
-        ctx.fillRect(0, 0, w, h)
-      }
-
-      const peakIdx = Math.floor(playT * (bars.length - 1))
-      if (bars[peakIdx] > 0.72 && p.isPlaying && !reducedMotion) {
-        const sparkX = (peakIdx / (bars.length - 1)) * w
-        ctx.beginPath()
-        ctx.arc(sparkX, h * 0.5 - bars[peakIdx] * h * 0.2, 2.2, 0, Math.PI * 2)
-        ctx.fillStyle = "rgba(255,255,255,0.45)"
-        ctx.fill()
-      }
-
-      const headX = playT * w
-      const pulse = reducedMotion ? 1 : 1 + Math.sin(anim.phase * 3.2) * 0.15 * (p.isPlaying ? 1 : 0.35)
       ctx.save()
-      ctx.strokeStyle = COLORS.playhead
-      ctx.lineWidth = 1.5 * pulse
-      ctx.shadowColor = "rgba(167,139,250,0.55)"
-      ctx.shadowBlur = 8
-      ctx.beginPath()
-      ctx.moveTo(headX, h * 0.12)
-      ctx.lineTo(headX, h * 0.88)
+      ctx.globalAlpha = variantVis.opacity * 0.9
+      drawWavePath(
+        ctx,
+        livePeaksRef.current!,
+        stereo,
+        w,
+        h,
+        midY,
+        anim.scaleX,
+        anim.scaleY * breatheMod,
+        stereoBoost,
+        variantVis.ampScale
+      )
+      ctx.strokeStyle = `rgba(255,255,255,${0.06 * variantVis.strokeMul})`
+      ctx.lineWidth = variantVis.strokeMul
       ctx.stroke()
       ctx.restore()
 
-      if (hoverT != null && Math.abs(hoverT - playT) > 0.01) {
-        const hx = hoverT * w
-        ctx.save()
-        ctx.strokeStyle = "rgba(255,255,255,0.22)"
-        ctx.lineWidth = 1
-        ctx.setLineDash([3, 4])
+      if (p.isPlaying && !reduced) {
+        const shimmerX = ((Math.sin(anim.phase * 0.85) * 0.5 + 0.5) * 0.82 + 0.06) * w
+        const g = ctx.createLinearGradient(shimmerX - 72, 0, shimmerX + 72, 0)
+        g.addColorStop(0, "rgba(255,255,255,0)")
+        g.addColorStop(0.5, `rgba(196,181,253,${0.1 * anim.shimmer * variantVis.glowMul})`)
+        g.addColorStop(1, "rgba(255,255,255,0)")
+        ctx.fillStyle = g
+        ctx.fillRect(0, 0, w, h)
+
+        const scanX = playT * w
+        const scanG = ctx.createLinearGradient(scanX - 28, 0, scanX + 28, 0)
+        scanG.addColorStop(0, "rgba(255,255,255,0)")
+        scanG.addColorStop(0.5, `rgba(125,211,252,${0.06 * anim.shimmer})`)
+        scanG.addColorStop(1, "rgba(255,255,255,0)")
+        ctx.fillStyle = scanG
+        ctx.fillRect(0, 0, w, h)
+      }
+
+      if (p.isPlaying && !reduced && localEnergy > 0.58 && playIdx !== lastSparkIdxRef.current) {
+        if (Math.random() < 0.35 + localEnergy * 0.4) {
+          const sx = (playIdx / (bars.length - 1)) * w
+          const sy = midY - livePeaksRef.current![playIdx] * h * 0.18
+          sparksRef.current.push({ x: sx, y: sy, life: 1, size: 1.5 + localEnergy * 2 })
+          lastSparkIdxRef.current = playIdx
+        }
+      }
+
+      sparksRef.current = sparksRef.current.filter((s) => {
+        s.life -= 0.045
+        if (s.life <= 0) return false
+        const a = s.life * s.life * 0.35 * variantVis.glowMul
         ctx.beginPath()
-        ctx.moveTo(hx, h * 0.15)
-        ctx.lineTo(hx, h * 0.85)
+        ctx.arc(s.x, s.y, s.size * (2 - s.life), 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255,255,255,${a})`
+        ctx.fill()
+        return true
+      })
+
+      const headX = playT * w
+      const pulse = reduced ? 1 : 1 + Math.sin(anim.phase * 3.4) * 0.12 * (p.isPlaying ? 1 : 0.3)
+
+      ctx.save()
+      const halo = ctx.createRadialGradient(headX, midY, 0, headX, midY, 22 * pulse)
+      halo.addColorStop(0, `rgba(255,255,255,${0.14 * variantVis.glowMul})`)
+      halo.addColorStop(0.5, `rgba(167,139,250,${0.08 * variantVis.glowMul})`)
+      halo.addColorStop(1, "rgba(167,139,250,0)")
+      ctx.fillStyle = halo
+      ctx.fillRect(headX - 28, midY - 28, 56, 56)
+      ctx.restore()
+
+      ctx.save()
+      ctx.strokeStyle = `rgba(245,243,255,${0.75 + variantVis.glowMul * 0.2})`
+      ctx.lineWidth = 1.35 * pulse
+      ctx.shadowColor = `rgba(167,139,250,${0.45 * variantVis.glowMul})`
+      ctx.shadowBlur = 10 * pulse
+      ctx.beginPath()
+      ctx.moveTo(headX, h * 0.1)
+      ctx.lineTo(headX, h * 0.9)
+      ctx.stroke()
+      ctx.restore()
+
+      if (hoverT != null && Math.abs(hoverT - playT) > 0.008) {
+        const hx = hoverT * w
+        const x0 = Math.min(hx, headX)
+        const x1 = Math.max(hx, headX)
+        ctx.save()
+        ctx.fillStyle = `rgba(167,139,250,${0.04 * variantVis.glowMul})`
+        ctx.fillRect(x0, h * 0.12, x1 - x0, h * 0.76)
+        ctx.restore()
+
+        ctx.save()
+        ctx.strokeStyle = `rgba(255,255,255,${0.18 + variantVis.glowMul * 0.12})`
+        ctx.lineWidth = 1
+        ctx.shadowColor = "rgba(167,139,250,0.25)"
+        ctx.shadowBlur = 6
+        ctx.setLineDash([2, 5])
+        ctx.beginPath()
+        ctx.moveTo(hx, h * 0.14)
+        ctx.lineTo(hx, h * 0.86)
         ctx.stroke()
         ctx.restore()
       }
@@ -283,11 +540,7 @@ export default function WaveformCanvas({
   }, [height, reducedMotion])
 
   return (
-    <div
-      ref={containerRef}
-      className={className}
-      style={{ height }}
-    >
+    <div ref={containerRef} className={className} style={{ height }}>
       <canvas ref={canvasRef} className="block w-full" aria-hidden />
     </div>
   )

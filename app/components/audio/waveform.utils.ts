@@ -20,6 +20,16 @@ export type StageVisualState = {
   shimmer: number
   stability: number
   breathe: number
+  polish: number
+  fieldWidth: number
+}
+
+export type VariantVisual = {
+  ampScale: number
+  opacity: number
+  glowMul: number
+  strokeMul: number
+  stereoMul: number
 }
 
 const peakCache = new Map<string, WaveformPeakSet>()
@@ -28,14 +38,33 @@ function cacheKey(src: string, barCount: number, window: WaveformWindow) {
   return `${src}|${barCount}|${window.startSec}|${window.durationSec}`
 }
 
+/** Per-stage motion for processing screen — restrained, engine-like */
 export function getStageVisualState(step: number): StageVisualState {
   const s = Math.min(4, Math.max(0, Math.floor(step)))
+  switch (s) {
+    case 0:
+      return { scaleX: 1, scaleY: 1, shimmer: 1, stability: 0, breathe: 0.92, polish: 0, fieldWidth: 1 }
+    case 1:
+      return { scaleX: 1.02, scaleY: 0.97, shimmer: 0.78, stability: 0.15, breathe: 0.8, polish: 0.2, fieldWidth: 1.02 }
+    case 2:
+      return { scaleX: 0.98, scaleY: 0.86, shimmer: 0.52, stability: 0.35, breathe: 0.55, polish: 0.35, fieldWidth: 0.98 }
+    case 3:
+      return { scaleX: 1.14, scaleY: 0.96, shimmer: 0.68, stability: 0.25, breathe: 0.7, polish: 0.45, fieldWidth: 1.14 }
+    case 4:
+    default:
+      return { scaleX: 1.02, scaleY: 1, shimmer: 0.24, stability: 1, breathe: 0.28, polish: 1, fieldWidth: 1.02 }
+  }
+}
+
+/** blend 0 = original, 1 = mastered */
+export function getVariantVisual(blend: number): VariantVisual {
+  const k = Math.max(0, Math.min(1, blend))
   return {
-    scaleX: s === 3 ? 1.1 : s === 4 ? 1.02 : 1,
-    scaleY: s === 2 ? 0.9 : s === 4 ? 1 : 1,
-    shimmer: s === 0 ? 1 : s === 4 ? 0.28 : 0.62,
-    stability: s === 4 ? 1 : 0,
-    breathe: s === 4 ? 0.35 : 0.85,
+    ampScale: 0.88 + k * 0.12,
+    opacity: 0.68 + k * 0.32,
+    glowMul: 0.42 + k * 0.58,
+    strokeMul: 0.8 + k * 0.2,
+    stereoMul: 0.62 + k * 0.38,
   }
 }
 

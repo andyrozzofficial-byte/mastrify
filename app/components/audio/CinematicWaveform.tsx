@@ -130,7 +130,7 @@ export default function CinematicWaveform({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-lg bg-gradient-to-b from-white/[0.035] to-black/[0.22] ring-1 ring-white/[0.05] ${className}`}
+      className={`relative overflow-hidden rounded-lg bg-gradient-to-b from-white/[0.035] to-black/[0.28] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.06] ${className}`}
       onPointerMove={interactive ? handlePointer : undefined}
       onPointerDown={interactive ? handlePointer : undefined}
       onPointerLeave={interactive ? handleLeave : undefined}
@@ -141,7 +141,15 @@ export default function CinematicWaveform({
       aria-valuemax={interactive ? 100 : undefined}
     >
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(99,102,241,0.08),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_65%_at_50%_42%,rgba(99,102,241,0.11),transparent_62%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_88%,rgba(56,189,248,0.05),transparent_55%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent"
         aria-hidden
       />
       <WaveformCanvas
