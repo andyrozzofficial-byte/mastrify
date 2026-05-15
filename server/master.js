@@ -4,6 +4,11 @@ import ffprobePath from "ffprobe-static"
 import fs from "fs"
 import { spawn } from "child_process"
 import { analyzeTrack } from "./analyze.js"
+import {
+  MASTRIFY_LUFS_TRACE as LUFS_TRACE,
+  MASTRIFY_MASTER_DEBUG as MASTER_DEBUG,
+  MASTRIFY_PIPELINE_DEBUG as PIPELINE_DEBUG,
+} from "./mastrifyDebug.js"
 
 if (ffmpegPath) {
   ffmpeg.setFfmpegPath(ffmpegPath)
@@ -19,9 +24,6 @@ if (!fs.existsSync(mastersDir)) {
 
 const VALID_STYLES = new Set(["STREAM", "WARM", "LOUD", "CLUB", "FESTIVAL"])
 
-const MASTER_DEBUG = process.env.MASTRIFY_MASTER_DEBUG === "1"
-const PIPELINE_DEBUG = process.env.MASTRIFY_PIPELINE_DEBUG === "1"
-const LUFS_TRACE = process.env.MASTRIFY_LUFS_TRACE === "1"
 /** Bump when tracing deploy skew — echoed in logs + JSON when MASTRIFY_LUFS_TRACE=1 */
 const LUFS_TRACE_BUILD_STAMP = "mastrify-master-20260211b"
 

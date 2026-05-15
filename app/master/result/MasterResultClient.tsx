@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import {
+  MASTRIFY_CLIENT_LUFS_TRACE,
+  MASTRIFY_CLIENT_PIPELINE_DEBUG,
+  MASTRIFY_CLIENT_PREVIEW_DEBUG,
+} from "../../../lib/mastrifyDebug"
 import { useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
 
 const PREVIEW_START = 60
@@ -99,6 +104,7 @@ function isPlayableMediaUrl(url: string | null): url is string {
 }
 
 function logPreview(message: string, detail?: Record<string, unknown>) {
+  if (!MASTRIFY_CLIENT_PREVIEW_DEBUG) return
   if (detail) console.log(`[preview] ${message}`, detail)
   else console.log(`[preview] ${message}`)
 }
@@ -142,7 +148,7 @@ export default function MasterResultClient() {
   }, [selectedSource])
 
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_MASTRIFY_PIPELINE_DEBUG !== "1") return
+    if (!MASTRIFY_CLIENT_PIPELINE_DEBUG) return
     console.log("[pipeline] MasterResultClient state", {
       masteredUrl,
       stylePreset,
@@ -159,7 +165,7 @@ export default function MasterResultClient() {
   }, [masteredUrl, analysisAfter, stylePreset, targetLufs])
 
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_MASTRIFY_LUFS_TRACE !== "1") return
+    if (!MASTRIFY_CLIENT_LUFS_TRACE) return
     const measured = toFiniteNumber(analysisAfter?.lufs)
     const displayStr = measured !== null ? measured.toFixed(1) : "—"
     console.log("[LUFS_TRACE] AUTHORITY_UI_RESULT_PAGE", {

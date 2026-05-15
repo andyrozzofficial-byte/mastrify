@@ -7,6 +7,7 @@ import { fileURLToPath } from "url"
 import { analyzeTrack } from "./analyze.js"
 import { masterTrack, measureIntegratedLufsEbur128 } from "./master.js"
 import { serializeMasterAnalysisForJson } from "./masterAnalysisPayload.js"
+import { MASTRIFY_LUFS_TRACE as LUFS_TRACE, MASTRIFY_PIPELINE_DEBUG as PIPELINE_DEBUG } from "./mastrifyDebug.js"
 import ffmpegPath from "ffmpeg-static"
 import ffprobeStatic from "ffprobe-static"
 
@@ -24,9 +25,6 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const app = express()
-
-const PIPELINE_DEBUG = process.env.MASTRIFY_PIPELINE_DEBUG === "1"
-const LUFS_TRACE = process.env.MASTRIFY_LUFS_TRACE === "1"
 
 app.use(cors())
 app.use(express.json())
