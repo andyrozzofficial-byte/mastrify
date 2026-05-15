@@ -33,7 +33,7 @@ function FooterColumn({
       className="min-w-0"
     >
       <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-label-strong">{title}</p>
-      <ul className="mt-3.5 space-y-2.5">
+      <ul className="mt-4 space-y-3">
         {links.map(({ href, label }) => (
           <li key={href + label}>
             <Link href={href} className="text-[13px] text-muted-strong transition hover:text-white/90">
@@ -103,13 +103,13 @@ export default function SiteFooter() {
       />
 
       <motion.div
-        className="relative mx-auto w-full max-w-[1180px] px-5 pt-12 pb-8 md:px-10 md:pt-14 md:pb-9"
+        className="relative mx-auto w-full max-w-[1180px] px-5 pt-14 pb-10 md:px-10 md:pt-16 md:pb-12"
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <div className="grid items-start gap-10 lg:grid-cols-12 lg:gap-x-10 xl:gap-x-14">
+        <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-x-12 xl:gap-x-14">
           {/* Brand */}
           <motion.div
             className="lg:col-span-4"
@@ -121,7 +121,7 @@ export default function SiteFooter() {
             <Link href="/" className="inline-flex items-center">
               <span className="text-[17px] font-semibold tracking-[-0.02em] text-white/92">Mastrify</span>
             </Link>
-            <p className="mt-3.5 max-w-[16.5rem] text-[13px] leading-relaxed text-muted md:max-w-[18rem] md:text-[14px]">
+            <p className="mt-4 max-w-[16.5rem] text-[13px] leading-[1.65] text-muted md:max-w-[18rem] md:text-[14px] md:leading-[1.7]">
               Intelligent mastering for music that deserves its full emotional weight — release-ready, without the
               noise.
             </p>
@@ -129,7 +129,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="grid grid-cols-2 gap-x-8 gap-y-7 sm:gap-x-10 lg:col-span-4"
+            className="grid grid-cols-2 gap-x-10 gap-y-8 sm:gap-x-12 lg:col-span-4"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -164,7 +164,7 @@ export default function SiteFooter() {
                 </p>
                 <PremiumButton
                   href="/master"
-                  className="mt-4 w-full min-h-[46px] px-6 text-[13px] sm:mt-5"
+                  className="mt-5 min-h-[46px] w-auto min-w-[12.5rem] px-7 text-[13px] sm:mt-6"
                 >
                   Start mastering
                 </PremiumButton>
@@ -175,7 +175,7 @@ export default function SiteFooter() {
 
         {/* Bottom metadata row */}
         <motion.div
-          className="mt-10 flex flex-col gap-5 border-t border-white/[0.07] pt-6 md:mt-11 md:flex-row md:items-center md:justify-between md:gap-6 md:pt-7"
+          className="mt-12 flex flex-col gap-6 border-t border-white/[0.07] pt-8 md:mt-14 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-9"
           initial={reduce ? false : { opacity: 0 }}
           whileInView={reduce ? undefined : { opacity: 1 }}
           viewport={{ once: true }}

@@ -24,7 +24,7 @@ export default function PremiumButton({
 }: Props) {
   return (
     <Link
-      className={`group relative inline-flex min-h-[50px] items-center justify-center overflow-hidden rounded-xl px-8 text-[14px] font-semibold tracking-[-0.01em] transition-all duration-300 ${styles[variant]} ${className}`}
+      className={`group relative inline-flex min-h-[50px] w-auto max-w-full shrink-0 items-center justify-center overflow-hidden rounded-xl px-8 text-[14px] font-semibold tracking-[-0.01em] transition-all duration-300 ${styles[variant]} ${className}`}
       {...props}
     >
       <span

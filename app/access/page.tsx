@@ -10,7 +10,7 @@ export default function AccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[min(72vh,640px)] items-center justify-center text-muted">
+        <div className="flex min-h-[100dvh] items-center justify-center text-muted">
           Loading…
         </div>
       }

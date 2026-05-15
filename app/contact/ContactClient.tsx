@@ -23,7 +23,7 @@ export default function ContactClient() {
         aria-hidden
       />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-[600px] flex-col px-5 pb-20 pt-10 md:px-8 md:pb-24 md:pt-12">
+      <main className="relative z-10 mx-auto flex w-full max-w-[600px] flex-col px-5 pb-24 pt-12 md:px-8 md:pb-28 md:pt-16">
         <motion.header
           initial={reduce ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -33,16 +33,16 @@ export default function ContactClient() {
           <span className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70">
             Support
           </span>
-          <h1 className="mt-6 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white/95 sm:text-[2.35rem]">
+          <h1 className="mt-7 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white/95 sm:text-[2.35rem]">
             Contact
           </h1>
-          <p className="mx-auto mt-5 text-[16px] leading-[1.7] text-muted md:text-[17px] md:leading-[1.75]">
+          <p className="mx-auto mt-6 text-[16px] leading-[1.72] text-muted md:text-[17px] md:leading-[1.78]">
             Questions about mastering, exports, or billing? We typically reply within one business day.
           </p>
         </motion.header>
 
         <motion.div
-          className="relative mx-auto mt-12 w-full max-w-[26rem] md:mt-14"
+          className="relative mx-auto mt-14 w-full max-w-[26rem] md:mt-16"
           initial={reduce ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.06, ease: EASE }}
@@ -78,17 +78,17 @@ export default function ContactClient() {
         </motion.div>
 
         <motion.div
-          className="mx-auto mt-12 flex w-full max-w-[22rem] flex-col items-stretch gap-3 md:mt-14"
+          className="mx-auto mt-14 flex flex-col items-center gap-3 md:mt-16"
           initial={reduce ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.12, ease: EASE }}
         >
-          <PremiumButton href="/master" className="w-full min-h-[52px]">
+          <PremiumButton href="/master" className="min-h-[52px] min-w-[13.5rem] px-9">
             Start mastering
           </PremiumButton>
           <Link
             href="/pricing"
-            className="flex min-h-[48px] w-full items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.03] text-[14px] font-medium text-muted-strong shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-white/[0.04] transition duration-300 hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white/88"
+            className="inline-flex min-h-[48px] min-w-[13.5rem] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.03] px-9 text-[14px] font-medium text-muted-strong shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-white/[0.04] transition duration-300 hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white/88"
           >
             View pricing
           </Link>

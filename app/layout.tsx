@@ -1,8 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
-import SiteFooter from "./components/SiteFooter"
-import SiteHeader from "./components/SiteHeader"
+import SiteChrome from "./components/SiteChrome"
 import { MasterSessionRootProvider } from "./MasterSessionRootProvider"
 
 const geistSans = Geist({
@@ -51,11 +50,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col bg-black text-white antialiased`}
       >
-        <SiteHeader />
         <MasterSessionRootProvider>
-          <main className="w-full">{children}</main>
+          <SiteChrome>{children}</SiteChrome>
         </MasterSessionRootProvider>
-        <SiteFooter />
       </body>
     </html>
   )

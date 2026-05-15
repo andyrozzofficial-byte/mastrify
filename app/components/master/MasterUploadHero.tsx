@@ -67,14 +67,14 @@ export default function MasterUploadHero({
             Spatial mastering engine
           </span>
 
-          <h1 className="mt-5 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.35rem] md:text-[2.65rem]">
+          <h1 className="mt-6 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:text-[2.35rem] md:text-[2.65rem]">
             Release-ready masters
             <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
               with musical depth
             </span>
           </h1>
 
-          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/74 md:text-[16px]">
+          <p className="mt-6 max-w-lg text-[15px] leading-[1.65] text-white/74 md:text-[16px] md:leading-[1.7]">
             Hand your mix to an intelligent mastering engine that listens with restraint — shaping loudness, space,
             and tone while preserving what makes your music feel alive.
           </p>

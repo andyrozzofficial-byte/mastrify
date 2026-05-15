@@ -185,7 +185,7 @@ export default function HowItWorksClient() {
       />
 
       {/* Hero */}
-      <section className="relative z-10 mx-auto max-w-[1080px] px-5 pb-16 pt-10 md:px-10 md:pb-24 md:pt-14">
+      <section className="page-container page-hero-pad relative z-10 pb-20 md:pb-28">
         <HeroWaveBackdrop />
 
         <div className="relative grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-14">
@@ -249,7 +249,7 @@ export default function HowItWorksClient() {
       </section>
 
       {/* Steps */}
-      <section className="relative z-10 border-t border-white/[0.05] bg-black/20 py-16 md:py-24">
+      <section className="relative z-10 border-t border-white/[0.05] bg-black/20 py-20 md:py-28">
         <div className="mx-auto max-w-[1080px] px-5 md:px-10">
           <Reveal className="text-center">
             <SectionLabel>The path to your master</SectionLabel>

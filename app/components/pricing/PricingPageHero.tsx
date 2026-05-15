@@ -45,14 +45,14 @@ export default function PricingPageHero() {
             Simple, honest pricing
           </span>
 
-          <h1 className="mt-5 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.35rem] md:text-[2.65rem]">
+          <h1 className="mt-6 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:text-[2.35rem] md:text-[2.65rem]">
             One master.
             <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
               Full quality. No complexity.
             </span>
           </h1>
 
-          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/74 md:text-[16px]">
+          <p className="mt-6 max-w-lg text-[15px] leading-[1.65] text-white/74 md:text-[16px] md:leading-[1.7]">
             Release-ready mastering without subscriptions — master your track first, then pay when you are ready to
             export, powered by the same cinematic engine as the rest of Mastrify.
           </p>

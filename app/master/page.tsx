@@ -38,7 +38,7 @@ export default function MasterUploadPage() {
         transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="relative mx-auto w-full max-w-[1080px] px-5 pb-4 pt-6 md:px-10 md:pb-8 md:pt-8">
+      <motion.div className="page-container page-hero-pad relative pb-16 md:pb-20">
         <MasterUploadHero
           file={file}
           fileInputRef={inputRef}
@@ -46,7 +46,7 @@ export default function MasterUploadPage() {
           onChooseClick={openFilePicker}
           onContinue={() => router.push("/master/settings")}
         />
-      </div>
+      </motion.div>
     </motion.div>
   )
 }

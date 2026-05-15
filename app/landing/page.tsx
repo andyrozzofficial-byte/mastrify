@@ -51,7 +51,7 @@ export default function Landing() {
       />
 
       {/* Hero */}
-      <section className="relative z-10 mx-auto max-w-[1080px] px-5 pb-6 pt-12 md:px-10 md:pb-8 md:pt-16 lg:pt-[4.25rem]">
+      <section className="page-container page-hero-pad relative z-10 pb-10 md:pb-12">
         <motion.div
           className="relative grid items-center gap-12 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-14 xl:gap-16"
           initial={reduce ? false : { opacity: 0, y: 16 }}
@@ -68,7 +68,7 @@ export default function Landing() {
               Intelligent mastering engine
             </span>
 
-            <h1 className="mt-5 text-[2.1rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.65rem] md:text-[3.1rem] md:leading-[1.08] lg:mt-6">
+            <h1 className="mt-6 text-[2.1rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:text-[2.65rem] md:text-[3.1rem] md:leading-[1.08] lg:mt-7">
               Music shaped for release
               <span className="mt-2 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
                 with musical depth
@@ -80,7 +80,7 @@ export default function Landing() {
               bringing your mix to a confident, streaming-ready level.
             </p>
 
-            <ul className="mx-auto mt-6 max-w-md space-y-2.5 text-left text-[14px] text-white/70 lg:mx-0">
+            <ul className="mx-auto mt-7 max-w-md space-y-3 text-left text-[14px] leading-[1.55] text-white/70 lg:mx-0">
               <li className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
                 Transparent dynamics that respect what your mix already does well
@@ -92,7 +92,7 @@ export default function Landing() {
             </ul>
 
             <motion.div
-              className="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center lg:mx-0 lg:justify-start"
+              className="mx-auto mt-10 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center lg:mx-0 lg:justify-start"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
@@ -187,7 +187,7 @@ export default function Landing() {
         />
 
         <motion.div
-          className="mx-auto max-w-[1080px] px-5 pt-10 pb-14 md:px-10 md:pt-12 md:pb-16"
+          className="page-container relative z-10 pt-14 pb-20 md:pt-16 md:pb-24"
           initial={reduce ? false : { opacity: 0, y: 14 }}
           whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}

@@ -86,7 +86,7 @@ export default function PricingUnlockCard({ className = "" }: Props) {
 
           <Link
             href="/master"
-            className="group/btn relative mt-8 flex min-h-[50px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 text-[15px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_40px_rgba(0,0,0,0.4)] ring-1 ring-white/[0.1] transition-[filter,box-shadow] duration-300 hover:brightness-[1.05] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_18px_44px_rgba(0,0,0,0.42),0_0_28px_rgba(99,102,241,0.14)] md:mt-9"
+            className="group/btn relative mx-auto mt-8 inline-flex min-h-[50px] min-w-[13.5rem] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-9 text-[15px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_40px_rgba(0,0,0,0.4)] ring-1 ring-white/[0.1] transition-[filter,box-shadow] duration-300 hover:brightness-[1.05] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_18px_44px_rgba(0,0,0,0.42),0_0_28px_rgba(99,102,241,0.14)] md:mt-9"
           >
             <span
               className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.14] to-transparent transition-transform duration-700 ease-out group-hover/btn:translate-x-[120%]"
