@@ -1,5 +1,9 @@
+"use client"
+
+import { motion, useReducedMotion } from "framer-motion"
 import type { ReactNode } from "react"
 import Link from "next/link"
+import PremiumButton from "./PremiumButton"
 
 const product = [
   { href: "/analyze", label: "Analyze" },
@@ -38,7 +42,7 @@ function SocialPlaceholder({
   return (
     <button
       type="button"
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.05] text-white/48 transition hover:border-white/[0.18] hover:bg-white/[0.09] hover:text-white/72"
+      className="flex h-8 w-8 items-center justify-center rounded-full text-white/28 transition hover:bg-white/[0.04] hover:text-white/50"
       aria-label={`${label} (coming soon)`}
     >
       {children}
@@ -47,94 +51,166 @@ function SocialPlaceholder({
 }
 
 export default function SiteFooter() {
+  const reduce = useReducedMotion()
   const year = new Date().getFullYear()
 
   return (
-    <footer className="relative mt-auto border-t border-white/[0.1] bg-black/[0.88] shadow-[0_-1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl backdrop-saturate-150">
+    <footer className="relative mt-auto overflow-hidden">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_50%_100%,rgba(88,28,135,0.16),transparent_58%),radial-gradient(ellipse_40%_35%_at_90%_30%,rgba(34,211,238,0.07),transparent_50%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/25 to-transparent"
         aria-hidden
       />
+      <motion.div
+        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-violet-500/[0.06] to-transparent"
+        aria-hidden
+        animate={reduce ? undefined : { opacity: [0.4, 0.7, 0.4] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_100%,rgba(88,28,135,0.1),transparent_55%),radial-gradient(ellipse_35%_30%_at_12%_40%,rgba(34,211,238,0.04),transparent_50%)]"
+        aria-hidden
+        animate={reduce ? undefined : { opacity: [0.85, 1, 0.85] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      />
 
-      <div className="relative mx-auto max-w-[1240px] px-5 py-10 md:px-8 md:py-11">
+      <motion.div
+        className="relative mx-auto max-w-[1080px] px-5 pt-16 pb-4 md:px-10 md:pt-20"
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
         <span id="privacy" className="sr-only">
           Privacy policy — placeholder anchor for footer Privacy link until a dedicated page exists.
         </span>
-        <div className="grid gap-8 md:grid-cols-12 md:gap-x-12 md:gap-y-8 lg:gap-x-14 lg:gap-y-8">
-          <div className="md:col-span-4 lg:col-span-3">
-            <Link href="/" className="inline-flex items-center gap-2.5">
-              <WaveMark className="h-5 w-5 shrink-0 text-purple-400" />
-              <span className="text-lg font-bold tracking-tight text-transparent bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text drop-shadow-[0_0_12px_rgba(139,92,246,0.18)]">
-                Mastrify
-              </span>
-            </Link>
-            <p className="mt-3 max-w-[16.5rem] text-[12px] leading-relaxed text-white/48 md:text-[13px]">
-              AI-powered tools to help producers fix their mixes and release with confidence.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-2 gap-10 sm:gap-12 md:col-span-4 md:grid-cols-2 lg:col-span-5 lg:gap-x-14">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/46">Product</p>
-              <ul className="mt-3.5 space-y-2.5">
+        {/* Embedded mastering CTA — not a floating widget */}
+        <motion.div
+          className="relative mb-16 border-b border-white/[0.05] pb-14 md:mb-16 md:pb-16"
+          initial={reduce ? false : { opacity: 0, y: 12 }}
+          whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div
+            className="pointer-events-none absolute -left-8 top-1/2 h-32 w-48 -translate-y-1/2 rounded-full bg-violet-600/[0.06] blur-3xl"
+            aria-hidden
+          />
+          <motion.div
+            className="pointer-events-none absolute right-0 top-0 h-24 w-40 rounded-full bg-cyan-500/[0.04] blur-3xl"
+            aria-hidden
+            animate={reduce ? undefined : { opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-10"
+            initial={reduce ? false : { opacity: 0, y: 10 }}
+            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <motion.div
+              className="max-w-md"
+              initial={reduce ? false : { opacity: 0, y: 10 }}
+              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/40">Release ready</p>
+              <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.02em] text-white/88 sm:text-[1.5rem]">
+                Ready to master your track?
+              </h2>
+              <p className="mt-2.5 max-w-sm text-[13px] leading-relaxed text-white/32 md:text-[14px]">
+                Studio-grade mastering shaped with musical restraint — pay only for what you export.
+              </p>
+            </motion.div>
+            <PremiumButton href="/master" className="w-full shrink-0 sm:w-auto md:min-w-[200px]">
+              Start mastering
+            </PremiumButton>
+          </motion.div>
+        </motion.div>
+
+        <div className="grid gap-12 md:grid-cols-12 md:gap-x-14 lg:gap-x-16">
+          <motion.div
+            className="md:col-span-5 lg:col-span-4"
+            initial={reduce ? false : { opacity: 0, y: 10 }}
+            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Link href="/" className="inline-flex items-center gap-2.5">
+              <WaveMark className="h-5 w-5 shrink-0 text-violet-400/80" />
+              <span className="text-[17px] font-semibold tracking-[-0.02em] text-white/88">Mastrify</span>
+            </Link>
+            <p className="mt-4 max-w-[18rem] text-[13px] leading-relaxed text-white/30">
+              Intelligent mastering for music that deserves to be heard at its full emotional weight.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="grid grid-cols-2 gap-10 sm:gap-14 md:col-span-4 md:col-start-7 lg:col-span-4 lg:col-start-6"
+            initial={reduce ? false : { opacity: 0, y: 10 }}
+            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <motion.div
+              initial={reduce ? false : { opacity: 0, y: 10 }}
+              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-white/28">Product</p>
+              <ul className="mt-4 space-y-3">
                 {product.map(({ href, label }) => (
                   <li key={href}>
                     <Link
                       href={href}
-                      className="text-[13px] font-medium text-white/62 transition hover:text-white/92 md:text-sm"
+                      className="text-[13px] text-white/48 transition hover:text-white/78"
                     >
                       {label}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/46">Support</p>
-              <ul className="mt-3.5 space-y-2.5">
+            </motion.div>
+            <motion.div
+              initial={reduce ? false : { opacity: 0, y: 10 }}
+              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-white/28">Support</p>
+              <ul className="mt-4 space-y-3">
                 {support.map(({ href, label }) => (
                   <li key={label}>
                     <Link
                       href={href}
-                      className="text-[13px] font-medium text-white/62 transition hover:text-white/92 md:text-sm"
+                      className="text-[13px] text-white/48 transition hover:text-white/78"
                     >
                       {label}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          <div className="md:col-span-4 lg:col-span-4">
-            <div className="relative overflow-hidden rounded-xl border border-white/[0.14] bg-gradient-to-br from-white/[0.1] to-black/[0.62] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(167,139,250,0.12),0_0_36px_rgba(88,28,135,0.18),0_20px_56px_rgba(0,0,0,0.5)] ring-1 ring-purple-400/22 md:p-6">
-              <div
-                className="pointer-events-none absolute -right-4 -top-8 h-32 w-32 rounded-full bg-purple-500/22 blur-2xl"
-                aria-hidden
-              />
-              <div className="pointer-events-none absolute bottom-0 right-0 h-24 w-32 rounded-full bg-cyan-500/10 blur-3xl" aria-hidden />
-              <div className="relative max-w-[17rem]">
-                <p className="text-[16px] font-semibold leading-snug tracking-tight text-white md:text-[1.05rem]">
-                  Ready to master your track?
-                </p>
-                <p className="mt-2 text-[12px] leading-relaxed text-white/44 md:text-[13px]">
-                  Studio-grade AI mastering in minutes — pay only for what you export.
-                </p>
-                <Link
-                  href="/master"
-                  className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-[#5b21b6] via-[#4338ca] to-[#0e7490] px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_0_22px_rgba(91,33,182,0.32),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/12 transition hover:brightness-110 sm:w-auto sm:px-6"
-                >
-                  Try mastering
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-10 flex flex-col items-stretch gap-6 border-t border-white/[0.08] pt-8 md:mt-10 md:flex-row md:items-center md:justify-between md:gap-6 md:pt-8">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">Follow us</p>
-            <div className="mt-2.5 flex gap-2">
+          <motion.div
+            className="flex flex-col justify-end md:col-span-3 md:col-start-10 lg:col-span-4 lg:col-start-9"
+            initial={reduce ? false : { opacity: 0, y: 10 }}
+            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-white/28">Follow</p>
+            <motion.div
+              className="mt-3 flex gap-1"
+              initial={reduce ? false : { opacity: 0, y: 10 }}
+              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            >
               <SocialPlaceholder label="Instagram">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                   <rect x="3" y="3" width="18" height="18" rx="5" />
@@ -152,20 +228,21 @@ export default function SiteFooter() {
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
               </SocialPlaceholder>
-            </div>
-          </div>
-          <div className="text-center md:text-right">
-            <p className="text-[11px] text-white/38 md:text-xs">© {year} Mastrify. All rights reserved.</p>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
 
-        <p className="mt-6 border-t border-white/[0.04] pt-5 text-center text-[10px] font-medium tracking-[0.16em] text-white/22 md:text-left">
+        <div className="mt-14 flex flex-col items-center gap-3 border-t border-white/[0.04] pt-8 md:mt-16 md:flex-row md:justify-between md:pt-9">
+          <p className="text-[11px] text-white/24">© {year} Mastrify</p>
+        </div>
+
+        <p className="mt-8 pb-10 text-center text-[9px] font-normal uppercase tracking-[0.28em] text-white/16 md:pb-12">
           Designed &amp; engineered by{" "}
-          <span className="text-white/30 transition duration-300 hover:text-violet-200/50 hover:drop-shadow-[0_0_10px_rgba(167,139,250,0.18)]">
+          <span className="tracking-[0.22em] text-white/22 transition duration-500 hover:text-violet-200/35">
             Lunov
           </span>
         </p>
-      </div>
+      </motion.div>
     </footer>
   )
 }
