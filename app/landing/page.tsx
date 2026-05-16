@@ -144,7 +144,7 @@ export default function Landing() {
         />
 
         <motion.div
-          className="page-container relative z-10 pt-14 pb-20 md:pt-16 md:pb-24"
+          className="page-container landing-close-footer relative z-10 pt-14 md:pt-16"
           initial={reduce ? false : { opacity: 0, y: 14 }}
           whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}
@@ -164,26 +164,29 @@ export default function Landing() {
             </PremiumButton>
           </CinematicReveal>
 
-          <CinematicReveal className="mx-auto mt-14 max-w-[920px] md:mt-16" delay={0.08}>
-            <CinematicDivider className="mb-10" />
-            <p className="text-center text-[12px] tracking-wide text-white/60 md:text-[13px]">
-              Trusted by producers and artists worldwide
-            </p>
-            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 md:gap-x-12">
-              {dawLogos.map((name, i) => (
-                <motion.li
-                  key={name}
-                  initial={reduce ? false : { opacity: 0, y: 6 }}
-                  whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.04 * i, ease: EASE }}
-                >
-                  <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/54 md:text-[11px]">
-                    {name}
-                  </span>
-                </motion.li>
-              ))}
-            </ul>
+          <CinematicReveal className="mx-auto mt-14 max-w-[920px] md:mt-[3.75rem]" delay={0.08}>
+            <motion.div
+              className="trust-band"
+              initial={reduce ? false : { opacity: 0, y: 10 }}
+              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-24px" }}
+              transition={{ duration: 0.65, ease: EASE }}
+            >
+              <p className="trust-band-heading">Trusted by producers and artists worldwide</p>
+              <ul className="trust-daw-grid" aria-label="Supported digital audio workstations">
+                {dawLogos.map((name, i) => (
+                  <motion.li
+                    key={name}
+                    initial={reduce ? false : { opacity: 0, y: 6 }}
+                    whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.04 * i, ease: EASE }}
+                  >
+                    <span className="trust-daw-label">{name}</span>
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
           </CinematicReveal>
         </motion.div>
       </section>

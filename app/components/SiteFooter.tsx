@@ -103,16 +103,16 @@ export default function SiteFooter() {
       />
 
       <motion.div
-        className="relative mx-auto w-full max-w-[1180px] px-5 pt-12 pb-[max(2.25rem,env(safe-area-inset-bottom))] sm:px-6 sm:pt-14 md:px-10 md:pt-16 md:pb-12"
+        className="footer-shell relative mx-auto w-full px-5 pt-11 pb-[max(2.25rem,env(safe-area-inset-bottom))] sm:px-6 sm:pt-12 md:px-10 md:pt-14 md:pb-12 lg:pt-[3.25rem]"
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="grid items-start gap-10 sm:gap-12 lg:grid-cols-12 lg:gap-12 lg:gap-x-12 xl:gap-x-14">
+        <motion.div className="grid items-start gap-10 sm:gap-12 lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
           {/* Brand */}
           <motion.div
-            className="lg:col-span-4"
+            className="lg:col-span-3 xl:col-span-3"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -121,7 +121,7 @@ export default function SiteFooter() {
             <Link href="/" className="inline-flex items-center">
               <span className="text-[17px] font-semibold tracking-[-0.02em] text-white/92">Mastrify</span>
             </Link>
-            <p className="mt-4 max-w-[16.5rem] text-[13px] leading-[1.65] text-muted md:max-w-[18rem] md:text-[14px] md:leading-[1.7]">
+            <p className="mt-4 max-w-[16.5rem] text-[13px] leading-[1.65] text-muted lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
               Intelligent mastering for music that deserves its full emotional weight — release-ready, without the
               noise.
             </p>
@@ -129,7 +129,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="grid grid-cols-2 gap-x-8 gap-y-10 sm:gap-x-12 sm:gap-y-8 lg:col-span-4"
+            className="grid max-w-[17.5rem] grid-cols-2 gap-x-8 gap-y-10 sm:gap-x-10 sm:gap-y-8 lg:col-span-3 lg:max-w-[15.5rem] lg:justify-self-center xl:col-span-3 xl:max-w-[16.5rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -141,35 +141,39 @@ export default function SiteFooter() {
 
           {/* Mastering CTA */}
           <motion.div
-            className="lg:col-span-4"
+            className="lg:col-span-6 lg:pl-2 xl:col-span-6 xl:pl-4"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.08, ease: EASE }}
           >
-            <div className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-black/[0.35] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_48px_rgba(0,0,0,0.35)] backdrop-blur-md md:p-6">
+            <motion.div className="footer-cta-card lg:max-w-[26.5rem] lg:ml-auto lg:mr-1 xl:max-w-[28rem] xl:mr-2">
               <motion.div
-                className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-violet-600/[0.08] blur-2xl"
+                className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-violet-600/[0.1] blur-2xl"
                 aria-hidden
-                animate={reduce ? undefined : { opacity: [0.35, 0.6, 0.35] }}
+                animate={reduce ? undefined : { opacity: [0.35, 0.62, 0.35] }}
                 transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
               />
-              <div className="relative">
+              <div
+                className="pointer-events-none absolute bottom-0 left-1/4 h-20 w-2/3 rounded-full bg-cyan-500/[0.04] blur-2xl"
+                aria-hidden
+              />
+              <div className="relative flex h-full flex-col justify-center">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/58">Release ready</p>
-                <h2 className="mt-2 text-[1.15rem] font-semibold tracking-[-0.02em] text-white/90 sm:text-[1.25rem]">
+                <h2 className="mt-2.5 text-[1.2rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.3rem] lg:text-[1.35rem]">
                   Ready to master your track?
                 </h2>
-                <p className="mt-2 text-[12px] leading-relaxed text-muted sm:text-[13px]">
+                <p className="mt-2.5 max-w-[22rem] text-[12px] leading-relaxed text-muted sm:text-[13px] lg:text-[13.5px]">
                   Studio-grade loudness and tone — pay when your export is ready.
                 </p>
                 <PremiumButton
                   href="/master"
-                  className="mt-5 min-h-[46px] w-auto min-w-[12.5rem] px-7 text-[13px] sm:mt-6"
+                  className="mt-6 min-h-[46px] w-auto min-w-[13rem] px-8 text-[13px] lg:mt-7"
                 >
                   Start mastering
                 </PremiumButton>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </motion.div>
 

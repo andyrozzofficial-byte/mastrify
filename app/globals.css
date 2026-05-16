@@ -246,6 +246,170 @@ body {
   .text-label-strong {
     color: var(--text-label-strong);
   }
+  /* Landing trust band — anchored DAW row, premium opacity ladder */
+  .trust-band {
+    position: relative;
+    margin-top: 3.25rem;
+    margin-inline: auto;
+    max-width: 52rem;
+    padding: 2rem 1.25rem 2.25rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.025) 0%,
+      rgba(8, 8, 14, 0.55) 48%,
+      rgba(5, 5, 8, 0.35) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 24px 56px rgba(0, 0, 0, 0.22);
+  }
+  .trust-band::before {
+    content: "";
+    position: absolute;
+    inset-inline: 12%;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(167, 139, 250, 0.35) 50%,
+      transparent
+    );
+    pointer-events: none;
+  }
+  .trust-band::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset-inline: 8%;
+    bottom: 0;
+    height: 40%;
+    border-radius: 9999px;
+    background: radial-gradient(ellipse 70% 80% at 50% 100%, rgba(99, 102, 241, 0.08), transparent 70%);
+    opacity: 0.9;
+  }
+  @media (min-width: 768px) {
+    .trust-band {
+      margin-top: 4rem;
+      padding: 2.5rem 2.5rem 2.75rem;
+      border-radius: 1.125rem;
+    }
+  }
+  .trust-band-heading {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--text-support-68);
+  }
+  @media (min-width: 768px) {
+    .trust-band-heading {
+      font-size: 13px;
+      letter-spacing: 0.04em;
+    }
+  }
+  .trust-daw-grid {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem 1.75rem;
+    margin-top: 2rem;
+    padding-inline: 0.25rem;
+  }
+  @media (min-width: 768px) {
+    .trust-daw-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.5rem 1.25rem;
+      margin-top: 2.75rem;
+      max-width: 46rem;
+      margin-inline: auto;
+    }
+  }
+  @media (min-width: 1024px) {
+    .trust-daw-grid {
+      gap: 0.5rem 1.75rem;
+    }
+  }
+  .trust-daw-label {
+    display: block;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: rgba(255, 255, 255, 0.5);
+    transition: color 0.25s ease;
+  }
+  @media (min-width: 768px) {
+    .trust-daw-label {
+      font-size: 11px;
+      letter-spacing: 0.26em;
+    }
+  }
+  .trust-daw-grid > li:nth-child(1) .trust-daw-label,
+  .trust-daw-grid > li:nth-child(5) .trust-daw-label {
+    color: rgba(255, 255, 255, 0.44);
+  }
+  .trust-daw-grid > li:nth-child(2) .trust-daw-label,
+  .trust-daw-grid > li:nth-child(4) .trust-daw-label {
+    color: rgba(255, 255, 255, 0.52);
+  }
+  .trust-daw-grid > li:nth-child(3) .trust-daw-label {
+    color: rgba(255, 255, 255, 0.58);
+  }
+  @media (hover: hover) {
+    .trust-daw-grid > li:hover .trust-daw-label {
+      color: rgba(255, 255, 255, 0.68);
+    }
+  }
+  .landing-close-footer {
+    padding-bottom: 2.75rem;
+  }
+  @media (min-width: 768px) {
+    .landing-close-footer {
+      padding-bottom: 2rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .landing-close-footer {
+      padding-bottom: 1.5rem;
+    }
+  }
+  .footer-shell {
+    max-width: 1200px;
+  }
+  .footer-cta-card {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.38) 100%);
+    padding: 1.375rem 1.5rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      0 22px 52px rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(14px);
+  }
+  @media (min-width: 640px) {
+    .footer-cta-card {
+      padding: 1.5rem 1.625rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .footer-cta-card {
+      min-height: 13.5rem;
+      padding: 1.75rem 2rem;
+      border-radius: 1.125rem;
+    }
+  }
 }
 @keyframes fadeIn {
   from {
