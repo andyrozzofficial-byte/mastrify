@@ -32,11 +32,11 @@ function FooterColumn({
       initial={false}
       className="min-w-0"
     >
-      <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-label-strong">{title}</p>
-      <ul className="mt-4 space-y-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-label-strong">{title}</p>
+      <ul className="mt-4 space-y-1 sm:space-y-2">
         {links.map(({ href, label }) => (
           <li key={href + label}>
-            <Link href={href} className="text-[13px] text-muted-strong transition hover:text-white/90">
+            <Link href={href} className="footer-tap-link">
               {label}
             </Link>
           </li>
@@ -72,7 +72,7 @@ function SocialLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="flex h-8 w-8 items-center justify-center rounded-full border border-transparent text-muted-soft transition duration-300 hover:border-white/[0.1] hover:bg-white/[0.05] hover:text-white/82 hover:shadow-[0_0_18px_rgba(99,102,241,0.1)]"
+      className="flex h-11 w-11 items-center justify-center rounded-full border border-transparent text-muted-soft transition duration-300 active:scale-[0.96] hover:border-white/[0.1] hover:bg-white/[0.05] hover:text-white/82 hover:shadow-[0_0_18px_rgba(99,102,241,0.1)]"
     >
       {children}
     </a>
@@ -103,13 +103,13 @@ export default function SiteFooter() {
       />
 
       <motion.div
-        className="relative mx-auto w-full max-w-[1180px] px-4 pt-10 pb-8 sm:px-5 sm:pt-12 md:px-10 md:pt-16 md:pb-12"
+        className="relative mx-auto w-full max-w-[1180px] px-5 pt-12 pb-[max(2.25rem,env(safe-area-inset-bottom))] sm:px-6 sm:pt-14 md:px-10 md:pt-16 md:pb-12"
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <div className="grid items-start gap-8 sm:gap-10 lg:grid-cols-12 lg:gap-12 lg:gap-x-12 xl:gap-x-14">
+        <motion.div className="grid items-start gap-10 sm:gap-12 lg:grid-cols-12 lg:gap-12 lg:gap-x-12 xl:gap-x-14">
           {/* Brand */}
           <motion.div
             className="lg:col-span-4"
@@ -129,7 +129,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="grid grid-cols-2 gap-x-10 gap-y-8 sm:gap-x-12 lg:col-span-4"
+            className="grid grid-cols-2 gap-x-8 gap-y-10 sm:gap-x-12 sm:gap-y-8 lg:col-span-4"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -171,7 +171,7 @@ export default function SiteFooter() {
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Bottom metadata row */}
         <motion.div

@@ -62,18 +62,16 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.05, ease: EASE }}
           >
-            <span className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70 backdrop-blur-md">
-              Intelligent mastering engine
-            </span>
+            <span className="hero-eyebrow-pill">Intelligent mastering engine</span>
 
-            <h1 className="mt-4 text-[1.65rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2.1rem] md:text-[3.1rem] md:leading-[1.08] lg:mt-7 lg:text-[2.65rem]">
+            <h1 className="mt-3.5 text-[1.65rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2.1rem] md:text-[3.1rem] md:leading-[1.08] lg:mt-7 lg:text-[2.65rem]">
               Music shaped for release
               <span className="mt-2 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
                 with musical depth
               </span>
             </h1>
 
-            <p className="mx-auto mt-5 max-w-lg text-[15px] leading-relaxed text-white/74 md:text-[16px] md:leading-relaxed lg:mx-0">
+            <p className="hero-lead lg:mx-0">
               Mastrify masters with perceptual intelligence — preserving punch, space, and emotional movement while
               bringing your mix to a confident, streaming-ready level.
             </p>
@@ -90,7 +88,7 @@ export default function Landing() {
             </ul>
 
             <motion.div
-              className="mx-auto mt-6 flex w-full max-w-[16rem] flex-col gap-2.5 sm:mt-8 sm:max-w-none sm:flex-row sm:justify-center sm:gap-3 lg:mx-0 lg:justify-start"
+              className="mobile-cta-stack mt-5 sm:mt-8 lg:justify-start"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.18, ease: EASE }}

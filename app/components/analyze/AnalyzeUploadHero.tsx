@@ -49,24 +49,22 @@ export default function AnalyzeUploadHero({
       />
 
       <motion.div
-        className="relative isolate grid gap-8 max-lg:grid-cols-1 max-lg:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
+        className="relative isolate grid gap-7 max-lg:grid-cols-1 max-lg:gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
         initial={reduce ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: EASE }}
       >
         <motion.div className="relative z-10 flex min-w-0 flex-col max-lg:order-1">
-          <span className="inline-flex w-fit rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70 backdrop-blur-md">
-            Perceptual mix intelligence
-          </span>
+          <span className="hero-eyebrow-pill">Perceptual mix intelligence</span>
 
-          <h1 className="mt-5 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.35rem] md:text-[2.65rem]">
+          <h1 className="mt-3.5 text-[1.85rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:mt-5 sm:text-[2.35rem] md:text-[2.65rem]">
             See what your mix
             <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
               actually needs
             </span>
           </h1>
 
-          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/74 md:text-[16px]">
+          <p className="hero-lead">
             Perceptual analysis maps dynamics, balance, and release readiness — the first step in an intelligent
             mastering journey, before you commit to the final master.
           </p>

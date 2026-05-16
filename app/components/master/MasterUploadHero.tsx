@@ -55,9 +55,7 @@ export default function MasterUploadHero({
         transition={{ duration: 0.65, ease: EASE }}
       >
         <motion.div className="flex min-w-0 flex-col max-lg:order-1">
-          <span className="inline-flex w-fit rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-0.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-violet-200/70 backdrop-blur-md sm:px-3.5 sm:py-1 sm:text-[10px] sm:tracking-[0.26em]">
-            Spatial mastering engine
-          </span>
+          <span className="hero-eyebrow-pill sm:tracking-[0.22em]">Spatial mastering engine</span>
 
           <h1 className="mt-3 text-[1.55rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
             Release-ready masters
@@ -66,7 +64,7 @@ export default function MasterUploadHero({
             </span>
           </h1>
 
-          <p className="mt-3 max-w-lg text-[14px] leading-[1.6] text-white/74 sm:mt-4 sm:text-[15px] md:mt-6 md:text-[16px] md:leading-[1.7]">
+          <p className="hero-lead text-[14px] sm:text-[15px] md:mt-6">
             <span className="lg:hidden">Intelligent mastering that preserves punch, space, and tone — shaped for release.</span>
             <span className="hidden lg:inline">
               Hand your mix to an intelligent mastering engine that listens with restraint — shaping loudness, space,

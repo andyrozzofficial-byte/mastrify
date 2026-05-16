@@ -677,14 +677,14 @@ export default function MasterResultClient() {
 
           {/* Preview + settings */}
           <div className="flex min-w-0 flex-col gap-4 lg:gap-4">
-            <div className="flex flex-1 flex-col rounded-xl border border-white/[0.055] bg-black/[0.3] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] md:p-5">
+            <div className="card-pad-mobile flex flex-1 flex-col rounded-xl border border-white/[0.055] bg-black/[0.3] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] md:p-5">
               <p className="text-center text-[9px] font-semibold uppercase tracking-[0.24em] text-white/60">Mastering preview</p>
 
               <div className="mt-3 grid grid-cols-2 gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={() => selectSource("original")}
-                  className={`rounded-lg py-2 text-[11px] font-semibold transition-all duration-200 sm:py-2.5 sm:text-xs ${
+                  className={`min-h-[44px] rounded-lg py-2.5 text-[11px] font-semibold transition-all duration-200 active:scale-[0.98] sm:min-h-0 sm:py-2.5 sm:text-xs ${
                     selectedSource === "original"
                       ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.11)] ring-1 ring-white/[0.07]"
                       : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/88"
@@ -695,7 +695,7 @@ export default function MasterResultClient() {
                 <button
                   type="button"
                   onClick={() => selectSource("mastered")}
-                  className={`rounded-lg py-2 text-[11px] font-semibold transition-all duration-200 sm:py-2.5 sm:text-xs ${
+                  className={`min-h-[44px] rounded-lg py-2.5 text-[11px] font-semibold transition-all duration-200 active:scale-[0.98] sm:min-h-0 sm:py-2.5 sm:text-xs ${
                     selectedSource === "mastered"
                       ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.11)] ring-1 ring-white/[0.07]"
                       : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/88"
@@ -724,15 +724,15 @@ export default function MasterResultClient() {
                       : originalPreviewUrl
                 )}
                 onSeek={seekPreview}
-                height={88}
-                className="mt-3"
+                height={isMobileClient ? 104 : 88}
+                className="mt-4 w-full sm:mt-3"
               />
 
-              <div className="mt-3.5 flex items-center gap-3 sm:mt-4">
+              <div className="mt-4 flex items-center gap-3.5 sm:mt-4">
                 <button
                   type="button"
                   onClick={togglePlayPause}
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600/95 to-indigo-700/95 text-white shadow-[0_0_12px_rgba(99,102,241,0.12),0_6px_16px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.05] hover:shadow-[0_0_14px_rgba(99,102,241,0.14)] active:scale-[0.97]"
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600/95 to-indigo-700/95 text-white shadow-[0_0_12px_rgba(99,102,241,0.12),0_6px_16px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.05] hover:shadow-[0_0_14px_rgba(99,102,241,0.14)] active:scale-[0.97] sm:h-12 sm:w-12"
                   aria-label={isPlaying ? "Pause" : "Play"}
                 >
                   {isPlaying ? (

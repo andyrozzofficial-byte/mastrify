@@ -190,7 +190,7 @@ export default function HowItWorksClient() {
 
         <div className="relative grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-14">
           <Reveal>
-            <span className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70 backdrop-blur-md">
+            <span className="hero-eyebrow-pill">
               Intelligent mastering
             </span>
             <h1 className="mt-5 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.5rem] md:text-[3rem] md:leading-[1.08]">

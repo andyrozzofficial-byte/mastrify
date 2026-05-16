@@ -32,7 +32,7 @@ function MetricTile({
   hintClassName?: string
 }) {
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-black/[0.38] px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-md md:rounded-2xl md:px-4 md:py-3.5">
+    <div className="card-pad-mobile rounded-xl border border-white/[0.06] bg-black/[0.38] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-md md:rounded-2xl md:px-4 md:py-3.5">
       <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/68">{label}</div>
       <div className="mt-1 text-lg font-bold tabular-nums tracking-tight text-white md:text-xl">{value}</div>
       {hint ? (

@@ -39,18 +39,16 @@ export default function PricingPageHero() {
         transition={{ duration: 0.65, ease: EASE }}
       >
         <motion.div className="flex flex-col">
-          <span className="inline-flex w-fit rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70 backdrop-blur-md">
-            Simple, honest pricing
-          </span>
+          <span className="hero-eyebrow-pill">Simple, honest pricing</span>
 
-          <h1 className="mt-4 text-[1.6rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
+          <h1 className="mt-3.5 text-[1.6rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
             One master.
             <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
               Full quality. No complexity.
             </span>
           </h1>
 
-          <p className="mt-6 max-w-lg text-[15px] leading-[1.65] text-white/74 md:text-[16px] md:leading-[1.7]">
+          <p className="hero-lead md:mt-6">
             Release-ready mastering without subscriptions — master your track first, then pay when you are ready to
             export, powered by the same cinematic engine as the rest of Mastrify.
           </p>
