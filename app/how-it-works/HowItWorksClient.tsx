@@ -185,7 +185,7 @@ export default function HowItWorksClient() {
       />
 
       {/* Hero */}
-      <section className="page-container page-hero-pad relative z-10 pb-20 md:pb-28">
+      <section className="hero-section page-container page-hero-pad relative z-10 pb-20 md:pb-28">
         <HeroWaveBackdrop />
 
         <div className="relative grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-14">

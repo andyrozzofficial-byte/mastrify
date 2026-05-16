@@ -6,11 +6,16 @@
 
   /* Cinematic muted text — readable on dark without breaking restraint */
   --text-muted-faint: rgba(210, 214, 228, 0.44);
-  --text-muted-soft: rgba(220, 224, 236, 0.52);
+  --text-muted-soft: rgba(220, 224, 236, 0.54);
   --text-muted: rgba(255, 255, 255, 0.64);
   --text-muted-strong: rgba(255, 255, 255, 0.72);
   --text-label: rgba(196, 200, 220, 0.58);
   --text-label-strong: rgba(210, 214, 232, 0.68);
+  /* Support copy ladder — labels / captions / metadata / body */
+  --text-support-60: rgba(255, 255, 255, 0.6);
+  --text-support-68: rgba(255, 255, 255, 0.68);
+  --text-support-74: rgba(255, 255, 255, 0.74);
+  --text-support-80: rgba(255, 255, 255, 0.8);
 }
 
 
@@ -49,12 +54,12 @@ body {
   }
   .page-hero-pad {
     padding-top: 1.5rem;
-    padding-bottom: 1.125rem;
+    padding-bottom: 2.25rem;
   }
   @media (min-width: 640px) {
     .page-hero-pad {
       padding-top: 2rem;
-      padding-bottom: 1.5rem;
+      padding-bottom: 1.75rem;
     }
   }
   @media (min-width: 768px) {
@@ -96,7 +101,7 @@ body {
     margin-inline: auto;
     font-size: 15px;
     line-height: 1.62;
-    color: rgba(255, 255, 255, 0.74);
+    color: var(--text-support-74);
   }
   @media (min-width: 640px) {
     .hero-lead {
@@ -155,6 +160,73 @@ body {
     .card-pad-mobile {
       padding: 1.25rem;
     }
+  }
+  .hero-section {
+    position: relative;
+    overflow: visible;
+    padding-bottom: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  @media (min-width: 768px) {
+    .hero-section {
+      padding-bottom: 1.5rem;
+      margin-bottom: 0;
+    }
+  }
+  .section-after-hero {
+    padding-top: 2.75rem;
+    margin-top: 0.25rem;
+  }
+  @media (min-width: 640px) {
+    .section-after-hero {
+      padding-top: 3rem;
+    }
+  }
+  @media (min-width: 768px) {
+    .section-after-hero {
+      padding-top: 3.5rem;
+      margin-top: 0;
+    }
+  }
+  .section-rhythm {
+    padding-block: 2.5rem;
+  }
+  @media (min-width: 768px) {
+    .section-rhythm {
+      padding-block: 3.5rem;
+    }
+  }
+  .hero-orb-radial-mobile {
+    pointer-events: none;
+    position: absolute;
+    inset: -22%;
+    z-index: 0;
+    border-radius: 9999px;
+    background: radial-gradient(
+      circle at 50% 46%,
+      rgba(99, 102, 241, 0.22) 0%,
+      rgba(79, 70, 229, 0.09) 40%,
+      rgba(5, 5, 8, 0) 72%
+    );
+    filter: blur(44px);
+    opacity: 0.95;
+  }
+  @media (min-width: 768px) {
+    .hero-orb-radial-mobile {
+      display: none;
+    }
+  }
+  .text-support-60 {
+    color: var(--text-support-60);
+  }
+  .text-support-68 {
+    color: var(--text-support-68);
+  }
+  .text-support-74 {
+    color: var(--text-support-74);
+  }
+  .text-support-80 {
+    color: var(--text-support-80);
   }
   .text-muted-faint {
     color: var(--text-muted-faint);

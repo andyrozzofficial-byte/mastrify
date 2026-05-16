@@ -38,7 +38,7 @@ export default function Pricing() {
         <PricingPageHero />
 
         <motion.div
-          className="relative -mt-2 md:-mt-4"
+          className="section-after-hero relative -mt-2 md:-mt-4"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.15 }}

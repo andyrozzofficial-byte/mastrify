@@ -40,7 +40,7 @@ export default function MasterUploadHero({
   }, [reduce])
 
   return (
-    <section className="relative w-full overflow-visible">
+    <section className="hero-section relative w-full overflow-visible">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
@@ -130,7 +130,8 @@ export default function MasterUploadHero({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
         >
-          <LandingHeroAtmosphere compact />
+          <div className="hero-orb-radial-mobile" aria-hidden />
+          <LandingHeroAtmosphere compact mobileGlowBoost />
           <motion.div className="relative w-full max-w-[min(14rem,78vw)] overflow-visible sm:max-w-[16rem] lg:max-w-[28rem]">
             <HeroWaveBackdrop heightClass="h-[32%] lg:h-[40%]" className="opacity-[0.14] lg:opacity-[0.2]" />
             <MasteringEngineVisual

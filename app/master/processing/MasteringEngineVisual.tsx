@@ -51,11 +51,11 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
     >
       {/* Depth layers — parallax glow */}
       <motion.div
-        className="pointer-events-none absolute inset-[-5%] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.22)_0%,transparent_62%)] blur-3xl sm:inset-[-10%] md:inset-[-16%] lg:inset-[-22%]"
+        className="pointer-events-none absolute inset-[-5%] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.28)_0%,rgba(79,70,229,0.08)_45%,transparent_65%)] blur-3xl sm:inset-[-10%] sm:bg-[radial-gradient(circle,rgba(99,102,241,0.22)_0%,transparent_62%)] md:inset-[-16%] lg:inset-[-22%]"
         animate={
           reduceMotion
             ? { opacity: 0.5 }
-            : { opacity: [0.4, 0.62, 0.4], scale: [haloScale * 0.98, haloScale * 1.05, haloScale * 0.98] }
+            : { opacity: [0.44, 0.66, 0.44], scale: [haloScale * 0.98, haloScale * 1.05, haloScale * 0.98] }
         }
         transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
       />

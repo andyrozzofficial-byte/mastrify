@@ -40,7 +40,7 @@ export default function AnalyzeUploadHero({
   }, [reduce])
 
   return (
-    <section className="relative w-full overflow-visible pb-6 md:pb-10">
+    <section className="hero-section relative w-full overflow-visible md:pb-10">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
@@ -125,6 +125,7 @@ export default function AnalyzeUploadHero({
         <HeroEngineOrb
           activeStep={engineStep}
           compactAtmosphere
+          mobileGlowBoost
           className="relative z-0 max-lg:order-2 max-lg:mt-1 lg:sticky lg:top-24 lg:justify-self-end"
         />
       </motion.div>

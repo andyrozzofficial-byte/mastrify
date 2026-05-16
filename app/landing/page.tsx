@@ -49,7 +49,7 @@ export default function Landing() {
       />
 
       {/* Hero */}
-      <section className="page-container page-hero-pad relative z-10 pb-8 sm:pb-10 md:pb-12">
+      <section className="hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
         <motion.div
           className="relative grid items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-14 xl:gap-16"
           initial={reduce ? false : { opacity: 0, y: 16 }}
@@ -101,7 +101,7 @@ export default function Landing() {
               </PremiumButton>
             </motion.div>
 
-            <p className="mt-5 text-center text-[13px] text-white/64 lg:text-left">
+            <p className="mt-5 text-center text-[13px] text-support-68 lg:text-left">
               <Link
                 href="/how-it-works"
                 className="transition hover:text-violet-200/70 hover:underline hover:underline-offset-2"
@@ -113,7 +113,7 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <HeroEngineOrb activeStep={engineStep} compactAtmosphere className="lg:justify-self-end" />
+          <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost className="lg:justify-self-end" />
         </motion.div>
       </section>
 
@@ -129,7 +129,7 @@ export default function Landing() {
       </motion.div>
 
       {/* Below fold — mix intelligence */}
-      <section className="relative z-10">
+      <section className="section-after-hero relative z-10">
         <motion.div
           className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-transparent via-violet-950/[0.12] to-transparent"
           aria-hidden

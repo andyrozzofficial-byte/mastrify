@@ -24,7 +24,7 @@ export default function PricingPageHero() {
   }, [reduce])
 
   return (
-    <section className="relative w-full">
+    <section className="hero-section relative w-full">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
@@ -79,7 +79,7 @@ export default function PricingPageHero() {
           </p>
         </motion.div>
 
-        <HeroEngineOrb activeStep={engineStep} className="lg:justify-self-end" />
+        <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost className="lg:justify-self-end" />
       </motion.div>
     </section>
   )
