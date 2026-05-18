@@ -13,78 +13,27 @@ import AnalyzeProcessingView from "../components/analyze/AnalyzeProcessingView"
 import AnalyzeStepRail from "../components/analyze/AnalyzeStepRail"
 import AnalyzeUploadHero from "../components/analyze/AnalyzeUploadHero"
 import CinematicBackground from "../components/CinematicBackground"
+import MetricInsightTile from "../components/analyze/MetricInsightTile"
 import ScoreRing from "../components/ScoreRing"
+import {
+  brightnessPresentation,
+  clarityPresentation,
+  dynamicRangePresentation,
+  energyPresentation,
+  heroInsightBullets,
+  highsPresentation,
+  lowEndPresentation,
+  lufsPresentation,
+  presentIssue,
+  readinessHeadline,
+  readinessSubcopy,
+  stereoWidthPresentation,
+} from "../../lib/analyzeMixPresentation"
 import { appendHistory } from "../../lib/history"
 import { publicBackendUrl } from "../../lib/publicBackendUrl"
 import { AUDIO_UPLOAD_REJECT_MESSAGE, isAcceptedAudioUpload } from "../../lib/audioUploadAccept"
 import { useMasterSession } from "../master/MasterSessionProvider"
 
-/** Small metric cell — real values only; `hint` is derived copy, not fake data */
-function MetricTile({
-  label,
-  value,
-  hint,
-  hintClassName,
-}: {
-  label: string
-  value: string
-  hint?: string
-  hintClassName?: string
-}) {
-  return (
-    <div className="card-pad-mobile rounded-xl border border-white/[0.06] bg-black/[0.38] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-md md:rounded-2xl md:px-4 md:py-3.5">
-      <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/68">{label}</div>
-      <div className="mt-1 text-lg font-bold tabular-nums tracking-tight text-white md:text-xl">{value}</div>
-      {hint ? (
-        <div className={`mt-1 text-[10px] font-medium leading-snug text-white/72 md:text-[11px] ${hintClassName ?? ""}`}>{hint}</div>
-      ) : null}
-    </div>
-  )
-}
-
-function formatMetricValue(value: unknown, percent?: boolean): string {
-  if (typeof value === "number") {
-    if (percent) return `${(value * 100).toFixed(0)}%`
-    return Number.isInteger(value) ? `${value}` : value.toFixed(1)
-  }
-  if (typeof value === "string" && value.length > 0) return value
-  return "—"
-}
-
-function formatEnergyLabel(energy: unknown): string {
-  if (typeof energy === "string") {
-    const s = energy.toLowerCase()
-    return s.charAt(0).toUpperCase() + s.slice(1)
-  }
-  if (typeof energy === "number") return energy.toFixed(2)
-  return "—"
-}
-
-function energyHint(energy: unknown): string {
-  if (typeof energy === "string") {
-    const e = energy.toLowerCase()
-    if (e === "low") return "Needs more"
-    if (e === "high") return "Strong"
-    if (e === "medium") return "Balanced"
-  }
-  if (typeof energy === "number") return "Level"
-  return "—"
-}
-
-function highsHint(brightness: number): string {
-  if (brightness < 0.28) return "Slightly low"
-  if (brightness < 0.48) return "Balanced"
-  return "Bright"
-}
-
-function clarityFromMix(result: any): { value: string; hint: string } {
-  const b = typeof result?.brightness === "number" ? result.brightness : 0
-  const s = typeof result?.stereoWidth === "number" ? result.stereoWidth : 0
-  const blend = b * 0.55 + s * 0.45
-  if (blend < 0.22) return { value: "Low", hint: "Needs more definition & air" }
-  if (blend < 0.42) return { value: "Medium", hint: "Okay" }
-  return { value: "High", hint: "Strong presence" }
-}
 
 function generateFixes(result: any) {
   const fixes: any[] = []
@@ -402,7 +351,7 @@ export default function AnalyzePage() {
           initial={{ opacity: 0, filter: "blur(10px)", y: 16 }}
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
           transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto mt-2 w-full space-y-3 pb-3 md:space-y-4"
+          className="mx-auto mt-2 w-full space-y-4 pb-4 md:space-y-5 md:pb-5"
         >
           <AnalyzeStepRail phase="results" className="mx-auto" />
 
@@ -438,60 +387,50 @@ export default function AnalyzePage() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_56px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:rounded-[1.25rem] md:p-5"
+            className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_56px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:rounded-[1.25rem] md:p-6"
           >
-            <div className="flex flex-col items-stretch gap-4 md:flex-row md:items-center md:justify-between md:gap-6">
-              <div className="min-w-0 flex-1 text-center md:max-w-xl md:text-left">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/64">Release readiness</p>
-                <h2 className="mt-1 text-xl font-bold leading-tight tracking-tight text-white md:text-2xl lg:text-[1.65rem]">
-                  Your mix is{" "}
-                  <span className="text-transparent bg-gradient-to-r from-fuchsia-300 via-white to-cyan-200 bg-clip-text">
-                    {result.mixQuality != null ? Math.round(result.mixQuality) : 0}%
-                  </span>{" "}
-                  ready for release
+            <div className="flex flex-col items-stretch gap-5 md:flex-row md:items-center md:justify-between md:gap-8">
+              <motion.div
+                className="order-first flex shrink-0 justify-center py-1 md:order-last md:py-0"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.75, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <ScoreRing
+                  value={result.mixQuality != null ? result.mixQuality : 0}
+                  size={188}
+                  variant="percent"
+                  prominent
+                />
+              </motion.div>
+
+              <div className="order-last min-w-0 flex-1 text-center md:order-first md:max-w-xl md:text-left">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/64">Release readiness</p>
+                <h2 className="mt-1.5 text-xl font-bold leading-tight tracking-tight text-white md:text-2xl lg:text-[1.65rem]">
+                  {readinessHeadline(result.mixQuality)}
                 </h2>
 
-                <div className="mx-auto mt-2.5 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/[0.07] md:mx-0">
+                <div className="mx-auto mt-3 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/[0.07] md:mx-0">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-400 to-violet-500 shadow-[0_0_12px_rgba(244,114,182,0.15)]"
                     style={{ width: `${Math.min(100, Math.max(0, result.mixQuality ?? 0))}%` }}
                   />
                 </div>
 
-                {verdict ? (
-                  <p className="mx-auto mt-2 max-w-md line-clamp-2 text-[12px] leading-snug text-white/72 md:mx-0">{verdict}</p>
-                ) : (
-                  <p className="mx-auto mt-2 max-w-md text-[12px] leading-snug text-white/72 md:mx-0">
-                    {typeof result.mixQuality === "number" && result.mixQuality >= 75
-                      ? "Mix is in good shape for mastering."
-                      : "Mix needs improvement before release"}
-                  </p>
-                )}
+                <p className="mx-auto mt-2.5 max-w-md text-[12px] leading-relaxed text-white/74 md:mx-0 md:text-[13px]">
+                  {readinessSubcopy(result.mixQuality, verdict)}
+                </p>
 
-                <ul className="mx-auto mt-2.5 max-w-md space-y-1 text-left text-[11px] leading-snug text-white/68 md:mx-0">
-                  <li className="flex gap-2">
-                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-white/22" aria-hidden />
-                    <span>
-                      Stereo width {result.stereoWidth > 0.25 ? "good" : "needs improvement"} (
-                      {Math.round((result.stereoWidth ?? 0) * 100)}%)
-                    </span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-white/22" aria-hidden />
-                    <span>
-                      Dynamic range {typeof result.dynamicRange === "number" && result.dynamicRange > 14 ? "is high" : "looks healthy"} (
-                      {typeof result.dynamicRange === "number" ? result.dynamicRange.toFixed(1) : "—"})
-                    </span>
-                  </li>
-                  {typeof result.lufs === "number" && (
-                    <li className="flex gap-2">
-                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-white/22" aria-hidden />
-                      <span>Integrated loudness around {result.lufs.toFixed(1)} LUFS</span>
+                <ul className="mx-auto mt-3 max-w-md space-y-2 text-left md:mx-0">
+                  {heroInsightBullets(result).map((item) => (
+                    <li key={item.text} className="flex gap-2.5">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-300/45" aria-hidden />
+                      <span className="text-[11px] leading-relaxed text-white/72 sm:text-[12px]">{item.text}</span>
                     </li>
-                  )}
+                  ))}
                 </ul>
 
-                <div className="mx-auto mt-3 flex flex-wrap items-center justify-center gap-2 md:mx-0 md:justify-start">
+                <div className="mx-auto mt-4 flex flex-wrap items-center justify-center gap-2.5 md:mx-0 md:justify-start">
                   <button
                     type="button"
                     onClick={async () => {
@@ -507,28 +446,19 @@ export default function AnalyzePage() {
                         /* user cancelled or clipboard blocked */
                       }
                     }}
-                    className="rounded-lg border border-white/[0.1] bg-white/[0.04] px-4 py-2 text-[11px] font-semibold text-white/88 transition hover:border-white/[0.16] hover:bg-white/[0.07] md:text-xs"
+                    className="inline-flex min-h-[44px] items-center rounded-lg border border-white/[0.1] bg-white/[0.04] px-4 py-2.5 text-[11px] font-semibold text-white/88 transition hover:border-white/[0.16] hover:bg-white/[0.07] md:text-xs"
                   >
                     Share
                   </button>
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="rounded-lg border border-white/[0.1] bg-white/[0.04] px-4 py-2 text-[11px] font-semibold text-white/88 transition hover:border-white/[0.16] hover:bg-white/[0.07] md:text-xs"
+                    className="inline-flex min-h-[44px] items-center rounded-lg border border-white/[0.1] bg-white/[0.04] px-4 py-2.5 text-[11px] font-semibold text-white/88 transition hover:border-white/[0.16] hover:bg-white/[0.07] md:text-xs"
                   >
                     Download PDF
                   </button>
                 </div>
               </div>
-
-              <motion.div
-                className="flex shrink-0 justify-center md:pr-1"
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.75, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <ScoreRing value={result.mixQuality != null ? result.mixQuality : 0} size={168} variant="percent" />
-              </motion.div>
             </div>
           </motion.div>
 
@@ -537,48 +467,29 @@ export default function AnalyzePage() {
             <h3 id="mix-metrics-heading" className="sr-only">
               Mix metrics
             </h3>
-            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:grid-cols-4">
-              <MetricTile
-                label="LUFS"
-                value={formatMetricValue(result.lufs)}
-                hint={typeof result.lufs === "number" && result.lufs < -12 ? "Too quiet" : "Level check"}
-              />
-              <MetricTile
-                label="Dynamic range"
-                value={formatMetricValue(result.dynamicRange)}
-                hint={typeof result.dynamicRange === "number" && result.dynamicRange > 14 ? "High" : "Healthy"}
-              />
-              <MetricTile
-                label="Stereo width"
-                value={formatMetricValue(result.stereoWidth, true)}
-                hint={(result.stereoWidth ?? 0) < 0.2 ? "Narrow" : "OK"}
-              />
-              <MetricTile
-                label="Low end"
-                value={formatMetricValue(result.bassWeight, true)}
-                hint={(result.bassWeight ?? 0) > 0.55 ? "Too loud" : (result.bassWeight ?? 0) < 0.4 ? "Light" : "Balanced"}
-              />
-              <MetricTile
-                label="Brightness"
-                value={formatMetricValue(result.brightness, true)}
-                hint={(result.brightness ?? 0) < 0.3 ? "Dark" : "Air"}
-              />
-              <MetricTile
-                label="Energy"
-                value={formatEnergyLabel(result.energy)}
-                hint={energyHint(result.energy)}
-                hintClassName={
-                  typeof result.energy === "string" && result.energy.toLowerCase() === "low"
-                    ? "text-sky-300/85"
-                    : undefined
-                }
-              />
-              <MetricTile label="Clarity" value={clarityFromMix(result).value} hint={clarityFromMix(result).hint} />
-              <MetricTile
-                label="Highs"
-                value={formatMetricValue(result.brightness, true)}
-                hint={highsHint(typeof result.brightness === "number" ? result.brightness : 0)}
-              />
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4">
+              {(() => {
+                const brightness = typeof result.brightness === "number" ? result.brightness : 0
+                const tiles = [
+                  { label: "Loudness", ...lufsPresentation(result.lufs) },
+                  { label: "Dynamics", ...dynamicRangePresentation(result.dynamicRange) },
+                  { label: "Stereo width", ...stereoWidthPresentation(result.stereoWidth) },
+                  { label: "Low end", ...lowEndPresentation(result.bassWeight) },
+                  { label: "Brightness", ...brightnessPresentation(result.brightness) },
+                  { label: "Energy", ...energyPresentation(result.energy) },
+                  { label: "Clarity", ...clarityPresentation(result) },
+                  { label: "Highs", ...highsPresentation(brightness) },
+                ]
+                return tiles.map((tile) => (
+                  <MetricInsightTile
+                    key={tile.label}
+                    label={tile.label}
+                    vibe={tile.vibe}
+                    feel={tile.feel}
+                    technical={tile.technical}
+                  />
+                ))
+              })()}
             </div>
           </section>
 
@@ -641,7 +552,7 @@ export default function AnalyzePage() {
 
           {/* Diagnostics — issues */}
           {(result.issues?.length || 0) > 0 && issueListForUi.length > 0 && (
-            <section className="rounded-lg border border-white/[0.09] bg-black/[0.48] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_40px_rgba(0,0,0,0.42)] backdrop-blur-xl md:px-3.5 md:py-3">
+            <section className="rounded-xl border border-white/[0.09] bg-black/[0.48] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_40px_rgba(0,0,0,0.42)] backdrop-blur-xl md:px-4 md:py-4">
               <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] pb-1.5">
                 <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/68">Issues found</h3>
                 <span className="text-[10px] tabular-nums text-white/58">{issueListForUi.length} signals</span>
@@ -651,13 +562,9 @@ export default function AnalyzePage() {
                   const current = Math.round(result.mixQuality)
                   const next = Math.min(99, Math.round(current + (issue.realImpact || 0)))
                   const actualGain = next - current
-                  const gen = displayIssues.find((d: any) => d.text === issue.text)
-                  const insight = issue.insight ?? gen?.insight
                   const isMain = mainIssueRowIndex !== -1 && i === mainIssueRowIndex
                   const rec = recommendations.find((r: any) => r.title === issue.text)
-                  const tip = rec?.steps?.[0] as string | undefined
-                  const detailParts = [insight, tip].filter((x): x is string => typeof x === "string" && x.trim().length > 0)
-                  const detailLine = [...new Set(detailParts)].join(" · ")
+                  const presented = presentIssue(issue, result, rec?.steps?.[0] as string | undefined)
 
                   const dotClass =
                     issue.level === "high"
@@ -676,13 +583,16 @@ export default function AnalyzePage() {
                               Main issue
                             </span>
                           ) : null}
-                          <p className="text-[13px] font-semibold leading-snug text-white md:text-[14px]">{issue.text}</p>
+                          <p className="text-[13px] font-semibold leading-snug text-white md:text-[14px]">{presented.title}</p>
                           {isMain && issue.realImpact !== undefined ? (
                             <span className="text-[10px] tabular-nums text-amber-200/75">+{Math.max(1, actualGain)}%</span>
                           ) : null}
                         </div>
-                        {detailLine ? (
-                          <p className="mt-1 text-[11px] leading-snug text-white/66 line-clamp-2">{detailLine}</p>
+                        {presented.insight ? (
+                          <p className="mt-1 text-[11px] leading-snug text-white/66 line-clamp-2">{presented.insight}</p>
+                        ) : null}
+                        {presented.tip ? (
+                          <p className="mt-1 text-[10px] leading-snug text-white/55">{presented.tip}</p>
                         ) : null}
                         {isMain && issue.realImpact !== undefined ? (
                           <p className="mt-0.5 text-[10px] tabular-nums text-white/60">

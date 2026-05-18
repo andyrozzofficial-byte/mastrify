@@ -1,5 +1,6 @@
 "use client"
 
+import { motion, useReducedMotion } from "framer-motion"
 import { useId } from "react"
 
 /** Circular readiness ring (0–100) — decorative, matches dashboard mockups */
@@ -7,32 +8,57 @@ export default function ScoreRing({
   value,
   size = 160,
   variant = "score",
+  prominent = false,
 }: {
   value: number
   size?: number
-  /** `percent` — large “44%” center (landing preview). `score` — score + /100. */
+  /** `percent` — large center value (analyze results). `score` — score + /100. */
   variant?: "score" | "percent"
+  /** Larger glow and subtle pulse — analyze hero centerpiece */
+  prominent?: boolean
 }) {
+  const reduce = useReducedMotion()
   const uid = useId().replace(/:/g, "")
   const gradId = `ringGrad-${uid}`
   const v = Math.max(0, Math.min(100, Math.round(value)))
-  const stroke = 10
+  const stroke = prominent ? 11 : 10
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
   const offset = c - (v / 100) * c
 
   return (
     <div
-      className="relative flex shrink-0 items-center justify-center"
+      className={`relative flex shrink-0 items-center justify-center ${prominent ? "score-ring-hero" : ""}`}
       style={{ width: size, height: size }}
     >
-      <div
-        className="pointer-events-none absolute inset-0 rounded-full opacity-80 blur-2xl"
-        style={{
-          background: `conic-gradient(from 200deg, rgba(139,92,246,0.28), rgba(34,211,238,0.2), rgba(139,92,246,0.12))`,
-        }}
-      />
-      <svg width={size} height={size} className="relative -rotate-90 drop-shadow-[0_0_16px_rgba(139,92,246,0.22)]">
+      {prominent ? (
+        <>
+          <motion.div
+            className="pointer-events-none absolute inset-[-18%] rounded-full bg-violet-500/[0.14] blur-3xl"
+            aria-hidden
+            animate={reduce ? undefined : { opacity: [0.45, 0.72, 0.45], scale: [0.98, 1.04, 0.98] }}
+            transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="pointer-events-none absolute inset-[-8%] rounded-full bg-cyan-400/[0.08] blur-2xl"
+            aria-hidden
+            animate={reduce ? undefined : { opacity: [0.35, 0.55, 0.35] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+          />
+        </>
+      ) : (
+        <div
+          className="pointer-events-none absolute inset-0 rounded-full opacity-80 blur-2xl"
+          style={{
+            background: `conic-gradient(from 200deg, rgba(139,92,246,0.28), rgba(34,211,238,0.2), rgba(139,92,246,0.12))`,
+          }}
+        />
+      )}
+      <svg
+        width={size}
+        height={size}
+        className={`relative -rotate-90 ${prominent ? "drop-shadow-[0_0_28px_rgba(139,92,246,0.35)]" : "drop-shadow-[0_0_16px_rgba(139,92,246,0.22)]"}`}
+      >
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -73,9 +99,13 @@ export default function ScoreRing({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {variant === "percent" ? (
-          <span className="text-3xl font-bold tabular-nums tracking-tight text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.1)] md:text-[2.125rem]">
+          <span
+            className={`font-bold tabular-nums tracking-tight text-white drop-shadow-[0_0_14px_rgba(255,255,255,0.12)] ${
+              prominent ? "text-[2.35rem] sm:text-[2.5rem]" : "text-3xl md:text-[2.125rem]"
+            }`}
+          >
             {v}
-            <span className="text-[0.55em] font-semibold text-white/90">%</span>
+            <span className="text-[0.52em] font-semibold text-white/90">%</span>
           </span>
         ) : (
           <>
@@ -84,6 +114,11 @@ export default function ScoreRing({
             <span className="text-xs text-white/66">/ 100</span>
           </>
         )}
+        {prominent && variant === "percent" ? (
+          <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-violet-200/55">
+            Readiness
+          </span>
+        ) : null}
       </div>
     </div>
   )
