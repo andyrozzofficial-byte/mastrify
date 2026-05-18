@@ -6,12 +6,7 @@ function normalizeEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? value : ""
 }
 
-function expiryLabel(expiresAt) {
-  if (!expiresAt) return "Your secure download link remains active for 7 days."
-  const expires = new Date(expiresAt).getTime()
-  const days = Math.max(1, Math.round((expires - Date.now()) / (1000 * 60 * 60 * 24)))
-  return `Your secure download link remains active for ${days} day${days === 1 ? "" : "s"}.`
-}
+const EXPIRY_COPY = "Your secure download link remains active for 7 days."
 
 async function storeMasteredExport({ email, objectKey, expiresAt }) {
   if (!isSupabaseStorageConfigured()) return { stored: false, reason: "supabase_not_configured" }
@@ -49,27 +44,94 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
   if (!apiKey) return { sent: false, reason: "resend_not_configured" }
 
   const from = process.env.MASTRIFY_EMAIL_FROM?.trim() || "Mastrify <masters@mastrify.com>"
-  const subject = "Your master is ready"
-  const expiresCopy = expiryLabel(expiresAt)
   const title = cleanTrackTitle(trackTitle)
-  const titleHtml = title
-    ? `<p style="margin:14px 0 0;color:rgba(255,255,255,0.52);font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;">${escapeHtml(title)}</p>`
+  const escapedTitle = escapeHtml(title)
+  const heading = title ? `Your master of '${escapedTitle}' is ready` : "Your master is ready"
+  const subject = title ? `Your master of '${title}' is ready` : "Your master is ready"
+  const previewCta = playbackUrl
+    ? `
+                        <tr>
+                          <td align="center" style="padding:12px 0 0;">
+                            <a href="${playbackUrl}" style="display:inline-block;border:1px solid rgba(255,255,255,0.16);border-radius:999px;color:rgba(255,255,255,0.78);font-size:13px;font-weight:700;letter-spacing:-0.01em;line-height:20px;padding:12px 20px;text-decoration:none;">Preview your master</a>
+                          </td>
+                        </tr>`
     : ""
   const html = `
-    <div style="margin:0;background:#030308;color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:36px 20px;">
-      <div style="max-width:540px;margin:0 auto;border:1px solid rgba(255,255,255,0.11);border-radius:24px;background:radial-gradient(circle at 12% 0%,rgba(124,58,237,0.24),transparent 38%),radial-gradient(circle at 88% 8%,rgba(37,99,235,0.18),transparent 34%),linear-gradient(180deg,rgba(255,255,255,0.075),rgba(5,5,12,0.94));box-shadow:0 24px 80px rgba(0,0,0,0.44);padding:34px 30px;text-align:left;">
-        <p style="margin:0 0 12px;color:rgba(196,181,253,0.74);font-size:11px;font-weight:800;letter-spacing:0.24em;text-transform:uppercase;">Mastrify</p>
-        <h1 style="margin:0;color:#fff;font-size:28px;line-height:1.15;letter-spacing:-0.035em;">Your master is ready</h1>
-        ${titleHtml}
-        <p style="margin:18px 0 26px;color:rgba(255,255,255,0.72);font-size:15px;line-height:1.7;">Your mastered track is ready to download. ${expiresCopy}</p>
-        <a href="${playbackUrl}" style="display:inline-block;border-radius:999px;background:linear-gradient(90deg,#8b5cf6,#2563eb);color:#fff;text-decoration:none;font-size:14px;font-weight:800;letter-spacing:-0.01em;padding:15px 22px;box-shadow:0 14px 34px rgba(79,70,229,0.28);">Download your mastered track</a>
-        <p style="margin:18px 0 0;color:rgba(255,255,255,0.46);font-size:12px;line-height:1.65;">Your secure download link remains active for 7 days.</p>
-        <div style="height:1px;margin:28px 0 18px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.13),transparent);"></div>
-        <p style="margin:0;color:rgba(255,255,255,0.36);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;">Delivered by Mastrify</p>
-      </div>
-    </div>
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <style>
+          @media screen and (max-width: 480px) {
+            .email-shell { padding: 24px 14px !important; }
+            .email-card { padding: 28px 20px !important; border-radius: 22px !important; }
+            .email-heading { font-size: 25px !important; line-height: 1.18 !important; }
+            .email-copy { font-size: 15px !important; line-height: 1.75 !important; }
+            .primary-cta { padding: 17px 22px !important; min-height: 22px !important; }
+          }
+          .primary-cta:hover { box-shadow: 0 16px 38px rgba(99,102,241,0.34) !important; filter: brightness(1.05); }
+        </style>
+      </head>
+      <body style="margin:0;background:#030308;color:#f8fafc;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#030308;margin:0;padding:0;">
+          <tr>
+            <td class="email-shell" align="center" style="padding:38px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;">
+                <tr>
+                  <td class="email-card" style="border:1px solid rgba(255,255,255,0.11);border-radius:26px;background:#080811;background-image:radial-gradient(circle at 14% 0%,rgba(124,58,237,0.24),transparent 38%),radial-gradient(circle at 88% 6%,rgba(37,99,235,0.18),transparent 34%),linear-gradient(180deg,rgba(255,255,255,0.075),rgba(5,5,12,0.96));box-shadow:0 24px 78px rgba(0,0,0,0.46);padding:36px 32px;text-align:left;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td style="padding:0 0 22px;">
+                          <table role="presentation" width="168" cellspacing="0" cellpadding="0" border="0" style="opacity:0.48;">
+                            <tr>
+                              <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:5px;background:#8b5cf6;border-radius:6px;"></div></td>
+                              <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:10px;background:#6366f1;border-radius:6px;"></div></td>
+                              <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:15px;background:#3b82f6;border-radius:6px;"></div></td>
+                              <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:8px;background:#8b5cf6;border-radius:6px;"></div></td>
+                              <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:13px;background:#6366f1;border-radius:6px;"></div></td>
+                              <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:6px;background:#3b82f6;border-radius:6px;"></div></td>
+                              <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:12px;background:#8b5cf6;border-radius:6px;"></div></td>
+                              <td valign="bottom" style="width:6px;height:16px;"><div style="height:4px;background:#6366f1;border-radius:6px;"></div></td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p style="margin:0 0 12px;color:rgba(196,181,253,0.76);font-size:11px;font-weight:800;letter-spacing:0.24em;text-transform:uppercase;">Mastrify</p>
+                          <h1 class="email-heading" style="margin:0;color:#ffffff;font-size:29px;line-height:1.14;letter-spacing:-0.035em;font-weight:800;">${heading}</h1>
+                          <p class="email-copy" style="margin:18px 0 26px;color:rgba(255,255,255,0.72);font-size:15px;line-height:1.72;">Your mastered track is ready to download. ${EXPIRY_COPY}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding:0;">
+                          <a class="primary-cta" href="${playbackUrl}" style="display:inline-block;border-radius:999px;background:#6d5dfc;background-image:linear-gradient(90deg,#8b5cf6,#2563eb);color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;letter-spacing:-0.01em;line-height:20px;padding:16px 24px;box-shadow:0 12px 30px rgba(79,70,229,0.26);transition:box-shadow 180ms ease,filter 180ms ease;">Download your mastered track</a>
+                        </td>
+                      </tr>
+                      ${previewCta}
+                      <tr>
+                        <td style="padding:30px 0 18px;">
+                          <div style="height:1px;background:rgba(255,255,255,0.12);background-image:linear-gradient(90deg,transparent,rgba(255,255,255,0.13),transparent);line-height:1px;font-size:1px;">&nbsp;</div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p style="margin:0;color:rgba(255,255,255,0.38);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Powered by Mastrify Audio Engine</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
   `
-  const text = `Your master is ready${title ? `\n${title}` : ""}\n\nUse the “Download your mastered track” button in this email.\n\nYour secure download link remains active for 7 days.\n\nDelivered by Mastrify`
+  const textHeading = title ? `Your master of '${title}' is ready` : "Your master is ready"
+  const text = `${textHeading}\n\nUse the Download your mastered track button in this email.\n\n${EXPIRY_COPY}\n\nPowered by Mastrify Audio Engine`
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
