@@ -86,6 +86,18 @@ function resolveMasteredPlaybackUrl(mp3: string | null, wav: string | null): { u
   return { url: null, via: null }
 }
 
+function objectKeyFromPlaybackUrl(url: string | null): string {
+  if (!url) return ""
+  const signedMatch = url.match(/\/storage\/v1\/object\/sign\/masters\/([^?/#]+)/)
+  const railwayMatch = url.match(/\/masters\/([^?/#]+)/)
+  const key = signedMatch?.[1] ?? railwayMatch?.[1] ?? ""
+  try {
+    return key ? decodeURIComponent(key) : ""
+  } catch {
+    return key
+  }
+}
+
 export default function MasterResultClient() {
   const {
     file,
@@ -552,7 +564,8 @@ export default function MasterResultClient() {
       setDeliveryError("Enter a valid email address.")
       return
     }
-    if (!masteredWavUrl || !masterObjectKey) {
+    const deliveryObjectKey = masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)
+    if (!masteredWavUrl || !deliveryObjectKey) {
       setDeliveryError("Master delivery link is not ready yet.")
       return
     }
@@ -565,7 +578,7 @@ export default function MasterResultClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
-          objectKey: masterObjectKey,
+          objectKey: deliveryObjectKey,
           playbackUrl: masteredWavUrl,
           expiresAt: masterExpiresAt || null,
         }),

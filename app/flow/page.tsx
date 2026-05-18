@@ -17,6 +17,28 @@ import { PUBLIC_BACKEND_API_BASE } from "../../lib/publicBackendUrl"
 
 type Step = "upload" | "analyzing" | "done"
 
+function stringField(value: unknown): string {
+  return typeof value === "string" ? value : ""
+}
+
+function objectKeyFromAfterPath(after: unknown): string {
+  const raw = stringField(after).trim()
+  if (!raw) return ""
+  const match = raw.match(/^\/?masters\/([^?#]+)$/)
+  return match?.[1] ?? ""
+}
+
+function objectKeyFromPlaybackUrl(url: string): string {
+  const signedMatch = url.match(/\/storage\/v1\/object\/sign\/masters\/([^?/#]+)/)
+  const railwayMatch = url.match(/\/masters\/([^?/#]+)/)
+  const key = signedMatch?.[1] ?? railwayMatch?.[1] ?? ""
+  try {
+    return key ? decodeURIComponent(key) : ""
+  } catch {
+    return key
+  }
+}
+
 export default function FlowPage() {
   const API = PUBLIC_BACKEND_API_BASE
   const SHOW_REFERENCE = false
@@ -229,8 +251,17 @@ const previewMp3 =
   res.data.previewAfterMp3Url ||
   (res.data.previewAfterMp3 ? `${API}${res.data.previewAfterMp3}` : "")
 setMasteredPreviewMp3Url(previewMp3)
-setMasterObjectKey(typeof res.data.objectKey === "string" ? res.data.objectKey : "")
-setMasterExpiresAt(typeof res.data.expiresAt === "string" ? res.data.expiresAt : "")
+setMasterObjectKey(
+  stringField(res.data.objectKey) ||
+  stringField(res.data.object_key) ||
+  stringField(res.data.pipelineDebug?.objectKey) ||
+  objectKeyFromAfterPath(res.data.after)
+)
+setMasterExpiresAt(
+  stringField(res.data.expiresAt) ||
+  stringField(res.data.expires_at) ||
+  stringField(res.data.pipelineDebug?.expiresAt)
+)
 
 setSelectedSource("mastered")
 
@@ -411,7 +442,8 @@ const handleEmailDelivery = async () => {
     setDeliveryError("Enter a valid email address.")
     return
   }
-  if (!masteredUrl || !masterObjectKey) {
+  const deliveryObjectKey = masterObjectKey || objectKeyFromPlaybackUrl(masteredUrl)
+  if (!masteredUrl || !deliveryObjectKey) {
     setDeliveryError("Master delivery link is not ready yet.")
     return
   }
@@ -424,7 +456,7 @@ const handleEmailDelivery = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email,
-        objectKey: masterObjectKey,
+        objectKey: deliveryObjectKey,
         playbackUrl: masteredUrl,
         expiresAt: masterExpiresAt || null,
       }),

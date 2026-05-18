@@ -1190,6 +1190,7 @@ app.post("/master",
           masterBytes: fs.existsSync(masterPath) ? fs.statSync(masterPath).size : 0,
           storage: playback.storage,
           objectKey: playback.objectKey,
+          expiresAt: playback.expiresAt,
           deliveryRequested: delivery.requested,
         }
       }

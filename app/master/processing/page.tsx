@@ -17,6 +17,17 @@ const API = PUBLIC_BACKEND_API_BASE
 
 const STEP_DELAYS_MS = [520, 680, 680, 780, 480] as const
 
+function stringField(value: unknown): string {
+  return typeof value === "string" ? value : ""
+}
+
+function objectKeyFromAfterPath(after: unknown): string {
+  const raw = stringField(after).trim()
+  if (!raw) return ""
+  const match = raw.match(/^\/?masters\/([^?#]+)$/)
+  return match?.[1] ?? ""
+}
+
 export default function MasterProcessingPage() {
   const router = useRouter()
   const {
@@ -101,10 +112,20 @@ export default function MasterProcessingPage() {
           res.data.previewAfterMp3Url ||
           (res.data.previewAfterMp3 ? `${API}${res.data.previewAfterMp3}` : "")
 
+        const responseObjectKey =
+          stringField(res.data.objectKey) ||
+          stringField(res.data.object_key) ||
+          stringField(res.data.pipelineDebug?.objectKey) ||
+          objectKeyFromAfterPath(res.data.after)
+        const responseExpiresAt =
+          stringField(res.data.expiresAt) ||
+          stringField(res.data.expires_at) ||
+          stringField(res.data.pipelineDebug?.expiresAt)
+
         setMasteredUrl(mastered)
         setMasteredPreviewMp3Url(previewMp3)
-        setMasterObjectKey(typeof res.data.objectKey === "string" ? res.data.objectKey : "")
-        setMasterExpiresAt(typeof res.data.expiresAt === "string" ? res.data.expiresAt : "")
+        setMasterObjectKey(responseObjectKey)
+        setMasterExpiresAt(responseExpiresAt)
 
         appendHistory({
           kind: "master",
