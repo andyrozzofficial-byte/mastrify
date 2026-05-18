@@ -997,6 +997,10 @@ app.post("/master",
       const chainDebugMode = body.chainDebugMode ?? body.chainMode
       const chainDebugSweep = body.chainDebugSweep
       const deliveryEmail = typeof body.deliveryEmail === "string" ? body.deliveryEmail.trim() : ""
+      const deliveryTrackTitle =
+        typeof body.trackTitle === "string" && body.trackTitle.trim()
+          ? body.trackTitle.trim()
+          : path.parse(file.originalname || "").name
 
       if (LUFS_TRACE) {
         console.log("[LUFS_TRACE] POST /master incoming (req.body after multer)", {
@@ -1144,6 +1148,7 @@ app.post("/master",
         objectKey: playback.objectKey,
         playbackUrl: playback.afterUrl,
         expiresAt: playback.expiresAt,
+        trackTitle: deliveryTrackTitle,
       })
 
       const resPayload = {
@@ -1221,12 +1226,14 @@ app.post("/master",
 )
 
 app.post("/master/deliver", async (req, res) => {
+  console.log("MASTER DELIVER HIT")
   try {
     const body = req.body || {}
     const email = typeof body.email === "string" ? body.email.trim() : ""
     const objectKey = typeof body.objectKey === "string" ? body.objectKey.trim() : ""
     const playbackUrl = typeof body.playbackUrl === "string" ? body.playbackUrl.trim() : ""
     const expiresAt = typeof body.expiresAt === "string" && body.expiresAt.trim() ? body.expiresAt.trim() : null
+    const trackTitle = typeof body.trackTitle === "string" ? body.trackTitle.trim() : ""
 
     if (!email || !objectKey || !playbackUrl) {
       return res.status(400).json({ success: false, error: "Missing delivery details" })
@@ -1237,6 +1244,7 @@ app.post("/master/deliver", async (req, res) => {
       objectKey,
       playbackUrl,
       expiresAt,
+      trackTitle,
     })
 
     res.json({ success: true, delivery })

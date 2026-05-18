@@ -75,6 +75,7 @@ export default function MasterProcessingPage() {
         formData.append("stereoEnhance", String(stereoEnhance))
         formData.append("lowEndControl", String(lowEndControl))
         formData.append("clarityPresence", String(clarityPresence))
+        formData.append("trackTitle", file.name)
         if (deliveryEmail.trim()) {
           formData.append("deliveryEmail", deliveryEmail.trim())
         }

@@ -581,6 +581,7 @@ export default function MasterResultClient() {
           objectKey: deliveryObjectKey,
           playbackUrl: masteredWavUrl,
           expiresAt: masterExpiresAt || null,
+          trackTitle: trackMeta?.title || file?.name || "",
         }),
       })
       const data = await res.json().catch(() => null)

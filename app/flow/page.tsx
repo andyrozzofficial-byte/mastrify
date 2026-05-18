@@ -232,6 +232,7 @@ export default function FlowPage() {
     try {
       const formData = new FormData()
       formData.append("file", file)
+      formData.append("trackTitle", file.name)
 
       if (SHOW_REFERENCE && referenceTrack) {
   formData.append("reference", referenceTrack)
@@ -459,6 +460,7 @@ const handleEmailDelivery = async () => {
         objectKey: deliveryObjectKey,
         playbackUrl: masteredUrl,
         expiresAt: masterExpiresAt || null,
+        trackTitle: file?.name || "",
       }),
     })
     const data = await res.json().catch(() => null)
