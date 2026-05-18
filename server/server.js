@@ -9,6 +9,7 @@ import { masterTrack, measureIntegratedLufsEbur128 } from "./master.js"
 import { serializeMasterAnalysisForJson } from "./masterAnalysisPayload.js"
 import { serializeMasteringInsightsForJson } from "./masterInsightsPayload.js"
 import { MASTRIFY_LUFS_TRACE as LUFS_TRACE, MASTRIFY_PIPELINE_DEBUG as PIPELINE_DEBUG } from "./mastrifyDebug.js"
+import { persistMasterExport } from "./supabaseStorage.js"
 import ffmpegPath from "ffmpeg-static"
 import ffprobeStatic from "ffprobe-static"
 
@@ -1129,13 +1130,21 @@ app.post("/master",
         masterResult?.masteringInsights ?? rawAfter
       )
 
+      const railwayPlaybackUrl = `${baseUrl}${after}`
+      const playback = await persistMasterExport({
+        localMasterPath: masterPath,
+        localUploadPath: newPath,
+        masterFileName,
+        railwayPlaybackUrl,
+      })
+
       const resPayload = {
         success: true,
         before,
-        after,
-        afterUrl: `${baseUrl}${after}`,
+        after: playback.after,
+        afterUrl: playback.afterUrl,
         // kept for backwards compatibility with older clients
-        fullUrl: `${baseUrl}${after}`,
+        fullUrl: playback.fullUrl,
         analysisBefore,
         analysisAfter,
         ...(masteringInsights ? { masteringInsights } : {}),
@@ -1166,6 +1175,8 @@ app.post("/master",
           analysisAfter,
           hasLufsRmsProxy: Boolean(rawAfter && rawAfter.lufsRmsProxy != null),
           masterBytes: fs.existsSync(masterPath) ? fs.statSync(masterPath).size : 0,
+          storage: playback.storage,
+          objectKey: playback.objectKey,
         }
       }
       if (LUFS_TRACE) {
