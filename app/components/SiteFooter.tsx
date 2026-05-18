@@ -1,6 +1,7 @@
 "use client"
 
 import { motion, useReducedMotion } from "framer-motion"
+import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 import Link from "next/link"
 import PremiumButton from "./PremiumButton"
@@ -81,10 +82,18 @@ function SocialLink({
 
 export default function SiteFooter() {
   const reduce = useReducedMotion()
+  const pathname = usePathname()
+  const onAnalyze = pathname === "/analyze"
   const year = new Date().getFullYear()
 
   return (
-    <footer className="relative mt-auto overflow-hidden">
+    <footer className={`relative mt-auto overflow-hidden ${onAnalyze ? "max-md:-mt-1" : ""}`}>
+      {onAnalyze ? (
+        <motion.div
+          className="pointer-events-none absolute inset-x-0 -top-10 h-16 bg-gradient-to-b from-transparent via-black/45 to-black/80 md:-top-14 md:h-20"
+          aria-hidden
+        />
+      ) : null}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/28 to-transparent"
         aria-hidden
@@ -103,7 +112,9 @@ export default function SiteFooter() {
       />
 
       <motion.div
-        className="footer-shell relative mx-auto w-full px-5 pt-11 pb-[max(2.25rem,env(safe-area-inset-bottom))] sm:px-6 sm:pt-12 md:px-10 md:pt-14 md:pb-12 lg:pt-[3.25rem]"
+        className={`footer-shell relative mx-auto w-full px-5 pb-[max(2.25rem,env(safe-area-inset-bottom))] sm:px-6 md:px-10 md:pt-14 md:pb-12 lg:pt-[3.25rem] ${
+          onAnalyze ? "pt-8 sm:pt-9" : "pt-11 sm:pt-12"
+        }`}
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-48px" }}
@@ -147,7 +158,9 @@ export default function SiteFooter() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.08, ease: EASE }}
           >
-            <motion.div className="footer-cta-card lg:max-w-[26.5rem] lg:ml-auto lg:mr-1 xl:max-w-[28rem] xl:mr-2">
+            <motion.div
+              className={`footer-cta-card lg:max-w-[26.5rem] lg:ml-auto lg:mr-1 xl:max-w-[28rem] xl:mr-2 ${onAnalyze ? "footer-cta-card--analyze" : ""}`}
+            >
               <motion.div
                 className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-violet-600/[0.1] blur-2xl"
                 aria-hidden

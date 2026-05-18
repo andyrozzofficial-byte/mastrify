@@ -21,12 +21,12 @@ export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props
       className="relative"
     >
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-xl bg-gradient-to-r from-violet-600/[0.12] via-indigo-500/[0.06] to-cyan-500/[0.08] opacity-70 blur-md"
+        className="pointer-events-none absolute -inset-1 rounded-xl bg-gradient-to-r from-violet-600/[0.16] via-indigo-500/[0.09] to-cyan-500/[0.1] blur-lg"
         aria-hidden
-        animate={reduce ? undefined : { opacity: [0.45, 0.7, 0.45] }}
+        animate={reduce ? undefined : { opacity: [0.5, 0.78, 0.5] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
-      <div className="relative overflow-hidden rounded-xl border border-violet-400/[0.14] bg-gradient-to-br from-violet-950/35 via-black/55 to-slate-950/40 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_32px_rgba(99,102,241,0.08),0_20px_48px_rgba(0,0,0,0.42)] backdrop-blur-xl md:flex md:items-center md:justify-between md:gap-6 md:px-5 md:py-4">
+      <motion.div className="relative overflow-hidden rounded-xl border border-violet-400/[0.2] bg-gradient-to-br from-violet-950/42 via-black/60 to-slate-950/48 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_40px_rgba(99,102,241,0.12),0_20px_48px_rgba(0,0,0,0.45)] backdrop-blur-xl md:flex md:items-center md:justify-between md:gap-6 md:px-5 md:py-4">
         <div
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(105deg,rgba(255,255,255,0.04)_0%,transparent_42%,transparent_100%)]"
           aria-hidden
@@ -44,10 +44,9 @@ export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props
           <motion.button
             type="button"
             onClick={onMaster}
-            whileHover={reduce ? undefined : { scale: 1.02, y: -1 }}
-            whileTap={reduce ? undefined : { scale: 0.99 }}
+            whileHover={reduce ? undefined : { y: -1 }}
             transition={{ duration: 0.22, ease: ANALYZE_EASE }}
-            className="inline-flex min-h-[46px] items-center justify-center rounded-lg bg-gradient-to-r from-[#6d28d9] via-[#4f46e5] to-[#2563eb] px-7 text-[13px] font-semibold text-white shadow-[0_0_22px_rgba(99,102,241,0.22),0_12px_32px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.12] transition-[box-shadow,filter] duration-300 hover:shadow-[0_0_28px_rgba(99,102,241,0.28),0_14px_36px_rgba(0,0,0,0.42)] hover:brightness-[1.04]"
+            className="inline-flex min-h-[46px] items-center justify-center rounded-lg bg-gradient-to-r from-[#6d28d9] via-[#4f46e5] to-[#2563eb] px-7 text-[13px] font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,0.26),0_12px_32px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.14] transition-[box-shadow,filter] duration-300 hover:shadow-[0_0_32px_rgba(99,102,241,0.32),0_14px_36px_rgba(0,0,0,0.42)] hover:brightness-[1.04]"
           >
             Master my track
           </motion.button>
@@ -55,8 +54,7 @@ export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props
             type="button"
             onClick={onFlow}
             disabled={!canMaster}
-            whileHover={canMaster && !reduce ? { scale: 1.01, y: -1 } : undefined}
-            whileTap={canMaster && !reduce ? { scale: 0.99 } : undefined}
+            whileHover={canMaster && !reduce ? { y: -1 } : undefined}
             transition={{ duration: 0.22, ease: ANALYZE_EASE }}
             className={`inline-flex min-h-[46px] items-center justify-center rounded-lg border px-5 text-[13px] font-semibold transition-[border-color,background-color,box-shadow] duration-300 ${
               canMaster
@@ -67,7 +65,7 @@ export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props
             One-page master
           </motion.button>
         </motion.div>
-      </div>
+      </motion.div>
     </motion.div>
   )
 }

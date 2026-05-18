@@ -37,9 +37,9 @@ export default function ScoreRing({
         prominent && !reduce
           ? {
               filter: [
-                "drop-shadow(0 0 24px rgba(139,92,246,0.28))",
-                "drop-shadow(0 0 32px rgba(99,102,241,0.38))",
-                "drop-shadow(0 0 24px rgba(139,92,246,0.28))",
+                "drop-shadow(0 0 28px rgba(139,92,246,0.22))",
+                "drop-shadow(0 0 36px rgba(99,102,241,0.3))",
+                "drop-shadow(0 0 28px rgba(139,92,246,0.22))",
               ],
             }
           : undefined
@@ -49,22 +49,22 @@ export default function ScoreRing({
       {prominent ? (
         <>
           <motion.div
-            className="pointer-events-none absolute inset-[-24%] rounded-full bg-violet-500/[0.16] blur-3xl"
+            className="pointer-events-none absolute inset-[-28%] rounded-full bg-violet-500/[0.13] blur-[44px]"
             aria-hidden
-            animate={reduce ? undefined : { opacity: [0.4, 0.68, 0.4], scale: [0.96, 1.05, 0.96] }}
+            animate={reduce ? undefined : { opacity: [0.36, 0.58, 0.36] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
-            className="pointer-events-none absolute inset-[-12%] rounded-full bg-cyan-400/[0.09] blur-2xl"
+            className="pointer-events-none absolute inset-[-16%] rounded-full bg-cyan-400/[0.07] blur-[36px]"
             aria-hidden
-            animate={reduce ? undefined : { opacity: [0.3, 0.52, 0.3] }}
+            animate={reduce ? undefined : { opacity: [0.28, 0.44, 0.28] }}
             transition={{ duration: 7.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
           />
           <motion.div
-            className="pointer-events-none absolute inset-[-6%] rounded-full opacity-40 blur-xl"
+            className="pointer-events-none absolute inset-[-8%] rounded-full opacity-35 blur-2xl"
             style={{
               background:
-                "conic-gradient(from 0deg, transparent 0deg, rgba(196,181,253,0.22) 60deg, transparent 120deg, rgba(34,211,238,0.12) 200deg, transparent 280deg)",
+                "conic-gradient(from 0deg, transparent 0deg, rgba(196,181,253,0.18) 60deg, transparent 120deg, rgba(34,211,238,0.09) 200deg, transparent 280deg)",
             }}
             aria-hidden
             animate={reduce ? undefined : { rotate: 360 }}
@@ -83,7 +83,7 @@ export default function ScoreRing({
       <svg
         width={size}
         height={size}
-        className={`relative -rotate-90 ${prominent ? "drop-shadow-[0_0_32px_rgba(139,92,246,0.32)]" : "drop-shadow-[0_0_16px_rgba(139,92,246,0.22)]"}`}
+        className={`relative -rotate-90 ${prominent ? "drop-shadow-[0_0_36px_rgba(139,92,246,0.26)]" : "drop-shadow-[0_0_16px_rgba(139,92,246,0.22)]"}`}
       >
         <circle
           cx={size / 2}

@@ -14,6 +14,10 @@ import AnalyzeStepRail from "../components/analyze/AnalyzeStepRail"
 import AnalyzeUploadHero from "../components/analyze/AnalyzeUploadHero"
 import CinematicBackground from "../components/CinematicBackground"
 import AnalyzeResultsCta from "../components/analyze/AnalyzeResultsCta"
+import {
+  polishIssueDisplay,
+  polishVerdictDisplay,
+} from "../components/analyze/analyzeResultsPolish"
 import MetricInsightTile from "../components/analyze/MetricInsightTile"
 import { ANALYZE_EASE } from "../components/analyze/analyzeMotion"
 import ScoreRing from "../components/ScoreRing"
@@ -315,8 +319,10 @@ export default function AnalyzePage() {
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className={`relative mx-auto w-full px-5 pb-12 pt-6 md:px-10 md:pb-16 md:pt-8 ${
-          result && !processing ? "max-w-6xl md:max-w-7xl" : "max-w-[1080px]"
+        className={`relative mx-auto w-full px-5 pb-10 pt-6 md:px-10 md:pb-16 md:pt-8 ${
+          result && !processing
+            ? "max-w-6xl pb-6 pt-3 md:max-w-7xl md:pb-16 md:pt-8"
+            : "max-w-[1080px]"
         }`}
       >
         <AnimatePresence mode="wait">
@@ -353,9 +359,9 @@ export default function AnalyzePage() {
           initial={{ opacity: 0, filter: "blur(10px)", y: 16 }}
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
           transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto mt-2 w-full space-y-4 pb-4 md:space-y-5 md:pb-5"
+          className="mx-auto mt-0 w-full space-y-2.5 pb-2 md:mt-2 md:space-y-5 md:pb-5"
         >
-          <AnalyzeStepRail phase="results" className="mx-auto" />
+          <AnalyzeStepRail phase="results" className="mx-auto max-md:-mt-1.5 max-md:mb-0" />
 
           <div className="relative flex w-full items-center justify-between gap-2">
             <button
@@ -375,7 +381,7 @@ export default function AnalyzePage() {
             <span className="w-14 shrink-0 sm:w-20" aria-hidden />
           </div>
 
-          <header className="text-center">
+          <header className="-mt-1 text-center md:mt-0">
             <h1 className="text-[1.45rem] font-semibold leading-[1.1] tracking-[-0.02em] text-white sm:text-[1.6rem] md:text-[1.75rem]">
               Your mix,{" "}
               <span className="bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
@@ -389,25 +395,25 @@ export default function AnalyzePage() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.18, ease: ANALYZE_EASE }}
-            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_56px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:rounded-[1.25rem] md:p-7 lg:p-8"
+            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_56px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:rounded-[1.25rem] md:p-7 lg:p-8"
           >
             <div
               className="pointer-events-none absolute right-0 top-1/2 hidden h-[min(320px,70%)] w-[min(380px,45%)] -translate-y-1/2 rounded-full bg-violet-600/[0.07] blur-[90px] md:block"
               aria-hidden
             />
-            <div className="relative grid grid-cols-1 items-center gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:gap-10 lg:gap-14">
+            <div className="relative grid grid-cols-1 items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-10 lg:gap-14">
               <motion.div
                 className="order-2 min-w-0 text-center md:order-1 md:max-w-[34rem] md:pr-2 md:text-left lg:max-w-[36rem]"
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65, delay: 0.24, ease: ANALYZE_EASE }}
               >
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/64">Release readiness</p>
-                <h2 className="mt-1.5 text-xl font-bold leading-tight tracking-tight text-white md:text-2xl lg:text-[1.65rem]">
+                <h2 className="mt-1 text-xl font-bold leading-tight tracking-tight text-white md:mt-1.5 md:text-2xl lg:text-[1.65rem]">
                   {readinessHeadline(result.mixQuality)}
                 </h2>
 
-                <motion.div className="mx-auto mt-3 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/[0.07] md:mx-0">
+                <motion.div className="mx-auto mt-2 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/[0.07] md:mx-0 md:mt-3">
                   <motion.div
                     className="h-full rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-400 to-violet-500 shadow-[0_0_12px_rgba(244,114,182,0.15)]"
                     initial={{ width: 0 }}
@@ -416,11 +422,11 @@ export default function AnalyzePage() {
                   />
                 </motion.div>
 
-                <p className="mx-auto mt-2.5 max-w-md text-[12px] leading-relaxed text-white/74 md:mx-0 md:text-[13px]">
-                  {readinessSubcopy(result.mixQuality, verdict)}
+                <p className="mx-auto mt-1.5 max-w-md text-[12px] leading-relaxed text-white/74 md:mx-0 md:mt-2.5 md:text-[13px]">
+                  {readinessSubcopy(result.mixQuality, polishVerdictDisplay(verdict) ?? verdict)}
                 </p>
 
-                <ul className="mx-auto mt-3 max-w-md space-y-2 text-left md:mx-0">
+                <ul className="mx-auto mt-1.5 max-w-md space-y-1 text-left md:mx-0 md:mt-3 md:space-y-2">
                   {heroInsightBullets(result).map((item) => (
                     <li key={item.text} className="flex gap-2.5">
                       <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-300/45" aria-hidden />
@@ -429,7 +435,7 @@ export default function AnalyzePage() {
                   ))}
                 </ul>
 
-                <div className="mx-auto mt-4 flex flex-wrap items-center justify-center gap-2.5 md:mx-0 md:justify-start">
+                <div className="mx-auto mt-3 flex flex-wrap items-center justify-center gap-2 md:mx-0 md:mt-4 md:gap-2.5 md:justify-start">
                   <button
                     type="button"
                     onClick={async () => {
@@ -460,15 +466,15 @@ export default function AnalyzePage() {
               </motion.div>
 
               <motion.div
-                className="order-1 flex shrink-0 justify-center py-1 md:order-2 md:justify-end md:pl-4 lg:pl-6"
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
+                className="order-1 flex shrink-0 justify-center py-0 md:order-2 md:justify-end md:py-1 md:pl-4 lg:pl-6"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.75, delay: 0.3, ease: ANALYZE_EASE }}
               >
-                <div className="relative flex h-[12.25rem] w-[12.25rem] items-center justify-center md:h-[13.25rem] md:w-[13.25rem] lg:h-[14rem] lg:w-[14rem]">
+                <motion.div className="relative flex h-[10.75rem] w-[10.75rem] items-center justify-center md:h-[13.25rem] md:w-[13.25rem] lg:h-[14rem] lg:w-[14rem]">
                   <ScoreRing
                     value={result.mixQuality != null ? result.mixQuality : 0}
-                    size={188}
+                    size={172}
                     variant="percent"
                     prominent
                     className="md:hidden"
@@ -480,7 +486,7 @@ export default function AnalyzePage() {
                     prominent
                     className="hidden md:flex"
                   />
-                </div>
+                </motion.div>
               </motion.div>
             </div>
           </motion.div>
@@ -495,7 +501,7 @@ export default function AnalyzePage() {
             <h3 id="mix-metrics-heading" className="sr-only">
               Mix metrics
             </h3>
-            <div className="grid grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 md:gap-2.5 lg:grid-cols-4">
               {(() => {
                 const brightness = typeof result.brightness === "number" ? result.brightness : 0
                 const tiles = [
@@ -524,7 +530,7 @@ export default function AnalyzePage() {
 
           {/* No issues — compact status */}
           {(result.issues?.length || 0) === 0 && (
-            <div className="rounded-lg border border-emerald-500/12 bg-emerald-950/[0.1] px-3.5 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:text-left">
+            <div className="rounded-lg border border-emerald-500/12 bg-emerald-950/[0.1] px-3 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:px-3.5 md:py-3 md:text-left">
               <p className="text-[13px] font-medium text-emerald-300/95">Production-ready — no critical issues flagged</p>
               <p className="mx-auto mt-1 max-w-xl text-[11px] leading-snug text-white/68 md:mx-0">
                 Estimated post-master loudness <span className="font-semibold text-emerald-300/85">~−9 LUFS</span>
@@ -561,27 +567,30 @@ export default function AnalyzePage() {
               whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-32px" }}
               transition={{ duration: 0.65, delay: 0.06, ease: ANALYZE_EASE }}
-              className="rounded-xl border border-white/[0.09] bg-black/[0.48] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_40px_rgba(0,0,0,0.42)] backdrop-blur-xl md:px-4 md:py-4"
+              className="rounded-xl border border-white/[0.09] bg-black/[0.48] px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_40px_rgba(0,0,0,0.42)] backdrop-blur-xl md:px-4 md:py-4"
             >
-              <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] pb-1.5">
+              <div className="flex items-center justify-between gap-2 border-b border-white/[0.04] pb-1.5">
                 <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/68">Issues found</h3>
                 <span className="text-[10px] tabular-nums text-white/58">{issueListForUi.length} signals</span>
               </div>
-              <ul className="mt-0 divide-y divide-white/[0.05]">
+              <ul className="mt-0 divide-y divide-white/[0.035]">
                 {issueListForUi.map((issue: any, i: number) => {
                   const current = Math.round(result.mixQuality)
                   const next = Math.min(99, Math.round(current + (issue.realImpact || 0)))
                   const actualGain = next - current
                   const isMain = mainIssueRowIndex !== -1 && i === mainIssueRowIndex
                   const rec = recommendations.find((r: any) => r.title === issue.text)
-                  const presented = presentIssue(issue, result, rec?.steps?.[0] as string | undefined)
+                  const presented = polishIssueDisplay(
+                    issue.text ?? "",
+                    presentIssue(issue, result, rec?.steps?.[0] as string | undefined)
+                  )
 
                   const dotClass =
                     issue.level === "high"
                       ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.18)] ring-1 ring-rose-400/32"
                       : issue.level === "medium"
-                        ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.14)] ring-1 ring-amber-300/28"
-                        : "bg-emerald-400/90 shadow-[0_0_6px_rgba(52,211,153,0.12)] ring-1 ring-emerald-400/22"
+                        ? "bg-amber-600/55 shadow-[0_0_6px_rgba(180,130,70,0.1)] ring-1 ring-amber-600/18"
+                        : "bg-emerald-500/75 shadow-[0_0_5px_rgba(52,211,153,0.1)] ring-1 ring-emerald-500/18"
 
                   return (
                     <li key={`${issue.text}-${i}`} className="flex gap-2.5 py-2 md:gap-3">
@@ -595,7 +604,7 @@ export default function AnalyzePage() {
                           ) : null}
                           <p className="text-[13px] font-semibold leading-snug text-white md:text-[14px]">{presented.title}</p>
                           {isMain && issue.realImpact !== undefined ? (
-                            <span className="text-[10px] tabular-nums text-amber-200/75">+{Math.max(1, actualGain)}%</span>
+                            <span className="text-[10px] tabular-nums text-amber-100/55">+{Math.max(1, actualGain)}%</span>
                           ) : null}
                         </div>
                         {presented.insight ? (
@@ -615,13 +624,18 @@ export default function AnalyzePage() {
                 })}
               </ul>
               {recommendations?.length > issues.length && recommendations[recommendations.length - 1]?.steps?.[0] ? (
-                <div className="mt-1.5 border-t border-white/[0.06] pt-1.5">
+                <div className="mt-1.5 border-t border-white/[0.04] pt-1.5">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-purple-200/50">Pro enhancement</p>
                   <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-white/66">{recommendations[recommendations.length - 1].steps[0]}</p>
                 </div>
               ) : null}
             </motion.section>
           )}
+
+          <motion.div
+            className="pointer-events-none -mt-1 h-6 w-full bg-gradient-to-b from-transparent to-black/55 max-md:block md:hidden"
+            aria-hidden
+          />
         </motion.div>
           )}
         </AnimatePresence>
