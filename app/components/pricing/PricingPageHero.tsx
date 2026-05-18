@@ -33,12 +33,12 @@ export default function PricingPageHero() {
       />
 
       <motion.div
-        className="relative grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center lg:gap-14 xl:gap-16"
+        className="relative grid gap-6 sm:gap-8 lg:mx-auto lg:w-full lg:max-w-[1010px] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:items-center lg:gap-10 xl:max-w-[1040px] xl:gap-12"
         initial={reduce ? false : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
       >
-        <motion.div className="flex flex-col">
+        <motion.div className="flex flex-col lg:w-full lg:max-w-[31rem] lg:justify-self-center">
           <span className="hero-eyebrow-pill">Simple, honest pricing</span>
 
           <h1 className="mt-3.5 text-[1.6rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
@@ -79,7 +79,7 @@ export default function PricingPageHero() {
           </p>
         </motion.div>
 
-        <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost className="lg:justify-self-end" />
+        <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost className="lg:justify-self-center" />
       </motion.div>
     </section>
   )

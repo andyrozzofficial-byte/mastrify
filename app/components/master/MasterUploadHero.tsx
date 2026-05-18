@@ -47,12 +47,12 @@ export default function MasterUploadHero({
       />
 
       <motion.div
-        className="relative grid min-w-0 gap-6 max-lg:grid-cols-1 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
+        className="relative grid min-w-0 gap-6 max-lg:grid-cols-1 lg:mx-auto lg:w-full lg:max-w-[1010px] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:items-start lg:gap-10 xl:max-w-[1040px] xl:gap-12"
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
       >
-        <motion.div className="flex min-w-0 flex-col max-lg:order-1">
+        <motion.div className="flex min-w-0 flex-col max-lg:order-1 lg:w-full lg:max-w-[31rem] lg:justify-self-center">
           <span className="hero-eyebrow-pill sm:tracking-[0.22em]">Spatial mastering engine</span>
 
           <h1 className="mt-3 text-[1.48rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white min-[430px]:text-[1.55rem] sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
@@ -123,7 +123,7 @@ export default function MasterUploadHero({
         </motion.div>
 
         <motion.div
-          className="relative mx-auto flex w-full max-w-full justify-center overflow-hidden max-lg:order-2 max-lg:mt-2 max-lg:min-h-[min(14rem,42vw)] max-lg:py-3 sm:max-lg:py-4 md:max-lg:min-h-[16rem] lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-end lg:py-0"
+          className="relative mx-auto flex w-full max-w-full justify-center overflow-hidden max-lg:order-2 max-lg:mt-2 max-lg:min-h-[min(14rem,42vw)] max-lg:py-3 sm:max-lg:py-4 md:max-lg:min-h-[16rem] lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-center lg:py-0"
           initial={reduce ? false : { opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.85, delay: 0.1, ease: EASE }}

@@ -188,8 +188,8 @@ export default function HowItWorksClient() {
       <section className="hero-section page-container page-hero-pad relative z-10 pb-20 md:pb-28">
         <HeroWaveBackdrop />
 
-        <div className="relative grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-14">
-          <Reveal>
+        <div className="relative grid items-center gap-12 lg:mx-auto lg:w-full lg:max-w-[1010px] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:gap-10 xl:max-w-[1040px] xl:gap-12">
+          <Reveal className="lg:w-full lg:max-w-[31rem] lg:justify-self-center">
             <span className="hero-eyebrow-pill">
               Intelligent mastering
             </span>
@@ -238,7 +238,7 @@ export default function HowItWorksClient() {
             </motion.div>
           </Reveal>
 
-          <Reveal delay={0.1} className="relative flex justify-center lg:justify-end">
+          <Reveal delay={0.1} className="relative flex justify-center lg:justify-center">
             <div
               className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.14),transparent_65%)]"
               aria-hidden

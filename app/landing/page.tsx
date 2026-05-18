@@ -51,13 +51,13 @@ export default function Landing() {
       {/* Hero */}
       <section className="hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
         <motion.div
-          className="relative grid items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-14 xl:gap-16"
+          className="relative grid items-center gap-8 sm:gap-10 lg:mx-auto lg:w-full lg:max-w-[1010px] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:gap-10 xl:max-w-[1040px] xl:gap-12"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
         >
           <motion.div
-            className="text-center lg:max-w-xl lg:text-left"
+            className="text-center lg:w-full lg:max-w-[31rem] lg:justify-self-center lg:text-left"
             initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.05, ease: EASE }}
@@ -113,7 +113,7 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost className="lg:justify-self-end" />
+          <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost className="lg:justify-self-center" />
         </motion.div>
       </section>
 
