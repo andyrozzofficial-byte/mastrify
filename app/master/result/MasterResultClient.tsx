@@ -133,6 +133,7 @@ export default function MasterResultClient() {
   const sharedTimelineSecRef = useRef(PREVIEW_START)
   const isStartingPlaybackRef = useRef(false)
   const isSwappingMobileSourceRef = useRef(false)
+  const mobilePlaybackRequestRef = useRef(0)
 
   useEffect(() => {
     selectedSourceRef.current = selectedSource
@@ -323,6 +324,25 @@ export default function MasterResultClient() {
     })
   }
 
+  const waitForMobileReady = async (el: HTMLAudioElement) => {
+    await waitForReady(el)
+    if (el.readyState >= 3) return
+    await new Promise<void>((resolve) => {
+      let timer: ReturnType<typeof setTimeout> | null = null
+      const done = () => {
+        if (timer) clearTimeout(timer)
+        el.removeEventListener("canplay", done)
+        el.removeEventListener("canplaythrough", done)
+        el.removeEventListener("loadeddata", done)
+        resolve()
+      }
+      timer = setTimeout(done, 700)
+      el.addEventListener("canplay", done, { once: true })
+      el.addEventListener("canplaythrough", done, { once: true })
+      el.addEventListener("loadeddata", done, { once: true })
+    })
+  }
+
   const waitForSeekSettle = (el: HTMLAudioElement, targetTime: number) => {
     if (Math.abs(el.currentTime - targetTime) < 0.08) return Promise.resolve()
     return new Promise<void>((resolve) => {
@@ -344,25 +364,41 @@ export default function MasterResultClient() {
   const seekMobileElementToTimeline = async (
     el: HTMLAudioElement,
     source: PreviewSource,
-    absoluteSec: number
+    absoluteSec: number,
+    requestId: number
   ) => {
     const targetTime = timelineToElementTime(source, absoluteSec, el, true)
     try {
-      el.currentTime = targetTime
+      if (typeof el.fastSeek === "function") el.fastSeek(targetTime)
+      else el.currentTime = targetTime
     } catch {
       return targetTime
     }
     await waitForSeekSettle(el, targetTime)
+    if (mobilePlaybackRequestRef.current !== requestId) return targetTime
+    if (Math.abs(el.currentTime - targetTime) > 0.12) {
+      try {
+        el.currentTime = targetTime
+      } catch {
+        /* ignore */
+      }
+      await waitForSeekSettle(el, targetTime)
+    }
     return targetTime
   }
 
-  const correctMobileTimelineAfterPlay = (
+  const correctMobileTimelineAfterPlay = async (
     el: HTMLAudioElement,
     source: PreviewSource,
-    absoluteSec: number
+    absoluteSec: number,
+    requestId: number
   ) => {
+    if (mobilePlaybackRequestRef.current !== requestId) return
     const targetTime = timelineToElementTime(source, absoluteSec, el, true)
+    const previousMuted = el.muted
+    el.muted = true
     const correct = () => {
+      if (mobilePlaybackRequestRef.current !== requestId) return
       if (selectedSourceRef.current !== source || el.paused) return
       if (Math.abs(el.currentTime - targetTime) > 0.28) {
         try {
@@ -373,7 +409,11 @@ export default function MasterResultClient() {
       }
     }
     if (typeof requestAnimationFrame === "function") requestAnimationFrame(correct)
-    window.setTimeout(correct, 80)
+    const timers = [0, 60, 140, 280, 520]
+    for (const delay of timers) window.setTimeout(correct, delay)
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 180))
+    correct()
+    el.muted = previousMuted
   }
 
   useEffect(() => {
@@ -497,20 +537,25 @@ export default function MasterResultClient() {
 
       if (!el || !isPlayableMediaUrl(nextSrc)) return
 
+      const requestId = mobilePlaybackRequestRef.current + 1
+      mobilePlaybackRequestRef.current = requestId
       isSwappingMobileSourceRef.current = true
       try {
         if (!audioElementHasSource(el, nextSrc)) {
           el.pause()
           el.src = nextSrc
           el.load()
-          await waitForReady(el)
+          await waitForMobileReady(el)
+        } else {
+          await waitForMobileReady(el)
         }
-        await seekMobileElementToTimeline(el, next, abs)
+        if (mobilePlaybackRequestRef.current !== requestId) return
+        await seekMobileElementToTimeline(el, next, abs, requestId)
         setPlayProgress(progressPercentFromAbsolute(abs))
         if (wasPlaying) {
           try {
             await el.play()
-            correctMobileTimelineAfterPlay(el, next, abs)
+            await correctMobileTimelineAfterPlay(el, next, abs, requestId)
             setIsPlaying(true)
           } catch {
             setIsPlaying(false)
@@ -567,22 +612,30 @@ export default function MasterResultClient() {
         logPreview("mobile play aborted — no valid preview URL", { selectedSource })
         return
       }
+      const requestId = mobilePlaybackRequestRef.current + 1
+      mobilePlaybackRequestRef.current = requestId
       el.pause()
-      if (!audioElementHasSource(el, nextSrc)) {
-        el.src = nextSrc
-        el.load()
-      }
-      await waitForReady(el)
-      const timelineBeforePlay = sharedTimelineSecRef.current
-      await seekMobileElementToTimeline(el, selectedSource, timelineBeforePlay)
-      el.volume = 1
-      setPlayProgress(progressPercentFromAbsolute(timelineBeforePlay))
+      isSwappingMobileSourceRef.current = true
       try {
+        if (!audioElementHasSource(el, nextSrc)) {
+          el.src = nextSrc
+          el.load()
+        }
+        await waitForMobileReady(el)
+        const timelineBeforePlay = sharedTimelineSecRef.current
+        if (mobilePlaybackRequestRef.current !== requestId) return
+        await seekMobileElementToTimeline(el, selectedSource, timelineBeforePlay, requestId)
+        el.volume = 1
+        setPlayProgress(progressPercentFromAbsolute(timelineBeforePlay))
         await el.play()
-        correctMobileTimelineAfterPlay(el, selectedSource, timelineBeforePlay)
+        await correctMobileTimelineAfterPlay(el, selectedSource, timelineBeforePlay, requestId)
         setIsPlaying(true)
       } catch {
         setIsPlaying(false)
+      } finally {
+        if (mobilePlaybackRequestRef.current === requestId) {
+          isSwappingMobileSourceRef.current = false
+        }
       }
       return
     }
