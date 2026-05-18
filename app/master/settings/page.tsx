@@ -114,8 +114,6 @@ export default function MasterSettingsPage() {
     setLowEndControl,
     clarityPresence,
     setClarityPresence,
-    deliveryEmail,
-    setDeliveryEmail,
   } = useMasterSession()
 
   useEffect(() => {
@@ -290,27 +288,6 @@ export default function MasterSettingsPage() {
                 </div>
               </section>
 
-              <section>
-                <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/66">Delivery email</h3>
-                <div className="mt-3 rounded-xl border border-white/[0.06] bg-black/20 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-                  <label htmlFor="master-delivery-email" className="sr-only">
-                    Email address for master delivery
-                  </label>
-                  <input
-                    id="master-delivery-email"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    value={deliveryEmail}
-                    onChange={(e) => setDeliveryEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full rounded-lg border border-white/[0.08] bg-white/[0.035] px-3.5 py-2.5 text-[13px] text-white outline-none transition placeholder:text-white/32 focus:border-purple-300/35 focus:bg-white/[0.05]"
-                  />
-                  <p className="mt-2 text-[11px] leading-relaxed text-white/52">
-                    Receive your master download link by email. Optional — no account required.
-                  </p>
-                </div>
-              </section>
             </div>
 
             <div className="mt-7 flex flex-col items-stretch gap-2.5 border-t border-white/[0.06] pt-6 md:mt-8 md:pt-7">

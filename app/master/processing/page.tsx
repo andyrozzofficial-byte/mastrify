@@ -45,7 +45,6 @@ export default function MasterProcessingPage() {
     stereoEnhance,
     lowEndControl,
     clarityPresence,
-    deliveryEmail,
   } = useMasterSession()
   const [activeStep, setActiveStep] = useState(0)
 
@@ -76,9 +75,6 @@ export default function MasterProcessingPage() {
         formData.append("lowEndControl", String(lowEndControl))
         formData.append("clarityPresence", String(clarityPresence))
         formData.append("trackTitle", file.name)
-        if (deliveryEmail.trim()) {
-          formData.append("deliveryEmail", deliveryEmail.trim())
-        }
 
         const masterUrl = `${API}/master`
         if (MASTRIFY_CLIENT_LUFS_TRACE) {
@@ -166,7 +162,6 @@ export default function MasterProcessingPage() {
     stereoEnhance,
     lowEndControl,
     clarityPresence,
-    deliveryEmail,
   ])
 
   return (
