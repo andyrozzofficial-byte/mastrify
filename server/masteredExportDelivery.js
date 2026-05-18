@@ -66,6 +66,7 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
           @media screen and (max-width: 480px) {
             .email-shell { padding: 24px 14px !important; }
             .email-card { padding: 28px 20px !important; border-radius: 22px !important; }
+            .email-brand { font-size: 19px !important; }
             .email-heading { font-size: 25px !important; line-height: 1.18 !important; }
             .email-copy { font-size: 15px !important; line-height: 1.75 !important; }
             .primary-cta { display:block !important; padding: 17px 22px !important; min-height: 22px !important; text-align:center !important; }
@@ -83,36 +84,8 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
                   <td class="email-card" style="border:1px solid rgba(255,255,255,0.11);border-radius:26px;background:#080811;background-image:radial-gradient(circle at 14% 0%,rgba(124,58,237,0.24),transparent 38%),radial-gradient(circle at 88% 6%,rgba(37,99,235,0.18),transparent 34%),linear-gradient(180deg,rgba(255,255,255,0.075),rgba(5,5,12,0.96));box-shadow:0 24px 78px rgba(0,0,0,0.46);padding:36px 32px;text-align:left;">
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                       <tr>
-                        <td style="padding:0 0 22px;">
-                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                            <tr>
-                              <td width="42" height="42" valign="middle" style="width:42px;height:42px;border-radius:15px;background:#111122;background-image:radial-gradient(circle at 32% 22%,rgba(139,92,246,0.92),rgba(37,99,235,0.48) 54%,rgba(3,7,18,0.96) 100%);box-shadow:0 0 28px rgba(99,102,241,0.22);">
-                                <div style="width:42px;height:42px;border-radius:15px;border:1px solid rgba(255,255,255,0.13);">
-                                  <div style="padding:14px 8px 0;">
-                                    <div style="height:3px;border-radius:999px;background:linear-gradient(90deg,#ffffff,#c4b5fd,#7dd3fc);"></div>
-                                    <div style="height:2px;margin-top:5px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,0.42),rgba(147,197,253,0.72));"></div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td valign="middle" style="padding-left:12px;">
-                                <table role="presentation" width="120" cellspacing="0" cellpadding="0" border="0" style="opacity:0.48;">
-                                  <tr>
-                                    <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:5px;background:#8b5cf6;border-radius:6px;"></div></td>
-                                    <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:10px;background:#6366f1;border-radius:6px;"></div></td>
-                                    <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:15px;background:#3b82f6;border-radius:6px;"></div></td>
-                                    <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:8px;background:#8b5cf6;border-radius:6px;"></div></td>
-                                    <td valign="bottom" style="width:6px;height:16px;padding-right:4px;"><div style="height:13px;background:#6366f1;border-radius:6px;"></div></td>
-                                    <td valign="bottom" style="width:6px;height:16px;"><div style="height:6px;background:#3b82f6;border-radius:6px;"></div></td>
-                                  </tr>
-                                </table>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                      <tr>
                         <td>
-                          <p style="margin:0 0 12px;color:rgba(196,181,253,0.76);font-size:11px;font-weight:800;letter-spacing:0.24em;text-transform:uppercase;">Master ready</p>
+                          <p class="email-brand" style="margin:0 0 20px;color:#ffffff;font-size:20px;font-weight:800;letter-spacing:-0.035em;line-height:1.1;text-shadow:0 0 18px rgba(139,92,246,0.24);">Mastrify</p>
                           <h1 class="email-heading" style="margin:0;color:#ffffff;font-size:29px;line-height:1.14;letter-spacing:-0.035em;font-weight:800;overflow-wrap:break-word;word-break:break-word;">${heading}</h1>
                           <p class="email-copy" style="margin:18px 0 26px;color:rgba(255,255,255,0.72);font-size:15px;line-height:1.72;">Your mastered track is ready to download. ${EXPIRY_COPY}</p>
                         </td>

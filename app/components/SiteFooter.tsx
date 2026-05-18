@@ -112,7 +112,7 @@ export default function SiteFooter() {
       />
 
       <motion.div
-        className={`footer-shell relative mx-auto w-full px-5 pb-[max(2.25rem,env(safe-area-inset-bottom))] sm:px-6 md:px-10 md:pt-14 md:pb-12 lg:pt-[3.25rem] ${
+        className={`footer-shell relative mx-auto w-full px-4 pb-[max(2.25rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 md:px-10 md:pt-14 md:pb-12 lg:pt-[3.25rem] ${
           onAnalyze ? "pt-8 sm:pt-9" : "pt-11 sm:pt-12"
         }`}
         initial={reduce ? false : { opacity: 0, y: 14 }}
@@ -120,10 +120,10 @@ export default function SiteFooter() {
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="grid items-start gap-10 sm:gap-12 lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
+        <motion.div className="grid min-w-0 items-start gap-9 sm:gap-12 lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
           {/* Brand */}
           <motion.div
-            className="lg:col-span-3 xl:col-span-3"
+            className="min-w-0 lg:col-span-3 xl:col-span-3"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -140,7 +140,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="grid max-w-[17.5rem] grid-cols-2 gap-x-8 gap-y-10 sm:gap-x-10 sm:gap-y-8 lg:col-span-3 lg:max-w-[15.5rem] lg:justify-self-center xl:col-span-3 xl:max-w-[16.5rem]"
+            className="grid w-full max-w-[17.5rem] min-w-0 grid-cols-2 gap-x-7 gap-y-9 sm:gap-x-10 sm:gap-y-8 lg:col-span-3 lg:max-w-[15.5rem] lg:justify-self-center xl:col-span-3 xl:max-w-[16.5rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -152,7 +152,7 @@ export default function SiteFooter() {
 
           {/* Mastering CTA */}
           <motion.div
-            className="lg:col-span-6 lg:pl-2 xl:col-span-6 xl:pl-4"
+            className="min-w-0 lg:col-span-6 lg:pl-2 xl:col-span-6 xl:pl-4"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -181,7 +181,7 @@ export default function SiteFooter() {
                 </p>
                 <PremiumButton
                   href="/master"
-                  className="mt-6 min-h-[46px] w-auto min-w-[13rem] px-8 text-[13px] lg:mt-7"
+                  className="mt-6 min-h-[46px] w-full px-7 text-[13px] min-[430px]:w-auto min-[430px]:min-w-[13rem] min-[430px]:px-8 lg:mt-7"
                 >
                   Start mastering
                 </PremiumButton>

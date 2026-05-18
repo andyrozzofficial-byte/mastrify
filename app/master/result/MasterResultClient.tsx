@@ -948,11 +948,11 @@ export default function MasterResultClient() {
       </motion.div>
 
       {deliveryOpen && !deliverySent ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/72 px-5 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/72 px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md min-[430px]:px-5">
           <motion.div
             initial={{ opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="w-full max-w-md rounded-2xl border border-white/[0.1] bg-[#090912] p-5 text-left shadow-[0_24px_80px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.06)]"
+            className="w-full max-w-md rounded-2xl border border-white/[0.1] bg-[#090912] p-4 text-left shadow-[0_24px_80px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.06)] min-[430px]:p-5"
           >
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/58">Master delivery</p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">Secure your master link</h2>
@@ -984,7 +984,7 @@ export default function MasterResultClient() {
                 type="button"
                 onClick={handleEmailDelivery}
                 disabled={deliverySending}
-                className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-5 text-sm font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-[46px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-5 text-sm font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {deliverySending ? "Sending…" : "Email my master"}
               </button>
@@ -992,7 +992,7 @@ export default function MasterResultClient() {
                 type="button"
                 onClick={() => setDeliveryOpen(false)}
                 disabled={deliverySending}
-                className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 text-sm font-semibold text-white/76 transition hover:bg-white/[0.055] hover:text-white"
+                className="inline-flex min-h-[46px] w-full flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 text-sm font-semibold text-white/76 transition hover:bg-white/[0.055] hover:text-white"
               >
                 Not now
               </button>

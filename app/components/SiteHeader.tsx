@@ -34,7 +34,7 @@ export default function SiteHeader() {
       }`}
     >
       <div className="mx-auto w-full max-w-[1240px] min-w-0">
-        <div className="flex h-[50px] min-w-0 items-center justify-between gap-2 px-[max(0.875rem,env(safe-area-inset-left))] pr-[max(0.875rem,env(safe-area-inset-right))] sm:h-12 sm:gap-3 sm:px-4 md:h-[58px] md:px-8">
+        <div className="flex h-[50px] min-w-0 items-center justify-between gap-2 px-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] min-[430px]:px-[max(0.875rem,env(safe-area-inset-left))] min-[430px]:pr-[max(0.875rem,env(safe-area-inset-right))] sm:h-12 sm:gap-3 sm:px-4 md:h-[58px] md:px-8">
           <Link
             href="/"
             className="min-w-0 shrink bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text text-[1.02rem] font-extrabold tracking-tight text-transparent sm:text-lg md:text-xl"
@@ -57,7 +57,7 @@ export default function SiteHeader() {
         </div>
 
         <nav
-          className="flex min-w-0 items-center justify-between gap-0.5 overflow-hidden border-t border-white/[0.06] px-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] py-2 sm:gap-1.5 sm:px-4 sm:py-2.5 md:justify-center md:gap-6 md:border-t-0 md:px-8 md:py-0 lg:gap-8"
+          className="flex min-w-0 items-center justify-between gap-0.5 overflow-hidden border-t border-white/[0.06] px-[max(0.375rem,env(safe-area-inset-left))] pr-[max(0.375rem,env(safe-area-inset-right))] py-2 min-[430px]:px-[max(0.5rem,env(safe-area-inset-left))] min-[430px]:pr-[max(0.5rem,env(safe-area-inset-right))] sm:gap-1.5 sm:px-4 sm:py-2.5 md:justify-center md:gap-6 md:border-t-0 md:px-8 md:py-0 lg:gap-8"
           aria-label="Main"
         >
           {links.map(({ href, label, short }) => {
@@ -66,7 +66,7 @@ export default function SiteHeader() {
               <Link
                 key={href}
                 href={href}
-                className={`relative flex min-h-[38px] min-w-0 flex-1 items-center justify-center rounded-lg px-2 py-2 text-[11px] font-medium tracking-wide transition active:scale-[0.98] sm:min-h-[40px] sm:px-3.5 sm:text-[12px] md:min-h-0 md:flex-none md:justify-start md:rounded-none md:bg-transparent md:px-0 md:py-0 md:pb-0.5 md:text-[13px] md:text-sm ${
+                className={`relative flex min-h-[38px] min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 py-2 text-[11px] font-medium tracking-wide transition active:scale-[0.98] min-[430px]:px-2 sm:min-h-[40px] sm:px-3.5 sm:text-[12px] md:min-h-0 md:flex-none md:justify-start md:rounded-none md:bg-transparent md:px-0 md:py-0 md:pb-0.5 md:text-[13px] md:text-sm ${
                   active
                     ? "bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.06] md:bg-transparent md:shadow-none md:ring-0"
                     : "text-white/62 hover:bg-white/[0.04] hover:text-white/88 md:hover:bg-transparent"
