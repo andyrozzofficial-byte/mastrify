@@ -28,6 +28,16 @@ function objectKeyFromAfterPath(after: unknown): string {
   return match?.[1] ?? ""
 }
 
+function sliderDebugEnabled() {
+  if (typeof window === "undefined") return false
+  try {
+    const raw = window.localStorage.getItem("mastrify:slider-debug")
+    return raw === "1" || raw === "true" || raw === "on"
+  } catch {
+    return false
+  }
+}
+
 export default function MasterProcessingPage() {
   const router = useRouter()
   const {
@@ -75,12 +85,15 @@ export default function MasterProcessingPage() {
         formData.append("lowEndControl", String(lowEndControl))
         formData.append("clarityPresence", String(clarityPresence))
         formData.append("trackTitle", file.name)
+        const sliderDebug = sliderDebugEnabled()
+        if (sliderDebug) formData.append("sliderDebug", "1")
 
         const masterUrl = `${API}/master`
         if (MASTRIFY_CLIENT_LUFS_TRACE) {
           console.log("[LUFS_TRACE] client → POST /master", {
             outgoingFormTargetLufs: targetLufs,
             stylePreset,
+            sliderDebug,
             resolvedApiBase: API,
             masterUrl,
           })

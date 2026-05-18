@@ -9,11 +9,12 @@ import CinematicBackground from "../../components/CinematicBackground"
 import { useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
 import { AUDIO_UPLOAD_ACCEPT, isAcceptedAudioUpload } from "../../../lib/audioUploadAccept"
 
-const PRESETS: { id: MasterStylePreset; label: string; hint: string; icon: ReactNode }[] = [
+const PRESETS: { id: MasterStylePreset; label: string; hint: string; detail: string; icon: ReactNode }[] = [
   {
     id: "STREAM",
     label: "Balanced",
     hint: "Streaming & all-round",
+    detail: "Clean level, balanced tone, and safe translation across headphones, phones, and streaming platforms.",
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v18M8 9l4-4 4 4M8 15l4 4 4-4" />
@@ -24,6 +25,7 @@ const PRESETS: { id: MasterStylePreset; label: string; hint: string; icon: React
     id: "WARM",
     label: "Warm",
     hint: "Round lows, softer top",
+    detail: "Adds body and smooths bright edges for a fuller, less aggressive master.",
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m8-9h-1M5 12H4m13.364-5.364l-.707.707M6.343 17.657l-.707.707M17.657 6.343l-.707-.707M6.343 6.343l-.707-.707" />
@@ -34,6 +36,7 @@ const PRESETS: { id: MasterStylePreset; label: string; hint: string; icon: React
     id: "LOUD",
     label: "Punchy",
     hint: "Competitive loudness",
+    detail: "Pushes density, impact, and forwardness while keeping peaks controlled.",
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -44,6 +47,7 @@ const PRESETS: { id: MasterStylePreset; label: string; hint: string; icon: React
     id: "CLUB",
     label: "Club",
     hint: "Weight & impact",
+    detail: "Prioritizes low-end weight, punch, and playback impact on larger systems.",
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-13c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
@@ -54,6 +58,7 @@ const PRESETS: { id: MasterStylePreset; label: string; hint: string; icon: React
     id: "FESTIVAL",
     label: "Open",
     hint: "Wide & energetic",
+    detail: "Creates a brighter, wider, more energetic presentation with extra spatial lift.",
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -63,18 +68,22 @@ const PRESETS: { id: MasterStylePreset; label: string; hint: string; icon: React
 ]
 
 const LOUDNESS = [
-  { lufs: -14, label: "Streaming" },
-  { lufs: -13, label: "YouTube" },
-  { lufs: -11, label: "Spotify Loud" },
-  { lufs: -9, label: "CD / Club" },
+  { lufs: -14, label: "Streaming", detail: "Most transparent. Best for balanced streaming playback." },
+  { lufs: -13, label: "YouTube", detail: "A small lift while preserving dynamics." },
+  { lufs: -11, label: "Spotify Loud", detail: "Noticeably louder and denser for casual listening." },
+  { lufs: -9, label: "CD / Club", detail: "Maximum loudness target. More impact, less dynamic headroom." },
 ]
 
 function ThinSlider({
   label,
+  description,
+  helper,
   value,
   onChange,
 }: {
   label: string
+  description: string
+  helper: string
   value: number
   onChange: (n: number) => void
 }) {
@@ -92,8 +101,28 @@ function ThinSlider({
         onChange={(e) => onChange(Number(e.target.value))}
         className="h-0.5 w-full cursor-pointer appearance-none rounded-full bg-white/[0.07] accent-purple-500 transition [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(192,132,252,0.45),0_0_4px_rgba(34,211,238,0.12)] [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:shadow-[0_0_8px_rgba(192,132,252,0.45)]"
       />
+      <div className="space-y-0.5">
+        <p className="text-[10px] leading-snug text-white/45">{description}</p>
+        <p className="text-[10px] leading-snug text-cyan-200/62">{helper}</p>
+      </div>
     </div>
   )
+}
+
+function sliderHelper(type: "stereo" | "low" | "clarity", value: number) {
+  if (type === "stereo") {
+    if (value < 35) return "Lower values narrow the sides and keep vocals, kick, and bass more centered."
+    if (value < 70) return "Mid values preserve a natural stereo image with controlled spatial depth."
+    return "Higher values widen the sides for a more immersive headphone and speaker image."
+  }
+  if (type === "low") {
+    if (value < 35) return "Lower values tighten subs and reduce boom for cleaner kick/bass separation."
+    if (value < 70) return "Mid values keep the low end balanced and controlled."
+    return "Higher values add bass body and heavier release-ready weight."
+  }
+  if (value < 35) return "Lower values smooth sharp highs and keep the master warmer."
+  if (value < 70) return "Mid values add detail while keeping vocals and instruments natural."
+  return "Higher values add brightness, vocal clarity, air, and front-of-speaker detail."
 }
 
 export default function MasterSettingsPage() {
@@ -211,13 +240,16 @@ export default function MasterSettingsPage() {
             <header className="mb-6 pt-1 text-center md:mb-7">
               <h1 className="text-[1.35rem] font-bold tracking-tight text-white md:text-[1.5rem]">Master settings</h1>
               <p className="mx-auto mt-1.5 max-w-sm text-[12px] leading-snug text-white/68 md:text-[13px]">
-                Choose the style and settings for your master.
+                Choose how Mastrify shapes tone, loudness, width, and clarity before rendering your master.
               </p>
             </header>
 
             <div className="space-y-6 md:space-y-7">
               <section>
                 <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/66">Mastering style</h3>
+                <p className="mt-2 max-w-2xl text-[11px] leading-relaxed text-white/45">
+                  Styles set the overall mastering direction: tonal color, punch, loudness behavior, and stereo character.
+                </p>
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                   {PRESETS.map((p) => {
                     const active = stylePreset === p.id
@@ -245,6 +277,9 @@ export default function MasterSettingsPage() {
                         <span className={`mt-1 block text-[10px] leading-snug ${active ? "text-white/75" : "text-white/62"}`}>
                           {p.hint}
                         </span>
+                        <span className={`mt-1.5 block text-[9px] leading-snug ${active ? "text-white/58" : "text-white/42"}`}>
+                          {p.detail}
+                        </span>
                       </button>
                     )
                   })}
@@ -253,6 +288,9 @@ export default function MasterSettingsPage() {
 
               <section>
                 <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/66">Loudness target</h3>
+                <p className="mt-2 max-w-2xl text-[11px] leading-relaxed text-white/45">
+                  Lower LUFS keeps more openness and dynamics. Higher LUFS sounds louder and denser, but leaves less peak headroom.
+                </p>
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {LOUDNESS.map((o) => {
                     const active = targetLufs === o.lufs
@@ -273,6 +311,9 @@ export default function MasterSettingsPage() {
                         <span className={`mt-0.5 block text-[10px] font-medium tabular-nums ${active ? "text-white/75" : "text-white/60"}`}>
                           {o.lufs} LUFS
                         </span>
+                        <span className={`mt-1.5 block text-[9px] leading-snug ${active ? "text-white/58" : "text-white/42"}`}>
+                          {o.detail}
+                        </span>
                       </button>
                     )
                   })}
@@ -281,10 +322,31 @@ export default function MasterSettingsPage() {
 
               <section>
                 <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/66">Advanced options</h3>
+                <p className="mt-2 max-w-2xl text-[11px] leading-relaxed text-white/45">
+                  Tuned for interactive mastering: small moves stay polished, while the upper range creates clearly audible character changes.
+                </p>
                 <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-x-6 md:gap-y-4">
-                  <ThinSlider label="Stereo enhancement" value={stereoEnhance} onChange={setStereoEnhance} />
-                  <ThinSlider label="Low end control" value={lowEndControl} onChange={setLowEndControl} />
-                  <ThinSlider label="Clarity & presence" value={clarityPresence} onChange={setClarityPresence} />
+                  <ThinSlider
+                    label="Stereo enhancement"
+                    description="Controls stereo width and spatial depth."
+                    helper={sliderHelper("stereo", stereoEnhance)}
+                    value={stereoEnhance}
+                    onChange={setStereoEnhance}
+                  />
+                  <ThinSlider
+                    label="Low end control"
+                    description="Tightens or enhances bass response."
+                    helper={sliderHelper("low", lowEndControl)}
+                    value={lowEndControl}
+                    onChange={setLowEndControl}
+                  />
+                  <ThinSlider
+                    label="Clarity & presence"
+                    description="Adds brightness, vocal clarity, and detail."
+                    helper={sliderHelper("clarity", clarityPresence)}
+                    value={clarityPresence}
+                    onChange={setClarityPresence}
+                  />
                 </div>
               </section>
 

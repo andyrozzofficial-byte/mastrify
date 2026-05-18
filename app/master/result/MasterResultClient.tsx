@@ -110,6 +110,9 @@ export default function MasterResultClient() {
     setDeliveryEmail,
     targetLufs,
     stylePreset,
+    stereoEnhance,
+    lowEndControl,
+    clarityPresence,
     resetSession,
     analysisBefore,
     analysisAfter,
@@ -1049,6 +1052,25 @@ export default function MasterResultClient() {
                   <p className="mt-1.5 text-[10px] tabular-nums text-white/60">{measuredApprox}</p>
                 ) : null}
               </div>
+            </div>
+            <div className="rounded-xl border border-white/[0.05] bg-black/[0.22] px-4 py-3 md:px-4 md:py-3.5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/60">Advanced settings</p>
+                  <p className="mt-1 text-[11px] leading-snug text-white/58">
+                    Width {stereoEnhance}% · Low end {lowEndControl}% · Clarity {clarityPresence}%
+                  </p>
+                </div>
+                <Link
+                  href="/master/settings"
+                  className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.035] px-3 py-1.5 text-[10px] font-semibold text-white/72 transition hover:border-white/[0.12] hover:bg-white/[0.06] hover:text-white"
+                >
+                  Adjust
+                </Link>
+              </div>
+              <p className="mt-2 text-[10px] leading-snug text-white/42">
+                Tweak these settings and render again without returning to upload while this session is active.
+              </p>
             </div>
           </div>
         </div>

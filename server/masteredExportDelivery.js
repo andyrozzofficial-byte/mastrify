@@ -44,18 +44,12 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
   if (!apiKey) return { sent: false, reason: "resend_not_configured" }
 
   const from = process.env.MASTRIFY_EMAIL_FROM?.trim() || "Mastrify <masters@mastrify.com>"
+  const replyTo = process.env.MASTRIFY_EMAIL_REPLY_TO?.trim() || "support@mastrify.com"
   const title = cleanTrackTitle(trackTitle)
   const escapedTitle = escapeHtml(title)
+  const escapedPlaybackUrl = escapeHtml(playbackUrl)
   const heading = title ? `Your master of '${escapedTitle}' is ready` : "Your master is ready"
   const subject = title ? `Your master of '${title}' is ready` : "Your master is ready"
-  const previewCta = playbackUrl
-    ? `
-                        <tr>
-                          <td align="center" style="padding:12px 0 0;">
-                            <a class="secondary-cta" href="${playbackUrl}" style="display:inline-block;border:1px solid rgba(255,255,255,0.16);border-radius:999px;color:rgba(255,255,255,0.78);font-size:13px;font-weight:700;letter-spacing:-0.01em;line-height:20px;padding:12px 20px;text-decoration:none;">Preview your master</a>
-                          </td>
-                        </tr>`
-    : ""
   const html = `
     <!doctype html>
     <html>
@@ -76,6 +70,7 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
         </style>
       </head>
       <body style="margin:0;background:#030308;color:#f8fafc;">
+        <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Your Mastrify master is ready. Open your secure 7-day download link.</div>
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#030308;margin:0;padding:0;">
           <tr>
             <td class="email-shell" align="center" style="padding:38px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
@@ -87,15 +82,14 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
                         <td>
                           <p class="email-brand" style="margin:0 0 20px;color:#ffffff;font-size:20px;font-weight:800;letter-spacing:-0.035em;line-height:1.1;text-shadow:0 0 18px rgba(139,92,246,0.24);">Mastrify</p>
                           <h1 class="email-heading" style="margin:0;color:#ffffff;font-size:29px;line-height:1.14;letter-spacing:-0.035em;font-weight:800;overflow-wrap:break-word;word-break:break-word;">${heading}</h1>
-                          <p class="email-copy" style="margin:18px 0 26px;color:rgba(255,255,255,0.72);font-size:15px;line-height:1.72;">Your mastered track is ready to download. ${EXPIRY_COPY}</p>
+                          <p class="email-copy" style="margin:18px 0 26px;color:rgba(255,255,255,0.72);font-size:15px;line-height:1.72;">Your mastered track is ready. Open the secure link below to download the final WAV export. ${EXPIRY_COPY}</p>
                         </td>
                       </tr>
                       <tr>
                         <td align="center" style="padding:0;">
-                          <a class="primary-cta" href="${playbackUrl}" style="display:inline-block;border-radius:999px;background:#6d5dfc;background-image:linear-gradient(90deg,#8b5cf6,#2563eb);color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;letter-spacing:-0.01em;line-height:20px;padding:16px 24px;box-shadow:0 12px 30px rgba(79,70,229,0.26);transition:box-shadow 180ms ease,filter 180ms ease;">Download your mastered track</a>
+                          <a class="primary-cta" href="${escapedPlaybackUrl}" style="display:inline-block;border-radius:999px;background:#6d5dfc;background-image:linear-gradient(90deg,#8b5cf6,#2563eb);color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;letter-spacing:-0.01em;line-height:20px;padding:16px 24px;box-shadow:0 12px 30px rgba(79,70,229,0.26);transition:box-shadow 180ms ease,filter 180ms ease;">Open secure download</a>
                         </td>
                       </tr>
-                      ${previewCta}
                       <tr>
                         <td style="padding:30px 0 18px;">
                           <div style="height:1px;background:rgba(255,255,255,0.12);background-image:linear-gradient(90deg,transparent,rgba(255,255,255,0.13),transparent);line-height:1px;font-size:1px;">&nbsp;</div>
@@ -103,7 +97,8 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
                       </tr>
                       <tr>
                         <td>
-                          <p style="margin:0;color:rgba(255,255,255,0.38);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Powered by Mastrify Audio Engine</p>
+                          <p style="margin:0;color:rgba(255,255,255,0.38);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Sent by Mastrify Audio Engine</p>
+                          <p style="margin:12px 0 0;color:rgba(255,255,255,0.36);font-size:12px;line-height:1.6;">You are receiving this transactional email because this address was used to request a mastered export from Mastrify.</p>
                         </td>
                       </tr>
                     </table>
@@ -117,7 +112,7 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
     </html>
   `
   const textHeading = title ? `Your master of '${title}' is ready` : "Your master is ready"
-  const text = `${textHeading}\n\nUse the Download your mastered track button in this email.\n\n${EXPIRY_COPY}\n\nPowered by Mastrify Audio Engine`
+  const text = `${textHeading}\n\nYour mastered track is ready. Open your secure 7-day download link:\n${playbackUrl}\n\n${EXPIRY_COPY}\n\nSent by Mastrify Audio Engine`
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -131,6 +126,7 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
       subject,
       html,
       text,
+      reply_to: replyTo,
     }),
   })
 

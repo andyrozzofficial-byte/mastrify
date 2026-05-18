@@ -199,6 +199,33 @@ function parseIntSlider(v, fallback = 50) {
   return clamp(n, 0, 100)
 }
 
+function parseBoolFlag(v) {
+  if (v === true) return true
+  if (typeof v === "number") return v === 1
+  const s = String(v ?? "").trim().toLowerCase()
+  return s === "1" || s === "true" || s === "yes" || s === "on"
+}
+
+function sliderDebugModeEnabled(v) {
+  return parseBoolFlag(v) || parseBoolFlag(process.env.MASTRIFY_SLIDER_DEBUG)
+}
+
+/**
+ * Interactive curve for 0–100 controls.
+ * 40–60 stays close to neutral, 70+ opens into clearly audible character.
+ */
+function interactiveSliderCurve(value, fallback = 50) {
+  const raw = parseIntSlider(value, fallback)
+  const x = (raw - 50) / 50
+  const sign = x < 0 ? -1 : 1
+  const a = Math.abs(x)
+  let shaped
+  if (a <= 0.4) shaped = a * 0.72
+  else if (a <= 0.8) shaped = 0.288 + (a - 0.4) * 1.08
+  else shaped = 0.72 + (a - 0.8) * 1.4
+  return sign * clamp(shaped, 0, 1)
+}
+
 function parseStyle(style) {
   const s = String(style || "STREAM").toUpperCase()
   return VALID_STYLES.has(s) ? s : "STREAM"
@@ -474,23 +501,23 @@ function transparentProcessingScalars(adaptiveTransparency) {
 }
 
 /** Stereo width — `extrastereo` m≈1 is neutral; wider >1, narrower <1. */
-function buildStereoStage(stereoEnhance, style, hotClubProtection = false) {
+function buildStereoStage(stereoEnhance, style, hotClubProtection = false, sliderDebug = false) {
   let se = clamp(parseIntSlider(stereoEnhance, 50), 0, 100)
   if (style === "FESTIVAL" && !hotClubProtection) se = Math.min(100, se + 10)
   if (style === "WARM") se = Math.max(0, se - 6)
   if (style === "LOUD" && !hotClubProtection) se = Math.min(100, se + 4)
   if (hotClubProtection) se = Math.max(0, se - 14)
 
-  if (se >= 47 && se <= 53) return ""
+  const shaped = interactiveSliderCurve(se, 50)
+  if (Math.abs(shaped) < 0.035) return ""
 
-  if (se > 53) {
-    const t = (se - 53) / 47
-    const widen = hotClubProtection ? 0.14 : 0.26
-    const m = 1 + t * widen
+  if (shaped > 0) {
+    const widen = sliderDebug ? 0.9 : hotClubProtection ? 0.34 : 0.58
+    const m = 1 + shaped * widen
     return `extrastereo=m=${m.toFixed(4)},`
   }
-  const t = (47 - se) / 47
-  const m = 1 - t * 0.18
+  const narrow = sliderDebug ? 0.56 : 0.38
+  const m = 1 + shaped * narrow
   return `extrastereo=m=${m.toFixed(4)},`
 }
 
@@ -1654,19 +1681,29 @@ function baseTone(style) {
   }
 }
 
-/** Sliders — audible but still mastering-safe */
-function applyToneSliders(tone, lowEndControl, clarityPresence) {
-  const lc = (parseIntSlider(lowEndControl, 50) - 50) / 50
-  const cp = (parseIntSlider(clarityPresence, 50) - 50) / 50
+/** Sliders — temporarily test-forward so 0–100 moves are obvious on casual playback systems. */
+function applyToneSliders(tone, lowEndControl, clarityPresence, sliderDebug = false) {
+  const lc = interactiveSliderCurve(lowEndControl, 50)
+  const cp = interactiveSliderCurve(clarityPresence, 50)
+  const testScale = sliderDebug ? 2.15 : 1.35
+  const lowGainShift = (lc >= 0 ? lc * 2.35 : lc * 1.7) * testScale
+  const lowMudShift = (lc >= 0 ? lc * 0.18 : lc * 0.86) * testScale
+  const clarityPresenceShift = (cp >= 0 ? cp * 2.55 : cp * 1.25) * testScale
+  const clarityAirShift = (cp >= 0 ? cp * 1.1 : cp * 0.5) * testScale
+  const clarityShelfShift = (cp >= 0 ? cp * 0.82 : cp * 0.38) * testScale
+  const clarityMudShift = (cp >= 0 ? -cp * 0.42 : -cp * 0.13) * testScale
   return {
     ...tone,
-    lowGain: tone.lowGain + lc * 0.42,
-    mudGain: tone.mudGain - lc * 0.12 - cp * 0.12,
-    mudWideGain: tone.mudWideGain - cp * 0.08,
-    airGain: tone.airGain + cp * 0.32,
-    dipAboveAirGain: tone.dipAboveAirGain - Math.max(0, cp) * 0.08,
-    highShelf9k: tone.highShelf9k + cp * 0.22,
-    presenceDb: cp * 1.35,
+    lowGain: tone.lowGain + lowGainShift,
+    mudGain: tone.mudGain + lowMudShift + clarityMudShift,
+    mudWideGain:
+      tone.mudWideGain +
+      (lc < 0 ? lc * 0.28 * testScale : lc * 0.12 * testScale) -
+      Math.max(0, cp) * 0.28 * testScale,
+    airGain: tone.airGain + clarityAirShift,
+    dipAboveAirGain: tone.dipAboveAirGain - Math.max(0, cp) * 0.18 * testScale,
+    highShelf9k: tone.highShelf9k + clarityShelfShift,
+    presenceDb: clarityPresenceShift,
   }
 }
 
@@ -1795,6 +1832,7 @@ async function runFfmpegCapture(args, label) {
  * @param {number|string} [opts.stereoEnhance] - 0–100
  * @param {number|string} [opts.lowEndControl] - 0–100
  * @param {number|string} [opts.clarityPresence] - 0–100
+ * @param {boolean|string} [opts.sliderDebug] - exaggerated internal slider ranges
  * @param {string} [opts.chainDebugMode] - A|B|C|D|E (eq-only … full chain) for isolation
  * @param {boolean|string} [opts.chainDebugSweep] - probe all modes A–E and rank movement
  */
@@ -1808,6 +1846,7 @@ export async function masterTrack({
   stereoEnhance: stereoEnhanceIn,
   lowEndControl: lowEndControlIn,
   clarityPresence: clarityPresenceIn,
+  sliderDebug: sliderDebugIn,
   chainDebugMode: chainDebugModeIn,
   chainDebugSweep: chainDebugSweepIn,
 }) {
@@ -1819,6 +1858,7 @@ export async function masterTrack({
   const stereoEnhance = parseIntSlider(stereoEnhanceIn, 50)
   const lowEndControl = parseIntSlider(lowEndControlIn, 50)
   const clarityPresence = parseIntSlider(clarityPresenceIn, 50)
+  const sliderDebug = sliderDebugModeEnabled(sliderDebugIn)
 
   const activeChainMode = resolveChainDebugMode(chainDebugModeIn)
   const chainDebugActive = Boolean(activeChainMode) || CHAIN_DEBUG_ENV
@@ -2187,7 +2227,7 @@ export async function masterTrack({
     }
     const tpVal = rawIsolation ? -2 : truePeakForLoudnormTarget(resolvedLufs, requestedLufs)
     const compVal = compressorForStyleAndTarget(style, resolvedLufs, compInt, requestedLufs)
-    let tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence)
+    let tone = applyToneSliders(baseTone(style), lowEndControl, clarityPresence, sliderDebug)
     if (!rawIsolation && masteringDecisions) {
       tone = applyPerceptualToneToBase(tone, masteringDecisions.perceptualTone)
     }
@@ -2200,7 +2240,7 @@ export async function masterTrack({
             100
           )
         : stereoEnhance
-    const stereoStage = buildStereoStage(stereoSlider, style, hotClubProtection)
+    const stereoStage = buildStereoStage(stereoSlider, style, hotClubProtection, sliderDebug)
     const perceptualEq =
       !rawIsolation && masteringDecisions?.perceptualTone?.filters
         ? `${masteringDecisions.perceptualTone.filters},`
@@ -3197,6 +3237,12 @@ export async function masterTrack({
       stereoEnhance,
       lowEndControl,
       clarityPresence,
+      sliderDebug,
+      sliderCurves: {
+        stereoEnhance: interactiveSliderCurve(stereoEnhance, 50),
+        lowEndControl: interactiveSliderCurve(lowEndControl, 50),
+        clarityPresence: interactiveSliderCurve(clarityPresence, 50),
+      },
       chainDebugMode: chainDebugModeId,
       chainDiagnostics,
       adaptiveTransparency,

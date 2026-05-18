@@ -994,6 +994,7 @@ app.post("/master",
       const stereoEnhance = body.stereoEnhance
       const lowEndControl = body.lowEndControl
       const clarityPresence = body.clarityPresence
+      const sliderDebug = body.sliderDebug ?? body.sliderDebugMode
       const chainDebugMode = body.chainDebugMode ?? body.chainMode
       const chainDebugSweep = body.chainDebugSweep
       const deliveryEmail = typeof body.deliveryEmail === "string" ? body.deliveryEmail.trim() : ""
@@ -1009,6 +1010,7 @@ app.post("/master",
           stereoEnhance,
           lowEndControl,
           clarityPresence,
+          sliderDebug,
           chainDebugMode,
           chainDebugSweep,
         })
@@ -1022,6 +1024,7 @@ app.post("/master",
         stereoEnhance,
         lowEndControl,
         clarityPresence,
+        sliderDebug,
         chainDebugMode,
         chainDebugSweep,
       })
@@ -1116,7 +1119,7 @@ app.post("/master",
           analyzedMasterPath: absMaster,
           uploadPath: absUpload,
           masterBytes: fs.existsSync(masterPath) ? fs.statSync(masterPath).size : 0,
-          body: { stylePreset, targetLufs, stereoEnhance, lowEndControl, clarityPresence },
+          body: { stylePreset, targetLufs, stereoEnhance, lowEndControl, clarityPresence, sliderDebug },
           rawAfter: rawAfter
             ? {
                 lufs: rawAfter.lufs,
