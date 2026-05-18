@@ -142,6 +142,43 @@ body {
       padding-bottom: 1.25rem;
     }
   }
+  @media (min-width: 1024px) {
+    .homepage-hero-shell {
+      max-width: min(1220px, calc(100vw - 5rem));
+    }
+    .homepage-hero-lockup {
+      width: min(1120px, 100%);
+      margin-inline: auto;
+      grid-template-columns: minmax(0, 600px) minmax(0, 430px);
+      gap: 1.75rem;
+      justify-content: center;
+      align-items: center;
+    }
+    .homepage-hero-copy {
+      width: 100%;
+      max-width: 36rem;
+      justify-self: end;
+      margin-top: 0.5rem;
+    }
+    .homepage-hero-orb {
+      width: min(26rem, 100%);
+      justify-self: start;
+      margin-left: -1.5rem;
+    }
+    .homepage-hero-orb > * {
+      margin-inline: 0;
+    }
+  }
+  @media (min-width: 1440px) {
+    .homepage-hero-lockup {
+      width: min(1080px, 100%);
+      grid-template-columns: minmax(0, 610px) minmax(0, 410px);
+      gap: 1.5rem;
+    }
+    .homepage-hero-orb {
+      margin-left: -2rem;
+    }
+  }
   .hero-eyebrow-pill {
     display: inline-flex;
     width: fit-content;

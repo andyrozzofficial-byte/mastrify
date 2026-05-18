@@ -49,15 +49,15 @@ export default function Landing() {
       />
 
       {/* Hero */}
-      <section className="hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
+      <section className="homepage-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
         <motion.div
-          className="relative grid items-center gap-8 sm:gap-10 lg:mx-auto lg:w-full lg:max-w-[860px] lg:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)] lg:gap-0 xl:max-w-[880px]"
+          className="homepage-hero-lockup relative grid items-center gap-8 sm:gap-10"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
         >
           <motion.div
-            className="text-center lg:ml-10 lg:mt-2 lg:w-full lg:max-w-[35rem] lg:justify-self-center lg:text-left xl:ml-12"
+            className="homepage-hero-copy text-center lg:text-left"
             initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.05, ease: EASE }}
@@ -113,7 +113,7 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <div className="lg:-ml-24 lg:-translate-x-8 lg:justify-self-stretch xl:-ml-28 xl:-translate-x-10">
+          <div className="homepage-hero-orb">
             <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost />
           </div>
         </motion.div>
