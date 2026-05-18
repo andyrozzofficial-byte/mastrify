@@ -1153,6 +1153,8 @@ app.post("/master",
         afterUrl: playback.afterUrl,
         // kept for backwards compatibility with older clients
         fullUrl: playback.fullUrl,
+        objectKey: playback.objectKey,
+        expiresAt: playback.expiresAt,
         analysisBefore,
         analysisAfter,
         ...(masteringInsights ? { masteringInsights } : {}),
@@ -1216,6 +1218,32 @@ app.post("/master",
 
   }
 )
+
+app.post("/master/deliver", async (req, res) => {
+  try {
+    const body = req.body || {}
+    const email = typeof body.email === "string" ? body.email.trim() : ""
+    const objectKey = typeof body.objectKey === "string" ? body.objectKey.trim() : ""
+    const playbackUrl = typeof body.playbackUrl === "string" ? body.playbackUrl.trim() : ""
+    const expiresAt = typeof body.expiresAt === "string" && body.expiresAt.trim() ? body.expiresAt.trim() : null
+
+    if (!email || !objectKey || !playbackUrl) {
+      return res.status(400).json({ success: false, error: "Missing delivery details" })
+    }
+
+    const delivery = await deliverMasterExportEmail({
+      email,
+      objectKey,
+      playbackUrl,
+      expiresAt,
+    })
+
+    res.json({ success: true, delivery })
+  } catch (err) {
+    console.error("Master delivery failed:", err)
+    res.status(500).json({ success: false, error: "Delivery failed" })
+  }
+})
 
 
 

@@ -33,6 +33,7 @@ import {
   type PreviewSource,
 } from "../../../lib/audioPreviewTimeline"
 import { parseTrackDisplayName } from "../../../lib/parseTrackDisplayName"
+import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 
 const STYLE_LABELS: Record<MasterStylePreset, string> = {
@@ -91,6 +92,10 @@ export default function MasterResultClient() {
     audioUrl,
     masteredUrl,
     masteredPreviewMp3Url,
+    masterObjectKey,
+    masterExpiresAt,
+    deliveryEmail,
+    setDeliveryEmail,
     targetLufs,
     stylePreset,
     resetSession,
@@ -103,8 +108,11 @@ export default function MasterResultClient() {
   const [selectedSource, setSelectedSource] = useState<"original" | "mastered">("mastered")
   const [isPlaying, setIsPlaying] = useState(false)
   const [playProgress, setPlayProgress] = useState(0)
-  const [isPaid, setIsPaid] = useState(false)
+  const [deliverySent, setDeliverySent] = useState(false)
   const [shareLabel, setShareLabel] = useState("Share")
+  const [deliveryOpen, setDeliveryOpen] = useState(false)
+  const [deliverySending, setDeliverySending] = useState(false)
+  const [deliveryError, setDeliveryError] = useState("")
 
   const originalAudioRef = useRef<HTMLAudioElement | null>(null)
   const masteredAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -151,7 +159,6 @@ export default function MasterResultClient() {
     setMounted(true)
     const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
     setIsMobileClient(/iPhone|iPad|iPod|Android|Mobile/i.test(ua))
-    setIsPaid(typeof window !== "undefined" && localStorage.getItem("paid") === "true")
   }, [])
 
   const originalPreviewUrl = useMemo(() => normalizePlaybackUrl(audioUrl), [audioUrl])
@@ -535,8 +542,44 @@ export default function MasterResultClient() {
   }
 
   const handlePayment = () => {
-    localStorage.setItem("paid", "true")
-    setIsPaid(true)
+    setDeliveryOpen(true)
+    setDeliveryError("")
+  }
+
+  const handleEmailDelivery = async () => {
+    const email = deliveryEmail.trim()
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setDeliveryError("Enter a valid email address.")
+      return
+    }
+    if (!masteredWavUrl || !masterObjectKey) {
+      setDeliveryError("Master delivery link is not ready yet.")
+      return
+    }
+
+    setDeliverySending(true)
+    setDeliveryError("")
+    try {
+      const res = await fetch(`${PUBLIC_BACKEND_API_BASE}/master/deliver`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          objectKey: masterObjectKey,
+          playbackUrl: masteredWavUrl,
+          expiresAt: masterExpiresAt || null,
+        }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || data?.success === false) {
+        throw new Error(data?.error || "Could not send email")
+      }
+      setDeliverySent(true)
+    } catch (err) {
+      setDeliveryError(err instanceof Error ? err.message : "Could not send email. Please try again.")
+    } finally {
+      setDeliverySending(false)
+    }
   }
 
   const handleShare = async () => {
@@ -866,7 +909,7 @@ export default function MasterResultClient() {
         transition={{ duration: 0.45, delay: 0.1 }}
         className="mx-auto mt-5 flex w-full max-w-[28rem] flex-col gap-3 sm:mt-6 sm:flex-row sm:justify-center sm:gap-4"
       >
-        {!isPaid ? (
+        {!deliverySent ? (
           <button
             type="button"
             onClick={handlePayment}
@@ -875,13 +918,11 @@ export default function MasterResultClient() {
             Pay $9 &amp; download
           </button>
         ) : (
-          <a
-            href={masteredWavUrl || "#"}
-            download="master.wav"
+          <div
             className="inline-flex min-h-[54px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-9 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99]"
           >
-            Download master
-          </a>
+            Check your inbox
+          </div>
         )}
         <Link
           href="/master"
@@ -891,6 +932,60 @@ export default function MasterResultClient() {
           New master
         </Link>
       </motion.div>
+
+      {deliveryOpen && !deliverySent ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/72 px-5 backdrop-blur-md">
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="w-full max-w-md rounded-2xl border border-white/[0.1] bg-[#090912] p-5 text-left shadow-[0_24px_80px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.06)]"
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/58">Master delivery</p>
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">Secure your master link</h2>
+            <p className="mt-2 text-sm leading-relaxed text-white/68">
+              Enter your email to receive your mastered track and secure download link. You can reopen it later from any
+              device, even if this page is closed.
+            </p>
+            <p className="mt-2 text-[12px] leading-relaxed text-white/48">
+              We send the link instantly and only use it to deliver this export.
+            </p>
+
+            <label htmlFor="master-result-delivery-email" className="sr-only">
+              Email address
+            </label>
+            <input
+              id="master-result-delivery-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={deliveryEmail}
+              onChange={(e) => setDeliveryEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="mt-5 w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/34 focus:border-violet-300/36 focus:bg-white/[0.06]"
+            />
+            {deliveryError ? <p className="mt-2 text-xs text-rose-300/85">{deliveryError}</p> : null}
+
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={handleEmailDelivery}
+                disabled={deliverySending}
+                className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-5 text-sm font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deliverySending ? "Sending…" : "Email my master"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeliveryOpen(false)}
+                disabled={deliverySending}
+                className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 text-sm font-semibold text-white/76 transition hover:bg-white/[0.055] hover:text-white"
+              >
+                Not now
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      ) : null}
 
       <motion.div
         initial={{ opacity: 0 }}

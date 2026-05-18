@@ -25,6 +25,8 @@ export default function MasterProcessingPage() {
     sessionHydrated,
     setMasteredUrl,
     setMasteredPreviewMp3Url,
+    setMasterObjectKey,
+    setMasterExpiresAt,
     setAnalysisBefore,
     setAnalysisAfter,
     stylePreset,
@@ -101,6 +103,8 @@ export default function MasterProcessingPage() {
 
         setMasteredUrl(mastered)
         setMasteredPreviewMp3Url(previewMp3)
+        setMasterObjectKey(typeof res.data.objectKey === "string" ? res.data.objectKey : "")
+        setMasterExpiresAt(typeof res.data.expiresAt === "string" ? res.data.expiresAt : "")
 
         appendHistory({
           kind: "master",
@@ -131,6 +135,8 @@ export default function MasterProcessingPage() {
     router,
     setMasteredUrl,
     setMasteredPreviewMp3Url,
+    setMasterObjectKey,
+    setMasterExpiresAt,
     setAnalysisBefore,
     setAnalysisAfter,
     stylePreset,

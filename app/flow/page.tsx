@@ -39,13 +39,14 @@ export default function FlowPage() {
   const [audioUrl, setAudioUrl] = useState("")
   const [masteredUrl, setMasteredUrl] = useState("")
   const [masteredPreviewMp3Url, setMasteredPreviewMp3Url] = useState("")
+  const [masterObjectKey, setMasterObjectKey] = useState("")
+  const [masterExpiresAt, setMasterExpiresAt] = useState("")
+  const [deliveryEmail, setDeliveryEmail] = useState("")
+  const [deliveryOpen, setDeliveryOpen] = useState(false)
+  const [deliverySending, setDeliverySending] = useState(false)
+  const [deliveryError, setDeliveryError] = useState("")
   const [selectedSource, setSelectedSource] = useState<"original" | "mastered">("mastered")
-  const [isPaid, setIsPaid] = useState(() => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("paid") === "true"
-  }
-  return false
-})
+  const [isPaid, setIsPaid] = useState(false)
 
   const [step, setStep] = useState<Step>("upload")
   const [aiText, setAiText] = useState("")
@@ -173,6 +174,8 @@ export default function FlowPage() {
   setAudioUrl(URL.createObjectURL(selected))
   setMasteredUrl("")
   setMasteredPreviewMp3Url("")
+  setMasterObjectKey("")
+  setMasterExpiresAt("")
   
   setStep("upload")
   setIsPaid(false)
@@ -183,6 +186,8 @@ export default function FlowPage() {
   setAudioUrl(URL.createObjectURL(file))
   setMasteredUrl("")
   setMasteredPreviewMp3Url("")
+  setMasterObjectKey("")
+  setMasterExpiresAt("")
   
   setStep("upload")
   setIsPaid(false)
@@ -224,6 +229,8 @@ const previewMp3 =
   res.data.previewAfterMp3Url ||
   (res.data.previewAfterMp3 ? `${API}${res.data.previewAfterMp3}` : "")
 setMasteredPreviewMp3Url(previewMp3)
+setMasterObjectKey(typeof res.data.objectKey === "string" ? res.data.objectKey : "")
+setMasterExpiresAt(typeof res.data.expiresAt === "string" ? res.data.expiresAt : "")
 
 setSelectedSource("mastered")
 
@@ -393,12 +400,46 @@ useEffect(() => {
   return () => clearInterval(interval)
 }, [step])
 
-  const [showSuccess, setShowSuccess] = useState(false)
-
 const handlePayment = () => {
-  localStorage.setItem("paid", "true")
-  setIsPaid(true)
-  setShowSuccess(true)
+  setDeliveryOpen(true)
+  setDeliveryError("")
+}
+
+const handleEmailDelivery = async () => {
+  const email = deliveryEmail.trim()
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setDeliveryError("Enter a valid email address.")
+    return
+  }
+  if (!masteredUrl || !masterObjectKey) {
+    setDeliveryError("Master delivery link is not ready yet.")
+    return
+  }
+
+  setDeliverySending(true)
+  setDeliveryError("")
+  try {
+    const res = await fetch(`${API}/master/deliver`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        objectKey: masterObjectKey,
+        playbackUrl: masteredUrl,
+        expiresAt: masterExpiresAt || null,
+      }),
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok || data?.success === false) {
+      throw new Error(data?.error || "Could not send email")
+    }
+    setIsPaid(true)
+    setDeliveryOpen(false)
+  } catch (err) {
+    setDeliveryError(err instanceof Error ? err.message : "Could not send email. Please try again.")
+  } finally {
+    setDeliverySending(false)
+  }
 }
 
   // (metadata sync handled in the preview enforcement effect above)
@@ -709,6 +750,50 @@ disabled:opacity-40 disabled:cursor-not-allowed"
   </motion.button>
 )}
 
+{deliveryOpen && (
+  <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/72 px-5 backdrop-blur-md">
+    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#090912] p-5 text-left shadow-[0_24px_80px_rgba(0,0,0,0.65)]">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/58">Master delivery</p>
+      <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">Secure your master link</h2>
+      <p className="mt-2 text-sm leading-relaxed text-white/68">
+        Enter your email to receive your mastered track and secure download link. You can reopen it later from any
+        device, even if this page is closed.
+      </p>
+      <p className="mt-2 text-[12px] leading-relaxed text-white/48">
+        We send the link instantly and only use it to deliver this export.
+      </p>
+      <input
+        type="email"
+        inputMode="email"
+        autoComplete="email"
+        value={deliveryEmail}
+        onChange={(e) => setDeliveryEmail(e.target.value)}
+        placeholder="you@example.com"
+        className="mt-5 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-white/34 focus:border-violet-300/36"
+      />
+      {deliveryError ? <p className="mt-2 text-xs text-rose-300/85">{deliveryError}</p> : null}
+      <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+        <button
+          type="button"
+          onClick={handleEmailDelivery}
+          disabled={deliverySending}
+          className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 px-5 text-sm font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {deliverySending ? "Sending…" : "Email my master"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setDeliveryOpen(false)}
+          disabled={deliverySending}
+          className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] px-5 text-sm font-semibold text-white/76 transition hover:bg-white/[0.055]"
+        >
+          Not now
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
         {/* ANALYZING */}
         <AnimatePresence mode="wait">
         {step === "analyzing" && (
@@ -931,11 +1016,9 @@ transition-all duration-300"
   </>
 )}
 
-{/* ⚡ DOWNLOAD KNAPP (visas efter betalning) */}
+{/* Delivery confirmation */}
 {isPaid && (
-  <a
-  href={masteredUrl || "#"}
-  download="master.wav"
+  <div
   className="block w-full py-5 mt-4 rounded-xl text-lg font-bold text-white text-center cursor-pointer
 bg-gradient-to-r from-purple-500 to-blue-500
 shadow-[0_0_40px_rgba(139,92,246,0.35)]
@@ -943,8 +1026,8 @@ hover:brightness-110 hover:scale-[1.02]
 active:scale-[0.98]
 transition-all duration-300"
 >
-  Download master 🎧
-</a>
+  Check your inbox
+</div>
 )}
 
 

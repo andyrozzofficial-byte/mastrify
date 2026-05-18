@@ -31,6 +31,8 @@ type MasterSessionSnapshotV2 = {
   deliveryEmail: string
   masteredUrl: string
   masteredPreviewMp3Url: string
+  masterObjectKey: string
+  masterExpiresAt: string
   fileName: string
 }
 
@@ -59,6 +61,10 @@ type MasterSession = {
   setClarityPresence: (n: number) => void
   deliveryEmail: string
   setDeliveryEmail: (email: string) => void
+  masterObjectKey: string
+  setMasterObjectKey: (key: string) => void
+  masterExpiresAt: string
+  setMasterExpiresAt: (expiresAt: string) => void
   resetSession: () => void
   /** True after first client storage hydrate attempt (for /master/settings gating). */
   sessionHydrated: boolean
@@ -110,6 +116,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const [lowEndControl, setLowEndControl] = useState(50)
   const [clarityPresence, setClarityPresence] = useState(50)
   const [deliveryEmail, setDeliveryEmail] = useState("")
+  const [masterObjectKey, setMasterObjectKey] = useState("")
+  const [masterExpiresAt, setMasterExpiresAt] = useState("")
   const [sessionHydrated, setSessionHydrated] = useState(false)
   const hydrateRan = useRef(false)
 
@@ -121,6 +129,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     })
     setMasteredUrl("")
     setMasteredPreviewMp3Url("")
+    setMasterObjectKey("")
+    setMasterExpiresAt("")
     setAnalysisBefore(null)
     setAnalysisAfter(null)
     clearMasterStorageKeys()
@@ -144,6 +154,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setAnalysisAfter(null)
     setMasteredUrl("")
     setMasteredPreviewMp3Url("")
+    setMasterObjectKey("")
+    setMasterExpiresAt("")
   }, [])
 
   const resetSession = useCallback(() => {
@@ -154,6 +166,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setFileState(null)
     setMasteredUrl("")
     setMasteredPreviewMp3Url("")
+    setMasterObjectKey("")
+    setMasterExpiresAt("")
     setAnalysisBefore(null)
     setAnalysisAfter(null)
     setStylePreset("STREAM")
@@ -188,6 +202,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
         if (typeof s.clarityPresence === "number" && Number.isFinite(s.clarityPresence)) setClarityPresence(s.clarityPresence)
         if (typeof s.masteredUrl === "string") setMasteredUrl(s.masteredUrl)
         if (typeof s.masteredPreviewMp3Url === "string") setMasteredPreviewMp3Url(s.masteredPreviewMp3Url)
+        if (typeof s.masterObjectKey === "string") setMasterObjectKey(s.masterObjectKey)
+        if (typeof s.masterExpiresAt === "string") setMasterExpiresAt(s.masterExpiresAt)
         if (typeof s.deliveryEmail === "string") setDeliveryEmail(s.deliveryEmail)
       } else if (snap.v === 1) {
         const mastered = typeof snap.masteredUrl === "string" ? snap.masteredUrl : ""
@@ -221,6 +237,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       deliveryEmail,
       masteredUrl,
       masteredPreviewMp3Url,
+      masterObjectKey,
+      masterExpiresAt,
       fileName: file?.name ?? "",
     }
     const hasPayload =
@@ -228,6 +246,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       !!analysisBefore ||
       !!analysisAfter ||
       !!file ||
+      !!masterObjectKey ||
+      !!masterExpiresAt ||
       stylePreset !== "STREAM" ||
       targetLufs !== -14 ||
       stereoEnhance !== 50 ||
@@ -259,6 +279,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     deliveryEmail,
     masteredUrl,
     masteredPreviewMp3Url,
+    masterObjectKey,
+    masterExpiresAt,
     file,
   ])
 
@@ -288,6 +310,10 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       setClarityPresence,
       deliveryEmail,
       setDeliveryEmail,
+      masterObjectKey,
+      setMasterObjectKey,
+      masterExpiresAt,
+      setMasterExpiresAt,
       resetSession,
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,
@@ -300,6 +326,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       setAudioUrl,
       masteredUrl,
       masteredPreviewMp3Url,
+      masterObjectKey,
+      masterExpiresAt,
       analysisBefore,
       analysisAfter,
       stylePreset,
