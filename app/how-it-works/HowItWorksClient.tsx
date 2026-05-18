@@ -185,11 +185,11 @@ export default function HowItWorksClient() {
       />
 
       {/* Hero */}
-      <section className="hero-section page-container page-hero-pad relative z-10 pb-20 md:pb-28">
+      <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 pb-20 md:pb-28">
         <HeroWaveBackdrop />
 
-        <div className="relative grid items-center gap-12 lg:mx-auto lg:w-full lg:max-w-[1010px] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:gap-10 xl:max-w-[1040px] xl:gap-12">
-          <Reveal className="lg:w-full lg:max-w-[31rem] lg:justify-self-center">
+        <div className="marketing-hero-lockup relative grid items-center gap-12">
+          <Reveal className="marketing-hero-copy">
             <span className="hero-eyebrow-pill">
               Intelligent mastering
             </span>
@@ -238,7 +238,7 @@ export default function HowItWorksClient() {
             </motion.div>
           </Reveal>
 
-          <Reveal delay={0.1} className="relative flex justify-center lg:justify-center">
+          <Reveal delay={0.1} className="marketing-hero-visual relative flex justify-center">
             <div
               className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.14),transparent_65%)]"
               aria-hidden
@@ -334,7 +334,7 @@ export default function HowItWorksClient() {
       {/* Headroom */}
       <section className="relative z-10 border-t border-white/[0.05] py-16 md:py-24">
         <motion.div className="mx-auto max-w-[1080px] px-5 md:px-10">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-14">
+          <div className="marketing-split-grid grid gap-10">
             <Reveal>
               <SectionLabel>Before you upload</SectionLabel>
               <h2 className="mt-3 text-[1.65rem] font-semibold tracking-[-0.02em] text-white sm:text-[2rem]">

@@ -49,15 +49,15 @@ export default function Landing() {
       />
 
       {/* Hero */}
-      <section className="homepage-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
+      <section className="marketing-hero-shell homepage-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
         <motion.div
-          className="homepage-hero-lockup relative grid items-center gap-8 sm:gap-10"
+          className="marketing-hero-lockup homepage-hero-lockup relative grid items-center gap-8 sm:gap-10"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
         >
           <motion.div
-            className="homepage-hero-copy text-center lg:text-left"
+            className="marketing-hero-copy text-center lg:text-left"
             initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.05, ease: EASE }}
@@ -113,7 +113,7 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <div className="homepage-hero-orb">
+          <div className="marketing-hero-visual homepage-hero-orb">
             <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost />
           </div>
         </motion.div>

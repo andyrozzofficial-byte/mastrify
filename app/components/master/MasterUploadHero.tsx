@@ -38,7 +38,7 @@ export default function MasterUploadHero({
   }, [reduce])
 
   return (
-    <section className="hero-section relative w-full">
+    <section className="marketing-hero-shell hero-section relative w-full">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
@@ -47,12 +47,12 @@ export default function MasterUploadHero({
       />
 
       <motion.div
-        className="relative grid min-w-0 gap-6 max-lg:grid-cols-1 lg:mx-auto lg:w-full lg:max-w-[1010px] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:items-start lg:gap-10 xl:max-w-[1040px] xl:gap-12"
+        className="marketing-hero-lockup marketing-hero-lockup--top relative grid min-w-0 gap-6 max-lg:grid-cols-1"
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
       >
-        <motion.div className="flex min-w-0 flex-col max-lg:order-1 lg:w-full lg:max-w-[31rem] lg:justify-self-center">
+        <motion.div className="marketing-hero-copy flex min-w-0 flex-col max-lg:order-1">
           <span className="hero-eyebrow-pill sm:tracking-[0.22em]">Spatial mastering engine</span>
 
           <h1 className="mt-3 text-[1.48rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white min-[430px]:text-[1.55rem] sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
@@ -123,7 +123,7 @@ export default function MasterUploadHero({
         </motion.div>
 
         <motion.div
-          className="relative mx-auto flex w-full max-w-full justify-center overflow-hidden max-lg:order-2 max-lg:mt-2 max-lg:min-h-[min(14rem,42vw)] max-lg:py-3 sm:max-lg:py-4 md:max-lg:min-h-[16rem] lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-center lg:py-0"
+          className="marketing-hero-visual relative mx-auto flex w-full max-w-full justify-center overflow-hidden max-lg:order-2 max-lg:mt-2 max-lg:min-h-[min(14rem,42vw)] max-lg:py-3 sm:max-lg:py-4 md:max-lg:min-h-[16rem] lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-start lg:py-0"
           initial={reduce ? false : { opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.85, delay: 0.1, ease: EASE }}

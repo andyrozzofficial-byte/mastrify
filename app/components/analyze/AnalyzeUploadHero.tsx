@@ -40,7 +40,7 @@ export default function AnalyzeUploadHero({
   }, [reduce])
 
   return (
-    <section className="hero-section relative w-full md:pb-10">
+    <section className="marketing-hero-shell hero-section relative w-full md:pb-10">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
@@ -49,12 +49,12 @@ export default function AnalyzeUploadHero({
       />
 
       <motion.div
-        className="relative isolate grid min-w-0 gap-7 max-lg:grid-cols-1 max-lg:gap-8 lg:mx-auto lg:w-full lg:max-w-[1010px] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:items-start lg:gap-10 xl:max-w-[1040px] xl:gap-12"
+        className="marketing-hero-lockup marketing-hero-lockup--top relative isolate grid min-w-0 gap-7 max-lg:grid-cols-1 max-lg:gap-8"
         initial={reduce ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="relative z-10 flex min-w-0 flex-col max-lg:order-1 lg:w-full lg:max-w-[31rem] lg:justify-self-center">
+        <motion.div className="marketing-hero-copy relative z-10 flex min-w-0 flex-col max-lg:order-1">
           <span className="hero-eyebrow-pill">Perceptual mix intelligence</span>
 
           <h1 className="mt-3.5 text-[1.62rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white min-[430px]:text-[1.85rem] sm:mt-5 sm:text-[2.35rem] md:text-[2.65rem]">
@@ -126,7 +126,7 @@ export default function AnalyzeUploadHero({
           activeStep={engineStep}
           compactAtmosphere
           mobileGlowBoost
-          className="relative z-0 max-lg:order-2 max-lg:mt-1 lg:sticky lg:top-24 lg:justify-self-center"
+          className="marketing-hero-visual relative z-0 max-lg:order-2 max-lg:mt-1 lg:sticky lg:top-24"
         />
       </motion.div>
     </section>

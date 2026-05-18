@@ -143,10 +143,10 @@ body {
     }
   }
   @media (min-width: 1024px) {
-    .homepage-hero-shell {
+    .marketing-hero-shell {
       max-width: min(1220px, calc(100vw - 5rem));
     }
-    .homepage-hero-lockup {
+    .marketing-hero-lockup {
       width: min(1120px, 100%);
       margin-inline: auto;
       grid-template-columns: minmax(0, 600px) minmax(0, 430px);
@@ -154,28 +154,31 @@ body {
       justify-content: center;
       align-items: center;
     }
-    .homepage-hero-copy {
+    .marketing-hero-lockup--top {
+      align-items: start;
+    }
+    .marketing-hero-copy {
       width: 100%;
       max-width: 36rem;
       justify-self: end;
       margin-top: 0.5rem;
     }
-    .homepage-hero-orb {
+    .marketing-hero-visual {
       width: min(26rem, 100%);
       justify-self: start;
       margin-left: -1.5rem;
     }
-    .homepage-hero-orb > * {
+    .marketing-hero-visual > * {
       margin-inline: 0;
     }
   }
   @media (min-width: 1440px) {
-    .homepage-hero-lockup {
+    .marketing-hero-lockup {
       width: min(1080px, 100%);
       grid-template-columns: minmax(0, 610px) minmax(0, 410px);
       gap: 1.5rem;
     }
-    .homepage-hero-orb {
+    .marketing-hero-visual {
       margin-left: -2rem;
     }
   }
@@ -188,6 +191,21 @@ body {
     }
     .homepage-hero-orb {
       margin-top: -0.25rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .marketing-split-grid {
+      width: min(1040px, 100%);
+      margin-inline: auto;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.84fr);
+      gap: 2.25rem;
+      align-items: center;
+    }
+  }
+  @media (min-width: 1440px) {
+    .marketing-split-grid {
+      width: min(1000px, 100%);
+      gap: 2rem;
     }
   }
   .hero-eyebrow-pill {
