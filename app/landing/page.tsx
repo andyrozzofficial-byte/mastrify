@@ -51,13 +51,13 @@ export default function Landing() {
       {/* Hero */}
       <section className="hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
         <motion.div
-          className="relative grid items-center gap-8 sm:gap-10 lg:mx-auto lg:w-full lg:max-w-[1010px] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:gap-10 xl:max-w-[1040px] xl:gap-12"
+          className="relative grid items-center gap-8 sm:gap-10 lg:mx-auto lg:w-full lg:max-w-[1010px] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:gap-8 xl:max-w-[1040px] xl:gap-10"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
         >
           <motion.div
-            className="text-center lg:w-full lg:max-w-[31rem] lg:justify-self-center lg:text-left"
+            className="text-center lg:mt-2 lg:w-full lg:max-w-[31rem] lg:justify-self-center lg:text-left"
             initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.05, ease: EASE }}
@@ -119,7 +119,7 @@ export default function Landing() {
 
       {/* Bridge — tightens hero → below fold */}
       <motion.div
-        className="relative z-10 mx-auto max-w-[1080px] px-5 md:px-10"
+        className="relative z-10 mx-auto max-w-[1080px] px-5 md:px-10 lg:-mt-2"
         initial={reduce ? false : { opacity: 0 }}
         whileInView={reduce ? undefined : { opacity: 1 }}
         viewport={{ once: true }}
@@ -144,7 +144,7 @@ export default function Landing() {
         />
 
         <motion.div
-          className="page-container landing-close-footer relative z-10 pt-14 md:pt-16"
+          className="page-container landing-close-footer relative z-10 pt-14 md:pt-16 lg:pt-8"
           initial={reduce ? false : { opacity: 0, y: 14 }}
           whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}
@@ -164,7 +164,7 @@ export default function Landing() {
             </PremiumButton>
           </CinematicReveal>
 
-          <CinematicReveal className="mx-auto mt-14 max-w-[920px] md:mt-[3.75rem]" delay={0.08}>
+          <CinematicReveal className="mx-auto mt-14 max-w-[920px] md:mt-[3.75rem] lg:mt-10" delay={0.08}>
             <motion.div
               className="trust-band"
               initial={reduce ? false : { opacity: 0, y: 10 }}

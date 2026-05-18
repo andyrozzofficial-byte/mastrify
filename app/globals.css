@@ -138,7 +138,8 @@ body {
   }
   @media (min-width: 1024px) {
     .page-hero-pad {
-      padding-top: 5rem;
+      padding-top: 3.75rem;
+      padding-bottom: 1.25rem;
     }
   }
   .hero-eyebrow-pill {
@@ -293,6 +294,11 @@ body {
       margin-bottom: 0;
     }
   }
+  @media (min-width: 1024px) {
+    .hero-section {
+      padding-bottom: 0.75rem;
+    }
+  }
   .section-after-hero {
     padding-top: 2.75rem;
     margin-top: 0.25rem;
@@ -306,6 +312,11 @@ body {
     .section-after-hero {
       padding-top: 3.5rem;
       margin-top: 0;
+    }
+  }
+  @media (min-width: 1024px) {
+    .section-after-hero {
+      padding-top: 1.5rem;
     }
   }
   .section-rhythm {
