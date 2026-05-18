@@ -262,24 +262,26 @@ body {
   .text-label-strong {
     color: var(--text-label-strong);
   }
-  /* Landing trust band — anchored DAW row, premium opacity ladder */
+  /* Landing trust band — glass DAW badges, integrated with the cinematic surface */
   .trust-band {
     position: relative;
-    margin-top: 3.25rem;
+    margin-top: 2.75rem;
     margin-inline: auto;
-    max-width: 52rem;
-    padding: 2rem 1.25rem 2.25rem;
+    max-width: 50rem;
+    overflow: hidden;
+    padding: 1.45rem 1rem 1.55rem;
     border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.065);
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.025) 0%,
-      rgba(8, 8, 14, 0.55) 48%,
-      rgba(5, 5, 8, 0.35) 100%
+      rgba(255, 255, 255, 0.035) 0%,
+      rgba(10, 10, 18, 0.58) 48%,
+      rgba(5, 5, 8, 0.42) 100%
     );
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.05),
-      0 24px 56px rgba(0, 0, 0, 0.22);
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      0 24px 56px rgba(0, 0, 0, 0.24);
+    backdrop-filter: blur(18px);
   }
   .trust-band::before {
     content: "";
@@ -301,88 +303,182 @@ body {
     position: absolute;
     inset-inline: 8%;
     bottom: 0;
-    height: 40%;
+    height: 44%;
     border-radius: 9999px;
-    background: radial-gradient(ellipse 70% 80% at 50% 100%, rgba(99, 102, 241, 0.08), transparent 70%);
-    opacity: 0.9;
+    background: radial-gradient(ellipse 70% 80% at 50% 100%, rgba(99, 102, 241, 0.075), transparent 72%);
+    opacity: 0.82;
   }
   @media (min-width: 768px) {
     .trust-band {
-      margin-top: 4rem;
-      padding: 2.5rem 2.5rem 2.75rem;
+      margin-top: 3.25rem;
+      padding: 1.85rem 2rem 2rem;
       border-radius: 1.125rem;
     }
+  }
+  .trust-band-kicker {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(196, 181, 253, 0.52);
   }
   .trust-band-heading {
     position: relative;
     z-index: 1;
+    margin-top: 0.45rem;
     text-align: center;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    color: var(--text-support-68);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.015em;
+    color: rgba(255, 255, 255, 0.78);
   }
   @media (min-width: 768px) {
     .trust-band-heading {
-      font-size: 13px;
-      letter-spacing: 0.04em;
+      font-size: 14px;
+      letter-spacing: 0.01em;
     }
   }
-  .trust-daw-grid {
+  .trust-daw-viewport {
     position: relative;
     z-index: 1;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem 1.75rem;
-    margin-top: 2rem;
+    margin-top: 1.15rem;
+  }
+  .trust-daw-viewport::before,
+  .trust-daw-viewport::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    width: 2.25rem;
+  }
+  .trust-daw-viewport::before {
+    left: -0.25rem;
+    background: linear-gradient(90deg, rgba(8, 8, 14, 0.74), transparent);
+  }
+  .trust-daw-viewport::after {
+    right: -0.25rem;
+    background: linear-gradient(270deg, rgba(8, 8, 14, 0.74), transparent);
+  }
+  .trust-daw-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin: 0;
     padding-inline: 0.25rem;
   }
   @media (min-width: 768px) {
+    .trust-daw-viewport {
+      margin-top: 1.35rem;
+      overflow: hidden;
+    }
     .trust-daw-grid {
+      animation: trustDawDrift 22s ease-in-out infinite;
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 0.5rem 1.25rem;
-      margin-top: 2.75rem;
-      max-width: 46rem;
+      gap: 0.65rem;
+      max-width: 44rem;
       margin-inline: auto;
     }
   }
   @media (min-width: 1024px) {
     .trust-daw-grid {
-      gap: 0.5rem 1.75rem;
+      gap: 0.75rem;
     }
   }
+  .trust-daw-card {
+    position: relative;
+    display: flex;
+    min-height: 2.8rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    overflow: hidden;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.022));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      0 12px 28px rgba(0, 0, 0, 0.18);
+    opacity: 0.78;
+    backdrop-filter: blur(16px);
+    transform: translateY(0);
+    transition:
+      border-color 0.28s ease,
+      box-shadow 0.28s ease,
+      opacity 0.28s ease,
+      transform 0.28s ease,
+      background 0.28s ease;
+  }
+  .trust-daw-card::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(167, 139, 250, 0.12), transparent 55%);
+    opacity: 0;
+    transition: opacity 0.28s ease;
+  }
+  .trust-daw-mark {
+    position: relative;
+    z-index: 1;
+    height: 0.38rem;
+    width: 0.38rem;
+    border-radius: 9999px;
+    background: rgba(196, 181, 253, 0.48);
+    box-shadow: 0 0 14px rgba(139, 92, 246, 0.16);
+  }
   .trust-daw-label {
+    position: relative;
+    z-index: 1;
     display: block;
     text-align: center;
     font-size: 10px;
-    font-weight: 500;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.24em;
-    color: rgba(255, 255, 255, 0.5);
-    transition: color 0.25s ease;
+    letter-spacing: 0.17em;
+    color: rgba(255, 255, 255, 0.58);
+    transition: color 0.28s ease;
   }
   @media (min-width: 768px) {
     .trust-daw-label {
       font-size: 11px;
-      letter-spacing: 0.26em;
+      letter-spacing: 0.18em;
     }
   }
-  .trust-daw-grid > li:nth-child(1) .trust-daw-label,
-  .trust-daw-grid > li:nth-child(5) .trust-daw-label {
-    color: rgba(255, 255, 255, 0.44);
-  }
-  .trust-daw-grid > li:nth-child(2) .trust-daw-label,
-  .trust-daw-grid > li:nth-child(4) .trust-daw-label {
-    color: rgba(255, 255, 255, 0.52);
-  }
-  .trust-daw-grid > li:nth-child(3) .trust-daw-label {
-    color: rgba(255, 255, 255, 0.58);
-  }
   @media (hover: hover) {
+    .trust-daw-grid > li:hover .trust-daw-card {
+      border-color: rgba(167, 139, 250, 0.18);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.028));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 14px 34px rgba(0, 0, 0, 0.24),
+        0 0 24px rgba(139, 92, 246, 0.08);
+      opacity: 0.94;
+      transform: translateY(-2px);
+    }
+    .trust-daw-grid > li:hover .trust-daw-card::before {
+      opacity: 1;
+    }
     .trust-daw-grid > li:hover .trust-daw-label {
-      color: rgba(255, 255, 255, 0.68);
+      color: rgba(255, 255, 255, 0.78);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .trust-daw-grid {
+      animation: none;
+    }
+  }
+  @keyframes trustDawDrift {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(-1rem);
     }
   }
   .landing-close-footer {

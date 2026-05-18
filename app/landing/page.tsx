@@ -11,7 +11,7 @@ import PremiumButton from "../components/PremiumButton"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
-const dawLogos = ["Ableton", "FL Studio", "Logic Pro", "Pro Tools", "Studio One"]
+const dawLogos = ["Ableton Live", "FL Studio", "Logic Pro", "Pro Tools", "Studio One"]
 
 export default function Landing() {
   const reduce = useReducedMotion()
@@ -172,20 +172,26 @@ export default function Landing() {
               viewport={{ once: true, margin: "-24px" }}
               transition={{ duration: 0.65, ease: EASE }}
             >
-              <p className="trust-band-heading">Trusted by producers and artists worldwide</p>
-              <ul className="trust-daw-grid" aria-label="Supported digital audio workstations">
-                {dawLogos.map((name, i) => (
-                  <motion.li
-                    key={name}
-                    initial={reduce ? false : { opacity: 0, y: 6 }}
-                    whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.04 * i, ease: EASE }}
-                  >
-                    <span className="trust-daw-label">{name}</span>
-                  </motion.li>
-                ))}
-              </ul>
+              <p className="trust-band-kicker">Seamless with your studio</p>
+              <h3 className="trust-band-heading">Trusted by producers and artists worldwide</h3>
+              <div className="trust-daw-viewport" aria-label="Supported digital audio workstations">
+                <motion.ul className="trust-daw-grid">
+                  {dawLogos.map((name, i) => (
+                    <motion.li
+                      key={name}
+                      initial={reduce ? false : { opacity: 0, y: 6 }}
+                      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: 0.04 * i, ease: EASE }}
+                    >
+                      <span className="trust-daw-card">
+                        <span className="trust-daw-mark" aria-hidden />
+                        <span className="trust-daw-label">{name}</span>
+                      </span>
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              </div>
             </motion.div>
           </CinematicReveal>
         </motion.div>
