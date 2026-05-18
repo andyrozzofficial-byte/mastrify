@@ -197,6 +197,36 @@ export default function MasterResultClient() {
     return masteredPlaybackUrl
   }, [selectedSource, masteredPlaybackUrl, originalPreviewUrl, masteredMp3Url])
 
+  const isClipPlayback = (source: PreviewSource, isMobilePlayback: boolean) =>
+    source === "mastered" && (isMobilePlayback || masteredPlayback.via === "mp3")
+
+  const elementTimeToTimeline = (source: PreviewSource, elementTime: number, isMobilePlayback: boolean) => {
+    if (!Number.isFinite(elementTime)) return PREVIEW_START
+    if (isClipPlayback(source, isMobilePlayback)) {
+      return PREVIEW_START + Math.max(0, elementTime)
+    }
+    return elementTimeToAbsolute(source, elementTime, isMobilePlayback)
+  }
+
+  const timelineToElementTime = (
+    source: PreviewSource,
+    absoluteSec: number,
+    el: HTMLAudioElement,
+    isMobilePlayback: boolean
+  ) => {
+    if (isClipPlayback(source, isMobilePlayback)) {
+      const clamped = Math.max(PREVIEW_START, Math.min(PREVIEW_END, absoluteSec))
+      return Math.max(0, Math.min(PREVIEW_DURATION, clamped - PREVIEW_START))
+    }
+    return absoluteToElementTime(source, absoluteSec, {
+      duration: el.duration,
+      isMobile: isMobilePlayback,
+    })
+  }
+
+  const audioElementHasSource = (el: HTMLAudioElement, url: string) =>
+    el.currentSrc === url || el.src === url || el.getAttribute("src") === url
+
   useEffect(() => {
     if (!originalPreviewUrl) {
       logPreview("original preview URL missing", { audioUrl: audioUrl || null })
@@ -238,10 +268,7 @@ export default function MasterResultClient() {
   ) => {
     if (!el) return
     try {
-      el.currentTime = absoluteToElementTime(source, absoluteSec, {
-        duration: el.duration,
-        isMobile: isMobilePlayback,
-      })
+      el.currentTime = timelineToElementTime(source, absoluteSec, el, isMobilePlayback)
     } catch {
       /* ignore */
     }
@@ -256,12 +283,12 @@ export default function MasterResultClient() {
     if (isMobileClient) {
       const el = mobileAudioRef.current
       if (!el) return sharedTimelineSecRef.current
-      return elementTimeToAbsolute(source, el.currentTime, true)
+      return elementTimeToTimeline(source, el.currentTime, true)
     }
     const el =
       source === "mastered" ? masteredAudioRef.current : originalAudioRef.current
     if (!el) return sharedTimelineSecRef.current
-    return elementTimeToAbsolute(source, el.currentTime, false)
+    return elementTimeToTimeline(source, el.currentTime, false)
   }
 
   const resetBothToPreviewStart = () => {
@@ -312,7 +339,7 @@ export default function MasterResultClient() {
 
       const onTimeUpdate = () => {
         if (!isSelected()) return
-        const abs = elementTimeToAbsolute(label, el.currentTime, false)
+        const abs = elementTimeToTimeline(label, el.currentTime, false)
         if (Number.isFinite(abs) && abs >= PREVIEW_END) {
           pauseBoth()
           resetBothToPreviewStart()
@@ -355,7 +382,7 @@ export default function MasterResultClient() {
 
     const onTimeUpdate = () => {
       const source = selectedSourceRef.current
-      const abs = elementTimeToAbsolute(source, el.currentTime, true)
+      const abs = elementTimeToTimeline(source, el.currentTime, true)
 
       if (Number.isFinite(abs) && abs >= PREVIEW_END - MOBILE_FADE_OUT_SECONDS && abs < PREVIEW_END) {
         const remaining = PREVIEW_END - abs
@@ -418,7 +445,7 @@ export default function MasterResultClient() {
 
       isSwappingMobileSourceRef.current = true
       try {
-        if (el.src !== nextSrc) {
+        if (!audioElementHasSource(el, nextSrc)) {
           el.pause()
           el.src = nextSrc
           el.load()
@@ -486,7 +513,7 @@ export default function MasterResultClient() {
         return
       }
       el.pause()
-      if (el.src !== nextSrc) {
+      if (!audioElementHasSource(el, nextSrc)) {
         el.src = nextSrc
         el.load()
       }
@@ -521,7 +548,7 @@ export default function MasterResultClient() {
         originalAudioRef.current?.pause()
         const masteredEl = masteredAudioRef.current
         if (masteredEl) {
-          if (masteredEl.src !== playUrl) {
+          if (!audioElementHasSource(masteredEl, playUrl)) {
             masteredEl.src = playUrl
             masteredEl.load()
           }
@@ -538,7 +565,7 @@ export default function MasterResultClient() {
         return
       }
       masteredAudioRef.current?.pause()
-      selectedEl.load()
+      if (selectedEl.readyState === 0) selectedEl.load()
       await waitForReady(selectedEl)
       applyTimelineToElement(selectedEl, "original", sharedTimelineSecRef.current, false)
       setPlayProgress(progressPercentFromAbsolute(sharedTimelineSecRef.current))
