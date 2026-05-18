@@ -3,8 +3,6 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState, type RefObject } from "react"
-import HeroWaveBackdrop from "../HeroWaveBackdrop"
-import LandingHeroAtmosphere from "../LandingHeroAtmosphere"
 import MasteringEngineVisual from "../../master/processing/MasteringEngineVisual"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import MasterUploadCard from "./MasterUploadCard"
@@ -125,20 +123,12 @@ export default function MasterUploadHero({
         </motion.div>
 
         <motion.div
-          className="relative mx-auto flex w-full max-w-[14rem] justify-center overflow-hidden max-lg:order-2 max-lg:py-3 sm:max-w-[16rem] sm:max-lg:py-4 lg:sticky lg:top-20 lg:max-w-none lg:justify-end lg:overflow-visible lg:py-0"
+          className="relative mx-auto flex w-full max-w-full justify-center overflow-hidden max-lg:order-2 max-lg:mt-2 max-lg:min-h-[min(14rem,42vw)] max-lg:py-3 sm:max-lg:py-4 md:max-lg:min-h-[16rem] lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-end lg:py-0"
           initial={reduce ? false : { opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
         >
-          <div className="hero-orb-radial-mobile" aria-hidden />
-          <LandingHeroAtmosphere compact mobileGlowBoost />
-          <motion.div className="relative w-full max-w-[min(14rem,78vw)] overflow-hidden sm:max-w-[16rem] lg:max-w-[28rem] lg:overflow-visible">
-            <HeroWaveBackdrop heightClass="h-[32%] lg:h-[40%]" className="opacity-[0.14] lg:opacity-[0.2]" />
-            <MasteringEngineVisual
-              activeStep={engineStep}
-              className="relative z-[1] mx-auto w-[min(11.5rem,72vw)] max-w-[14rem] sm:w-[min(13rem,76vw)] sm:max-w-[16rem] md:w-[min(18rem,40vw)] md:max-w-[22rem] lg:w-[min(22rem,40vw)] lg:max-w-[26rem]"
-            />
-          </motion.div>
+          <MasteringEngineVisual activeStep={engineStep} />
         </motion.div>
       </motion.div>
     </section>
