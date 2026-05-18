@@ -146,7 +146,7 @@ export default function Landing() {
         />
 
         <motion.div
-          className="page-container landing-close-footer relative z-10 pt-14 md:pt-16 lg:pt-8"
+          className="page-container landing-close-footer relative z-10 pt-7 md:pt-16 lg:pt-8"
           initial={reduce ? false : { opacity: 0, y: 14 }}
           whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}

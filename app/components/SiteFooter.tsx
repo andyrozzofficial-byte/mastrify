@@ -85,6 +85,11 @@ export default function SiteFooter() {
   const pathname = usePathname()
   const onAnalyze = pathname === "/analyze"
   const onLanding = pathname === "/" || pathname === "/landing"
+  const footerTopClass = onAnalyze
+    ? "pt-7 sm:pt-8 lg:pt-[3.25rem]"
+    : onLanding
+      ? "pt-3 sm:pt-4 lg:pt-8"
+      : "pt-8 sm:pt-9 lg:pt-[3.25rem]"
   const year = new Date().getFullYear()
 
   return (
@@ -113,17 +118,13 @@ export default function SiteFooter() {
       />
 
       <motion.div
-        className={`footer-shell relative mx-auto w-full px-4 pb-[max(2.25rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 md:px-10 md:pt-14 md:pb-12 ${
-          onLanding ? "lg:pt-8" : "lg:pt-[3.25rem]"
-        } ${
-          onAnalyze ? "pt-8 sm:pt-9" : "pt-11 sm:pt-12"
-        }`}
+        className={`footer-shell relative mx-auto w-full px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 md:px-10 md:pt-14 md:pb-12 ${footerTopClass}`}
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="grid min-w-0 items-start gap-9 sm:gap-12 lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
+        <motion.div className="grid min-w-0 items-start gap-6 sm:gap-8 md:gap-12 lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
           {/* Brand */}
           <motion.div
             className="min-w-0 lg:col-span-3 xl:col-span-3"
@@ -135,7 +136,7 @@ export default function SiteFooter() {
             <Link href="/" className="inline-flex items-center">
               <span className="text-[17px] font-semibold tracking-[-0.02em] text-white/92">Mastrify</span>
             </Link>
-            <p className="mt-4 max-w-[16.5rem] text-[13px] leading-[1.65] text-muted lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
+            <p className="mt-3 max-w-[16.5rem] text-[13px] leading-[1.6] text-muted md:mt-4 lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
               Intelligent mastering for music that deserves its full emotional weight — release-ready, without the
               noise.
             </p>
@@ -143,7 +144,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="grid w-full max-w-[17.5rem] min-w-0 grid-cols-2 gap-x-7 gap-y-9 sm:gap-x-10 sm:gap-y-8 lg:col-span-3 lg:max-w-[15.5rem] lg:justify-self-center xl:col-span-3 xl:max-w-[16.5rem]"
+            className="grid w-full max-w-[17.5rem] min-w-0 grid-cols-2 gap-x-6 gap-y-5 sm:gap-x-8 sm:gap-y-6 md:gap-x-10 md:gap-y-8 lg:col-span-3 lg:max-w-[15.5rem] lg:justify-self-center xl:col-span-3 xl:max-w-[16.5rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -184,7 +185,7 @@ export default function SiteFooter() {
                 </p>
                 <PremiumButton
                   href="/master"
-                  className="mt-6 min-h-[46px] w-full px-7 text-[13px] min-[430px]:w-auto min-[430px]:min-w-[13rem] min-[430px]:px-8 lg:mt-7"
+                  className="mt-5 min-h-[46px] w-full px-7 text-[13px] min-[430px]:w-auto min-[430px]:min-w-[13rem] min-[430px]:px-8 lg:mt-7"
                 >
                   Start mastering
                 </PremiumButton>
@@ -195,7 +196,7 @@ export default function SiteFooter() {
 
         {/* Bottom metadata row */}
         <motion.div
-          className="mt-12 flex flex-col gap-6 border-t border-white/[0.07] pt-8 md:mt-14 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-9"
+          className="mt-8 flex flex-col gap-4 border-t border-white/[0.07] pt-6 md:mt-14 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-9"
           initial={reduce ? false : { opacity: 0 }}
           whileInView={reduce ? undefined : { opacity: 1 }}
           viewport={{ once: true }}
