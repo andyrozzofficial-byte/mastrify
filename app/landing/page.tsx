@@ -174,20 +174,18 @@ export default function Landing() {
             >
               <p className="trust-band-kicker">Seamless with your studio</p>
               <h3 className="trust-band-heading">Trusted by producers and artists worldwide</h3>
-              <div className="trust-daw-viewport" aria-label="Supported digital audio workstations">
-                <motion.ul className="trust-daw-grid">
+              <div className="trust-daw-row" aria-label="Supported digital audio workstations">
+                <motion.ul className="trust-daw-list">
                   {dawLogos.map((name, i) => (
                     <motion.li
                       key={name}
+                      className="trust-daw-item"
                       initial={reduce ? false : { opacity: 0, y: 6 }}
                       whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: 0.04 * i, ease: EASE }}
                     >
-                      <span className="trust-daw-card">
-                        <span className="trust-daw-mark" aria-hidden />
-                        <span className="trust-daw-label">{name}</span>
-                      </span>
+                      <span className="trust-daw-label">{name}</span>
                     </motion.li>
                   ))}
                 </motion.ul>

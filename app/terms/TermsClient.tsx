@@ -52,6 +52,34 @@ const SECTIONS = [
     ),
   },
   {
+    title: "Storage & availability",
+    body: (
+      <ul>
+        <li>
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
+          Exported masters and preview files may be stored temporarily or permanently depending on current platform
+          storage policies.
+        </li>
+        <li>
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
+          Signed playback and download links may expire after a certain period.
+        </li>
+        <li>
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
+          You are responsible for downloading and backing up exported masters after delivery.
+        </li>
+        <li>
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
+          We may remove inactive or expired files to maintain platform performance and storage capacity.
+        </li>
+        <li>
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
+          Mastrify does not guarantee permanent cloud storage unless we explicitly say so.
+        </li>
+      </ul>
+    ),
+  },
+  {
     title: "Provided “as is”",
     narrow: true,
     body: (

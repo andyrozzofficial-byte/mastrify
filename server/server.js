@@ -10,6 +10,7 @@ import { serializeMasterAnalysisForJson } from "./masterAnalysisPayload.js"
 import { serializeMasteringInsightsForJson } from "./masterInsightsPayload.js"
 import { MASTRIFY_LUFS_TRACE as LUFS_TRACE, MASTRIFY_PIPELINE_DEBUG as PIPELINE_DEBUG } from "./mastrifyDebug.js"
 import { persistMasterExport } from "./supabaseStorage.js"
+import { deliverMasterExportEmail } from "./masteredExportDelivery.js"
 import ffmpegPath from "ffmpeg-static"
 import ffprobeStatic from "ffprobe-static"
 
@@ -995,6 +996,7 @@ app.post("/master",
       const clarityPresence = body.clarityPresence
       const chainDebugMode = body.chainDebugMode ?? body.chainMode
       const chainDebugSweep = body.chainDebugSweep
+      const deliveryEmail = typeof body.deliveryEmail === "string" ? body.deliveryEmail.trim() : ""
 
       if (LUFS_TRACE) {
         console.log("[LUFS_TRACE] POST /master incoming (req.body after multer)", {
@@ -1137,6 +1139,12 @@ app.post("/master",
         masterFileName,
         railwayPlaybackUrl,
       })
+      const delivery = await deliverMasterExportEmail({
+        email: deliveryEmail,
+        objectKey: playback.objectKey,
+        playbackUrl: playback.afterUrl,
+        expiresAt: playback.expiresAt,
+      })
 
       const resPayload = {
         success: true,
@@ -1148,6 +1156,9 @@ app.post("/master",
         analysisBefore,
         analysisAfter,
         ...(masteringInsights ? { masteringInsights } : {}),
+      }
+      if (delivery.requested) {
+        resPayload.delivery = delivery
       }
       if (masterResult?.debugInfo) {
         resPayload.masterDebug = masterResult.debugInfo
@@ -1177,6 +1188,7 @@ app.post("/master",
           masterBytes: fs.existsSync(masterPath) ? fs.statSync(masterPath).size : 0,
           storage: playback.storage,
           objectKey: playback.objectKey,
+          deliveryRequested: delivery.requested,
         }
       }
       if (LUFS_TRACE) {

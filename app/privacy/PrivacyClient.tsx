@@ -36,8 +36,9 @@ const SECTIONS = [
     body: (
       <p>
         Uploads and generated masters may be stored temporarily to complete your session. Files can be automatically
-        deleted after a limited retention period. Do not rely on Mastrify as long-term storage — keep your own backups
-        of original mixes and final exports.
+        deleted after a limited retention period. Playback and download links may expire after a limited period for
+        security and storage management. Do not rely on Mastrify as long-term storage — keep your own backups of original
+        mixes and final exports.
       </p>
     ),
   },

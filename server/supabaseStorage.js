@@ -32,7 +32,7 @@ export function isStorageFallbackEnabled() {
   return envTruthy("MASTRIFY_STORAGE_FALLBACK")
 }
 
-function getStorageClient() {
+export function getSupabaseServiceClient() {
   if (!isSupabaseStorageConfigured()) {
     throw new Error("Supabase storage is not configured")
   }
@@ -66,9 +66,13 @@ export function safeUnlink(filePath) {
   }
 }
 
-function signedUrlTtlSec() {
+export function signedUrlTtlSec() {
   const n = Number(process.env.MASTRIFY_SIGNED_URL_TTL_SEC)
   return Number.isFinite(n) && n > 60 ? Math.floor(n) : DEFAULT_SIGNED_URL_TTL_SEC
+}
+
+export function signedUrlExpiresAt(from = new Date()) {
+  return new Date(from.getTime() + signedUrlTtlSec() * 1000).toISOString()
 }
 
 /**
@@ -78,7 +82,7 @@ export async function uploadMasterWav(localPath, objectKey) {
   const bucket = getMastersBucket()
   const key = masterObjectKey(objectKey)
   const body = fs.readFileSync(localPath)
-  const { error } = await getStorageClient().storage.from(bucket).upload(key, body, {
+  const { error } = await getSupabaseServiceClient().storage.from(bucket).upload(key, body, {
     contentType: "audio/wav",
     upsert: true,
     cacheControl: "3600",
@@ -96,7 +100,7 @@ export async function createMasterPlaybackSignedUrl(objectKey) {
   const bucket = getMastersBucket()
   const key = masterObjectKey(objectKey)
   const expiresIn = signedUrlTtlSec()
-  const { data, error } = await getStorageClient()
+  const { data, error } = await getSupabaseServiceClient()
     .storage.from(bucket)
     .createSignedUrl(key, expiresIn, { download: false })
   if (error || !data?.signedUrl) {
@@ -128,12 +132,15 @@ export async function persistMasterExport({
       fullUrl: railwayPlaybackUrl,
       storage: "railway",
       objectKey,
+      expiresAt: null,
+      signedUrlExpiresIn: null,
     }
   }
 
   try {
     await uploadMasterWav(localMasterPath, objectKey)
     const signedUrl = await createMasterPlaybackSignedUrl(objectKey)
+    const expiresAt = signedUrlExpiresAt()
     safeUnlink(localMasterPath)
     safeUnlink(localUploadPath)
     console.log("[storage] master persisted to Supabase", {
@@ -147,6 +154,8 @@ export async function persistMasterExport({
       fullUrl: signedUrl,
       storage: "supabase",
       objectKey,
+      expiresAt,
+      signedUrlExpiresIn: signedUrlTtlSec(),
     }
   } catch (err) {
     console.error("[storage] Supabase persist failed:", err?.message || err)
@@ -158,6 +167,8 @@ export async function persistMasterExport({
         fullUrl: railwayPlaybackUrl,
         storage: "railway-fallback",
         objectKey,
+        expiresAt: null,
+        signedUrlExpiresIn: null,
         storageError: err?.message || String(err),
       }
     }

@@ -28,6 +28,7 @@ type MasterSessionSnapshotV2 = {
   stereoEnhance: number
   lowEndControl: number
   clarityPresence: number
+  deliveryEmail: string
   masteredUrl: string
   masteredPreviewMp3Url: string
   fileName: string
@@ -56,6 +57,8 @@ type MasterSession = {
   setLowEndControl: (n: number) => void
   clarityPresence: number
   setClarityPresence: (n: number) => void
+  deliveryEmail: string
+  setDeliveryEmail: (email: string) => void
   resetSession: () => void
   /** True after first client storage hydrate attempt (for /master/settings gating). */
   sessionHydrated: boolean
@@ -106,6 +109,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const [stereoEnhance, setStereoEnhance] = useState(50)
   const [lowEndControl, setLowEndControl] = useState(50)
   const [clarityPresence, setClarityPresence] = useState(50)
+  const [deliveryEmail, setDeliveryEmail] = useState("")
   const [sessionHydrated, setSessionHydrated] = useState(false)
   const hydrateRan = useRef(false)
 
@@ -157,6 +161,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setStereoEnhance(50)
     setLowEndControl(50)
     setClarityPresence(50)
+    setDeliveryEmail("")
     clearMasterStorageKeys()
   }, [])
 
@@ -183,6 +188,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
         if (typeof s.clarityPresence === "number" && Number.isFinite(s.clarityPresence)) setClarityPresence(s.clarityPresence)
         if (typeof s.masteredUrl === "string") setMasteredUrl(s.masteredUrl)
         if (typeof s.masteredPreviewMp3Url === "string") setMasteredPreviewMp3Url(s.masteredPreviewMp3Url)
+        if (typeof s.deliveryEmail === "string") setDeliveryEmail(s.deliveryEmail)
       } else if (snap.v === 1) {
         const mastered = typeof snap.masteredUrl === "string" ? snap.masteredUrl : ""
         if (mastered) setMasteredUrl(mastered)
@@ -212,6 +218,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       stereoEnhance,
       lowEndControl,
       clarityPresence,
+      deliveryEmail,
       masteredUrl,
       masteredPreviewMp3Url,
       fileName: file?.name ?? "",
@@ -225,7 +232,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       targetLufs !== -14 ||
       stereoEnhance !== 50 ||
       lowEndControl !== 50 ||
-      clarityPresence !== 50
+      clarityPresence !== 50 ||
+      !!deliveryEmail
     if (!hasPayload) {
       try {
         sessionStorage.removeItem(MASTER_SESSION_STORAGE_KEY)
@@ -248,6 +256,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     stereoEnhance,
     lowEndControl,
     clarityPresence,
+    deliveryEmail,
     masteredUrl,
     masteredPreviewMp3Url,
     file,
@@ -277,6 +286,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       setLowEndControl,
       clarityPresence,
       setClarityPresence,
+      deliveryEmail,
+      setDeliveryEmail,
       resetSession,
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,
@@ -296,6 +307,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       stereoEnhance,
       lowEndControl,
       clarityPresence,
+      deliveryEmail,
       resetSession,
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,
