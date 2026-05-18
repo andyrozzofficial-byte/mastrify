@@ -49,7 +49,7 @@ export default function MasterUploadCard({
 
   return (
     <motion.div
-      className="relative w-full"
+      className="fluid-surface relative"
       initial={reduce ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.65, delay: 0.12, ease: EASE }}
@@ -69,7 +69,7 @@ export default function MasterUploadCard({
 
       <motion.div
         layout
-        className={`relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color,box-shadow] duration-500 ${
+        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color,box-shadow] duration-500 ${
           loaded
             ? "border-violet-400/22 shadow-[0_0_28px_rgba(99,102,241,0.1),0_28px_64px_rgba(0,0,0,0.48)]"
             : dragging
@@ -103,7 +103,7 @@ export default function MasterUploadCard({
           aria-hidden
         />
 
-        <div className="relative flex flex-col p-4 sm:p-6">
+        <div className="relative flex min-w-0 flex-col p-3.5 sm:p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={loaded ? "loaded" : dragging ? "drag" : "idle"}
@@ -111,7 +111,7 @@ export default function MasterUploadCard({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.35, ease: EASE }}
-              className={`relative overflow-hidden rounded-xl border border-dashed px-4 text-center transition-colors duration-300 sm:px-6 ${
+              className={`relative min-w-0 overflow-hidden rounded-xl border border-dashed px-3.5 text-center transition-colors duration-300 sm:px-6 ${
                 loaded ? "border-emerald-400/25 bg-emerald-950/[0.08] py-5 sm:py-7" : "border-white/[0.1] bg-black/[0.35] py-6 sm:py-8"
               }`}
             >
@@ -130,7 +130,7 @@ export default function MasterUploadCard({
                   <p className="mx-auto mt-1.5 max-w-[20rem] text-[12px] leading-relaxed text-white/64">
                     Continue below to choose your master settings.
                   </p>
-                  <p className="mx-auto mt-2 max-w-[18rem] truncate text-[12px] text-white/68">{file?.name}</p>
+                  <p className="mx-auto mt-2 max-w-full truncate px-1 text-[12px] text-white/68">{file?.name}</p>
                 </>
               ) : (
                 <>

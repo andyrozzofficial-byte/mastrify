@@ -34,9 +34,9 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: "/icon.png",
-    shortcut: "/icon.png",
-    apple: "/icon.png",
+    icon: "/brand-mark.svg",
+    shortcut: "/brand-mark.svg",
+    apple: "/brand-mark.svg",
   },
 }
 
@@ -46,9 +46,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="overflow-x-hidden">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col overflow-x-hidden bg-black text-white antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} site-overflow-guard flex min-h-screen flex-col bg-black text-white antialiased`}
       >
         <MasterSessionRootProvider>
           <SiteChrome>{children}</SiteChrome>

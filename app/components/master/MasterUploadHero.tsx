@@ -40,7 +40,7 @@ export default function MasterUploadHero({
   }, [reduce])
 
   return (
-    <section className="hero-section relative w-full overflow-visible">
+    <section className="hero-section relative w-full">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
@@ -49,7 +49,7 @@ export default function MasterUploadHero({
       />
 
       <motion.div
-        className="relative grid gap-6 max-lg:grid-cols-1 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
+        className="relative grid min-w-0 gap-6 max-lg:grid-cols-1 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-start lg:gap-14 xl:gap-16"
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
@@ -57,7 +57,7 @@ export default function MasterUploadHero({
         <motion.div className="flex min-w-0 flex-col max-lg:order-1">
           <span className="hero-eyebrow-pill sm:tracking-[0.22em]">Spatial mastering engine</span>
 
-          <h1 className="mt-3 text-[1.55rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
+          <h1 className="mt-3 text-[1.48rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white min-[430px]:text-[1.55rem] sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
             Release-ready masters
             <span className="mt-0.5 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent sm:mt-1">
               with musical depth
@@ -89,7 +89,7 @@ export default function MasterUploadHero({
 
           <MasterFlowStepRail phase="upload" className="mt-4 justify-start sm:mt-5 md:mt-8" />
 
-          <motion.div className="mt-4 w-full max-w-[29.5rem] sm:mt-5 lg:max-w-none">
+          <motion.div className="mt-4 w-full max-w-[29.5rem] min-w-0 sm:mt-5 lg:max-w-none">
             <MasterUploadCard
               file={file}
               fileInputRef={fileInputRef}
@@ -125,14 +125,14 @@ export default function MasterUploadHero({
         </motion.div>
 
         <motion.div
-          className="relative mx-auto flex w-full max-w-[14rem] justify-center overflow-visible max-lg:order-2 max-lg:py-3 sm:max-w-[16rem] sm:max-lg:py-4 lg:sticky lg:top-20 lg:max-w-none lg:justify-end lg:py-0"
+          className="relative mx-auto flex w-full max-w-[14rem] justify-center overflow-hidden max-lg:order-2 max-lg:py-3 sm:max-w-[16rem] sm:max-lg:py-4 lg:sticky lg:top-20 lg:max-w-none lg:justify-end lg:overflow-visible lg:py-0"
           initial={reduce ? false : { opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
         >
           <div className="hero-orb-radial-mobile" aria-hidden />
           <LandingHeroAtmosphere compact mobileGlowBoost />
-          <motion.div className="relative w-full max-w-[min(14rem,78vw)] overflow-visible sm:max-w-[16rem] lg:max-w-[28rem]">
+          <motion.div className="relative w-full max-w-[min(14rem,78vw)] overflow-hidden sm:max-w-[16rem] lg:max-w-[28rem] lg:overflow-visible">
             <HeroWaveBackdrop heightClass="h-[32%] lg:h-[40%]" className="opacity-[0.14] lg:opacity-[0.2]" />
             <MasteringEngineVisual
               activeStep={engineStep}

@@ -48,7 +48,7 @@ export default function AnalyzeUploadCard({
 
   return (
     <motion.div
-      className="relative w-full"
+      className="fluid-surface relative"
       initial={reduce ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.65, delay: 0.12, ease: EASE }}
@@ -67,7 +67,7 @@ export default function AnalyzeUploadCard({
       />
 
       <motion.div
-        className={`relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color,box-shadow] duration-300 ${
+        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color,box-shadow] duration-300 ${
           dragging
             ? "border-violet-400/30 shadow-[0_0_32px_rgba(139,92,246,0.12),0_28px_64px_rgba(0,0,0,0.5)]"
             : "border-white/[0.1] hover:border-white/[0.14] hover:shadow-[0_0_28px_rgba(99,102,241,0.08),0_28px_64px_rgba(0,0,0,0.48)]"
@@ -97,9 +97,9 @@ export default function AnalyzeUploadCard({
           aria-hidden
         />
 
-        <motion.div className="relative p-6 sm:p-7 md:p-8">
+        <motion.div className="relative min-w-0 p-4 sm:p-7 md:p-8">
           <motion.div
-            className={`relative overflow-hidden rounded-xl border border-dashed px-6 py-10 text-center transition-colors duration-300 sm:px-8 sm:py-12 ${
+            className={`relative min-w-0 overflow-hidden rounded-xl border border-dashed px-4 py-8 text-center transition-colors duration-300 sm:px-8 sm:py-12 ${
               dragging
                 ? "border-violet-400/35 bg-violet-950/[0.12]"
                 : "border-white/[0.1] bg-black/[0.35]"

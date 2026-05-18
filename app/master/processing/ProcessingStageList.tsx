@@ -19,7 +19,7 @@ export default function ProcessingStageList({ activeStep }: Props) {
   const perceptual = Math.min(100, ((activeStep + 0.38) / PROCESSING_STEPS.length) * 100)
 
   return (
-    <div className="w-full">
+    <div className="fluid-surface">
       <motion.div
         className="mb-6 h-[3px] w-full overflow-hidden rounded-full bg-white/[0.06]"
         initial={{ opacity: 0 }}
@@ -40,7 +40,7 @@ export default function ProcessingStageList({ activeStep }: Props) {
         </motion.div>
       </motion.div>
 
-      <ul className="flex flex-col gap-0">
+      <ul className="flex min-w-0 flex-col gap-0">
         {PROCESSING_STEPS.map((label, i) => {
           const done = i < activeStep
           const active = i === activeStep
@@ -49,7 +49,7 @@ export default function ProcessingStageList({ activeStep }: Props) {
           return (
             <motion.li
               key={label}
-              className={`relative flex min-h-[3.75rem] items-center gap-4 rounded-xl px-3 py-3.5 transition-colors md:min-h-[4rem] md:gap-4 md:px-4 md:py-4 ${
+              className={`relative flex min-h-[3.55rem] min-w-0 items-center gap-3 rounded-xl px-2.5 py-3 transition-colors sm:min-h-[3.75rem] sm:gap-4 sm:px-3 sm:py-3.5 md:min-h-[4rem] md:gap-4 md:px-4 md:py-4 ${
                 active
                   ? "bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                   : done

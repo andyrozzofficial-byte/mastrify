@@ -191,7 +191,7 @@ export default function MasterProcessingPage() {
       />
 
       <motion.header
-        className="relative z-20 flex shrink-0 items-center justify-center px-6 pt-8 md:pt-10"
+        className="relative z-20 flex w-full shrink-0 items-center justify-center px-4 pt-7 sm:px-6 sm:pt-8 md:pt-10"
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
@@ -201,9 +201,9 @@ export default function MasterProcessingPage() {
         </span>
       </motion.header>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[52rem] flex-1 flex-col items-center justify-center px-5 pb-10 pt-4 md:px-8 md:pb-14">
+      <div className="fluid-surface relative z-10 mx-auto flex max-w-[52rem] flex-1 flex-col items-center justify-center px-4 pb-10 pt-4 sm:px-5 md:px-8 md:pb-14">
         <motion.div
-          className="w-full max-w-xl text-center md:max-w-2xl"
+          className="w-full max-w-xl min-w-0 text-center md:max-w-2xl"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
@@ -211,7 +211,7 @@ export default function MasterProcessingPage() {
           <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-cyan-200/45 md:text-xs">
             Intelligent signal processing
           </p>
-          <h1 className="mt-4 text-[1.75rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:text-[2.15rem] md:text-[2.65rem] md:leading-[1.08]">
+          <h1 className="mt-4 text-[1.62rem] font-semibold leading-[1.13] tracking-[-0.03em] text-white min-[430px]:text-[1.75rem] sm:text-[2.15rem] md:text-[2.65rem] md:leading-[1.08]">
             Mastering your track
             <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
               with musical depth
@@ -224,7 +224,7 @@ export default function MasterProcessingPage() {
         </motion.div>
 
         <motion.div
-          className="relative mt-8 w-full min-h-[min(14rem,42vw)] md:mt-10 md:min-h-[16rem]"
+          className="relative mt-8 min-h-[min(14rem,42vw)] w-full max-w-full overflow-hidden md:mt-10 md:min-h-[16rem]"
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
@@ -234,7 +234,7 @@ export default function MasterProcessingPage() {
 
         {(audioUrl || file) && (
           <motion.div
-            className="relative mt-5 w-full min-h-[4.75rem] max-w-lg px-1 md:mt-6 md:min-h-[5rem] md:max-w-xl"
+            className="relative mt-5 min-h-[4.75rem] w-full max-w-lg overflow-hidden px-0.5 md:mt-6 md:min-h-[5rem] md:max-w-xl"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
@@ -250,7 +250,7 @@ export default function MasterProcessingPage() {
         )}
 
         <motion.div
-          className="relative mt-2 w-full max-w-md md:mt-4 md:max-w-lg"
+          className="relative mt-2 w-full max-w-md min-w-0 md:mt-4 md:max-w-lg"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
@@ -262,7 +262,7 @@ export default function MasterProcessingPage() {
             aria-hidden
           />
           <motion.div
-            className="relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:px-6 md:py-6"
+            className="fluid-surface relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-3.5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:px-4 sm:py-5 md:px-6 md:py-6"
           >
             <div
               className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,transparent_22%,transparent_100%)]"

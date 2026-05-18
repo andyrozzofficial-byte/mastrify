@@ -130,7 +130,7 @@ export default function CinematicWaveform({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-lg bg-gradient-to-b from-white/[0.035] to-black/[0.28] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.06] ${className}`}
+      className={`fluid-surface relative overflow-hidden rounded-lg bg-gradient-to-b from-white/[0.035] to-black/[0.28] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.06] ${className}`}
       onPointerMove={interactive ? handlePointer : undefined}
       onPointerDown={interactive ? handlePointer : undefined}
       onPointerLeave={interactive ? handleLeave : undefined}
@@ -164,7 +164,7 @@ export default function CinematicWaveform({
         variant={variant}
         reducedMotion={Boolean(reduceMotion)}
         height={height}
-        className="relative z-[1] w-full px-2 py-2 sm:px-3 sm:py-2.5"
+        className="relative z-[1] block w-full max-w-full px-2 py-2 sm:px-3 sm:py-2.5"
       />
       {loading && !hasPeaks ? (
         <div

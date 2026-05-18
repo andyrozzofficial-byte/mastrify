@@ -691,7 +691,7 @@ export default function MasterResultClient() {
   }
 
   return (
-    <motion.div className="mx-auto w-full max-w-[1080px] px-5 pb-3 pt-5 sm:px-6 md:px-10 md:pb-4 md:pt-6 lg:px-12">
+    <motion.div className="fluid-surface mx-auto max-w-[1080px] px-4 pb-3 pt-5 sm:px-6 md:px-10 md:pb-4 md:pt-6 lg:px-12">
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -746,12 +746,12 @@ export default function MasterResultClient() {
           </motion.div>
         ) : null}
         {trackMeta ? (
-          <div className="mx-auto mt-6 max-w-md px-2 text-center sm:mt-7">
-            <p className="text-[17px] font-semibold leading-snug tracking-[-0.02em] text-white/78 sm:text-[18px]">
+          <div className="mx-auto mt-6 w-full max-w-md min-w-0 px-2 text-center sm:mt-7">
+            <p className="break-words text-[17px] font-semibold leading-snug tracking-[-0.02em] text-white/78 sm:text-[18px]">
               {trackMeta.title}
             </p>
             {trackMeta.artist ? (
-              <p className="mt-1.5 text-[12px] font-medium leading-snug tracking-[0.01em] text-white/68 sm:text-[13px]">
+              <p className="mt-1.5 break-words text-[12px] font-medium leading-snug tracking-[0.01em] text-white/68 sm:text-[13px]">
                 {trackMeta.artist}
               </p>
             ) : null}
@@ -763,14 +763,14 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
-        className="mt-8 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.46),0_0_72px_rgba(124,58,237,0.09)] backdrop-blur-2xl md:mt-10 md:rounded-[1.35rem] md:p-8 lg:p-9"
+        className="fluid-surface mt-8 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.46),0_0_72px_rgba(124,58,237,0.09)] backdrop-blur-2xl sm:p-5 md:mt-10 md:rounded-[1.35rem] md:p-8 lg:p-9"
       >
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-stretch lg:gap-10 xl:gap-11">
           {/* Before / After metrics */}
           <div className="flex min-w-0 flex-col">
             <p className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/60">Sound profile</p>
             <p className="mt-1 text-[11px] leading-snug text-white/64">How your master feels — not just the numbers.</p>
-            <div className="mt-3 flex-1 overflow-hidden rounded-xl border border-white/[0.05] bg-black/[0.26] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+            <div className="fluid-surface mt-3 flex-1 overflow-hidden rounded-xl border border-white/[0.05] bg-black/[0.26] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
               <table className="w-full table-fixed border-collapse text-left text-[12px] md:text-[13px]">
                 <thead>
                   <tr className="border-b border-white/[0.045] bg-white/[0.02]">
@@ -805,7 +805,7 @@ export default function MasterResultClient() {
 
           {/* Preview + settings */}
           <div className="flex min-w-0 flex-col gap-4 lg:gap-4">
-            <div className="card-pad-mobile flex flex-1 flex-col rounded-xl border border-white/[0.055] bg-black/[0.3] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] md:p-5">
+            <div className="fluid-surface card-pad-mobile flex flex-1 flex-col rounded-xl border border-white/[0.055] bg-black/[0.3] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] md:p-5">
               <p className="text-center text-[9px] font-semibold uppercase tracking-[0.24em] text-white/60">Mastering preview</p>
 
               <div className="mt-3 grid grid-cols-2 gap-1.5 sm:gap-2">
@@ -921,19 +921,19 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1 }}
-        className="mx-auto mt-5 flex w-full max-w-[28rem] flex-col gap-3 sm:mt-6 sm:flex-row sm:justify-center sm:gap-4"
+        className="mx-auto mt-5 flex w-full max-w-[28rem] flex-col gap-3 px-0 sm:mt-6 sm:flex-row sm:justify-center sm:gap-4"
       >
         {!deliverySent ? (
           <button
             type="button"
             onClick={handlePayment}
-            className="inline-flex min-h-[54px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-9 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99]"
+            className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99] sm:w-auto sm:px-9"
           >
             Pay $9 &amp; download
           </button>
         ) : (
           <div
-            className="inline-flex min-h-[54px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-9 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99]"
+            className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99] sm:w-auto sm:px-9"
           >
             Check your inbox
           </div>
@@ -941,7 +941,7 @@ export default function MasterResultClient() {
         <Link
           href="/master"
           onClick={() => resetSession()}
-          className="inline-flex min-h-[54px] flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-8 text-[14px] font-semibold text-white/82 transition-all duration-200 hover:border-white/[0.11] hover:bg-white/[0.055] hover:text-white/92 active:scale-[0.99]"
+          className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-7 text-[14px] font-semibold text-white/82 transition-all duration-200 hover:border-white/[0.11] hover:bg-white/[0.055] hover:text-white/92 active:scale-[0.99] sm:w-auto sm:px-8"
         >
           New master
         </Link>

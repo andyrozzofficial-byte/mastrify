@@ -17,13 +17,13 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
   const minimal = isMinimalRoute(pathname)
 
   if (minimal) {
-    return <main className="flex min-h-[100dvh] w-full flex-1 flex-col">{children}</main>
+    return <main className="site-overflow-guard flex min-h-[100dvh] flex-1 flex-col">{children}</main>
   }
 
   return (
     <>
       <SiteHeader />
-      <main className="flex w-full flex-1 flex-col">{children}</main>
+      <main className="site-overflow-guard flex flex-1 flex-col">{children}</main>
       <SiteFooter />
     </>
   )
