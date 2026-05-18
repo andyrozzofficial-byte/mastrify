@@ -191,7 +191,7 @@ export default function MasterProcessingPage() {
         </motion.div>
 
         <motion.div
-          className="relative mt-8 w-full md:mt-10"
+          className="relative mt-8 w-full min-h-[min(14rem,42vw)] md:mt-10 md:min-h-[16rem]"
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
@@ -201,7 +201,7 @@ export default function MasterProcessingPage() {
 
         {(audioUrl || file) && (
           <motion.div
-            className="relative mt-5 w-full max-w-lg px-1 md:mt-6 md:max-w-xl"
+            className="relative mt-5 w-full min-h-[4.75rem] max-w-lg px-1 md:mt-6 md:min-h-[5rem] md:max-w-xl"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
@@ -230,7 +230,6 @@ export default function MasterProcessingPage() {
           />
           <motion.div
             className="relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:px-6 md:py-6"
-            layout
           >
             <div
               className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,transparent_22%,transparent_100%)]"

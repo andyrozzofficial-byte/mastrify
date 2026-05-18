@@ -3,6 +3,16 @@
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
 import { AnimatePresence, motion } from "framer-motion"
+import {
+  PREVIEW_DURATION,
+  PREVIEW_END,
+  PREVIEW_START,
+  MOBILE_FADE_OUT_SECONDS,
+  absoluteToElementTime,
+  elementTimeToAbsolute,
+  progressPercentFromAbsolute,
+  type PreviewSource,
+} from "../../lib/audioPreviewTimeline"
 import { PUBLIC_BACKEND_API_BASE } from "../../lib/publicBackendUrl"
 
 type Step = "upload" | "analyzing" | "done"
@@ -14,7 +24,6 @@ export default function FlowPage() {
   const sleep = (ms: number) => new Promise(res => setTimeout(res, ms))
   const [mounted, setMounted] = useState(false)
   const [isMobileClient, setIsMobileClient] = useState(false)
-  const [mobileAudioKey, setMobileAudioKey] = useState(0)
 
   useEffect(() => {
     setMounted(true)
@@ -48,6 +57,8 @@ export default function FlowPage() {
   const [playProgress, setPlayProgress] = useState(0)
 
   const selectedSourceRef = useRef<"original" | "mastered">("mastered")
+  const sharedTimelineSecRef = useRef(PREVIEW_START)
+  const isSwappingMobileSourceRef = useRef(false)
   /** Desktop only: ignore stacked Play taps until the current play() settles */
   const isStartingPlaybackRef = useRef(false)
 
@@ -72,10 +83,6 @@ export default function FlowPage() {
   const [displayText, setDisplayText] = useState("")
  
 
-  const PREVIEW_START = 60
-  const PREVIEW_DURATION = 30
-  const PREVIEW_END = PREVIEW_START + PREVIEW_DURATION
-
   const AI_STATUS = [
     "Initializing mastering engine",
     "Balancing low-end",
@@ -85,27 +92,45 @@ export default function FlowPage() {
     "Finalizing master",
   ]
 
-  const safePreviewTimeForEl = (el: HTMLAudioElement | null) => {
-    const dur = el?.duration
-    if (el && Number.isFinite(dur) && (dur as number) > 0) {
-      return Math.min(PREVIEW_START, Math.max(0, (dur as number) - 0.1))
+  const applyTimelineToElement = (
+    el: HTMLAudioElement | null,
+    source: PreviewSource,
+    absoluteSec: number,
+    isMobilePlayback: boolean
+  ) => {
+    if (!el) return
+    try {
+      el.currentTime = absoluteToElementTime(source, absoluteSec, {
+        duration: el.duration,
+        isMobile: isMobilePlayback,
+      })
+    } catch {
+      /* ignore */
     }
-    return PREVIEW_START
+  }
+
+  const syncDesktopElementsToTimeline = (absoluteSec: number) => {
+    applyTimelineToElement(originalAudioRef.current, "original", absoluteSec, false)
+    applyTimelineToElement(masteredAudioRef.current, "mastered", absoluteSec, false)
+  }
+
+  const captureTimelineFromActive = (source: PreviewSource) => {
+    if (isMobileClient) {
+      const el = mobileAudioRef.current
+      if (!el) return sharedTimelineSecRef.current
+      return elementTimeToAbsolute(source, el.currentTime, true)
+    }
+    const el =
+      source === "mastered" ? masteredAudioRef.current : originalAudioRef.current
+    if (!el) return sharedTimelineSecRef.current
+    return elementTimeToAbsolute(source, el.currentTime, false)
   }
 
   const resetBothToPreviewStart = () => {
-    const a = originalAudioRef.current
-    const b = masteredAudioRef.current
-    if (a) {
-      try {
-        a.currentTime = safePreviewTimeForEl(a)
-      } catch {}
-    }
-    if (b) {
-      try {
-        b.currentTime = safePreviewTimeForEl(b)
-      } catch {}
-    }
+    sharedTimelineSecRef.current = PREVIEW_START
+    syncDesktopElementsToTimeline(PREVIEW_START)
+    const mobile = mobileAudioRef.current
+    if (mobile) applyTimelineToElement(mobile, selectedSourceRef.current, PREVIEW_START, true)
   }
 
   const pauseBoth = () => {
@@ -138,9 +163,6 @@ export default function FlowPage() {
   const masteredMobilePreviewUrl = masteredPreviewMp3Url || ""
   const mobileSelectedUrl =
     selectedSource === "mastered" ? masteredMobilePreviewUrl : audioUrl
-
-  const MOBILE_MASTERED_DURATION = 30
-  const MOBILE_FADE_OUT_SECONDS = 3
 
   // ---------------- FILE ----------------
   const handleFile = (e: any) => {
@@ -250,27 +272,22 @@ setSelectedSource("mastered")
       const isSelected = () => selectedSourceRef.current === label
 
       const onReady = () => {
-        // Avoid seeking the actively playing track on repeated canplay events (breaks play()/causes AbortError)
         if (isSelected() && !el.paused) return
-        try {
-          el.currentTime = safePreviewTimeForEl(el)
-        } catch {}
+        applyTimelineToElement(el, label, sharedTimelineSecRef.current, false)
       }
 
       const onTimeUpdate = () => {
         if (!isSelected()) return
-
-        const t = el.currentTime
-        if (Number.isFinite(t) && t >= PREVIEW_END) {
+        const abs = elementTimeToAbsolute(label, el.currentTime, false)
+        if (Number.isFinite(abs) && abs >= PREVIEW_END) {
           pauseBoth()
           resetBothToPreviewStart()
           setIsPlaying(false)
           setPlayProgress(0)
           return
         }
-
-        const p = ((t - PREVIEW_START) / PREVIEW_DURATION) * 100
-        setPlayProgress(Math.max(0, Math.min(100, p)))
+        sharedTimelineSecRef.current = abs
+        setPlayProgress(progressPercentFromAbsolute(abs))
       }
 
       el.addEventListener("loadedmetadata", onReady)
@@ -299,42 +316,34 @@ setSelectedSource("mastered")
     if (!el) return
 
     const onReady = () => {
+      if (isSwappingMobileSourceRef.current) return
       el.volume = 1
-      try {
-        // ORIGINAL: 60–90 window. MASTERED mp3 preview is pre-cut to 30s, start at 0.
-        el.currentTime = selectedSource === "mastered" ? 0 : PREVIEW_START
-      } catch {}
+      applyTimelineToElement(el, selectedSourceRef.current, sharedTimelineSecRef.current, true)
     }
 
     const onTimeUpdate = () => {
-      const t = el.currentTime
-      const isMastered = selectedSource === "mastered"
-      const end = isMastered ? MOBILE_MASTERED_DURATION : PREVIEW_END
-      const start = isMastered ? 0 : PREVIEW_START
-      const duration = isMastered ? MOBILE_MASTERED_DURATION : PREVIEW_DURATION
+      const source = selectedSourceRef.current
+      const abs = elementTimeToAbsolute(source, el.currentTime, true)
 
-      // 30s fade-out (last 3 seconds) — keep behavior consistent
-      if (Number.isFinite(t) && t >= end - MOBILE_FADE_OUT_SECONDS && t < end) {
-        const remaining = end - t
-        const v = Math.max(0, Math.min(1, remaining / MOBILE_FADE_OUT_SECONDS))
-        el.volume = v
+      if (Number.isFinite(abs) && abs >= PREVIEW_END - MOBILE_FADE_OUT_SECONDS && abs < PREVIEW_END) {
+        const remaining = PREVIEW_END - abs
+        el.volume = Math.max(0, Math.min(1, remaining / MOBILE_FADE_OUT_SECONDS))
       } else {
         el.volume = 1
       }
 
-      if (Number.isFinite(t) && t >= end) {
+      if (Number.isFinite(abs) && abs >= PREVIEW_END) {
         el.pause()
-        try {
-          el.currentTime = start
-        } catch {}
+        sharedTimelineSecRef.current = PREVIEW_START
+        applyTimelineToElement(el, source, PREVIEW_START, true)
         el.volume = 1
         setIsPlaying(false)
         setPlayProgress(0)
         return
       }
 
-      const p = ((t - start) / duration) * 100
-      setPlayProgress(Math.max(0, Math.min(100, p)))
+      sharedTimelineSecRef.current = abs
+      setPlayProgress(progressPercentFromAbsolute(abs))
     }
 
     el.addEventListener("loadedmetadata", onReady)
@@ -345,7 +354,7 @@ setSelectedSource("mastered")
       el.removeEventListener("canplay", onReady)
       el.removeEventListener("timeupdate", onTimeUpdate)
     }
-  }, [isMobileClient, selectedSource, mobileAudioKey])
+  }, [isMobileClient, selectedSource, mobileSelectedUrl])
 
   useEffect(() => {
   if (!aiText) return
@@ -402,16 +411,64 @@ const handlePayment = () => {
   if (step === "done") setSelectedSource("mastered")
 }, [masteredUrl, step])
 
-  const selectSource = (next: "original" | "mastered") => {
+  const selectSource = async (next: "original" | "mastered") => {
     if (next === "mastered" && !masteredUrl) return
     if (next === "original" && !audioUrl) return
     if (next === selectedSource) return
 
-    pauseAll()
-    setPlayProgress(0)
-    if (isMobileClient) setMobileAudioKey((k) => k + 1)
+    const wasPlaying = isMobileClient
+      ? !mobileAudioRef.current?.paused
+      : !(selectedSource === "mastered"
+          ? masteredAudioRef.current
+          : originalAudioRef.current)?.paused
 
+    const abs = captureTimelineFromActive(selectedSource)
+    sharedTimelineSecRef.current = abs
+    setPlayProgress(progressPercentFromAbsolute(abs))
+
+    if (isMobileClient) {
+      const el = mobileAudioRef.current
+      const nextSrc = next === "mastered" ? masteredMobilePreviewUrl : audioUrl
+      pauseAll()
+      setSelectedSource(next)
+      if (!el || !nextSrc) return
+      isSwappingMobileSourceRef.current = true
+      try {
+        if (el.src !== nextSrc) {
+          el.pause()
+          el.src = nextSrc
+          el.load()
+          await waitForReady(el)
+        }
+        applyTimelineToElement(el, next, abs, true)
+        if (wasPlaying) {
+          try {
+            await el.play()
+            setIsPlaying(true)
+          } catch {
+            setIsPlaying(false)
+          }
+        }
+      } finally {
+        isSwappingMobileSourceRef.current = false
+      }
+      return
+    }
+
+    pauseAll()
+    syncDesktopElementsToTimeline(abs)
     setSelectedSource(next)
+    if (wasPlaying) {
+      const playEl = next === "mastered" ? masteredAudioRef.current : originalAudioRef.current
+      if (playEl) {
+        try {
+          await playEl.play()
+          setIsPlaying(true)
+        } catch {
+          setIsPlaying(false)
+        }
+      }
+    }
   }
 
   const waitForReady = (el: HTMLAudioElement) => {
@@ -455,14 +512,9 @@ const handlePayment = () => {
       if (el.src !== nextSrc) el.src = nextSrc
       el.load()
       await waitForReady(el)
-      // IMPORTANT: do not use selectedSourceRef here (can be stale between taps)
-      const isMastered = selectedSource === "mastered"
-      try {
-        el.currentTime = isMastered ? 0 : PREVIEW_START
-      } catch {}
+      applyTimelineToElement(el, selectedSource, sharedTimelineSecRef.current, true)
       el.volume = 1
-
-      setPlayProgress(0)
+      setPlayProgress(progressPercentFromAbsolute(sharedTimelineSecRef.current))
       try {
         await el.play()
         setIsPlaying(true)
@@ -494,10 +546,8 @@ const handlePayment = () => {
             masteredEl.load()
           }
           await waitForReady(masteredEl)
-          try {
-            masteredEl.currentTime = safePreviewTimeForEl(masteredEl)
-          } catch {}
-          setPlayProgress(0)
+          applyTimelineToElement(masteredEl, "mastered", sharedTimelineSecRef.current, false)
+          setPlayProgress(progressPercentFromAbsolute(sharedTimelineSecRef.current))
           try {
             await masteredEl.play()
             setIsPlaying(true)
@@ -512,10 +562,8 @@ const handlePayment = () => {
       masteredAudioRef.current?.pause()
       selectedEl.load()
       await waitForReady(selectedEl)
-      try {
-        selectedEl.currentTime = safePreviewTimeForEl(selectedEl)
-      } catch {}
-      setPlayProgress(0)
+      applyTimelineToElement(selectedEl, "original", sharedTimelineSecRef.current, false)
+      setPlayProgress(progressPercentFromAbsolute(sharedTimelineSecRef.current))
       try {
         await selectedEl.play()
         setIsPlaying(true)
@@ -672,8 +720,9 @@ disabled:opacity-40 disabled:cursor-not-allowed"
             transition={{ duration: 0.35, ease: "easeOut" }}
             className="space-y-4"
           >
-            <p className="text-sm text-white/75 font-mono tracking-tight">
-  {displayText}<span className="animate-pulse text-purple-200">|</span>
+            <p className="min-h-[1.35rem] text-sm text-white/75 font-mono tracking-tight">
+  {displayText || "\u00a0"}
+  <span className="animate-pulse text-purple-200">|</span>
 </p>
 
             <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
@@ -810,7 +859,7 @@ hover:brightness-110 transition-all duration-300"
     onEnded={() => {
       pauseBoth()
       const el = originalAudioRef.current
-      if (el) el.currentTime = safePreviewTimeForEl(el)
+      if (el) applyTimelineToElement(el, "original", PREVIEW_START, false)
       setPlayProgress(0)
     }}
   />
@@ -823,7 +872,7 @@ hover:brightness-110 transition-all duration-300"
     onEnded={() => {
       pauseBoth()
       const el = masteredAudioRef.current
-      if (el) el.currentTime = safePreviewTimeForEl(el)
+      if (el) applyTimelineToElement(el, "mastered", PREVIEW_START, false)
       setPlayProgress(0)
     }}
   />
@@ -831,7 +880,6 @@ hover:brightness-110 transition-all duration-300"
   {/* Mobile-only preview audio (single element, src swapped on play) */}
   <audio
     ref={mobileAudioRef}
-    key={mobileAudioKey}
     src={isMobileClient ? mobileSelectedUrl : ""}
     playsInline
     preload="auto"

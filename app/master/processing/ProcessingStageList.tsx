@@ -49,8 +49,7 @@ export default function ProcessingStageList({ activeStep }: Props) {
           return (
             <motion.li
               key={label}
-              layout
-              className={`relative flex items-center gap-4 rounded-xl px-3 py-3.5 transition-colors md:gap-4 md:px-4 md:py-4 ${
+              className={`relative flex min-h-[3.75rem] items-center gap-4 rounded-xl px-3 py-3.5 transition-colors md:min-h-[4rem] md:gap-4 md:px-4 md:py-4 ${
                 active
                   ? "bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                   : done
@@ -64,13 +63,12 @@ export default function ProcessingStageList({ activeStep }: Props) {
               }
               transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
             >
-              {active && (
-                <motion.div
+              {active ? (
+                <div
                   className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r from-violet-500/[0.07] via-transparent to-cyan-500/[0.04]"
-                  layoutId="stageGlow"
-                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  aria-hidden
                 />
-              )}
+              ) : null}
 
               <span className="relative z-[1] flex h-7 w-7 shrink-0 items-center justify-center md:h-8 md:w-8">
                 {done ? (
@@ -118,15 +116,14 @@ export default function ProcessingStageList({ activeStep }: Props) {
                 >
                   {label}
                 </span>
-                {active && (
-                  <motion.span
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-0.5 block text-[11px] font-normal tracking-wide text-violet-200/45 md:text-xs"
-                  >
-                    Processing with musical intelligence…
-                  </motion.span>
-                )}
+                <span
+                  className={`mt-0.5 block min-h-[1.125rem] text-[11px] font-normal tracking-wide transition-opacity duration-300 md:min-h-[1.25rem] md:text-xs ${
+                    active ? "text-violet-200/45 opacity-100" : "pointer-events-none opacity-0"
+                  }`}
+                  aria-hidden={!active}
+                >
+                  Processing with musical intelligence…
+                </span>
               </motion.div>
             </motion.li>
           )
