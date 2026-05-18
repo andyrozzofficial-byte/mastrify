@@ -876,7 +876,7 @@ export default function MasterResultClient() {
           </button>
         ) : (
           <a
-            href={masteredWavUrl ? `${masteredWavUrl}?download=1` : "#"}
+            href={masteredWavUrl || "#"}
             download="master.wav"
             className="inline-flex min-h-[54px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-9 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99]"
           >

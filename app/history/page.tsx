@@ -145,7 +145,7 @@ export default function HistoryPage() {
                   <div className="flex justify-end gap-2">
                     {e.kind === "master" && e.masteredUrl && (
                       <a
-                        href={`${e.masteredUrl}?download=1`}
+                        href={e.masteredUrl}
                         download
                         className="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-white/90 transition hover:border-cyan-400/35 hover:bg-white/[0.1]"
                       >

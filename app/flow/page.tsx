@@ -934,7 +934,7 @@ transition-all duration-300"
 {/* ⚡ DOWNLOAD KNAPP (visas efter betalning) */}
 {isPaid && (
   <a
-  href={masteredUrl ? `${masteredUrl}?download=1` : "#"}
+  href={masteredUrl || "#"}
   download="master.wav"
   className="block w-full py-5 mt-4 rounded-xl text-lg font-bold text-white text-center cursor-pointer
 bg-gradient-to-r from-purple-500 to-blue-500
