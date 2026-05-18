@@ -84,6 +84,7 @@ export default function SiteFooter() {
   const reduce = useReducedMotion()
   const pathname = usePathname()
   const onAnalyze = pathname === "/analyze"
+  const onLanding = pathname === "/" || pathname === "/landing"
   const year = new Date().getFullYear()
 
   return (
@@ -112,7 +113,9 @@ export default function SiteFooter() {
       />
 
       <motion.div
-        className={`footer-shell relative mx-auto w-full px-4 pb-[max(2.25rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 md:px-10 md:pt-14 md:pb-12 lg:pt-[3.25rem] ${
+        className={`footer-shell relative mx-auto w-full px-4 pb-[max(2.25rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 md:px-10 md:pt-14 md:pb-12 ${
+          onLanding ? "lg:pt-8" : "lg:pt-[3.25rem]"
+        } ${
           onAnalyze ? "pt-8 sm:pt-9" : "pt-11 sm:pt-12"
         }`}
         initial={reduce ? false : { opacity: 0, y: 14 }}

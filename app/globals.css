@@ -574,7 +574,7 @@ body {
   }
   @media (min-width: 1024px) {
     .landing-close-footer {
-      padding-bottom: 1.5rem;
+      padding-bottom: 0.25rem;
     }
   }
   .footer-shell {
