@@ -1206,7 +1206,7 @@ app.post("/master",
             : {}),
           rawAfterLufsPreSerialize: rawAfter?.lufs ?? null,
           serializedAnalysisAfterLufs: analysisAfter?.lufs ?? null,
-          hint: "Set NEXT_PUBLIC_MASTRIFY_API_URL to this server's public URL if stamp does not match deploy.",
+          hint: "Production frontend now pins the live Railway backend. Use local env overrides only for local development.",
         }
         console.log(
           "[LUFS_TRACE] AUTHORITY_RESPONSE_PAYLOAD lufsTrace.serializedAnalysisAfterLufs=",
