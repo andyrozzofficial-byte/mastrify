@@ -1,25 +1,52 @@
+"use client"
+
+import { motion, useReducedMotion } from "framer-motion"
+import { ANALYZE_EASE } from "./analyzeMotion"
+
 type Props = {
   label: string
   vibe: string
   feel: string
   technical: string
-  vibeClassName?: string
+  index?: number
 }
 
-/** Feel-first metric cell for analyze results — technical value secondary */
-export default function MetricInsightTile({ label, vibe, feel, technical, vibeClassName }: Props) {
+/** Feel-first metric cell — emotional descriptor dominates, technical value de-emphasized */
+export default function MetricInsightTile({ label, vibe, feel, technical, index = 0 }: Props) {
+  const reduce = useReducedMotion()
+
   return (
-    <div className="card-pad-mobile flex min-h-[7.25rem] flex-col justify-between rounded-xl border border-white/[0.07] bg-black/[0.38] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-md sm:min-h-[7.5rem] md:rounded-2xl md:px-4 md:py-4">
-      <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-white/60">{label}</div>
-      <div className="mt-2">
-        <p
-          className={`text-[1.15rem] font-semibold leading-tight tracking-tight text-white/94 sm:text-[1.2rem] ${vibeClassName ?? ""}`}
-        >
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 10 }}
+      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-24px" }}
+      transition={{ duration: 0.55, delay: Math.min(index * 0.04, 0.28), ease: ANALYZE_EASE }}
+      whileHover={
+        reduce
+          ? undefined
+          : {
+              y: -2,
+              transition: { duration: 0.25, ease: ANALYZE_EASE },
+            }
+      }
+      className="card-pad-mobile group relative flex min-h-[7.5rem] flex-col rounded-xl border border-white/[0.07] bg-black/[0.38] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-md transition-[border-color,box-shadow] duration-300 hover:border-white/[0.1] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_40px_rgba(0,0,0,0.42),0_0_24px_rgba(99,102,241,0.06)] sm:min-h-[7.75rem] md:rounded-2xl md:px-4 md:py-4"
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-300/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        aria-hidden
+      />
+      <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-white/50">{label}</p>
+      <div className="mt-3 flex flex-1 flex-col">
+        <p className="bg-gradient-to-br from-white via-white to-violet-100/85 bg-clip-text text-[1.35rem] font-semibold leading-[1.1] tracking-tight text-transparent sm:text-[1.4rem] md:text-[1.45rem]">
           {vibe}
         </p>
-        <p className="mt-1.5 text-[11px] font-medium leading-snug text-white/72 sm:text-[12px]">{feel}</p>
+        <p className="mt-2.5 text-[11px] font-normal leading-relaxed text-white/74 sm:text-[12px] md:leading-[1.55]">
+          {feel}
+        </p>
       </div>
-      <p className="mt-2 text-[10px] font-medium tabular-nums tracking-wide text-white/45">{technical}</p>
-    </div>
+      <p className="mt-3 border-t border-white/[0.05] pt-2 text-[9px] font-medium uppercase tracking-[0.14em] text-white/38 tabular-nums">
+        {technical}
+      </p>
+    </motion.div>
   )
 }

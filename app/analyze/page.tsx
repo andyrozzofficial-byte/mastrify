@@ -13,7 +13,9 @@ import AnalyzeProcessingView from "../components/analyze/AnalyzeProcessingView"
 import AnalyzeStepRail from "../components/analyze/AnalyzeStepRail"
 import AnalyzeUploadHero from "../components/analyze/AnalyzeUploadHero"
 import CinematicBackground from "../components/CinematicBackground"
+import AnalyzeResultsCta from "../components/analyze/AnalyzeResultsCta"
 import MetricInsightTile from "../components/analyze/MetricInsightTile"
+import { ANALYZE_EASE } from "../components/analyze/analyzeMotion"
 import ScoreRing from "../components/ScoreRing"
 import {
   brightnessPresentation,
@@ -386,36 +388,33 @@ export default function AnalyzePage() {
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_56px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:rounded-[1.25rem] md:p-6"
+            transition={{ duration: 0.7, delay: 0.18, ease: ANALYZE_EASE }}
+            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_56px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:rounded-[1.25rem] md:p-7 lg:p-8"
           >
-            <div className="flex flex-col items-stretch gap-5 md:flex-row md:items-center md:justify-between md:gap-8">
+            <div
+              className="pointer-events-none absolute right-0 top-1/2 hidden h-[min(320px,70%)] w-[min(380px,45%)] -translate-y-1/2 rounded-full bg-violet-600/[0.07] blur-[90px] md:block"
+              aria-hidden
+            />
+            <div className="relative grid grid-cols-1 items-center gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:gap-10 lg:gap-14">
               <motion.div
-                className="order-first flex shrink-0 justify-center py-1 md:order-last md:py-0"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.75, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                className="order-2 min-w-0 text-center md:order-1 md:max-w-[34rem] md:pr-2 md:text-left lg:max-w-[36rem]"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.65, delay: 0.24, ease: ANALYZE_EASE }}
               >
-                <ScoreRing
-                  value={result.mixQuality != null ? result.mixQuality : 0}
-                  size={188}
-                  variant="percent"
-                  prominent
-                />
-              </motion.div>
-
-              <div className="order-last min-w-0 flex-1 text-center md:order-first md:max-w-xl md:text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/64">Release readiness</p>
                 <h2 className="mt-1.5 text-xl font-bold leading-tight tracking-tight text-white md:text-2xl lg:text-[1.65rem]">
                   {readinessHeadline(result.mixQuality)}
                 </h2>
 
-                <div className="mx-auto mt-3 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/[0.07] md:mx-0">
-                  <div
+                <motion.div className="mx-auto mt-3 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-white/[0.07] md:mx-0">
+                  <motion.div
                     className="h-full rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-400 to-violet-500 shadow-[0_0_12px_rgba(244,114,182,0.15)]"
-                    style={{ width: `${Math.min(100, Math.max(0, result.mixQuality ?? 0))}%` }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(100, Math.max(0, result.mixQuality ?? 0))}%` }}
+                    transition={{ duration: 0.9, delay: 0.35, ease: ANALYZE_EASE }}
                   />
-                </div>
+                </motion.div>
 
                 <p className="mx-auto mt-2.5 max-w-md text-[12px] leading-relaxed text-white/74 md:mx-0 md:text-[13px]">
                   {readinessSubcopy(result.mixQuality, verdict)}
@@ -458,12 +457,41 @@ export default function AnalyzePage() {
                     Download PDF
                   </button>
                 </div>
-              </div>
+              </motion.div>
+
+              <motion.div
+                className="order-1 flex shrink-0 justify-center py-1 md:order-2 md:justify-end md:pl-4 lg:pl-6"
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.75, delay: 0.3, ease: ANALYZE_EASE }}
+              >
+                <div className="relative flex h-[12.25rem] w-[12.25rem] items-center justify-center md:h-[13.25rem] md:w-[13.25rem] lg:h-[14rem] lg:w-[14rem]">
+                  <ScoreRing
+                    value={result.mixQuality != null ? result.mixQuality : 0}
+                    size={188}
+                    variant="percent"
+                    prominent
+                    className="md:hidden"
+                  />
+                  <ScoreRing
+                    value={result.mixQuality != null ? result.mixQuality : 0}
+                    size={210}
+                    variant="percent"
+                    prominent
+                    className="hidden md:flex"
+                  />
+                </div>
+              </motion.div>
             </div>
           </motion.div>
-
           {/* Metrics */}
-          <section aria-labelledby="mix-metrics-heading">
+          <motion.section
+            aria-labelledby="mix-metrics-heading"
+            initial={reduce ? false : { opacity: 0, y: 10 }}
+            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.65, delay: 0.08, ease: ANALYZE_EASE }}
+          >
             <h3 id="mix-metrics-heading" className="sr-only">
               Mix metrics
             </h3>
@@ -480,18 +508,19 @@ export default function AnalyzePage() {
                   { label: "Clarity", ...clarityPresentation(result) },
                   { label: "Highs", ...highsPresentation(brightness) },
                 ]
-                return tiles.map((tile) => (
+                return tiles.map((tile, index) => (
                   <MetricInsightTile
                     key={tile.label}
                     label={tile.label}
                     vibe={tile.vibe}
                     feel={tile.feel}
                     technical={tile.technical}
+                    index={index}
                   />
                 ))
               })()}
             </div>
-          </section>
+          </motion.section>
 
           {/* No issues — compact status */}
           {(result.issues?.length || 0) === 0 && (
@@ -505,45 +534,20 @@ export default function AnalyzePage() {
             </div>
           )}
 
-          {/* Primary CTA — high in the scroll, dashboard strip */}
-          <div className="flex flex-col gap-2 rounded-lg border border-purple-500/16 bg-gradient-to-r from-purple-950/30 via-black/50 to-slate-950/35 px-3.5 py-3 shadow-[0_0_20px_rgba(88,28,135,0.05),0_16px_40px_rgba(0,0,0,0.4)] md:flex-row md:items-center md:justify-between md:gap-4 md:px-4 md:py-2.5">
-            <div className="min-w-0 text-center md:text-left">
-              <h3 className="text-[15px] font-semibold tracking-tight text-white md:text-base">Ready for a pro master?</h3>
-              <p className="mt-0.5 text-[11px] leading-snug text-white/70 line-clamp-2 md:line-clamp-1">
-                Let AI tighten loudness, clarity, and punch — same engine as full Master.
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  if (file && result) {
-                    seedAnalyzeIntoMasterFlow(file, result as Record<string, unknown>)
-                    router.push("/master/settings")
-                  } else {
-                    router.push("/master")
-                  }
-                }}
-                className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-gradient-to-r from-[#6d28d9] via-[#4f46e5] to-[#2563eb] px-6 text-[13px] font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.2),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/10 transition hover:brightness-110"
-              >
-                Master my track
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  window.location.href = "/flow"
-                }}
-                disabled={!canMaster}
-                className={`inline-flex min-h-[44px] items-center justify-center rounded-lg border px-5 text-[13px] font-semibold transition ${
-                  canMaster
-                    ? "border-white/[0.12] bg-white/[0.04] text-white/88 hover:border-cyan-400/22 hover:bg-white/[0.07]"
-                    : "cursor-not-allowed border-white/[0.06] bg-white/[0.02] text-white/64"
-                }`}
-              >
-                One-page master
-              </button>
-            </div>
-          </div>
+          <AnalyzeResultsCta
+            canMaster={canMaster}
+            onMaster={() => {
+              if (file && result) {
+                seedAnalyzeIntoMasterFlow(file, result as Record<string, unknown>)
+                router.push("/master/settings")
+              } else {
+                router.push("/master")
+              }
+            }}
+            onFlow={() => {
+              window.location.href = "/flow"
+            }}
+          />
           <p className="-mt-0.5 text-center text-[10px] leading-tight text-white/60 md:text-left">
             {canMaster
               ? "Choose workflow — identical processing core."
@@ -552,7 +556,13 @@ export default function AnalyzePage() {
 
           {/* Diagnostics — issues */}
           {(result.issues?.length || 0) > 0 && issueListForUi.length > 0 && (
-            <section className="rounded-xl border border-white/[0.09] bg-black/[0.48] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_40px_rgba(0,0,0,0.42)] backdrop-blur-xl md:px-4 md:py-4">
+            <motion.section
+              initial={reduce ? false : { opacity: 0, y: 10 }}
+              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-32px" }}
+              transition={{ duration: 0.65, delay: 0.06, ease: ANALYZE_EASE }}
+              className="rounded-xl border border-white/[0.09] bg-black/[0.48] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_16px_40px_rgba(0,0,0,0.42)] backdrop-blur-xl md:px-4 md:py-4"
+            >
               <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] pb-1.5">
                 <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/68">Issues found</h3>
                 <span className="text-[10px] tabular-nums text-white/58">{issueListForUi.length} signals</span>
@@ -610,7 +620,7 @@ export default function AnalyzePage() {
                   <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-white/66">{recommendations[recommendations.length - 1].steps[0]}</p>
                 </div>
               ) : null}
-            </section>
+            </motion.section>
           )}
         </motion.div>
           )}

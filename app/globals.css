@@ -148,6 +148,22 @@ body {
   .footer-tap-link:active {
     transform: scale(0.99);
   }
+  /* Analyze readiness ring — subtle arc shimmer (presentation only) */
+  @keyframes scoreRingShimmer {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .score-ring-shimmer-stroke {
+    transform-origin: center;
+    animation: scoreRingShimmer 22s linear infinite;
+    opacity: 0.85;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .score-ring-shimmer-stroke {
+      animation: none;
+    }
+  }
   @media (hover: hover) {
     .footer-tap-link:hover {
       color: rgba(255, 255, 255, 0.9);
