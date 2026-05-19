@@ -639,13 +639,25 @@ body {
     .marketing-hero-visual,
     .marketing-hero-visual .hero-engine-orb-cage,
     .marketing-hero-visual .hero-engine-orb-stage,
-    .marketing-hero-visual .hero-engine-orb-root,
-    .cinematic-orb-center,
-    .cinematic-orb-center .hero-engine-orb-cage,
-    .cinematic-orb-center .hero-engine-orb-stage,
-    .cinematic-orb-center .hero-engine-orb-root {
+    .marketing-hero-visual .hero-engine-orb-root {
       overflow: hidden;
       contain: layout style paint;
+    }
+    .cinematic-orb-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      margin-inline: auto;
+      overflow: visible;
+      contain: none;
+    }
+    .cinematic-orb-center .hero-engine-orb-root,
+    .cinematic-orb-center .hero-engine-orb-cage,
+    .cinematic-orb-center .hero-engine-orb-stage {
+      margin-inline: auto;
+      overflow: visible;
+      contain: none;
     }
   }
   /* Marketing heroes — clip orb/glow bleed on tablet */
@@ -661,13 +673,13 @@ body {
     .marketing-hero-shell,
     .marketing-hero-lockup,
     .marketing-hero-visual,
-    .hero-engine-orb-root {
+    .marketing-hero-visual .hero-engine-orb-root {
       width: 100%;
       max-width: 100%;
       min-width: 0;
       overflow-x: clip;
     }
-    .hero-engine-orb-cage {
+    .marketing-hero-visual .hero-engine-orb-cage {
       position: relative;
       width: 100%;
       max-width: min(11.5rem, calc(100vw - 2.5rem));
@@ -1101,181 +1113,6 @@ body {
     .marketing-pricing-footer-copy {
       margin-top: var(--mkt-space-3);
       font-size: 13px;
-    }
-  }
-  .preset-detail-backdrop {
-    border: 0;
-    padding: 0;
-    cursor: pointer;
-    background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-  .preset-detail-sheet {
-    position: relative;
-    z-index: 10;
-    width: 100%;
-    max-width: 28rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: #090912;
-    box-shadow:
-      0 -24px 80px rgba(0, 0, 0, 0.55),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    isolation: isolate;
-  }
-  @media (min-width: 640px) {
-    .preset-detail-overlay {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-      overflow: visible;
-    }
-    .preset-detail-backdrop {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-    }
-    .preset-detail-sheet {
-      display: block;
-      max-height: min(92dvh, 720px);
-      overflow-x: hidden;
-      overflow-y: auto;
-      border-radius: 1rem;
-      flex: none;
-      height: auto;
-    }
-    .preset-detail-sheet-body {
-      position: relative;
-      overflow: visible;
-      padding: 1.5rem;
-    }
-    .preset-detail-handle {
-      display: none;
-    }
-    .preset-detail-cta--desktop {
-      display: block;
-      margin-top: 1.25rem;
-    }
-    .preset-detail-cta--mobile {
-      display: none !important;
-    }
-    .preset-glance-card {
-      display: flex;
-      justify-content: center;
-      padding: 0.875rem 1.125rem;
-    }
-    .preset-glance-inner {
-      display: flex;
-      width: 100%;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.625rem;
-      text-align: center;
-    }
-    .preset-glance-title {
-      width: 100%;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      /* Compensate tracked uppercase so the label reads visually centered */
-      padding-right: 0.18em;
-    }
-    .preset-glance-card .preset-glance-pills {
-      width: fit-content;
-      max-width: 100%;
-      margin: 0 auto;
-      margin-top: 0;
-      padding: 0;
-      justify-content: center;
-      align-content: center;
-      column-gap: 0.375rem;
-      row-gap: 0.25rem;
-    }
-  }
-  @media (max-width: 639px) {
-    .preset-detail-overlay {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      box-sizing: border-box;
-      height: 100dvh;
-      max-height: 100dvh;
-      padding: max(0.75rem, env(safe-area-inset-top, 0px)) 1rem max(0.75rem, env(safe-area-inset-bottom, 0px));
-      overflow: hidden;
-      overscroll-behavior: none;
-    }
-    .preset-detail-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      background: rgba(0, 0, 0, 0.8);
-    }
-    .preset-detail-sheet {
-      position: relative;
-      z-index: 1;
-      flex: 0 1 auto;
-      display: block;
-      width: 100%;
-      min-height: 0;
-      max-height: 100%;
-      max-width: none;
-      overflow-x: hidden;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      touch-action: pan-y;
-      border-radius: 1.35rem;
-      box-shadow:
-        0 -24px 80px rgba(0, 0, 0, 0.55),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    }
-    .preset-detail-sheet-body {
-      overflow: visible;
-      padding: 1.25rem 1.25rem 0.25rem;
-    }
-    .preset-detail-handle {
-      display: block;
-    }
-    .preset-detail-cta--desktop {
-      display: none !important;
-    }
-    .preset-detail-cta--mobile {
-      display: block;
-      margin-top: 1rem;
-      padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
-    }
-    .preset-glance-card {
-      display: flex;
-      justify-content: center;
-      padding-inline: 1rem;
-    }
-    .preset-glance-inner {
-      display: flex;
-      width: 100%;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-      text-align: center;
-    }
-    .preset-glance-title {
-      width: 100%;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      padding-right: 0.18em;
-    }
-    .preset-glance-card .preset-glance-pills {
-      width: fit-content;
-      max-width: 100%;
-      margin: 0 auto;
-      margin-top: 0;
-      padding: 0;
-      justify-content: center;
-      align-content: center;
-      column-gap: 0.375rem;
-      row-gap: 0.25rem;
     }
   }
   .hero-orb-radial-mobile {

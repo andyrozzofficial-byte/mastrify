@@ -18,7 +18,7 @@ export default function CinematicOrbCenter({ activeStep, className = "" }: Props
 
   return (
     <motion.div
-      className={`cinematic-orb-center marketing-hero-visual relative mx-auto w-full max-w-[26rem] px-5 md:max-w-[28rem] ${className}`.trim()}
+      className={`cinematic-orb-center relative mx-auto w-full max-w-[26rem] px-5 md:max-w-[28rem] ${className}`.trim()}
       initial={reduce ? false : { opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.65, delay: 0.08, ease: EASE }}

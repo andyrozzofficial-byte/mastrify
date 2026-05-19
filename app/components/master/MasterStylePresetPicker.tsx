@@ -1,7 +1,9 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import "./preset-detail-modal.css"
 import type { MasterStylePreset } from "../../master/MasterSessionProvider"
 
 const STROKE = 1.35
@@ -262,21 +264,24 @@ function PersonalityPills({
   personality,
   active,
   className = "",
+  showSeparators = true,
 }: {
   personality: PresetPersonality
   active: boolean
   className?: string
+  showSeparators?: boolean
 }) {
   const items = [personality.loudness, personality.stereo, personality.dynamics]
+  const isGlance = className.includes("preset-glance-pills")
   return (
     <motion.div
-      className={`relative mt-2 flex flex-wrap items-center justify-center gap-1 px-0.5 ${className}`}
+      className={`relative flex flex-wrap items-center justify-center gap-1 ${isGlance ? "mt-0 px-0" : "mt-2 px-0.5"} ${className}`}
       initial={false}
       animate={{ opacity: active ? 1 : 0.85 }}
     >
       {items.map((item, i) => (
         <span key={item} className="inline-flex items-center gap-1">
-          {i > 0 ? <span className="text-[8px] text-white/22">·</span> : null}
+          {showSeparators && i > 0 ? <span className="text-[8px] text-white/22">·</span> : null}
           <span
             className={`rounded-md px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.12em] ${
               active ? "bg-white/[0.08] text-white/62" : "bg-white/[0.04] text-white/40"
@@ -361,6 +366,12 @@ function StylePresetDetailSheet({
   open: boolean
   onClose: () => void
 }) {
+  const [portalReady, setPortalReady] = useState(false)
+
+  useEffect(() => {
+    setPortalReady(true)
+  }, [])
+
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -394,11 +405,13 @@ function StylePresetDetailSheet({
     </button>
   )
 
-  return (
+  if (!portalReady) return null
+
+  return createPortal(
     <AnimatePresence>
       {open && preset ? (
         <motion.div
-          className="preset-detail-overlay fixed inset-0 z-[80]"
+          className="preset-detail-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -465,7 +478,12 @@ function StylePresetDetailSheet({
                     <p className="preset-glance-title text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">
                       Character at a glance
                     </p>
-                    <PersonalityPills personality={preset.personality} active className="preset-glance-pills" />
+                    <PersonalityPills
+                      personality={preset.personality}
+                      active
+                      showSeparators={false}
+                      className="preset-glance-pills"
+                    />
                   </div>
                 </div>
 
@@ -491,7 +509,8 @@ function StylePresetDetailSheet({
           </motion.div>
         </motion.div>
       ) : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }
 
