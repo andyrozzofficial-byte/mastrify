@@ -51,14 +51,12 @@ export default function CinematicUploadCardShell({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
-        <motion.div
-          className="pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden"
-          animate={{ height: loaded ? "48%" : "38%", opacity: loaded ? 0.2 : 0.1 }}
-          transition={{ duration: 0.55, ease: EASE }}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[38%] overflow-hidden opacity-10"
           aria-hidden
         >
           <HeroWaveBackdrop efficient heightClass="h-full" className="opacity-100" />
-        </motion.div>
+        </div>
 
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-violet-600/[0.08] blur-2xl"

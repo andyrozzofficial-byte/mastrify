@@ -10,8 +10,6 @@ import {
 } from "../../../lib/audioUploadAccept"
 import { IOS_SAFE_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
 
-const EASE = [0.22, 1, 0.36, 1] as const
-
 type Props = {
   file: File | null
   fileInputRef: RefObject<HTMLInputElement | null>
@@ -63,13 +61,7 @@ export default function AnalyzeUploadCard({
       }}
     >
       <motion.div
-        className={`relative min-w-0 overflow-hidden rounded-xl border border-dashed px-3.5 text-center transition-colors duration-300 sm:px-6 ${
-          dragging
-            ? "border-violet-400/30 bg-violet-950/[0.1]"
-            : loaded
-              ? "border-emerald-400/25 bg-emerald-950/[0.08] py-5 sm:py-7"
-              : "border-white/[0.1] bg-black/[0.35] py-6 sm:py-8"
-        }`}
+        className={`marketing-upload-dropzone ${loaded ? "is-loaded" : ""} ${dragging ? "is-dragging" : ""}`.trim()}
       >
         <motion.div
           className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] ring-1 ring-white/[0.08]"
@@ -107,38 +99,20 @@ export default function AnalyzeUploadCard({
         {...fileInputHandlers}
       />
 
-      <div className="relative z-[2] mt-4 flex flex-col items-stretch gap-2 border-t border-white/[0.06] pt-4">
+      <div className="marketing-upload-actions">
         {file ? (
-          <button
-            type="button"
-            onClick={onScanClick}
-            className="group relative flex min-h-[46px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-6 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
-          >
-            <span
-              className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
-              aria-hidden
-            />
-            <span className="relative z-[1]">Scan my track</span>
+          <button type="button" onClick={onScanClick} className="marketing-upload-btn-primary">
+            Scan my track
           </button>
         ) : (
-          <label
-            htmlFor={fileInputId}
-            className="group relative flex min-h-[46px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-6 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
-          >
-            <span
-              className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
-              aria-hidden
-            />
-            <span className="relative z-[1]">Choose file</span>
+          <label htmlFor={fileInputId} className="marketing-upload-btn-primary cursor-pointer">
+            Choose file
           </label>
         )}
 
         {file ? (
-          <label
-            htmlFor={fileInputId}
-            className="group relative flex min-h-[46px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-white/[0.1] bg-white/[0.04] px-6 py-3 text-[13px] font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
-          >
-            <span className="relative z-[1]">Choose a different file</span>
+          <label htmlFor={fileInputId} className="marketing-upload-btn-secondary cursor-pointer">
+            Choose a different file
           </label>
         ) : (
           <p className="text-center text-[11px] text-white/58">or drag and drop</p>

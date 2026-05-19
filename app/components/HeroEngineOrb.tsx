@@ -5,6 +5,7 @@ import { CINEMATIC_EASE } from "../../lib/cinematicMotion"
 import HeroWaveBackdrop from "./HeroWaveBackdrop"
 import LandingHeroAtmosphere from "./LandingHeroAtmosphere"
 import MasteringEngineVisual from "../master/processing/MasteringEngineVisual"
+import OrbScene from "./cinematic/OrbScene"
 
 type Props = {
   activeStep: number
@@ -60,16 +61,9 @@ export default function HeroEngineOrb({
 
 type SlotProps = {
   activeStep: number
-  className?: string
 }
 
-/** Shared marketing hero orb column — same wrapper on every desktop marketing hero. */
-export function MarketingHeroOrbSlot({ activeStep, className = "" }: SlotProps) {
-  return (
-    <div
-      className={`marketing-hero-orb-slot hidden md:flex marketing-hero-visual min-w-0 shrink-0 items-center justify-center ${className}`.trim()}
-    >
-      <HeroEngineOrb activeStep={activeStep} compactAtmosphere />
-    </div>
-  )
+/** @deprecated Prefer OrbScene — className overrides are ignored for layout consistency. */
+export function MarketingHeroOrbSlot({ activeStep }: SlotProps) {
+  return <OrbScene activeStep={activeStep} />
 }

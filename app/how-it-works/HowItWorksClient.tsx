@@ -3,10 +3,10 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
-import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
 import MarketingPageAmbient from "../components/MarketingPageAmbient"
-import { MarketingHeroOrbSlot } from "../components/HeroEngineOrb"
+import MarketingDesktopHero from "../components/cinematic/MarketingDesktopHero"
+import PremiumButton from "../components/PremiumButton"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -160,15 +160,6 @@ function MasterIcon({ className }: { className?: string }) {
 
 export default function HowItWorksClient() {
   const reduce = useReducedMotion()
-  const [engineStep, setEngineStep] = useState(0)
-
-  useEffect(() => {
-    if (reduce) return
-    const id = setInterval(() => {
-      setEngineStep((s) => (s + 1) % 5)
-    }, 3200)
-    return () => clearInterval(id)
-  }, [reduce])
 
   return (
     <motion.div
@@ -181,67 +172,51 @@ export default function HowItWorksClient() {
 
       <MarketingPageAmbient />
 
-      {/* Hero */}
-      <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
-        <div className="marketing-hero-lockup relative grid gap-6 sm:gap-10">
-          <Reveal className="marketing-hero-copy">
-            <span className="hero-eyebrow-pill">
-              Intelligent mastering
-            </span>
-            <h1 className="marketing-hero-title mt-5 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.5rem] md:leading-[1.08]">
-              How your music becomes
-              <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
-                release-ready
-              </span>
-            </h1>
-            <p className="hero-lead max-w-lg text-white/75 sm:text-[15px] md:text-[16px]">
-              Mastrify listens like an engineer who cares about the song — preserving dynamics, emotional movement,
-              and the identity of your mix while bringing it to a confident, streaming-ready level.
-            </p>
-            <ul className="marketing-hero-bullets mt-4 space-y-2 text-[14px] text-white/72 sm:mt-6 sm:space-y-2.5">
-              <li className="flex gap-2.5">
-                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
-                Perceptual processing that follows the music, not a fixed template
-              </li>
-              <li className="flex gap-2.5">
-                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/60" aria-hidden />
-                Transparency when your material already speaks clearly
-              </li>
-              <li className="flex gap-2.5">
-                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
-                Loudness and tone shaped with restraint and intent
-              </li>
-            </ul>
-            <motion.div
-              className="marketing-hero-cta mt-6 flex flex-wrap gap-2.5 sm:mt-8 sm:gap-3"
-              initial={reduce ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25, duration: 0.5, ease: EASE }}
-            >
-              <Link
-                href="/master"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600/90 via-indigo-600/90 to-indigo-700/90 px-7 text-[14px] font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.15),0_12px_32px_rgba(0,0,0,0.4)] ring-1 ring-white/[0.08] transition hover:brightness-[1.06]"
-              >
-                Start mastering
-              </Link>
-              <Link
-                href="/analyze"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] px-7 text-[14px] font-semibold text-white/80 transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
-              >
-                Analyze a mix first
-              </Link>
-            </motion.div>
-          </Reveal>
+      <MarketingDesktopHero>
+        <span className="hero-eyebrow-pill">Intelligent mastering</span>
 
-          <Reveal delay={0.1}>
-            <MarketingHeroOrbSlot activeStep={engineStep} />
-          </Reveal>
-        </div>
-      </section>
+        <h1 className="marketing-hero-title">
+          How your music becomes
+          <span className="marketing-hero-title-accent">release-ready</span>
+        </h1>
 
-      {/* Steps */}
-      <section className="relative z-10 border-t border-white/[0.05] bg-black/20 py-14 md:py-28">
-        <div className="mx-auto max-w-[1080px] px-5 md:px-10">
+        <p className="hero-lead lg:mx-0">
+          Mastrify listens like an engineer who cares about the song — preserving dynamics, emotional movement, and the
+          identity of your mix while bringing it to a confident, streaming-ready level.
+        </p>
+
+        <ul className="marketing-hero-bullets">
+          <li className="flex gap-2.5">
+            <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
+            Perceptual processing that follows the music, not a fixed template
+          </li>
+          <li className="flex gap-2.5">
+            <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/60" aria-hidden />
+            Transparency when your material already speaks clearly
+          </li>
+          <li className="flex gap-2.5 max-lg:hidden">
+            <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
+            Loudness and tone shaped with restraint and intent
+          </li>
+        </ul>
+
+        <motion.div
+          className="mobile-cta-stack marketing-hero-cta"
+          initial={reduce ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.5, ease: EASE }}
+        >
+          <PremiumButton href="/master" className="w-full sm:w-auto sm:px-9">
+            Start mastering
+          </PremiumButton>
+          <PremiumButton href="/analyze" variant="secondary" className="w-full sm:w-auto sm:px-9">
+            Analyze a mix first
+          </PremiumButton>
+        </motion.div>
+      </MarketingDesktopHero>
+
+      <section className="page-container section-rhythm relative z-10 border-t border-white/[0.05]">
+        <div className="w-full">
           <Reveal className="text-center">
             <SectionLabel>The path to your master</SectionLabel>
             <h2 className="mt-3 text-[1.65rem] font-semibold tracking-[-0.02em] text-white sm:text-[2rem]">
@@ -253,7 +228,7 @@ export default function HowItWorksClient() {
           </Reveal>
 
           <motion.div
-            className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5"
+            className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-40px" }}
@@ -269,10 +244,10 @@ export default function HowItWorksClient() {
                   hidden: reduce ? {} : { opacity: 0, y: 18 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } },
                 }}
-                className="group relative overflow-hidden rounded-[1.15rem] border border-white/[0.07] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_20px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition duration-300 hover:border-white/[0.1] hover:bg-white/[0.045] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_56px_rgba(0,0,0,0.42),0_0_40px_rgba(99,102,241,0.06)] md:p-6"
+                className="marketing-stage-card transition duration-300 hover:border-white/[0.1] hover:bg-white/[0.045]"
               >
-                <motion.div
-                  className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-violet-500/[0.07] blur-2xl transition group-hover:bg-violet-500/[0.1]"
+                <div
+                  className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-violet-500/[0.06] blur-xl"
                   aria-hidden
                 />
                 <div className="relative flex items-start gap-4">
@@ -293,10 +268,9 @@ export default function HowItWorksClient() {
         </div>
       </section>
 
-      {/* Philosophy */}
-      <section className="relative z-10 py-12 md:py-24">
-        <div className="mx-auto max-w-[1080px] px-5 md:px-10">
-          <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-black/40 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_32px_80px_rgba(0,0,0,0.5),0_0_72px_rgba(124,58,237,0.08)] backdrop-blur-2xl md:p-10 lg:p-12">
+      <section className="page-container section-rhythm relative z-10">
+        <div className="w-full">
+          <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-black/40 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_32px_80px_rgba(0,0,0,0.5)] md:p-10 lg:p-12">
             <Reveal>
               <SectionLabel>Mastering philosophy</SectionLabel>
               <h2 className="mt-3 max-w-2xl text-[1.65rem] font-semibold leading-[1.15] tracking-[-0.02em] text-white sm:text-[2rem]">
@@ -322,9 +296,8 @@ export default function HowItWorksClient() {
         </div>
       </section>
 
-      {/* Headroom */}
-      <section className="relative z-10 border-t border-white/[0.05] py-12 md:py-24">
-        <motion.div className="mx-auto max-w-[1080px] px-5 md:px-10">
+      <section className="page-container section-rhythm relative z-10 border-t border-white/[0.05]">
+        <motion.div className="w-full">
           <div className="marketing-split-grid grid gap-10">
             <Reveal>
               <SectionLabel>Before you upload</SectionLabel>

@@ -70,21 +70,14 @@ export default function MasterUploadCard({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.35, ease: EASE }}
-          className={`relative min-w-0 overflow-hidden rounded-xl border border-dashed px-3.5 text-center transition-colors duration-300 sm:px-6 ${
-            loaded ? "border-emerald-400/25 bg-emerald-950/[0.08] py-5 sm:py-7" : "border-white/[0.1] bg-black/[0.35] py-6 sm:py-8"
-          }`}
+          className={`marketing-upload-dropzone ${loaded ? "is-loaded" : ""} ${dragging ? "is-dragging" : ""}`.trim()}
         >
           {loaded ? (
             <>
-              <motion.span
-                className="mx-auto mb-2.5 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200/75"
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.4, ease: EASE }}
-              >
+              <span className="mx-auto mb-2.5 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200/75">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80 shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
                 Mix loaded
-              </motion.span>
+              </span>
               <p className="text-[1rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.05rem]">Mix received</p>
               <p className="mx-auto mt-1.5 max-w-[20rem] text-[12px] leading-relaxed text-white/64">
                 Continue below to choose your master settings.
@@ -129,29 +122,18 @@ export default function MasterUploadCard({
         {...fileInputHandlers}
       />
 
-      <div className="relative z-[2] mt-4 flex flex-col items-stretch gap-2 border-t border-white/[0.06] pt-4">
+      <div className="marketing-upload-actions">
         <button
           type="button"
           disabled={!loaded}
           onClick={onContinue}
-          className="group relative z-[3] flex min-h-[46px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-6 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-35"
+          className="marketing-upload-btn-primary disabled:cursor-not-allowed disabled:opacity-35"
         >
-          <span
-            className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%] group-disabled:translate-x-[-120%]"
-            aria-hidden
-          />
-          <span className="relative z-[1]">Continue to settings</span>
+          Continue to settings
         </button>
 
-        <label
-          htmlFor={fileInputId}
-          className="group relative flex min-h-[46px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-white/[0.1] bg-white/[0.04] px-6 py-3 text-[13px] font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
-        >
-          <span
-            className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.1] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
-            aria-hidden
-          />
-          <span className="relative z-[1]">{loaded ? "Choose a different file" : "Choose file"}</span>
+        <label htmlFor={fileInputId} className="marketing-upload-btn-secondary cursor-pointer">
+          {loaded ? "Choose a different file" : "Choose file"}
         </label>
 
         {!loaded ? <p className="text-center text-[11px] text-white/58">or drag and drop</p> : null}
