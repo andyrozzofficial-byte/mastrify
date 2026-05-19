@@ -97,7 +97,7 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
 
         {(file || audioUrl) && (
           <motion.div
-            className="relative mt-5 w-full max-w-lg md:mt-6"
+            className="relative mt-5 min-h-[4.75rem] w-full max-w-lg overflow-hidden px-0.5 md:mt-6 md:min-h-[5rem] md:max-w-xl"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.12, ease: EASE }}
@@ -114,28 +114,29 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
       </motion.div>
 
       <motion.div
-        className="relative z-10 mx-auto w-full max-w-md px-5 pb-10 pt-2 md:max-w-lg md:pb-12"
-        initial={{ opacity: 0, y: 16 }}
+        className="relative z-10 mx-auto mt-2 w-full max-w-md min-w-0 px-5 pb-10 md:mt-4 md:max-w-lg md:pb-12"
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, delay: 0.14, ease: EASE }}
+        transition={{ duration: 0.65, delay: 0.15, ease: EASE }}
       >
         <motion.div
-          className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-b from-violet-500/18 via-transparent to-cyan-500/10 opacity-60 blur-sm"
+          className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-b from-violet-500/20 via-transparent to-cyan-500/10 opacity-60 blur-sm"
           animate={reduce ? undefined : { opacity: [0.35, 0.55, 0.35] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           aria-hidden
         />
-        <div className="relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:px-6 md:py-6">
+        <motion.div className="fluid-surface relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-3.5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:px-4 sm:py-5 md:px-6 md:py-6">
           <div
             className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,transparent_22%,transparent_100%)]"
             aria-hidden
           />
           <AnalysisStageList activeStep={activeStep} />
-        </div>
+        </motion.div>
         <motion.p
-          className="mt-5 text-center text-[12px] tracking-wide text-white/58 md:text-[13px]"
-          animate={reduce ? undefined : { opacity: [0.5, 0.85, 0.5] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+          className="mt-6 text-center text-[12px] tracking-wide text-white/60 md:text-[13px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35, duration: 0.5 }}
         >
           The engine is mapping your mix — this usually takes a moment
         </motion.p>
