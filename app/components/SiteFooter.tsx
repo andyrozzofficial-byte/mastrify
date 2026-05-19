@@ -127,16 +127,16 @@ export default function SiteFooter() {
         <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:gap-4 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
           {/* Brand */}
           <motion.div
-            className="min-w-0 max-md:mx-auto max-md:max-w-[18.5rem] lg:col-span-3 xl:col-span-3"
+            className="footer-brand min-w-0 max-md:mx-auto max-md:flex max-md:w-full max-md:max-w-[18.5rem] max-md:flex-col max-md:items-center max-md:text-center lg:col-span-3 xl:col-span-3"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: EASE }}
           >
-            <Link href="/" className="inline-flex items-center max-md:mx-auto">
+            <Link href="/" className="inline-flex items-center justify-center max-md:w-full">
               <span className="text-[17px] font-semibold tracking-[-0.02em] text-white/92">Mastrify</span>
             </Link>
-            <p className="mt-2.5 max-w-[16.5rem] text-[13px] leading-[1.55] text-muted max-md:mt-2 max-md:leading-[1.5] sm:mt-3 md:mt-4 lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
+            <p className="footer-brand-copy mt-2.5 max-w-[16.5rem] text-[13px] leading-[1.55] text-muted max-md:mt-2 max-md:mx-auto max-md:text-center max-md:leading-[1.5] sm:mt-3 md:mt-4 md:text-left lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
               Intelligent mastering for music that deserves its full emotional weight — release-ready, without the
               noise.
             </p>

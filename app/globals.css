@@ -1348,6 +1348,19 @@ body {
       width: 100%;
       max-width: 20.5rem;
     }
+    .footer-mobile-grid .footer-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-inline: auto;
+      max-width: 18.5rem;
+      text-align: center;
+    }
+    .footer-mobile-grid .footer-brand-copy {
+      margin-inline: auto;
+      text-align: center;
+      max-width: 16.5rem;
+    }
     .footer-mobile-grid .footer-nav-columns {
       max-width: 15.5rem;
       margin-inline: auto;
