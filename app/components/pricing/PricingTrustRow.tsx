@@ -16,26 +16,30 @@ export default function PricingTrustRow() {
   const reduce = useReducedMotion()
 
   return (
-    <motion.ul
-      className="marketing-card-grid gap-2 sm:gap-2.5 lg:gap-2.5"
-      initial={reduce ? false : { opacity: 0, y: 14 }}
+    <motion.div
+      className="marketing-pricing-features"
+      initial={reduce ? false : { opacity: 0, y: 12 }}
       whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-32px" }}
-      transition={{ duration: 0.65, ease: EASE }}
+      transition={{ duration: 0.6, ease: EASE }}
     >
-      {TRUST.map((label, i) => (
-        <motion.li
-          key={label}
-          className="flex items-center gap-2.5 rounded-lg border border-white/[0.05] bg-black/[0.28] px-3.5 py-3 sm:justify-center lg:justify-start"
-          initial={reduce ? false : { opacity: 0, y: 8 }}
-          whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.04 * i, ease: EASE }}
-        >
-          <span className="h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
-          <span className="text-[12px] text-white/72 sm:text-[13px]">{label}</span>
-        </motion.li>
-      ))}
-    </motion.ul>
+      <p className="marketing-pricing-features-kicker">What you get</p>
+
+      <ul className="marketing-pricing-features-list">
+        {TRUST.map((label, i) => (
+          <motion.li
+            key={label}
+            className="marketing-pricing-features-item"
+            initial={reduce ? false : { opacity: 0, y: 6 }}
+            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45, delay: 0.03 * i, ease: EASE }}
+          >
+            <span className="marketing-pricing-features-dot" aria-hidden />
+            <span>{label}</span>
+          </motion.li>
+        ))}
+      </ul>
+    </motion.div>
   )
 }
