@@ -226,6 +226,16 @@ function interactiveSliderCurve(value, fallback = 50) {
   return sign * clamp(shaped, 0, 1)
 }
 
+/** Extra lift above ~58% for bright/widen controls — keeps low/mid safe, opens 60–100. */
+function sliderCurveEmphasis(value, fallback = 50) {
+  const raw = parseIntSlider(value, fallback)
+  const shaped = interactiveSliderCurve(value, fallback)
+  if (raw <= 58 || shaped <= 0) return { shaped, upper: 0 }
+  const upper = ((raw - 58) / 42) ** 1.25
+  const magnitude = clamp(Math.abs(shaped) + upper * 0.3, 0, 1.06)
+  return { shaped: magnitude, upper }
+}
+
 function parseStyle(style) {
   const s = String(style || "STREAM").toUpperCase()
   return VALID_STYLES.has(s) ? s : "STREAM"
@@ -500,7 +510,10 @@ function transparentProcessingScalars(adaptiveTransparency) {
   }
 }
 
-/** Stereo width — `extrastereo` m≈1 is neutral; wider >1, narrower <1. */
+/**
+ * Stereo width — extrastereo + gentle side lift / air-band width at high slider values.
+ * Upper-range emphasis widens without collapsing center (mono-safe stereotools slev).
+ */
 function buildStereoStage(stereoEnhance, style, hotClubProtection = false, sliderDebug = false) {
   let se = clamp(parseIntSlider(stereoEnhance, 50), 0, 100)
   if (style === "FESTIVAL" && !hotClubProtection) se = Math.min(100, se + 10)
@@ -508,17 +521,63 @@ function buildStereoStage(stereoEnhance, style, hotClubProtection = false, slide
   if (style === "LOUD" && !hotClubProtection) se = Math.min(100, se + 4)
   if (hotClubProtection) se = Math.max(0, se - 14)
 
-  const shaped = interactiveSliderCurve(se, 50)
-  if (Math.abs(shaped) < 0.035) return ""
+  const { shaped, upper } = sliderCurveEmphasis(se, 50)
+  const narrowShaped = shaped <= 0 ? interactiveSliderCurve(se, 50) : shaped
+  if (Math.abs(narrowShaped) < 0.035 && shaped <= 0) return ""
 
   if (shaped > 0) {
-    const widen = sliderDebug ? 0.9 : hotClubProtection ? 0.34 : 0.58
+    if (shaped < 0.035) return ""
+    const parts = []
+    const baseWiden = sliderDebug ? 0.78 : hotClubProtection ? 0.32 : 0.46
+    const widen = baseWiden + upper * 0.22
     const m = 1 + shaped * widen
-    return `extrastereo=m=${m.toFixed(4)},`
+    parts.push(`extrastereo=m=${m.toFixed(4)},`)
+    if (upper > 0.18 && !hotClubProtection) {
+      const slev = (1 + shaped * 0.05 + upper * 0.11).toFixed(4)
+      parts.push(`stereotools=balance_in=0:balance_out=0:mlev=1:slev=${slev},`)
+    }
+    if (upper > 0.35 && !hotClubProtection) {
+      const airW = (upper * 0.2 + shaped * 0.07).toFixed(3)
+      parts.push(`equalizer=f=11800:t=q:w=0.58:g=${airW},`)
+    }
+    return parts.join("")
   }
-  const narrow = sliderDebug ? 0.56 : 0.38
-  const m = 1 + shaped * narrow
+  const narrow = sliderDebug ? 0.48 : 0.34
+  const m = 1 + narrowShaped * narrow
   return `extrastereo=m=${m.toFixed(4)},`
+}
+
+/**
+ * Clarity macro — multi-band presence, sparkle, gentle excitation & micro-transients.
+ * Runs after main compression so EQ is not the only perceived “clarity” move.
+ */
+function buildClarityEnhancementStage(tone, sliderDebug = false) {
+  const bright = Math.max(0, tone.clarityDrive ?? 0)
+  const upper = tone.clarityUpper ?? 0
+  if (bright < 0.04) return ""
+  const s = sliderDebug ? 1.22 : 1
+  const parts = []
+  const body = (bright * 0.92 * s).toFixed(3)
+  const bite = (bright * 0.58 * s + upper * 0.16).toFixed(3)
+  const sparkle = (bright * 0.38 * s + upper * 0.26).toFixed(3)
+  parts.push(`equalizer=f=2680:t=q:w=0.78:g=${body},`)
+  parts.push(`equalizer=f=6200:t=q:w=1.05:g=${bite},`)
+  if (upper > 0.1) {
+    parts.push(`equalizer=f=11200:t=q:w=0.85:g=${sparkle},`)
+  }
+  if (upper > 0.2) {
+    const param = (1 + upper * 0.035).toFixed(3)
+    const th = (0.94 - upper * 0.05).toFixed(3)
+    const out = (0.96 + upper * 0.02).toFixed(3)
+    parts.push(`asoftclip=type=tanh:threshold=${th}:output=${out}:param=${param},`)
+  }
+  if (upper > 0.4) {
+    const th = (-24 - upper * 5).toFixed(1)
+    parts.push(
+      `acompressor=threshold=${th}dB:ratio=1.06:attack=10:release=88:makeup=1,`
+    )
+  }
+  return parts.join("")
 }
 
 function compressorForStyle(style) {
@@ -1681,29 +1740,31 @@ function baseTone(style) {
   }
 }
 
-/** Sliders — temporarily test-forward so 0–100 moves are obvious on casual playback systems. */
+/** Sliders — subtle low/mid, stronger 60–100 via emphasis + clarity/stereo macro stages. */
 function applyToneSliders(tone, lowEndControl, clarityPresence, sliderDebug = false) {
   const lc = interactiveSliderCurve(lowEndControl, 50)
-  const cp = interactiveSliderCurve(clarityPresence, 50)
-  const testScale = sliderDebug ? 2.15 : 1.35
-  const lowGainShift = (lc >= 0 ? lc * 2.35 : lc * 1.7) * testScale
-  const lowMudShift = (lc >= 0 ? lc * 0.18 : lc * 0.86) * testScale
-  const clarityPresenceShift = (cp >= 0 ? cp * 2.55 : cp * 1.25) * testScale
-  const clarityAirShift = (cp >= 0 ? cp * 1.1 : cp * 0.5) * testScale
-  const clarityShelfShift = (cp >= 0 ? cp * 0.82 : cp * 0.38) * testScale
-  const clarityMudShift = (cp >= 0 ? -cp * 0.42 : -cp * 0.13) * testScale
+  const { shaped: cp, upper: cpUpper } = sliderCurveEmphasis(clarityPresence, 50)
+  const scale = sliderDebug ? 1.55 : 1.05
+  const lowGainShift = (lc >= 0 ? lc * 2.2 : lc * 1.65) * scale
+  const lowMudShift = (lc >= 0 ? lc * 0.18 : lc * 0.86) * scale
+  const clarityPresenceShift = (cp >= 0 ? cp * 2.05 : cp * 1.2) * scale
+  const clarityAirShift = (cp >= 0 ? cp * 0.88 + cpUpper * 0.22 : cp * 0.48) * scale
+  const clarityShelfShift = (cp >= 0 ? cp * 0.72 + cpUpper * 0.14 : cp * 0.36) * scale
+  const clarityMudShift = (cp >= 0 ? -cp * 0.4 - cpUpper * 0.08 : -cp * 0.12) * scale
   return {
     ...tone,
     lowGain: tone.lowGain + lowGainShift,
     mudGain: tone.mudGain + lowMudShift + clarityMudShift,
     mudWideGain:
       tone.mudWideGain +
-      (lc < 0 ? lc * 0.28 * testScale : lc * 0.12 * testScale) -
-      Math.max(0, cp) * 0.28 * testScale,
+      (lc < 0 ? lc * 0.28 * scale : lc * 0.12 * scale) -
+      Math.max(0, cp) * 0.26 * scale,
     airGain: tone.airGain + clarityAirShift,
-    dipAboveAirGain: tone.dipAboveAirGain - Math.max(0, cp) * 0.18 * testScale,
+    dipAboveAirGain: tone.dipAboveAirGain - Math.max(0, cp) * 0.16 * scale,
     highShelf9k: tone.highShelf9k + clarityShelfShift,
     presenceDb: clarityPresenceShift,
+    clarityDrive: Math.max(0, cp),
+    clarityUpper: cpUpper,
   }
 }
 
@@ -2272,6 +2333,7 @@ export async function masterTrack({
     const compBypass = rawIsolation || chainDebugModeId === "D" ? 0 : transparent ? 0.62 : 0.48
     const compStage =
       stages.comp && compInt >= compBypass ? formatAcompressorFilter(compVal) : ""
+    const clarityStage = rawIsolation ? "" : buildClarityEnhancementStage(tone, sliderDebug)
     const limiterStage = stages.limiter
       ? rawIsolation
         ? peakContainmentLimiter(streaming, false, 1)
@@ -2306,6 +2368,7 @@ export async function masterTrack({
       `equalizer=f=9800:t=q:w=1:g=${hi9},` +
       `equalizer=f=4200:t=q:w=0.92:g=${pr},` +
       compStage +
+      clarityStage +
       `equalizer=f=${tone.airHz}:t=q:w=1.15:g=${airG},` +
       `equalizer=f=${tone.dipAboveAirHz}:t=q:w=1:g=${dipG},` +
       styleTail +

@@ -55,7 +55,7 @@ function sliderHelper(type: "stereo" | "low" | "clarity", value: number) {
   if (type === "stereo") {
     if (value < 35) return "Lower values narrow the sides and keep vocals, kick, and bass more centered."
     if (value < 70) return "Mid values preserve a natural stereo image with controlled spatial depth."
-    return "Higher values widen the sides for a more immersive headphone and speaker image."
+    return "Higher values open cinematic width and air while keeping vocals and kick/snare centered."
   }
   if (type === "low") {
     if (value < 35) return "Lower values tighten subs and reduce boom for cleaner kick/bass separation."
@@ -64,7 +64,7 @@ function sliderHelper(type: "stereo" | "low" | "clarity", value: number) {
   }
   if (value < 35) return "Lower values smooth sharp highs and keep the master warmer."
   if (value < 70) return "Mid values add detail while keeping vocals and instruments natural."
-  return "Higher values add brightness, vocal clarity, air, and front-of-speaker detail."
+  return "Higher values add polished detail, presence, and release-ready shine — not just boosted highs."
 }
 
 export default function MasterSettingsPage() {
