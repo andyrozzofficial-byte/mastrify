@@ -182,6 +182,54 @@ body {
       margin-left: -2rem;
     }
   }
+  /* Marketing heroes — clip orb/glow bleed; desktop layout unchanged from lg up */
+  @media (max-width: 1023px) {
+    .marketing-page-root {
+      overflow-x: clip;
+      max-width: 100%;
+    }
+    @supports not (overflow: clip) {
+      .marketing-page-root {
+        overflow-x: hidden;
+      }
+    }
+    .marketing-hero-shell,
+    .marketing-hero-lockup,
+    .marketing-hero-visual,
+    .homepage-hero-orb,
+    .hero-engine-orb-root {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow-x: clip;
+    }
+    .hero-engine-orb-cage {
+      position: relative;
+      width: 100%;
+      max-width: min(11.5rem, calc(100vw - 2.5rem));
+      margin-inline: auto;
+      overflow: hidden;
+      contain: paint;
+      aspect-ratio: 1 / 1;
+    }
+    .marketing-engine-visual {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 100% !important;
+      margin-inline: auto;
+    }
+    .marketing-hero-visual-slot {
+      min-height: 0 !important;
+      max-width: 100%;
+      overflow: hidden;
+      padding-top: 0.35rem;
+      padding-bottom: 0.35rem;
+    }
+    .hero-orb-radial-mobile {
+      inset: 0;
+      filter: blur(28px);
+    }
+  }
   @media (max-width: 767px) {
     .homepage-hero-shell {
       padding-bottom: 0;
@@ -191,27 +239,16 @@ body {
     }
     .homepage-hero-orb {
       margin-top: -0.35rem;
-      max-width: min(13rem, 54vw);
       margin-inline: auto;
     }
     .marketing-hero-lockup {
       gap: 0.875rem;
     }
     .marketing-hero-visual {
-      max-width: min(13rem, 54vw);
       margin-inline: auto;
     }
     .marketing-hero-copy .hero-lead {
       margin-top: 0.75rem;
-    }
-    .marketing-engine-visual {
-      width: min(12.25rem, 52vw) !important;
-      max-width: 13rem !important;
-    }
-    .marketing-hero-visual-slot {
-      min-height: 0 !important;
-      padding-top: 0.35rem;
-      padding-bottom: 0.35rem;
     }
   }
   @media (min-width: 1024px) {

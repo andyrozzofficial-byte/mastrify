@@ -14,7 +14,7 @@ export default function Pricing() {
 
   return (
     <motion.div
-      className="relative min-h-screen overflow-hidden text-white"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: EASE }}

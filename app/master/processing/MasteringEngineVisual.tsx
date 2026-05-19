@@ -43,7 +43,7 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
 
   return (
     <motion.div
-      className={`relative mx-auto aspect-square w-[min(20rem,88vw)] max-w-[22rem] md:w-[min(22rem,42vw)] md:max-w-[24rem] ${className ?? ""}`}
+      className={`relative mx-auto aspect-square w-full max-w-full max-lg:max-w-[min(11.5rem,calc(100vw-2.5rem))] lg:w-[min(20rem,88vw)] lg:max-w-[22rem] xl:max-w-[24rem] ${className ?? ""}`}
       initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
@@ -51,7 +51,7 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
     >
       {/* Depth layers — parallax glow */}
       <motion.div
-        className="pointer-events-none absolute inset-[-5%] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.28)_0%,rgba(79,70,229,0.08)_45%,transparent_65%)] blur-3xl sm:inset-[-10%] sm:bg-[radial-gradient(circle,rgba(99,102,241,0.22)_0%,transparent_62%)] md:inset-[-16%] lg:inset-[-22%]"
+        className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.28)_0%,rgba(79,70,229,0.08)_45%,transparent_65%)] blur-3xl max-lg:scale-[0.98] lg:inset-[-5%] lg:scale-100 xl:inset-[-16%] 2xl:inset-[-22%]"
         animate={
           reduceMotion
             ? { opacity: 0.5 }
@@ -60,7 +60,7 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
         transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="pointer-events-none absolute inset-[-4%] rounded-full bg-[radial-gradient(circle_at_30%_40%,rgba(34,211,238,0.12),transparent_55%)] blur-2xl sm:inset-[-8%] md:inset-[-12%]"
+        className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_40%,rgba(34,211,238,0.12),transparent_55%)] blur-2xl lg:inset-[-4%] xl:inset-[-12%]"
         animate={reduceMotion ? {} : { opacity: [0.25, 0.45, 0.25] }}
         transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
       />

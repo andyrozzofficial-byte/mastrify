@@ -93,7 +93,7 @@ export default function SiteFooter() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className={`relative mt-auto overflow-hidden ${onAnalyze ? "max-md:-mt-1" : ""}`}>
+    <footer className={`site-overflow-guard relative mt-auto overflow-x-clip ${onAnalyze ? "max-md:-mt-1" : ""}`}>
       {onAnalyze ? (
         <motion.div
           className="pointer-events-none absolute inset-x-0 -top-10 h-16 bg-gradient-to-b from-transparent via-black/45 to-black/80 md:-top-14 md:h-20"

@@ -126,7 +126,7 @@ export default function AnalyzeUploadHero({
           activeStep={engineStep}
           compactAtmosphere
           mobileGlowBoost
-          className="marketing-hero-visual relative z-0 max-lg:order-2 max-lg:-mt-0.5 max-lg:mb-0 lg:sticky lg:top-24"
+          className="marketing-hero-visual relative z-0 min-w-0 max-w-full overflow-hidden max-lg:order-2 max-lg:-mt-0.5 max-lg:mb-0 lg:sticky lg:top-24"
         />
       </motion.div>
     </section>

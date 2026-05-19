@@ -27,7 +27,7 @@ export default function Landing() {
 
   return (
     <motion.div
-      className="relative min-h-screen overflow-hidden text-white"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: EASE }}
@@ -113,7 +113,7 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <div className="marketing-hero-visual homepage-hero-orb">
+          <div className="marketing-hero-visual homepage-hero-orb min-w-0 max-w-full overflow-hidden">
             <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost />
           </div>
         </motion.div>

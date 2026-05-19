@@ -79,7 +79,7 @@ export default function PricingPageHero() {
           </p>
         </motion.div>
 
-        <div className="marketing-hero-visual">
+        <div className="marketing-hero-visual min-w-0 max-w-full overflow-hidden">
           <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost />
         </div>
       </motion.div>

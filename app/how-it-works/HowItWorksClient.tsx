@@ -172,7 +172,7 @@ export default function HowItWorksClient() {
 
   return (
     <motion.div
-      className="relative min-h-screen overflow-hidden text-white"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45 }}
@@ -238,12 +238,14 @@ export default function HowItWorksClient() {
             </motion.div>
           </Reveal>
 
-          <Reveal delay={0.1} className="marketing-hero-visual relative flex justify-center">
-            <div
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.14),transparent_65%)]"
-              aria-hidden
-            />
-            <MasteringEngineVisual activeStep={engineStep} className="marketing-engine-visual relative z-[1]" />
+          <Reveal delay={0.1} className="marketing-hero-visual relative flex min-w-0 justify-center overflow-hidden">
+            <div className="hero-engine-orb-cage relative w-full">
+              <div
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.14),transparent_65%)]"
+                aria-hidden
+              />
+              <MasteringEngineVisual activeStep={engineStep} className="marketing-engine-visual relative z-[1]" />
+            </div>
           </Reveal>
         </div>
       </section>
