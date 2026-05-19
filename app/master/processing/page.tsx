@@ -197,21 +197,21 @@ export default function MasterProcessingPage() {
         aria-hidden
       />
 
-      <motion.header
-        className="relative z-20 flex w-full shrink-0 items-center justify-center px-4 pt-6 sm:px-6 sm:pt-7 md:pt-8"
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/70">
-          Spatial mastering engine
-        </span>
-      </motion.header>
-
       <div className="master-processing-stage--processing relative z-10">
-        <div className="master-processing-stack">
-        <motion.div
-          className="master-processing-copy w-full min-w-0"
+        <motion.header
+          className="master-processing-badge relative z-20 flex w-full shrink-0 items-center justify-center"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/70">
+            Spatial mastering engine
+          </span>
+        </motion.header>
+
+        <motion.div className="master-processing-stack">
+          <motion.div
+            className="master-processing-copy w-full min-w-0"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
@@ -231,24 +231,26 @@ export default function MasterProcessingPage() {
           </p>
         </motion.div>
 
-        <CinematicOrbCenter activeStep={activeStep} />
+        <div className="master-processing-visuals">
+          <CinematicOrbCenter activeStep={activeStep} />
 
-        {(audioUrl || file) && (
-          <motion.div
-            className="cinematic-waveform-slot relative min-h-[4.75rem] overflow-hidden px-0.5 md:min-h-[5rem]"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <CinematicWaveform
-              mode="processing"
-              audioSrc={file ?? audioUrl}
-              activeStep={activeStep}
-              height={72}
-              className="shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_rgba(0,0,0,0.35)]"
-            />
-          </motion.div>
-        )}
+          {(audioUrl || file) && (
+            <motion.div
+              className="cinematic-waveform-slot relative min-h-[4.75rem] overflow-hidden px-0.5 sm:min-h-[4.75rem]"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <CinematicWaveform
+                mode="processing"
+                audioSrc={file ?? audioUrl}
+                activeStep={activeStep}
+                height={72}
+                className="shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_rgba(0,0,0,0.35)]"
+              />
+            </motion.div>
+          )}
+        </div>
 
         <motion.div
           className="master-processing-status relative w-full min-w-0"
@@ -277,7 +279,7 @@ export default function MasterProcessingPage() {
         >
           Typically 30–60 seconds · Do not close this window
         </motion.p>
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   )

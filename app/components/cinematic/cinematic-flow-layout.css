@@ -20,12 +20,10 @@
 
 @media (min-width: 768px) {
   .cinematic-orb-center--flow {
-    min-height: min(16rem, 40vw);
     max-width: 28rem;
     padding-inline: 0;
     overflow: visible;
     contain: none;
-    transform: translateY(-0.4rem);
   }
 
   .cinematic-orb-center--flow .hero-engine-orb-root,
