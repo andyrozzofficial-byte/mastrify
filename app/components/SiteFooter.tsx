@@ -86,10 +86,10 @@ export default function SiteFooter() {
   const onAnalyze = pathname === "/analyze"
   const onLanding = pathname === "/" || pathname === "/landing"
   const footerTopClass = onAnalyze
-    ? "pt-5 sm:pt-7 lg:pt-[3.25rem]"
+    ? "max-md:pt-7 sm:pt-7 lg:pt-[3.25rem]"
     : onLanding
-      ? "pt-2 sm:pt-4 lg:pt-8"
-      : "pt-6 sm:pt-8 lg:pt-[3.25rem]"
+      ? "max-md:pt-5 sm:pt-4 lg:pt-8"
+      : "max-md:pt-9 sm:pt-8 lg:pt-[3.25rem]"
   const year = new Date().getFullYear()
 
   return (
@@ -118,22 +118,22 @@ export default function SiteFooter() {
       />
 
       <motion.div
-        className={`footer-shell relative mx-auto w-full px-4 pb-[max(1.35rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 sm:pb-10 md:px-10 md:pt-14 md:pb-12 ${footerTopClass}`}
+        className={`footer-shell relative mx-auto w-full px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 sm:pb-10 md:px-10 md:pt-14 md:pb-12 ${footerTopClass}`}
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 sm:gap-7 md:gap-12 lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
+        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
           {/* Brand */}
           <motion.div
-            className="min-w-0 lg:col-span-3 xl:col-span-3"
+            className="min-w-0 max-md:mx-auto max-md:max-w-[18.5rem] lg:col-span-3 xl:col-span-3"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: EASE }}
           >
-            <Link href="/" className="inline-flex items-center">
+            <Link href="/" className="inline-flex items-center max-md:mx-auto">
               <span className="text-[17px] font-semibold tracking-[-0.02em] text-white/92">Mastrify</span>
             </Link>
             <p className="mt-2.5 max-w-[16.5rem] text-[13px] leading-[1.55] text-muted sm:mt-3 md:mt-4 lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
@@ -144,7 +144,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="grid w-full max-w-[17.5rem] min-w-0 grid-cols-2 gap-x-6 gap-y-5 sm:gap-x-8 sm:gap-y-6 md:gap-x-10 md:gap-y-8 lg:col-span-3 lg:max-w-[15.5rem] lg:justify-self-center xl:col-span-3 xl:max-w-[16.5rem]"
+            className="footer-nav-columns grid w-full max-w-[17.5rem] min-w-0 grid-cols-2 gap-x-8 gap-y-6 max-md:mx-auto max-md:gap-x-10 max-md:gap-y-7 sm:gap-x-8 sm:gap-y-6 md:gap-x-10 md:gap-y-8 lg:col-span-3 lg:max-w-[15.5rem] lg:justify-self-center xl:col-span-3 xl:max-w-[16.5rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -156,7 +156,7 @@ export default function SiteFooter() {
 
           {/* Mastering CTA */}
           <motion.div
-            className="min-w-0 lg:col-span-6 lg:pl-2 xl:col-span-6 xl:pl-4"
+            className="min-w-0 max-md:flex max-md:w-full max-md:justify-center lg:col-span-6 lg:pl-2 xl:col-span-6 xl:pl-4"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}

@@ -33,27 +33,27 @@ export default function PricingPageHero() {
       />
 
       <motion.div
-        className="marketing-hero-lockup relative grid gap-5 sm:gap-8"
+        className="marketing-hero-lockup relative grid gap-5 max-md:gap-6 sm:gap-8"
         initial={reduce ? false : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
       >
-        <motion.div className="marketing-hero-copy flex flex-col">
+        <motion.div className="marketing-hero-copy pricing-hero-copy flex flex-col">
           <span className="hero-eyebrow-pill">Simple, honest pricing</span>
 
-          <h1 className="mt-3.5 text-[1.6rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
-            One master.
-            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+          <h1 className="mt-4 text-[1.4rem] font-semibold leading-[1.2] tracking-[-0.028em] text-white min-[390px]:text-[1.48rem] sm:mt-6 sm:text-[2rem] sm:leading-[1.14] md:mt-6 md:text-[2.65rem] md:leading-[1.12]">
+            <span className="block">One master.</span>
+            <span className="mt-1.5 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent md:mt-1">
               Full quality. No complexity.
             </span>
           </h1>
 
-          <p className="hero-lead md:mt-6">
+          <p className="hero-lead mt-5 md:mt-6">
             Release-ready mastering without subscriptions — master your track first, then pay when you are ready to
             export, powered by the same cinematic engine as the rest of Mastrify.
           </p>
 
-          <ul className="mt-4 space-y-2 text-[14px] text-white/70 sm:mt-6 sm:space-y-2.5">
+          <ul className="mt-5 space-y-2.5 text-[14px] leading-[1.55] text-white/70 sm:mt-6 sm:space-y-2.5">
             {BULLETS.map((text) => (
               <li key={text} className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
@@ -62,7 +62,7 @@ export default function PricingPageHero() {
             ))}
           </ul>
 
-          <p className="mt-4 text-[13px] text-white/64 sm:mt-6">
+          <p className="mt-5 text-[13px] text-white/64 sm:mt-6">
             <Link
               href="/master"
               className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline"

@@ -232,6 +232,10 @@ body {
   }
   /* Marketing heroes: orbs hidden below md via .marketing-hero-orb-slot (product flow keeps orbs) */
   @media (max-width: 767px) {
+    .page-container {
+      padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+      padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+    }
     .homepage-hero-shell {
       padding-bottom: 0.5rem;
     }
@@ -249,6 +253,36 @@ body {
     }
     .marketing-hero-shell.hero-section {
       padding-bottom: 1.25rem;
+    }
+    .section-after-hero {
+      padding-top: 1.35rem;
+    }
+    .pricing-hero-copy {
+      margin-inline: auto;
+      max-width: 19.25rem;
+      padding-inline: 0.35rem;
+      text-align: center;
+    }
+    .pricing-hero-copy .hero-eyebrow-pill {
+      margin-inline: auto;
+    }
+    .pricing-hero-copy h1 {
+      max-width: 17.5rem;
+      margin-inline: auto;
+    }
+    .pricing-hero-copy .hero-lead {
+      max-width: 18rem;
+      margin-inline: auto;
+      margin-top: 1.35rem;
+    }
+    .pricing-hero-copy ul {
+      max-width: 17.25rem;
+      margin-inline: auto;
+      margin-top: 1.35rem;
+      text-align: left;
+    }
+    .pricing-hero-copy > p:last-of-type {
+      margin-top: 1.35rem;
     }
   }
   @media (min-width: 1024px) {
@@ -696,20 +730,38 @@ body {
     overflow-x: clip;
   }
   @media (max-width: 767px) {
+    .footer-shell {
+      padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+      padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+    }
     .footer-mobile-grid {
-      gap: 1.125rem;
+      gap: 2.25rem;
+      justify-items: center;
+      text-align: center;
+    }
+    .footer-mobile-grid > * {
+      width: 100%;
+      max-width: 20.5rem;
+    }
+    .footer-mobile-grid .footer-nav-columns {
+      max-width: 15.5rem;
+      margin-inline: auto;
     }
     .footer-mobile-meta {
-      margin-top: 1.35rem;
-      padding-top: 1.125rem;
-      gap: 0.875rem;
+      margin-top: 1.75rem;
+      padding-top: 1.35rem;
+      gap: 1rem;
     }
     .footer-column-title {
       margin-top: 0;
     }
     .footer-column-links {
-      margin-top: 0.625rem;
-      gap: 0.125rem;
+      margin-top: 0.75rem;
+      gap: 0.25rem;
+    }
+    .footer-cta-card {
+      max-width: 20.5rem;
+      margin-inline: auto;
     }
   }
   .footer-cta-card {
