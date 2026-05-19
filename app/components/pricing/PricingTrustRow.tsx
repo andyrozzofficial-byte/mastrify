@@ -17,7 +17,7 @@ export default function PricingTrustRow() {
 
   return (
     <motion.ul
-      className="mx-auto grid max-w-3xl gap-2 sm:grid-cols-2 lg:grid-cols-3 lg:gap-2.5"
+      className="marketing-card-grid gap-2 sm:gap-2.5 lg:gap-2.5"
       initial={reduce ? false : { opacity: 0, y: 14 }}
       whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-32px" }}
@@ -26,7 +26,7 @@ export default function PricingTrustRow() {
       {TRUST.map((label, i) => (
         <motion.li
           key={label}
-          className="flex items-center gap-2.5 rounded-lg border border-white/[0.05] bg-black/[0.28] px-3.5 py-3 backdrop-blur-md sm:justify-center lg:justify-start"
+          className="flex items-center gap-2.5 rounded-lg border border-white/[0.05] bg-black/[0.28] px-3.5 py-3 sm:justify-center lg:justify-start"
           initial={reduce ? false : { opacity: 0, y: 8 }}
           whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
