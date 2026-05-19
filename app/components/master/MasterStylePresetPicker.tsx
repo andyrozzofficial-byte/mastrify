@@ -308,9 +308,17 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-function lockBodyScroll(lock: boolean) {
-  if (typeof window === "undefined" || !lock) return () => {}
+const MOBILE_MODAL_MQ = "(max-width: 639px)"
 
+function lockBodyScrollDesktop() {
+  const prev = document.body.style.overflow
+  document.body.style.overflow = "hidden"
+  return () => {
+    document.body.style.overflow = prev
+  }
+}
+
+function lockBodyScrollMobile() {
   const scrollY = window.scrollY
   const body = document.body
   const html = document.documentElement
@@ -353,10 +361,20 @@ function StylePresetDetailSheet({
       if (e.key === "Escape") onClose()
     }
     document.addEventListener("keydown", onKey)
-    const unlock = lockBodyScroll(true)
+
+    const mq = window.matchMedia(MOBILE_MODAL_MQ)
+    let unlock = () => {}
+    const syncLock = () => {
+      unlock()
+      unlock = mq.matches ? lockBodyScrollMobile() : lockBodyScrollDesktop()
+    }
+    syncLock()
+    mq.addEventListener("change", syncLock)
+
     return () => {
       document.removeEventListener("keydown", onKey)
       unlock()
+      mq.removeEventListener("change", syncLock)
     }
   }, [open, onClose])
 
@@ -374,7 +392,7 @@ function StylePresetDetailSheet({
     <AnimatePresence>
       {open && preset ? (
         <motion.div
-          className="preset-detail-overlay fixed inset-0 z-[80] flex max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:flex-col max-sm:overflow-hidden sm:items-center sm:justify-center sm:p-4"
+          className="preset-detail-overlay fixed inset-0 z-[80]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -382,7 +400,7 @@ function StylePresetDetailSheet({
         >
           <button
             type="button"
-            className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            className="preset-detail-backdrop"
             aria-label="Close preset details"
             onClick={onClose}
           />
@@ -394,18 +412,17 @@ function StylePresetDetailSheet({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            className="preset-detail-sheet relative z-10 flex w-full max-w-md flex-col overflow-hidden border border-white/[0.1] bg-[#090912] shadow-[0_-24px_80px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:border-x-0 max-sm:border-b-0 sm:max-h-[min(92dvh,720px)] sm:overflow-y-auto sm:rounded-2xl"
+            className="preset-detail-sheet"
           >
             <motion.div
               className="pointer-events-none absolute inset-x-0 top-0 z-0 h-32 bg-[radial-gradient(ellipse_80%_70%_at_50%_0%,rgba(124,58,237,0.2),transparent_70%)]"
               aria-hidden
             />
             <motion.div
-              className="pointer-events-none absolute inset-x-8 top-3 z-10 h-1 rounded-full bg-white/15 sm:hidden"
+              className="preset-detail-handle pointer-events-none absolute inset-x-8 top-3 z-10 h-1 rounded-full bg-white/15"
               aria-hidden
             />
-            <motion.div className="preset-detail-sheet-layout relative z-[1] flex min-h-0 flex-1 flex-col">
-              <motion.div className="preset-detail-sheet-scroll min-h-0 flex-1 basis-0 overflow-y-auto overscroll-y-contain px-5 pt-5 sm:px-6 sm:pt-6">
+            <div className="preset-detail-sheet-body">
                 <motion.div className="flex items-start gap-4" layout>
                   <motion.div
                     layout
@@ -453,21 +470,18 @@ function StylePresetDetailSheet({
                   <p className="mt-2 text-[11px] leading-relaxed text-white/42">{preset.detail.genresNote}</p>
                 </motion.div>
 
-                <motion.div className="relative mt-4 grid gap-2.5 pb-2 sm:pb-0">
+                <div className="relative mt-4 grid gap-2.5">
                   <DetailRow label="Loudness feel" value={preset.personality.loudness} />
                   <DetailRow label="Stereo feel" value={preset.personality.stereo} />
                   <DetailRow label="Dynamics" value={preset.personality.dynamics} />
                   <DetailRow label="Tone" value={preset.detail.tone} />
                   <DetailRow label="Technical stereo" value={preset.detail.stereo} />
-                </motion.div>
+                </div>
 
-                <motion.div className="mt-5 hidden pb-6 sm:block">{gotItButton}</motion.div>
-              </motion.div>
+                <div className="preset-detail-cta preset-detail-cta--desktop">{gotItButton}</div>
+            </div>
 
-              <motion.div className="preset-detail-sheet-footer relative z-[1] shrink-0 border-t border-white/[0.08] bg-[#090912] px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:hidden">
-                {gotItButton}
-              </motion.div>
-            </motion.div>
+            <div className="preset-detail-sheet-footer preset-detail-cta--mobile">{gotItButton}</div>
           </motion.div>
         </motion.div>
       ) : null}
