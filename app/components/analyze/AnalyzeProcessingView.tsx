@@ -73,7 +73,7 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
 
         {(file || audioUrl) && (
           <motion.div
-            className="relative mt-5 min-h-[4.75rem] w-full max-w-lg overflow-hidden px-0.5 md:mt-6 md:min-h-[5rem] md:max-w-xl"
+            className="cinematic-waveform-slot relative mt-5 min-h-[4.75rem] w-full max-w-lg overflow-hidden px-0.5 md:mt-6 md:min-h-[5rem] md:max-w-xl"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.12, ease: EASE }}

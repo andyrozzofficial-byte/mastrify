@@ -1,0 +1,29 @@
+/* Waveform preview — scoped sizing (avoid global layout side effects) */
+
+.cinematic-waveform-root {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.cinematic-waveform-canvas-host {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.cinematic-waveform-slot {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 36rem;
+  align-self: stretch;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .master-processing-stage {
+    align-items: stretch;
+  }
+}

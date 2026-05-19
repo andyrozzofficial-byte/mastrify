@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { useReducedMotion } from "framer-motion"
 import WaveformCanvas from "./WaveformCanvas"
 import { useWaveformData } from "./useWaveformData"
+import "./cinematic-waveform.css"
 
 const PREVIEW_START = 60
 const PREVIEW_DURATION = 30
@@ -130,7 +131,7 @@ export default function CinematicWaveform({
 
   return (
     <div
-      className={`fluid-surface relative overflow-hidden rounded-lg bg-gradient-to-b from-white/[0.035] to-black/[0.28] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.06] ${className}`}
+      className={`cinematic-waveform-root relative overflow-hidden rounded-lg bg-gradient-to-b from-white/[0.035] to-black/[0.28] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.06] ${className}`}
       onPointerMove={interactive ? handlePointer : undefined}
       onPointerDown={interactive ? handlePointer : undefined}
       onPointerLeave={interactive ? handleLeave : undefined}

@@ -945,8 +945,8 @@ export default function MasterResultClient() {
           </div>
 
           {/* Preview + settings */}
-          <div className="flex min-w-0 flex-col gap-4 lg:gap-4">
-            <div className="fluid-surface card-pad-mobile flex flex-1 flex-col rounded-xl border border-white/[0.055] bg-black/[0.3] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] md:p-5">
+          <div className="master-result-preview-col flex min-w-0 w-full flex-col gap-4 lg:gap-4">
+            <div className="fluid-surface card-pad-mobile flex min-w-0 w-full flex-1 flex-col rounded-xl border border-white/[0.055] bg-black/[0.3] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] md:p-5">
               <p className="text-center text-[9px] font-semibold uppercase tracking-[0.24em] text-white/60">Mastering preview</p>
 
               <div className="mt-3 grid grid-cols-2 gap-1.5 sm:gap-2">
@@ -994,7 +994,7 @@ export default function MasterResultClient() {
                 )}
                 onSeek={seekPreview}
                 height={isMobileClient ? 104 : 88}
-                className="mt-4 w-full sm:mt-3"
+                className="mt-4 w-full min-w-0 self-stretch sm:mt-3"
               />
 
               <div className="mt-4 flex min-h-[4.25rem] items-center gap-3.5 sm:mt-4">

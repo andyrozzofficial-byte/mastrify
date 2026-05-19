@@ -224,9 +224,19 @@ export default function WaveformCanvas({
 
     const dpr = Math.min(2, typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1)
 
+    const readContainerWidth = () => {
+      const rect = container.getBoundingClientRect()
+      if (rect.width > 0) return rect.width
+      if (container.offsetWidth > 0) return container.offsetWidth
+      const parent = container.parentElement
+      if (parent && parent.clientWidth > 0) return parent.clientWidth
+      return 0
+    }
+
     const resize = () => {
-      const w = container.clientWidth
+      const w = readContainerWidth()
       const h = height
+      if (w <= 0) return
       canvas.width = Math.floor(w * dpr)
       canvas.height = Math.floor(h * dpr)
       canvas.style.width = `${w}px`
@@ -235,12 +245,17 @@ export default function WaveformCanvas({
     }
 
     resize()
+    const rafResize = requestAnimationFrame(() => {
+      resize()
+      requestAnimationFrame(resize)
+    })
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null
     ro?.observe(container)
+    if (container.parentElement) ro?.observe(container.parentElement)
 
     const draw = () => {
       const p = propsRef.current
-      const w = container.clientWidth
+      const w = readContainerWidth()
       const h = height
       if (w <= 0) {
         rafRef.current = requestAnimationFrame(draw)
@@ -534,14 +549,15 @@ export default function WaveformCanvas({
     rafRef.current = requestAnimationFrame(draw)
 
     return () => {
+      cancelAnimationFrame(rafResize)
       ro?.disconnect()
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
     }
   }, [height, reducedMotion])
 
   return (
-    <div ref={containerRef} className={className} style={{ height }}>
-      <canvas ref={canvasRef} className="block w-full" aria-hidden />
+    <div ref={containerRef} className={`cinematic-waveform-canvas-host ${className ?? ""}`} style={{ height }}>
+      <canvas ref={canvasRef} className="block h-full w-full" aria-hidden />
     </div>
   )
 }

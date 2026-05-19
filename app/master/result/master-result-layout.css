@@ -11,6 +11,11 @@
   width: 100%;
 }
 
+.master-result-preview-col {
+  width: 100%;
+  min-width: 0;
+}
+
 @media (min-width: 768px) {
   .master-result-grid {
     gap: 1.75rem;
