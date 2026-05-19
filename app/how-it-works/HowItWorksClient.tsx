@@ -5,8 +5,7 @@ import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
-import HeroWaveBackdrop from "../components/HeroWaveBackdrop"
-import MasteringEngineVisual from "../master/processing/MasteringEngineVisual"
+import { MarketingHeroOrbSlot } from "../components/HeroEngineOrb"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -185,25 +184,23 @@ export default function HowItWorksClient() {
       />
 
       {/* Hero */}
-      <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 pb-12 md:pb-28">
-        <HeroWaveBackdrop />
-
-        <div className="marketing-hero-lockup relative grid items-center gap-6 sm:gap-10 md:gap-12">
+      <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
+        <div className="marketing-hero-lockup relative grid gap-6 sm:gap-10">
           <Reveal className="marketing-hero-copy">
             <span className="hero-eyebrow-pill">
               Intelligent mastering
             </span>
-            <h1 className="mt-5 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.5rem] md:text-[3rem] md:leading-[1.08]">
+            <h1 className="marketing-hero-title mt-5 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.5rem] md:leading-[1.08]">
               How your music becomes
               <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
                 release-ready
               </span>
             </h1>
-            <p className="mt-4 max-w-lg text-[14px] leading-relaxed text-white/75 sm:mt-5 sm:text-[15px] md:text-[16px] md:leading-relaxed">
+            <p className="hero-lead max-w-lg text-white/75 sm:text-[15px] md:text-[16px]">
               Mastrify listens like an engineer who cares about the song — preserving dynamics, emotional movement,
               and the identity of your mix while bringing it to a confident, streaming-ready level.
             </p>
-            <ul className="mt-4 space-y-2 text-[14px] text-white/72 sm:mt-6 sm:space-y-2.5">
+            <ul className="marketing-hero-bullets mt-4 space-y-2 text-[14px] text-white/72 sm:mt-6 sm:space-y-2.5">
               <li className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
                 Perceptual processing that follows the music, not a fixed template
@@ -218,7 +215,7 @@ export default function HowItWorksClient() {
               </li>
             </ul>
             <motion.div
-              className="mt-6 flex flex-wrap gap-2.5 sm:mt-8 sm:gap-3"
+              className="marketing-hero-cta mt-6 flex flex-wrap gap-2.5 sm:mt-8 sm:gap-3"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.5, ease: EASE }}
@@ -238,17 +235,8 @@ export default function HowItWorksClient() {
             </motion.div>
           </Reveal>
 
-          <Reveal
-            delay={0.1}
-            className="marketing-hero-orb-slot hidden md:flex marketing-hero-visual relative min-w-0 justify-center overflow-hidden"
-          >
-            <div className="hero-engine-orb-cage relative w-full">
-              <div
-                className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.14),transparent_65%)]"
-                aria-hidden
-              />
-              <MasteringEngineVisual activeStep={engineStep} className="marketing-engine-visual relative z-[1]" />
-            </div>
+          <Reveal delay={0.1}>
+            <MarketingHeroOrbSlot activeStep={engineStep} />
           </Reveal>
         </div>
       </section>

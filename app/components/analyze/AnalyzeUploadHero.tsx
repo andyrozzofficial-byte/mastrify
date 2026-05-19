@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState, type RefObject } from "react"
-import HeroEngineOrb from "../HeroEngineOrb"
+import { MarketingHeroOrbSlot } from "../HeroEngineOrb"
 import AnalyzeStepRail, { type AnalyzePhase } from "./AnalyzeStepRail"
 import AnalyzeUploadCard from "./AnalyzeUploadCard"
 
@@ -40,7 +40,7 @@ export default function AnalyzeUploadHero({
   }, [reduce])
 
   return (
-    <section className="marketing-hero-shell hero-section relative w-full md:pb-10">
+    <section className="marketing-hero-shell hero-section page-hero-pad relative w-full md:pb-10">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
@@ -49,7 +49,7 @@ export default function AnalyzeUploadHero({
       />
 
       <motion.div
-        className="marketing-hero-lockup marketing-hero-lockup--top relative isolate grid min-w-0 gap-5 max-lg:grid-cols-1 max-lg:gap-6"
+        className="marketing-hero-lockup marketing-hero-lockup--top relative isolate grid min-w-0 gap-5 max-lg:grid-cols-1 max-lg:gap-6 sm:gap-10"
         initial={reduce ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: EASE }}
@@ -57,7 +57,7 @@ export default function AnalyzeUploadHero({
         <motion.div className="marketing-hero-copy relative z-10 flex min-w-0 flex-col max-lg:order-1">
           <span className="hero-eyebrow-pill">Perceptual mix intelligence</span>
 
-          <h1 className="mt-3.5 text-[1.62rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white min-[430px]:text-[1.85rem] sm:mt-5 sm:text-[2.35rem] md:text-[2.65rem]">
+          <h1 className="marketing-hero-title mt-3.5 text-[1.62rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white min-[430px]:text-[1.85rem] sm:mt-5 sm:text-[2.35rem]">
             See what your mix
             <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
               actually needs
@@ -69,7 +69,7 @@ export default function AnalyzeUploadHero({
             mastering journey, before you commit to the final master.
           </p>
 
-          <ul className="mt-4 space-y-2 text-[14px] text-white/70 sm:mt-6 sm:space-y-2.5">
+          <ul className="marketing-hero-bullets mt-4 space-y-2 text-[14px] text-white/70 sm:mt-6 sm:space-y-2.5">
             <li className="flex gap-2.5">
               <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
               Understand loudness, width, and tone with engineer-level clarity
@@ -122,12 +122,7 @@ export default function AnalyzeUploadHero({
           </p>
         </motion.div>
 
-        <HeroEngineOrb
-          activeStep={engineStep}
-          compactAtmosphere
-          mobileGlowBoost
-          className="marketing-hero-orb-slot hidden md:block marketing-hero-visual relative z-0 min-w-0 max-w-full overflow-hidden lg:sticky lg:top-24"
-        />
+        <MarketingHeroOrbSlot activeStep={engineStep} className="relative z-0" />
       </motion.div>
     </section>
   )

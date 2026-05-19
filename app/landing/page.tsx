@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
 import CinematicDivider from "../components/CinematicDivider"
 import CinematicReveal from "../components/CinematicReveal"
-import HeroEngineOrb from "../components/HeroEngineOrb"
+import { MarketingHeroOrbSlot } from "../components/HeroEngineOrb"
 import PremiumButton from "../components/PremiumButton"
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -50,8 +50,8 @@ export default function Landing() {
 
       {/* Hero */}
       <section className="marketing-hero-shell homepage-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
-        <motion.div
-          className="marketing-hero-lockup homepage-hero-lockup relative grid items-center gap-6 sm:gap-10"
+          <motion.div
+            className="marketing-hero-lockup homepage-hero-lockup relative grid gap-6 sm:gap-10"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
@@ -64,7 +64,7 @@ export default function Landing() {
           >
             <span className="hero-eyebrow-pill">Intelligent mastering engine</span>
 
-            <h1 className="mt-3.5 text-[1.65rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2.1rem] md:text-[3.1rem] md:leading-[1.08] lg:mt-7 lg:text-[2.65rem]">
+            <h1 className="marketing-hero-title mt-3.5 text-[1.65rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2.1rem] md:text-[3.1rem] md:leading-[1.08]">
               Music shaped for release
               <span className="mt-2 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
                 with musical depth
@@ -76,7 +76,7 @@ export default function Landing() {
               bringing your mix to a confident, streaming-ready level.
             </p>
 
-            <ul className="mx-auto mt-5 max-w-md space-y-2.5 text-left text-[14px] leading-[1.55] text-white/70 sm:mt-7 sm:space-y-3 lg:mx-0">
+            <ul className="marketing-hero-bullets mx-auto mt-5 max-w-md space-y-2.5 text-left text-[14px] leading-[1.55] text-white/70 sm:mt-7 sm:space-y-3 lg:mx-0">
               <li className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
                 Transparent dynamics that respect what your mix already does well
@@ -88,7 +88,7 @@ export default function Landing() {
             </ul>
 
             <motion.div
-              className="mobile-cta-stack mt-4 sm:mt-8 lg:justify-start"
+              className="mobile-cta-stack marketing-hero-cta mt-4 sm:mt-8 lg:justify-start"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
@@ -113,9 +113,7 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <div className="marketing-hero-orb-slot hidden md:block marketing-hero-visual homepage-hero-orb min-w-0 max-w-full overflow-hidden">
-            <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost />
-          </div>
+          <MarketingHeroOrbSlot activeStep={engineStep} className="homepage-hero-orb" />
         </motion.div>
       </section>
 
