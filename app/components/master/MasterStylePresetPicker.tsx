@@ -326,20 +326,26 @@ function lockBodyScrollMobile() {
     bodyOverflow: body.style.overflow,
     bodyPosition: body.style.position,
     bodyTop: body.style.top,
+    bodyLeft: body.style.left,
+    bodyRight: body.style.right,
     bodyWidth: body.style.width,
     htmlOverflow: html.style.overflow,
   }
 
+  html.style.overflow = "hidden"
   body.style.overflow = "hidden"
   body.style.position = "fixed"
   body.style.top = `-${scrollY}px`
+  body.style.left = "0"
+  body.style.right = "0"
   body.style.width = "100%"
-  html.style.overflow = "hidden"
 
   return () => {
     body.style.overflow = prev.bodyOverflow
     body.style.position = prev.bodyPosition
     body.style.top = prev.bodyTop
+    body.style.left = prev.bodyLeft
+    body.style.right = prev.bodyRight
     body.style.width = prev.bodyWidth
     html.style.overflow = prev.htmlOverflow
     window.scrollTo(0, scrollY)
@@ -408,10 +414,10 @@ function StylePresetDetailSheet({
             role="dialog"
             aria-modal="true"
             aria-labelledby="preset-detail-title"
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 24 }}
-            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="preset-detail-sheet"
           >
             <motion.div
@@ -423,9 +429,8 @@ function StylePresetDetailSheet({
               aria-hidden
             />
             <div className="preset-detail-sheet-body">
-                <motion.div className="flex items-start gap-4" layout>
+                <motion.div className="flex items-start gap-4">
                   <motion.div
-                    layout
                     className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${preset.accent.iconBg} text-white ring-1 ${preset.accent.iconRing} ${preset.accent.glow}`}
                     {...iconMotion(preset.motionKey, true, false)}
                   >
@@ -455,16 +460,16 @@ function StylePresetDetailSheet({
                   </button>
                 </motion.div>
 
-                <motion.div className="preset-glance-card relative mt-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-3">
+                <div className="preset-glance-card relative mt-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-3">
                   <p className="preset-glance-title text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">
                     Character at a glance
                   </p>
                   <PersonalityPills personality={preset.personality} active className="preset-glance-pills" />
-                </motion.div>
+                </div>
 
                 <p className="relative mt-4 text-[13px] leading-relaxed text-white/68">{preset.detail.summary}</p>
 
-                <motion.div className="relative mt-4" layout>
+                <motion.div className="relative mt-4">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Works well for</p>
                   <p className="mt-2 text-[12px] leading-relaxed text-white/55">{preset.worksWellFor.join(" · ")}</p>
                   <p className="mt-2 text-[11px] leading-relaxed text-white/42">{preset.detail.genresNote}</p>
@@ -479,9 +484,8 @@ function StylePresetDetailSheet({
                 </div>
 
                 <div className="preset-detail-cta preset-detail-cta--desktop">{gotItButton}</div>
+                <div className="preset-detail-cta preset-detail-cta--mobile">{gotItButton}</div>
             </div>
-
-            <div className="preset-detail-sheet-footer preset-detail-cta--mobile">{gotItButton}</div>
           </motion.div>
         </motion.div>
       ) : null}

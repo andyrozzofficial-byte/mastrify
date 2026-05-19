@@ -1160,6 +1160,24 @@ body {
     .preset-detail-cta--mobile {
       display: none !important;
     }
+    .preset-glance-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-inline: 1rem;
+      text-align: center;
+      gap: 0.75rem;
+    }
+    .preset-glance-title {
+      width: 100%;
+      margin: 0;
+      text-align: center;
+    }
+    .preset-glance-card .preset-glance-pills {
+      margin-top: 0;
+      justify-content: center;
+      padding-inline: 0.25rem;
+    }
   }
   @media (max-width: 639px) {
     .preset-detail-overlay {
@@ -1181,37 +1199,27 @@ body {
       background: rgba(0, 0, 0, 0.8);
     }
     .preset-detail-sheet {
-      display: flex;
-      flex-direction: column;
-      flex: 1 1 auto;
+      position: relative;
       z-index: 1;
-      min-height: 0;
+      flex: 0 1 auto;
+      display: block;
       width: 100%;
+      min-height: 0;
       max-height: 100%;
       max-width: none;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
       border-radius: 1.35rem;
       box-shadow:
         0 -24px 80px rgba(0, 0, 0, 0.55),
         inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
     .preset-detail-sheet-body {
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-x: hidden;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      touch-action: pan-y;
-      padding: 1.25rem 1.25rem 0.5rem;
-    }
-    .preset-detail-sheet-footer {
-      flex-shrink: 0;
-      position: relative;
-      z-index: 2;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      background: #090912;
-      padding: 0.75rem 1.25rem max(1rem, env(safe-area-inset-bottom, 0px));
+      overflow: visible;
+      padding: 1.25rem 1.25rem 0.25rem;
     }
     .preset-detail-handle {
       display: block;
@@ -1221,6 +1229,8 @@ body {
     }
     .preset-detail-cta--mobile {
       display: block;
+      margin-top: 1rem;
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
     }
     .preset-glance-card {
       display: flex;
