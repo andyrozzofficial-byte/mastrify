@@ -300,6 +300,39 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   )
 }
 
+function lockBodyScroll(lock: boolean) {
+  if (typeof window === "undefined" || !lock) return () => {}
+
+  const scrollY = window.scrollY
+  const body = document.body
+  const html = document.documentElement
+  const prev = {
+    bodyOverflow: body.style.overflow,
+    bodyPosition: body.style.position,
+    bodyTop: body.style.top,
+    bodyWidth: body.style.width,
+    bodyTouchAction: body.style.touchAction,
+    htmlOverflow: html.style.overflow,
+  }
+
+  body.style.overflow = "hidden"
+  body.style.position = "fixed"
+  body.style.top = `-${scrollY}px`
+  body.style.width = "100%"
+  body.style.touchAction = "none"
+  html.style.overflow = "hidden"
+
+  return () => {
+    body.style.overflow = prev.bodyOverflow
+    body.style.position = prev.bodyPosition
+    body.style.top = prev.bodyTop
+    body.style.width = prev.bodyWidth
+    body.style.touchAction = prev.bodyTouchAction
+    html.style.overflow = prev.htmlOverflow
+    window.scrollTo(0, scrollY)
+  }
+}
+
 function StylePresetDetailSheet({
   preset,
   open,
@@ -315,19 +348,28 @@ function StylePresetDetailSheet({
       if (e.key === "Escape") onClose()
     }
     document.addEventListener("keydown", onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = "hidden"
+    const unlock = lockBodyScroll(true)
     return () => {
       document.removeEventListener("keydown", onKey)
-      document.body.style.overflow = prev
+      unlock()
     }
   }, [open, onClose])
+
+  const gotItButton = (
+    <button
+      type="button"
+      onClick={onClose}
+      className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] py-3 text-sm font-semibold text-white/82 transition hover:bg-white/[0.07] hover:text-white"
+    >
+      Got it
+    </button>
+  )
 
   return (
     <AnimatePresence>
       {open && preset ? (
         <motion.div
-          className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4"
+          className="preset-detail-overlay fixed inset-0 z-[80] flex max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:flex-col max-sm:overflow-hidden sm:items-center sm:justify-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -335,7 +377,7 @@ function StylePresetDetailSheet({
         >
           <button
             type="button"
-            className="absolute inset-0 bg-black/72 backdrop-blur-md"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md max-sm:touch-none"
             aria-label="Close preset details"
             onClick={onClose}
           />
@@ -347,84 +389,85 @@ function StylePresetDetailSheet({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 max-h-[min(92dvh,720px)] w-full max-w-md overflow-hidden overflow-y-auto rounded-t-[1.35rem] border border-white/[0.1] bg-[#090912] shadow-[0_-24px_80px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] sm:rounded-2xl"
+            className="preset-detail-sheet relative z-10 flex w-full max-w-md flex-col overflow-hidden border border-white/[0.1] bg-[#090912] shadow-[0_-24px_80px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:border-x-0 max-sm:border-b-0 sm:max-h-[min(92dvh,720px)] sm:overflow-y-auto sm:rounded-2xl"
           >
             <motion.div
               className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_80%_70%_at_50%_0%,rgba(124,58,237,0.2),transparent_70%)]"
               aria-hidden
             />
             <motion.div
-              className="pointer-events-none absolute inset-x-8 top-3 h-1 rounded-full bg-white/15 sm:hidden"
+              className="pointer-events-none absolute inset-x-8 top-3 z-10 h-1 rounded-full bg-white/15 sm:hidden"
               aria-hidden
             />
-            <div className="relative px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pb-6 sm:pt-6">
-              <motion.div className="flex items-start gap-4" layout>
-                <motion.div
-                  layout
-                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${preset.accent.iconBg} text-white ring-1 ${preset.accent.iconRing} ${preset.accent.glow}`}
-                  {...iconMotion(preset.motionKey, true, false)}
-                >
-                  <PresetIcon motionKey={preset.motionKey} />
-                </motion.div>
-                <div className="min-w-0 flex-1 pt-0.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-200/55">Sonic personality</p>
-                  <h2 id="preset-detail-title" className="mt-1 text-xl font-bold tracking-tight text-white">
-                    {preset.label}
-                  </h2>
-                  <p className="mt-0.5 text-sm text-cyan-200/70">{preset.tagline}</p>
-                  <span
-                    className={`mt-2.5 inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ring-1 ${INTENSITY_STYLES[preset.detail.intensity]}`}
+            <motion.div className="relative flex min-h-0 flex-1 flex-col max-sm:overflow-hidden">
+              <motion.div className="preset-detail-sheet-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5 [-webkit-overflow-scrolling:touch] sm:px-6 sm:pt-6">
+                <motion.div className="flex items-start gap-4" layout>
+                  <motion.div
+                    layout
+                    className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${preset.accent.iconBg} text-white ring-1 ${preset.accent.iconRing} ${preset.accent.glow}`}
+                    {...iconMotion(preset.motionKey, true, false)}
                   >
-                    {preset.detail.intensity}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-white/55 transition hover:bg-white/[0.08] hover:text-white"
-                  aria-label="Close"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                    <PresetIcon motionKey={preset.motionKey} />
+                  </motion.div>
+                  <motion.div className="min-w-0 flex-1 pt-0.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-200/55">Sonic personality</p>
+                    <h2 id="preset-detail-title" className="mt-1 text-xl font-bold tracking-tight text-white">
+                      {preset.label}
+                    </h2>
+                    <p className="mt-0.5 text-sm text-cyan-200/70">{preset.tagline}</p>
+                    <span
+                      className={`mt-2.5 inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ring-1 ${INTENSITY_STYLES[preset.detail.intensity]}`}
+                    >
+                      {preset.detail.intensity}
+                    </span>
+                  </motion.div>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-white/55 transition hover:bg-white/[0.08] hover:text-white"
+                    aria-label="Close"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </motion.div>
+
+                <motion.div className="relative mt-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-3">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Character at a glance</p>
+                  <PersonalityPills personality={preset.personality} active />
+                </motion.div>
+
+                <p className="relative mt-4 text-[13px] leading-relaxed text-white/68">{preset.detail.summary}</p>
+
+                <motion.div className="relative mt-4" layout>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Works well for</p>
+                  <p className="mt-2 text-[12px] leading-relaxed text-white/55">{preset.worksWellFor.join(" · ")}</p>
+                  <p className="mt-2 text-[11px] leading-relaxed text-white/42">{preset.detail.genresNote}</p>
+                </motion.div>
+
+                <motion.div className="relative mt-4 grid gap-2.5 pb-2 sm:pb-0">
+                  <DetailRow label="Loudness feel" value={preset.personality.loudness} />
+                  <DetailRow label="Stereo feel" value={preset.personality.stereo} />
+                  <DetailRow label="Dynamics" value={preset.personality.dynamics} />
+                  <DetailRow label="Tone" value={preset.detail.tone} />
+                  <DetailRow label="Technical stereo" value={preset.detail.stereo} />
+                </motion.div>
+
+                <motion.div className="mt-5 hidden pb-6 sm:block">{gotItButton}</motion.div>
               </motion.div>
 
-              <div className="relative mt-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-3">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Character at a glance</p>
-                <PersonalityPills personality={preset.personality} active />
-              </div>
-
-              <p className="relative mt-4 text-[13px] leading-relaxed text-white/68">{preset.detail.summary}</p>
-
-              <motion.div className="relative mt-4" layout>
-                <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Works well for</p>
-                <p className="mt-2 text-[12px] leading-relaxed text-white/55">{preset.worksWellFor.join(" · ")}</p>
-                <p className="mt-2 text-[11px] leading-relaxed text-white/42">{preset.detail.genresNote}</p>
+              <motion.div className="preset-detail-sheet-footer shrink-0 border-t border-white/[0.08] bg-[#090912]/95 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm sm:hidden">
+                {gotItButton}
               </motion.div>
-
-              <div className="relative mt-4 grid gap-2.5">
-                <DetailRow label="Loudness feel" value={preset.personality.loudness} />
-                <DetailRow label="Stereo feel" value={preset.personality.stereo} />
-                <DetailRow label="Dynamics" value={preset.personality.dynamics} />
-                <DetailRow label="Tone" value={preset.detail.tone} />
-                <DetailRow label="Technical stereo" value={preset.detail.stereo} />
-              </div>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="mt-5 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] py-3 text-sm font-semibold text-white/82 transition hover:bg-white/[0.07] hover:text-white"
-              >
-                Got it
-              </button>
-            </div>
+            </motion.div>
           </motion.div>
         </motion.div>
       ) : null}
     </AnimatePresence>
   )
 }
+
 
 function StylePresetCard({
   preset,

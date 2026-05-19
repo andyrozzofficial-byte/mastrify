@@ -1103,6 +1103,18 @@ body {
       font-size: 13px;
     }
   }
+  @media (max-width: 639px) {
+    .preset-detail-overlay {
+      overscroll-behavior: none;
+    }
+    .preset-detail-sheet {
+      touch-action: pan-y;
+    }
+    .preset-detail-sheet-scroll {
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
   .hero-orb-radial-mobile {
     pointer-events: none;
     position: absolute;
