@@ -1337,9 +1337,10 @@ body {
     .footer-shell {
       padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
       padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+      padding-bottom: max(0.875rem, env(safe-area-inset-bottom, 0px));
     }
     .footer-mobile-grid {
-      gap: 2.25rem;
+      gap: 1.5rem;
       justify-items: center;
       text-align: center;
     }
@@ -1352,20 +1353,28 @@ body {
       margin-inline: auto;
     }
     .footer-mobile-meta {
-      margin-top: 1.75rem;
-      padding-top: 1.35rem;
-      gap: 1rem;
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      gap: 0.625rem;
+    }
+    .footer-meta-cluster {
+      gap: 0.5rem;
     }
     .footer-column-title {
       margin-top: 0;
     }
     .footer-column-links {
-      margin-top: 0.75rem;
-      gap: 0.25rem;
+      margin-top: 0.5rem;
+      gap: 0.125rem;
+    }
+    .footer-tap-link {
+      min-height: 2rem;
+      font-size: 13px;
     }
     .footer-cta-card {
       max-width: 20.5rem;
       margin-inline: auto;
+      padding: 0.8125rem 0.875rem;
     }
   }
   .footer-cta-card {
