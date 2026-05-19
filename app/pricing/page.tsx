@@ -17,20 +17,22 @@ export default function Pricing() {
       <PricingPageHero />
 
       <MarketingSection afterHero tightAfterHero compact contained className="marketing-pricing-lower">
-        <PricingTrustRow />
+        <div className="marketing-pricing-stack">
+          <PricingTrustRow />
 
-        <motion.div
-          className="marketing-pricing-footer"
-          initial={reduce ? false : { opacity: 0 }}
-          whileInView={reduce ? undefined : { opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.55, ease: EASE }}
-        >
-          <CinematicDivider />
-          <p className="marketing-pricing-footer-copy">
-            Studio-quality master. One simple price — more value than the cost suggests.
-          </p>
-        </motion.div>
+          <motion.div
+            className="marketing-pricing-footer"
+            initial={reduce ? false : { opacity: 0 }}
+            whileInView={reduce ? undefined : { opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55, ease: EASE }}
+          >
+            <CinematicDivider />
+            <p className="marketing-pricing-footer-copy">
+              Studio-quality master. One simple price — more value than the cost suggests.
+            </p>
+          </motion.div>
+        </div>
       </MarketingSection>
     </MarketingPageFrame>
   )
