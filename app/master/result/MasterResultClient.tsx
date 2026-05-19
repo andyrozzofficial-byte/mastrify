@@ -21,6 +21,7 @@ import {
   smartLoudnessTitle,
   toFiniteNumber,
 } from "../../../lib/masterResultInsights"
+import "./master-result-layout.css"
 import {
   PREVIEW_DURATION,
   PREVIEW_END,
@@ -831,7 +832,7 @@ export default function MasterResultClient() {
   }
 
   return (
-    <motion.div className="fluid-surface mx-auto max-w-[1080px] px-4 pb-3 pt-5 sm:px-6 md:px-10 md:pb-4 md:pt-6 lg:px-12">
+    <motion.div className="master-result-shell min-w-0 px-4 pb-3 pt-5 sm:px-6 md:pb-4 md:pt-6 md:px-8">
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -903,9 +904,9 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
-        className="fluid-surface mt-8 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.46),0_0_72px_rgba(124,58,237,0.09)] backdrop-blur-2xl sm:p-5 md:mt-10 md:rounded-[1.35rem] md:p-8 lg:p-9"
+        className="master-result-panel mt-8 min-w-0 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.46),0_0_72px_rgba(124,58,237,0.09)] backdrop-blur-2xl sm:p-5 md:mt-10 md:rounded-[1.35rem]"
       >
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-stretch lg:gap-10 xl:gap-11">
+        <div className="master-result-grid grid gap-6 md:gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-stretch lg:gap-8">
           {/* Before / After metrics */}
           <div className="flex min-w-0 flex-col">
             <p className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/60">Sound profile</p>

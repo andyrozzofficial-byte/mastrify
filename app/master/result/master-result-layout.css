@@ -1,0 +1,24 @@
+/* Master result page layout — scoped to result flow only */
+
+.master-result-shell {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 52rem;
+  margin-inline: auto;
+}
+
+.master-result-panel {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .master-result-grid {
+    gap: 1.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .master-result-grid {
+    gap: 2rem;
+  }
+}

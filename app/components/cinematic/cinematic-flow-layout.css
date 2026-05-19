@@ -1,0 +1,74 @@
+/* Product-flow orb layout (processing / analyze) — not marketing heroes */
+
+.master-processing-stage {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 52rem;
+  margin-inline: auto;
+}
+
+.cinematic-orb-center--flow {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  max-width: min(26rem, 100%);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .cinematic-orb-center--flow {
+    min-height: min(16rem, 40vw);
+    max-width: 28rem;
+    padding-inline: 0;
+    overflow: visible;
+    contain: none;
+    transform: translateY(-0.4rem);
+  }
+
+  .cinematic-orb-center--flow .hero-engine-orb-root,
+  .cinematic-orb-center--flow .hero-engine-orb-cage,
+  .cinematic-orb-center--flow .hero-engine-orb-stage {
+    margin-inline: auto;
+    overflow: visible;
+    contain: none;
+  }
+
+  .cinematic-orb-center--flow .hero-engine-orb-root {
+    width: 100%;
+    max-width: 22rem;
+  }
+
+  .cinematic-orb-center--flow .hero-engine-orb-cage {
+    width: min(22rem, 100%);
+    max-width: 22rem;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
+  }
+
+  .cinematic-orb-center--flow .hero-engine-orb-stage {
+    width: 100%;
+    height: 100%;
+  }
+
+  .cinematic-orb-center--flow .hero-engine-orb-cage .marketing-engine-visual {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+@media (min-width: 1280px) {
+  .cinematic-orb-center--flow .hero-engine-orb-root {
+    max-width: 24rem;
+  }
+
+  .cinematic-orb-center--flow .hero-engine-orb-cage {
+    width: min(24rem, 100%);
+    max-width: 24rem;
+  }
+}

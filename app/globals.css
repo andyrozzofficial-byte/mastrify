@@ -552,26 +552,6 @@ body {
       padding: 1.5rem;
     }
   }
-  @media (min-width: 768px) {
-    .cinematic-orb-center .hero-engine-orb-cage {
-      aspect-ratio: 1 / 1;
-      width: clamp(340px, 36vw, 540px);
-      height: auto;
-      flex-shrink: 0;
-      margin-inline: auto;
-      overflow: visible;
-    }
-    .cinematic-orb-center .hero-engine-orb-stage {
-      width: 100%;
-      height: 100%;
-    }
-    .cinematic-orb-center .hero-engine-orb-cage .marketing-engine-visual {
-      width: 100% !important;
-      max-width: 100% !important;
-      height: auto !important;
-      aspect-ratio: 1 / 1;
-    }
-  }
   /* Marketing scroll performance */
   .marketing-page-root {
     overflow-x: clip;
@@ -642,22 +622,6 @@ body {
     .marketing-hero-visual .hero-engine-orb-root {
       overflow: hidden;
       contain: layout style paint;
-    }
-    .cinematic-orb-center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-      margin-inline: auto;
-      overflow: visible;
-      contain: none;
-    }
-    .cinematic-orb-center .hero-engine-orb-root,
-    .cinematic-orb-center .hero-engine-orb-cage,
-    .cinematic-orb-center .hero-engine-orb-stage {
-      margin-inline: auto;
-      overflow: visible;
-      contain: none;
     }
   }
   /* Marketing heroes — clip orb/glow bleed on tablet */

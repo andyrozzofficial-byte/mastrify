@@ -197,7 +197,7 @@ export default function MasterProcessingPage() {
       />
 
       <motion.header
-        className="relative z-20 flex w-full shrink-0 items-center justify-center px-4 pt-7 sm:px-6 sm:pt-8 md:pt-10"
+        className="relative z-20 flex w-full shrink-0 items-center justify-center px-4 pt-6 sm:px-6 sm:pt-7 md:pt-8"
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
@@ -207,7 +207,7 @@ export default function MasterProcessingPage() {
         </span>
       </motion.header>
 
-      <div className="fluid-surface relative z-10 mx-auto flex max-w-[52rem] flex-1 flex-col items-center justify-center px-4 pb-10 pt-4 sm:px-5 md:px-8 md:pb-14">
+      <div className="master-processing-stage relative z-10 mx-auto flex w-full max-w-[52rem] flex-1 flex-col items-center justify-center px-4 pb-10 pt-2 sm:px-5 md:px-8 md:pb-14">
         <motion.div
           className="w-full max-w-xl min-w-0 text-center md:max-w-2xl"
           initial={{ opacity: 0, y: 12 }}
@@ -229,7 +229,7 @@ export default function MasterProcessingPage() {
           </p>
         </motion.div>
 
-        <CinematicOrbCenter activeStep={activeStep} className="mt-8 max-w-full px-0 md:mt-10" />
+        <CinematicOrbCenter activeStep={activeStep} className="mt-6 md:mt-8" />
 
         {(audioUrl || file) && (
           <motion.div

@@ -68,8 +68,8 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
         ) : null}
       </motion.header>
 
-      <div className="relative z-10 mx-auto mt-6 flex w-full max-w-[26rem] flex-1 flex-col items-center justify-center px-5 md:mt-8 md:max-w-[28rem]">
-        <CinematicOrbCenter activeStep={orbStep} className="max-w-full px-0" />
+      <div className="master-processing-stage relative z-10 mx-auto mt-6 flex w-full max-w-[52rem] flex-1 flex-col items-center justify-center px-4 sm:px-5 md:mt-8">
+        <CinematicOrbCenter activeStep={orbStep} className="mt-2 md:mt-4" />
 
         {(file || audioUrl) && (
           <motion.div
