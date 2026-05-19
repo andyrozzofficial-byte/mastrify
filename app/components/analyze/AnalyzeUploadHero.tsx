@@ -40,14 +40,15 @@ export default function AnalyzeUploadHero({
   }, [reduce])
 
   return (
-    <section className="marketing-hero-shell hero-section page-hero-pad relative w-full md:pb-10">
+    <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 w-full sm:pb-10 md:pb-12">
       <div
         className="marketing-ambient-pulse pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
       />
 
+      {/* Intro band — same grid/orb anchor as landing / pricing / why */}
       <motion.div
-        className="marketing-hero-lockup marketing-hero-lockup--top relative isolate grid min-w-0 gap-5 max-lg:grid-cols-1 max-lg:gap-6 sm:gap-10"
+        className="marketing-hero-lockup relative grid gap-6 sm:gap-10"
         initial={reduce ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: EASE }}
@@ -81,46 +82,54 @@ export default function AnalyzeUploadHero({
               Flow straight into mastering when your material is ready
             </li>
           </ul>
-
-          <AnalyzeStepRail phase={phase} className="mt-6 justify-start sm:mt-8 md:mt-9" />
-
-          <motion.div className="mt-6 w-full max-w-[29.5rem] min-w-0 sm:mt-8 lg:max-w-none">
-            <AnalyzeUploadCard
-              file={file}
-              fileInputRef={fileInputRef}
-              onFileInputChange={onFileInputChange}
-              onScanClick={onScanClick}
-            />
-          </motion.div>
-
-          <motion.div className="mt-5 grid gap-2 sm:mt-8 sm:grid-cols-3 sm:gap-2.5">
-            {TRUST.map((item, i) => (
-              <motion.div
-                key={item.title}
-                className="rounded-lg border border-white/[0.05] bg-black/[0.28] px-3 py-2.5 text-center backdrop-blur-md sm:py-3"
-                initial={reduce ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.15 + i * 0.05, ease: EASE }}
-              >
-                <p className="text-[11px] font-medium text-white/72">{item.title}</p>
-                <p className="mt-0.5 text-[10px] text-white/60">{item.sub}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <p className="mt-4 text-[11px] text-white/60 sm:mt-6">
-            <Link
-              href="/how-it-works"
-              className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline"
-            >
-              Why Mastrify
-            </Link>
-            <span className="mx-2 text-white/48">·</span>
-            Supported formats &amp; tips
-          </p>
         </motion.div>
 
-        <MarketingHeroOrbSlot activeStep={engineStep} className="relative z-0" />
+        <MarketingHeroOrbSlot activeStep={engineStep} className="homepage-hero-orb" />
+      </motion.div>
+
+      {/* Upload flow — below intro band so orb stays aligned with headline block on desktop */}
+      <motion.div
+        className="analyze-hero-actions relative z-10 mt-6 min-w-0 max-lg:order-2 sm:mt-8 lg:mt-10 lg:max-w-[36rem]"
+        initial={reduce ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.65, delay: 0.08, ease: EASE }}
+      >
+        <AnalyzeStepRail phase={phase} className="justify-start" />
+
+        <motion.div className="mt-6 w-full max-w-[29.5rem] min-w-0 sm:mt-8 lg:max-w-none">
+          <AnalyzeUploadCard
+            file={file}
+            fileInputRef={fileInputRef}
+            onFileInputChange={onFileInputChange}
+            onScanClick={onScanClick}
+          />
+        </motion.div>
+
+        <motion.div className="mt-5 grid gap-2 sm:mt-8 sm:grid-cols-3 sm:gap-2.5">
+          {TRUST.map((item, i) => (
+            <motion.div
+              key={item.title}
+              className="rounded-lg border border-white/[0.05] bg-black/[0.28] px-3 py-2.5 text-center backdrop-blur-md sm:py-3"
+              initial={reduce ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.15 + i * 0.05, ease: EASE }}
+            >
+              <p className="text-[11px] font-medium text-white/72">{item.title}</p>
+              <p className="mt-0.5 text-[10px] text-white/60">{item.sub}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        <p className="mt-4 text-[11px] text-white/60 sm:mt-6">
+          <Link
+            href="/how-it-works"
+            className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline"
+          >
+            Why Mastrify
+          </Link>
+          <span className="mx-2 text-white/48">·</span>
+          Supported formats &amp; tips
+        </p>
       </motion.div>
     </section>
   )

@@ -315,10 +315,10 @@ export default function AnalyzePage() {
       <CinematicBackground intensity="strong" marketingLite />
       <MarketingPageAmbient />
       <motion.div
-        className={`relative mx-auto w-full px-5 pb-8 pt-4 sm:pb-10 sm:pt-6 md:px-10 md:pb-16 md:pt-8 ${
+        className={`relative mx-auto w-full ${
           result && !processing
-            ? "max-w-6xl pb-6 pt-3 md:max-w-7xl md:pb-16 md:pt-8"
-            : "max-w-[1080px]"
+            ? "max-w-6xl px-5 pb-6 pt-3 sm:pb-10 md:max-w-7xl md:px-10 md:pb-16 md:pt-8"
+            : "max-w-[1220px] px-0 pb-8 pt-0 sm:pb-10 md:pb-16"
         }`}
       >
         <AnimatePresence mode="wait">
