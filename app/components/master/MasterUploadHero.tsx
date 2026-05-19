@@ -123,7 +123,7 @@ export default function MasterUploadHero({
         </motion.div>
 
         <motion.div
-          className="marketing-hero-visual marketing-hero-visual-slot relative mx-auto flex w-full min-w-0 max-w-full justify-center overflow-hidden max-lg:order-2 max-lg:mt-1 max-lg:py-2 sm:max-lg:py-3 lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-start lg:py-0"
+          className="marketing-hero-orb-slot hidden md:flex marketing-hero-visual marketing-hero-visual-slot relative mx-auto w-full min-w-0 max-w-full justify-center overflow-hidden md:py-2 lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-start lg:py-0"
           initial={reduce ? false : { opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.85, delay: 0.1, ease: EASE }}

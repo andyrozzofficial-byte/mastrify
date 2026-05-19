@@ -230,25 +230,25 @@ body {
       filter: blur(28px);
     }
   }
+  /* Marketing heroes: orbs hidden below md via .marketing-hero-orb-slot (product flow keeps orbs) */
   @media (max-width: 767px) {
     .homepage-hero-shell {
-      padding-bottom: 0;
+      padding-bottom: 0.5rem;
     }
     .homepage-hero-lockup {
-      gap: 0.75rem;
-    }
-    .homepage-hero-orb {
-      margin-top: -0.35rem;
-      margin-inline: auto;
+      gap: 0.625rem;
     }
     .marketing-hero-lockup {
-      gap: 0.875rem;
-    }
-    .marketing-hero-visual {
-      margin-inline: auto;
+      gap: 0.75rem;
     }
     .marketing-hero-copy .hero-lead {
       margin-top: 0.75rem;
+    }
+    .marketing-hero-copy .mobile-cta-stack {
+      margin-top: 1.125rem;
+    }
+    .marketing-hero-shell.hero-section {
+      padding-bottom: 1.25rem;
     }
   }
   @media (min-width: 1024px) {

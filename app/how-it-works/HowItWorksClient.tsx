@@ -238,7 +238,10 @@ export default function HowItWorksClient() {
             </motion.div>
           </Reveal>
 
-          <Reveal delay={0.1} className="marketing-hero-visual relative flex min-w-0 justify-center overflow-hidden">
+          <Reveal
+            delay={0.1}
+            className="marketing-hero-orb-slot hidden md:flex marketing-hero-visual relative min-w-0 justify-center overflow-hidden"
+          >
             <div className="hero-engine-orb-cage relative w-full">
               <div
                 className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.14),transparent_65%)]"
