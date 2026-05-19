@@ -21,9 +21,3 @@
   align-self: stretch;
   margin-inline: auto;
 }
-
-@media (min-width: 768px) {
-  .master-processing-stage {
-    align-items: stretch;
-  }
-}

@@ -8,6 +8,7 @@ import CinematicBackground from "../../components/CinematicBackground"
 import CinematicOrbCenter from "../../components/cinematic/CinematicOrbCenter"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import ProcessingStageList, { PROCESSING_STEPS } from "./ProcessingStageList"
+import "./master-processing-layout.css"
 import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
@@ -179,7 +180,7 @@ export default function MasterProcessingPage() {
 
   return (
     <motion.div
-      className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden text-white"
+      className="master-processing-page relative flex w-full flex-col text-white"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -207,9 +208,10 @@ export default function MasterProcessingPage() {
         </span>
       </motion.header>
 
-      <div className="master-processing-stage relative z-10 mx-auto flex w-full max-w-[52rem] flex-1 flex-col items-center justify-center px-4 pb-10 pt-2 sm:px-5 md:px-8 md:pb-14">
+      <div className="master-processing-stage--processing relative z-10">
+        <div className="master-processing-stack">
         <motion.div
-          className="w-full max-w-xl min-w-0 text-center md:max-w-2xl"
+          className="master-processing-copy w-full min-w-0"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
@@ -229,11 +231,11 @@ export default function MasterProcessingPage() {
           </p>
         </motion.div>
 
-        <CinematicOrbCenter activeStep={activeStep} className="mt-6 md:mt-8" />
+        <CinematicOrbCenter activeStep={activeStep} />
 
         {(audioUrl || file) && (
           <motion.div
-            className="cinematic-waveform-slot relative mt-5 min-h-[4.75rem] w-full max-w-lg overflow-hidden px-0.5 md:mt-6 md:min-h-[5rem] md:max-w-xl"
+            className="cinematic-waveform-slot relative min-h-[4.75rem] overflow-hidden px-0.5 md:min-h-[5rem]"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
@@ -249,7 +251,7 @@ export default function MasterProcessingPage() {
         )}
 
         <motion.div
-          className="relative mt-2 w-full max-w-md min-w-0 md:mt-4 md:max-w-lg"
+          className="master-processing-status relative w-full min-w-0"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
@@ -268,13 +270,14 @@ export default function MasterProcessingPage() {
         </motion.div>
 
         <motion.p
-          className="mt-6 text-center text-[12px] tracking-wide text-white/60 md:text-[13px]"
+          className="master-processing-footnote text-[12px] tracking-wide text-white/60 md:text-[13px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.35, duration: 0.5 }}
         >
           Typically 30–60 seconds · Do not close this window
         </motion.p>
+        </div>
       </div>
     </motion.div>
   )

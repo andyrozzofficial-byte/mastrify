@@ -1,0 +1,80 @@
+/* Master processing page only — do not import on result/analyze */
+
+.master-processing-page {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+  .master-processing-page {
+    overflow-x: hidden;
+  }
+}
+
+.master-processing-stage--processing {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  max-width: 52rem;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  margin-inline: auto;
+  padding: 0.25rem 1rem max(1.75rem, env(safe-area-inset-bottom, 0px));
+  overflow-x: clip;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 768px) {
+  .master-processing-stage--processing {
+    padding-inline: 2rem;
+    padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.master-processing-stack {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .master-processing-stack {
+    gap: 1.5rem;
+  }
+}
+
+.master-processing-stack .master-processing-copy {
+  width: 100%;
+  max-width: 42rem;
+  text-align: center;
+}
+
+.master-processing-stack .cinematic-orb-center--flow {
+  min-height: 0;
+  transform: none;
+  flex-shrink: 0;
+}
+
+.master-processing-stack .cinematic-waveform-slot {
+  width: 100%;
+  max-width: 36rem;
+  align-self: stretch;
+}
+
+.master-processing-stack .master-processing-status {
+  width: 100%;
+  max-width: 32rem;
+}
+
+.master-processing-stack .master-processing-footnote {
+  width: 100%;
+  text-align: center;
+}
