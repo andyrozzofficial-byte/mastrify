@@ -258,11 +258,19 @@ function InfoIcon() {
   )
 }
 
-function PersonalityPills({ personality, active }: { personality: PresetPersonality; active: boolean }) {
+function PersonalityPills({
+  personality,
+  active,
+  className = "",
+}: {
+  personality: PresetPersonality
+  active: boolean
+  className?: string
+}) {
   const items = [personality.loudness, personality.stereo, personality.dynamics]
   return (
     <motion.div
-      className="relative mt-2 flex flex-wrap items-center justify-center gap-1 px-0.5"
+      className={`relative mt-2 flex flex-wrap items-center justify-center gap-1 px-0.5 ${className}`}
       initial={false}
       animate={{ opacity: active ? 1 : 0.85 }}
     >
@@ -430,9 +438,11 @@ function StylePresetDetailSheet({
                   </button>
                 </motion.div>
 
-                <motion.div className="relative mt-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-3">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Character at a glance</p>
-                  <PersonalityPills personality={preset.personality} active />
+                <motion.div className="preset-glance-card relative mt-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-3">
+                  <p className="preset-glance-title text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">
+                    Character at a glance
+                  </p>
+                  <PersonalityPills personality={preset.personality} active className="preset-glance-pills" />
                 </motion.div>
 
                 <p className="relative mt-4 text-[13px] leading-relaxed text-white/68">{preset.detail.summary}</p>
