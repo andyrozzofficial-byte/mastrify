@@ -5,6 +5,7 @@ import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
+import MarketingPageAmbient from "../components/MarketingPageAmbient"
 import { MarketingHeroOrbSlot } from "../components/HeroEngineOrb"
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -171,17 +172,14 @@ export default function HowItWorksClient() {
 
   return (
     <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45 }}
     >
-      <CinematicBackground intensity="strong" />
+      <CinematicBackground intensity="strong" marketingLite />
 
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_8%,rgba(99,102,241,0.12),transparent_58%),radial-gradient(ellipse_50%_40%_at_85%_75%,rgba(34,211,238,0.06),transparent_50%)]"
-        aria-hidden
-      />
+      <MarketingPageAmbient />
 
       {/* Hero */}
       <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">

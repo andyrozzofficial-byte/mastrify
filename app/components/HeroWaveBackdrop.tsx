@@ -4,11 +4,16 @@ import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 
 const HERO_WAVE_BAR_COUNT = 72
+const HERO_WAVE_BAR_COUNT_LITE = 40
 
 const HERO_WAVE_BAR_HEIGHTS: readonly number[] = Array.from({ length: HERO_WAVE_BAR_COUNT }, (_, i) => {
   const t = Math.sin(i * 0.35) * 0.5 + 0.5
   return Math.round((22 + t * 58) * 100) / 100
 })
+
+const HERO_WAVE_BAR_HEIGHTS_LITE: readonly number[] = HERO_WAVE_BAR_HEIGHTS.filter(
+  (_, i) => i % 2 === 0
+).slice(0, HERO_WAVE_BAR_COUNT_LITE)
 
 function useMounted() {
   const [mounted, setMounted] = useState(false)
@@ -21,18 +26,22 @@ function useMounted() {
 type Props = {
   className?: string
   heightClass?: string
+  /** Marketing: static bars, no per-frame rAF */
+  efficient?: boolean
 }
 
 export default function HeroWaveBackdrop({
   className = "",
   heightClass = "h-[42%]",
+  efficient = false,
 }: Props) {
   const reduce = useReducedMotion()
   const mounted = useMounted()
   const barRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const heights = efficient ? HERO_WAVE_BAR_HEIGHTS_LITE : HERO_WAVE_BAR_HEIGHTS
 
   useEffect(() => {
-    if (!mounted || reduce) return
+    if (efficient || !mounted || reduce) return
 
     let raf = 0
     const start = performance.now()
@@ -52,34 +61,35 @@ export default function HeroWaveBackdrop({
 
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [mounted, reduce])
+  }, [efficient, mounted, reduce])
 
   return (
     <div
-      className={`pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden opacity-[0.14] ${heightClass} ${className}`}
+      className={`pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden opacity-[0.14] ${heightClass} ${className} ${
+        efficient ? "marketing-wave-backdrop" : ""
+      }`}
       aria-hidden
     >
-      <motion.div
-        className="flex h-full items-end justify-center gap-[3px] px-6"
-        initial={false}
-        animate={mounted && !reduce ? { opacity: [0.12, 0.16, 0.12] } : undefined}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      >
-        {HERO_WAVE_BAR_HEIGHTS.map((heightPct, i) => (
+      <div className="flex h-full items-end justify-center gap-[3px] px-6">
+        {heights.map((heightPct, i) => (
           <span
             key={i}
-            ref={(el) => {
-              barRefs.current[i] = el
-            }}
-            className="w-[2px] origin-bottom rounded-full bg-gradient-to-t from-violet-500/40 via-indigo-300/35 to-cyan-300/25 will-change-transform"
+            ref={
+              efficient
+                ? undefined
+                : (el) => {
+                    barRefs.current[i] = el
+                  }
+            }
+            className="w-[2px] origin-bottom rounded-full bg-gradient-to-t from-violet-500/40 via-indigo-300/35 to-cyan-300/25"
             style={{
               height: `${heightPct}%`,
-              opacity: 0.42,
+              opacity: efficient ? 0.4 : 0.42,
               transform: "scaleY(1)",
             }}
           />
         ))}
-      </motion.div>
+      </div>
     </div>
   )
 }

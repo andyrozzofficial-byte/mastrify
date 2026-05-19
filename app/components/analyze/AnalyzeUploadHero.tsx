@@ -41,11 +41,9 @@ export default function AnalyzeUploadHero({
 
   return (
     <section className="marketing-hero-shell hero-section page-hero-pad relative w-full md:pb-10">
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
+      <div
+        className="marketing-ambient-pulse pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
-        animate={reduce ? undefined : { opacity: [0.85, 1, 0.85] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
       />
 
       <motion.div

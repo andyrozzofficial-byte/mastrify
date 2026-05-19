@@ -13,6 +13,7 @@ import AnalyzeProcessingView from "../components/analyze/AnalyzeProcessingView"
 import AnalyzeStepRail from "../components/analyze/AnalyzeStepRail"
 import AnalyzeUploadHero from "../components/analyze/AnalyzeUploadHero"
 import CinematicBackground from "../components/CinematicBackground"
+import MarketingPageAmbient from "../components/MarketingPageAmbient"
 import AnalyzeResultsCta from "../components/analyze/AnalyzeResultsCta"
 import {
   polishIssueDisplay,
@@ -306,18 +307,13 @@ export default function AnalyzePage() {
 
   return (
     <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45 }}
     >
-      <CinematicBackground intensity="strong" />
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
-        aria-hidden
-        animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
+      <CinematicBackground intensity="strong" marketingLite />
+      <MarketingPageAmbient />
       <motion.div
         className={`relative mx-auto w-full px-5 pb-8 pt-4 sm:pb-10 sm:pt-6 md:px-10 md:pb-16 md:pt-8 ${
           result && !processing

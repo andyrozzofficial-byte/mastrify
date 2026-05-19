@@ -224,10 +224,81 @@ body {
       gap: 3rem;
     }
   }
-  /* Marketing heroes — clip orb/glow bleed; desktop layout unchanged from lg up */
+  /* Marketing scroll performance */
+  .marketing-page-root {
+    overflow-x: clip;
+  }
+  @keyframes marketing-ambient-pulse {
+    0%,
+    100% {
+      opacity: 0.48;
+    }
+    50% {
+      opacity: 0.68;
+    }
+  }
+  .marketing-ambient-pulse {
+    animation: marketing-ambient-pulse 9s ease-in-out infinite;
+    will-change: opacity;
+  }
+  @keyframes engine-halo-breathe {
+    0%,
+    100% {
+      opacity: 0.42;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+  .engine-halo-breathe:not([style*="opacity"]) {
+    animation: engine-halo-breathe 5.5s ease-in-out infinite;
+    will-change: opacity;
+  }
+  @keyframes engine-ring-spin-cw {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes engine-ring-spin-ccw {
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+  .engine-ring-spin-cw {
+    animation: engine-ring-spin-cw linear infinite;
+    transform-origin: center;
+    will-change: transform;
+  }
+  .engine-ring-spin-ccw {
+    animation: engine-ring-spin-ccw linear infinite;
+    transform-origin: center;
+    will-change: transform;
+  }
+  .marketing-wave-backdrop {
+    animation: marketing-ambient-pulse 7s ease-in-out infinite;
+    will-change: opacity;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marketing-ambient-pulse,
+    .engine-halo-breathe,
+    .engine-ring-spin-cw,
+    .engine-ring-spin-ccw,
+    .marketing-wave-backdrop {
+      animation: none !important;
+    }
+  }
+  @media (min-width: 768px) {
+    .marketing-hero-visual,
+    .marketing-hero-visual .hero-engine-orb-cage,
+    .marketing-hero-visual .hero-engine-orb-stage,
+    .marketing-hero-visual .hero-engine-orb-root {
+      overflow: hidden;
+      contain: layout style paint;
+    }
+  }
+  /* Marketing heroes — clip orb/glow bleed on tablet */
   @media (max-width: 1023px) {
     .marketing-page-root {
-      overflow-x: clip;
       max-width: 100%;
     }
     @supports not (overflow: clip) {
@@ -269,7 +340,7 @@ body {
     }
     .hero-orb-radial-mobile {
       inset: 0;
-      filter: blur(28px);
+      filter: blur(18px);
     }
   }
   /* Marketing heroes: orbs hidden below md via .marketing-hero-orb-slot (product flow keeps orbs) */

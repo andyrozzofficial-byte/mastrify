@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion"
 import CinematicBackground from "../components/CinematicBackground"
+import MarketingPageAmbient from "../components/MarketingPageAmbient"
 import CinematicDivider from "../components/CinematicDivider"
 import PricingPageHero from "../components/pricing/PricingPageHero"
 import PricingTrustRow from "../components/pricing/PricingTrustRow"
@@ -14,24 +15,17 @@ export default function Pricing() {
 
   return (
     <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: EASE }}
     >
-      <CinematicBackground intensity="strong" />
+      <CinematicBackground intensity="strong" marketingLite />
 
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.11),transparent_55%),radial-gradient(ellipse_50%_40%_at_88%_60%,rgba(34,211,238,0.06),transparent_50%)]"
-        aria-hidden
-        animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
+      <MarketingPageAmbient />
+      <div
         className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-violet-950/[0.1] via-transparent to-transparent"
         aria-hidden
-        animate={reduce ? undefined : { opacity: [0.5, 0.85, 0.5] }}
-        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
       />
 
       <main className="page-container relative z-10 pb-10 pt-5 max-md:pb-12 sm:pb-16 sm:pt-8 md:pb-24 md:pt-6">
@@ -44,7 +38,7 @@ export default function Pricing() {
           transition={{ duration: 0.5, delay: 0.15 }}
         >
           <div
-            className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(320px,50vh)] w-[min(520px,90vw)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_50%_40%_at_50%_50%,rgba(109,40,217,0.09),transparent_68%)] opacity-80 blur-3xl"
+            className="marketing-ambient-pulse pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(280px,45vh)] w-[min(480px,85vw)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_50%_40%_at_50%_50%,rgba(109,40,217,0.09),transparent_68%)] opacity-75 blur-2xl max-md:blur-xl"
             aria-hidden
           />
           <PricingUnlockCard className="relative z-[1]" />

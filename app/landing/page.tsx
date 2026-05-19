@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
+import MarketingPageAmbient from "../components/MarketingPageAmbient"
 import CinematicDivider from "../components/CinematicDivider"
 import CinematicReveal from "../components/CinematicReveal"
 import { MarketingHeroOrbSlot } from "../components/HeroEngineOrb"
@@ -27,26 +28,14 @@ export default function Landing() {
 
   return (
     <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: EASE }}
     >
-      <CinematicBackground intensity="strong" />
+      <CinematicBackground intensity="strong" marketingLite />
 
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_6%,rgba(99,102,241,0.14),transparent_58%),radial-gradient(ellipse_50%_40%_at_88%_70%,rgba(34,211,238,0.06),transparent_50%)]"
-        aria-hidden
-        animate={reduce ? undefined : { opacity: [0.92, 1, 0.92] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <motion.div
-        className="pointer-events-none absolute left-1/2 top-[12%] h-[min(520px,62vw)] w-[min(680px,88vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.06] blur-[100px]"
-        animate={reduce ? undefined : { opacity: [0.45, 0.68, 0.45], scale: [1, 1.03, 1] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        aria-hidden
-      />
+      <MarketingPageAmbient />
 
       {/* Hero */}
       <section className="marketing-hero-shell homepage-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
@@ -130,18 +119,7 @@ export default function Landing() {
 
       {/* Below fold — mix intelligence */}
       <section className="section-after-hero relative z-10">
-        <motion.div
-          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-transparent via-violet-950/[0.12] to-transparent"
-          aria-hidden
-          animate={reduce ? undefined : { opacity: [0.5, 0.85, 0.5] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="pointer-events-none absolute left-1/2 top-8 h-48 w-[min(640px,80vw)] -translate-x-1/2 rounded-full bg-indigo-600/[0.04] blur-[80px]"
-          aria-hidden
-          animate={reduce ? undefined : { opacity: [0.3, 0.55, 0.3], y: [0, 6, 0] }}
-          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
-        />
+        <MarketingPageAmbient variant="section" />
 
         <motion.div
           className="page-container landing-close-footer marketing-section-tight relative z-10 pt-5 md:pt-16 lg:pt-8"
