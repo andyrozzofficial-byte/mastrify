@@ -1,71 +1,13 @@
 "use client"
 
-import type { ReactNode } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
-import { useMasterSession, type MasterStylePreset } from "../MasterSessionProvider"
+import MasterStylePresetPicker from "../../components/master/MasterStylePresetPicker"
+import { useMasterSession } from "../MasterSessionProvider"
 import { AUDIO_UPLOAD_ACCEPT, isAcceptedAudioUpload } from "../../../lib/audioUploadAccept"
-
-const PRESETS: { id: MasterStylePreset; label: string; hint: string; detail: string; icon: ReactNode }[] = [
-  {
-    id: "STREAM",
-    label: "Balanced",
-    hint: "Streaming & all-round",
-    detail: "Clean level, balanced tone, and safe translation across headphones, phones, and streaming platforms.",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v18M8 9l4-4 4 4M8 15l4 4 4-4" />
-      </svg>
-    ),
-  },
-  {
-    id: "WARM",
-    label: "Warm",
-    hint: "Round lows, softer top",
-    detail: "Adds body and smooths bright edges for a fuller, less aggressive master.",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m8-9h-1M5 12H4m13.364-5.364l-.707.707M6.343 17.657l-.707.707M17.657 6.343l-.707-.707M6.343 6.343l-.707-.707" />
-      </svg>
-    ),
-  },
-  {
-    id: "LOUD",
-    label: "Punchy",
-    hint: "Competitive loudness",
-    detail: "Pushes density, impact, and forwardness while keeping peaks controlled.",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-  },
-  {
-    id: "CLUB",
-    label: "Club",
-    hint: "Weight & impact",
-    detail: "Prioritizes low-end weight, punch, and playback impact on larger systems.",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-13c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-      </svg>
-    ),
-  },
-  {
-    id: "FESTIVAL",
-    label: "Open",
-    hint: "Wide & energetic",
-    detail: "Creates a brighter, wider, more energetic presentation with extra spatial lift.",
-    icon: (
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-      </svg>
-    ),
-  },
-]
 
 const LOUDNESS = [
   { lufs: -14, label: "Streaming", detail: "Most transparent. Best for balanced streaming playback." },
@@ -246,43 +188,14 @@ export default function MasterSettingsPage() {
 
             <div className="space-y-6 md:space-y-7">
               <section>
-                <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/66">Mastering style</h3>
-                <p className="mt-2 max-w-2xl text-[11px] leading-relaxed text-white/45">
-                  Styles set the overall mastering direction: tonal color, punch, loudness behavior, and stereo character.
-                </p>
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-                  {PRESETS.map((p) => {
-                    const active = stylePreset === p.id
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setStylePreset(p.id)}
-                        className={`flex flex-col rounded-xl border px-2.5 py-2.5 text-left transition md:px-3 md:py-3 ${
-                          active
-                            ? "border-purple-400/55 bg-gradient-to-b from-purple-500/[0.18] to-black/35 text-white shadow-[0_0_18px_rgba(168,85,247,0.16),inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-purple-400/25"
-                            : "border-white/[0.06] bg-black/25 text-white/55 hover:border-white/[0.1] hover:bg-white/[0.03]"
-                        }`}
-                      >
-                        <span
-                          className={`mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg ${
-                            active ? "bg-white/10 text-purple-200" : "bg-white/[0.04] text-white/66"
-                          }`}
-                        >
-                          {p.icon}
-                        </span>
-                        <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-white/75"}`}>
-                          {p.label}
-                        </span>
-                        <span className={`mt-1 block text-[10px] leading-snug ${active ? "text-white/75" : "text-white/62"}`}>
-                          {p.hint}
-                        </span>
-                        <span className={`mt-1.5 block text-[9px] leading-snug ${active ? "text-white/58" : "text-white/42"}`}>
-                          {p.detail}
-                        </span>
-                      </button>
-                    )
-                  })}
+                <div>
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/66">Mastering style</h3>
+                  <p className="mt-1.5 text-[11px] text-white/42">
+                    Tap a style · <span className="text-white/55">ⓘ</span> for details
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <MasterStylePresetPicker value={stylePreset} onChange={setStylePreset} />
                 </div>
               </section>
 
