@@ -461,10 +461,12 @@ function StylePresetDetailSheet({
                 </motion.div>
 
                 <div className="preset-glance-card relative mt-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-3">
-                  <p className="preset-glance-title text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">
-                    Character at a glance
-                  </p>
-                  <PersonalityPills personality={preset.personality} active className="preset-glance-pills" />
+                  <div className="preset-glance-inner">
+                    <p className="preset-glance-title text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">
+                      Character at a glance
+                    </p>
+                    <PersonalityPills personality={preset.personality} active className="preset-glance-pills" />
+                  </div>
                 </div>
 
                 <p className="relative mt-4 text-[13px] leading-relaxed text-white/68">{preset.detail.summary}</p>
