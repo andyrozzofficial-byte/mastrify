@@ -54,22 +54,14 @@ export default function MasterUploadCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.65, delay: 0.12, ease: EASE }}
     >
-      <motion.div
-        className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/20 via-transparent to-cyan-500/15 opacity-60 blur-sm"
-        animate={
-          reduce
-            ? undefined
-            : {
-                opacity: dragging || loaded ? 0.8 : [0.35, 0.55, 0.35],
-              }
-        }
-        transition={{ duration: dragging || loaded ? 0.3 : 4, repeat: dragging || loaded ? 0 : Infinity, ease: "easeInOut" }}
+      <div
+        className="product-upload-card-glow pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/20 via-transparent to-cyan-500/15 blur-sm"
         aria-hidden
       />
 
       <motion.div
         layout
-        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color,box-shadow] duration-500 ${
+        className={`product-upload-card-panel fluid-surface relative overflow-hidden transition-[border-color,box-shadow] duration-500 ${
           loaded
             ? "border-violet-400/22 shadow-[0_0_28px_rgba(99,102,241,0.1),0_28px_64px_rgba(0,0,0,0.48)]"
             : dragging
@@ -93,13 +85,11 @@ export default function MasterUploadCard({
           transition={{ duration: 0.55, ease: EASE }}
           aria-hidden
         >
-          <HeroWaveBackdrop heightClass="h-full" className="opacity-100" />
+          <HeroWaveBackdrop efficient heightClass="h-full" className="opacity-100" />
         </motion.div>
 
         <motion.div
-          className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-violet-600/[0.08] blur-3xl"
-          animate={reduce ? undefined : { opacity: loaded ? [0.55, 0.75, 0.55] : [0.4, 0.65, 0.4] }}
-          transition={{ duration: loaded ? 3 : 7, repeat: Infinity, ease: "easeInOut" }}
+          className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-violet-600/[0.08] blur-2xl"
           aria-hidden
         />
 

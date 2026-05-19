@@ -318,7 +318,7 @@ export default function AnalyzePage() {
         className={`relative mx-auto w-full ${
           result && !processing
             ? "max-w-6xl px-5 pb-6 pt-3 sm:pb-10 md:max-w-7xl md:px-10 md:pb-16 md:pt-8"
-            : "max-w-[1220px] px-0 pb-8 pt-0 sm:pb-10 md:pb-16"
+            : "product-flow-page-inner px-5 pb-4 pt-6 sm:pb-10 md:pb-16 md:px-10 md:pt-8"
         }`}
       >
         <AnimatePresence mode="wait">

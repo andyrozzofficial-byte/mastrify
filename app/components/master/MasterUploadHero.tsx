@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState, type RefObject } from "react"
-import MasteringEngineVisual from "../../master/processing/MasteringEngineVisual"
+import ProductUploadHeroLayout from "../product/ProductUploadHeroLayout"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import MasterUploadCard from "./MasterUploadCard"
 
@@ -38,101 +38,74 @@ export default function MasterUploadHero({
   }, [reduce])
 
   return (
-    <section className="marketing-hero-shell hero-section relative w-full">
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
-        aria-hidden
-        animate={reduce ? undefined : { opacity: [0.85, 1, 0.85] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-      />
+    <ProductUploadHeroLayout engineStep={engineStep} showScanSweep={false}>
+      <span className="hero-eyebrow-pill sm:tracking-[0.22em]">Spatial mastering engine</span>
 
-      <motion.div
-        className="marketing-hero-lockup marketing-hero-lockup--top relative grid min-w-0 gap-5 max-lg:grid-cols-1 sm:gap-6"
-        initial={reduce ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, ease: EASE }}
-      >
-        <motion.div className="marketing-hero-copy flex min-w-0 flex-col max-lg:order-1">
-          <span className="hero-eyebrow-pill sm:tracking-[0.22em]">Spatial mastering engine</span>
+      <h1 className="product-flow-hero-title mt-3 text-[1.48rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white min-[430px]:text-[1.55rem] sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
+        Release-ready masters
+        <span className="mt-0.5 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent sm:mt-1">
+          with musical depth
+        </span>
+      </h1>
 
-          <h1 className="mt-3 text-[1.48rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white min-[430px]:text-[1.55rem] sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
-            Release-ready masters
-            <span className="mt-0.5 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent sm:mt-1">
-              with musical depth
-            </span>
-          </h1>
+      <p className="hero-lead text-[14px] sm:text-[15px] md:mt-6">
+        <span className="lg:hidden">Intelligent mastering that preserves punch, space, and tone — shaped for release.</span>
+        <span className="hidden lg:inline">
+          Hand your mix to an intelligent mastering engine that listens with restraint — shaping loudness, space, and tone
+          while preserving what makes your music feel alive.
+        </span>
+      </p>
 
-          <p className="hero-lead text-[14px] sm:text-[15px] md:mt-6">
-            <span className="lg:hidden">Intelligent mastering that preserves punch, space, and tone — shaped for release.</span>
-            <span className="hidden lg:inline">
-              Hand your mix to an intelligent mastering engine that listens with restraint — shaping loudness, space,
-              and tone while preserving what makes your music feel alive.
-            </span>
-          </p>
+      <ul className="mt-4 hidden space-y-2 text-[13px] text-white/70 sm:block sm:space-y-2.5 sm:text-[14px] md:mt-6">
+        <li className="flex gap-2.5">
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
+          Perceptual processing tuned to your mix, not a one-size chain
+        </li>
+        <li className="flex gap-2.5 max-md:hidden">
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
+          Style and loudness goals you control before the final render
+        </li>
+        <li className="flex gap-2.5 max-lg:hidden">
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
+          The same cinematic engine that powers processing and results
+        </li>
+      </ul>
 
-          <ul className="mt-4 hidden space-y-2 text-[13px] text-white/70 sm:block sm:space-y-2.5 sm:text-[14px] md:mt-6">
-            <li className="flex gap-2.5">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
-              Perceptual processing tuned to your mix, not a one-size chain
-            </li>
-            <li className="flex gap-2.5 max-md:hidden">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
-              Style and loudness goals you control before the final render
-            </li>
-            <li className="flex gap-2.5 max-lg:hidden">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
-              The same cinematic engine that powers processing and results
-            </li>
-          </ul>
+      <MasterFlowStepRail phase="upload" className="product-flow-step-rail mt-4 justify-start sm:mt-5 md:mt-8" />
 
-          <MasterFlowStepRail phase="upload" className="mt-4 justify-start sm:mt-5 md:mt-8" />
+      <div className="product-flow-upload-slot mt-4 w-full min-w-0 sm:mt-5">
+        <MasterUploadCard
+          file={file}
+          fileInputRef={fileInputRef}
+          onFileSelected={onFileSelected}
+          onContinue={onContinue}
+        />
+      </div>
 
-          <motion.div className="mt-4 w-full max-w-[29.5rem] min-w-0 sm:mt-5 lg:max-w-none">
-            <MasterUploadCard
-              file={file}
-              fileInputRef={fileInputRef}
-              onFileSelected={onFileSelected}
-              onContinue={onContinue}
-            />
+      <div className="product-flow-trust-row hidden gap-2 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-2.5 lg:mt-6">
+        {FEATURES.map((item, i) => (
+          <motion.div
+            key={item.title}
+            className="product-flow-trust-chip rounded-lg border border-white/[0.05] bg-black/[0.28] px-3 py-3 text-center"
+            initial={reduce ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 + i * 0.05, ease: EASE }}
+          >
+            <p className="text-[11px] font-medium text-white/72">{item.title}</p>
+            <p className="mt-0.5 text-[10px] text-white/60">{item.sub}</p>
           </motion.div>
+        ))}
+      </div>
 
-          <motion.div className="hidden gap-2 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-2.5 lg:mt-6">
-            {FEATURES.map((item, i) => (
-              <motion.div
-                key={item.title}
-                className="rounded-lg border border-white/[0.05] bg-black/[0.28] px-3 py-3 text-center backdrop-blur-md"
-                initial={reduce ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.15 + i * 0.05, ease: EASE }}
-              >
-                <p className="text-[11px] font-medium text-white/72">{item.title}</p>
-                <p className="mt-0.5 text-[10px] text-white/60">{item.sub}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <p className="mt-4 text-[10px] leading-relaxed text-white/58 sm:mt-5 sm:text-[11px]">
-            <Link href="/how-it-works" className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline">
-              Why Mastrify
-            </Link>
-            <span className="mx-1.5 text-white/48 sm:mx-2">·</span>
-            <Link href="/pricing" className="text-white/60 underline-offset-2 transition hover:text-white/75 hover:underline">
-              Pricing
-            </Link>
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="marketing-hero-orb-slot hidden md:flex marketing-hero-visual marketing-hero-visual-slot relative mx-auto w-full min-w-0 max-w-full justify-center overflow-hidden md:py-2 lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-start lg:py-0"
-          initial={reduce ? false : { opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
-        >
-          <div className="hero-engine-orb-cage relative w-full max-lg:mx-auto">
-            <MasteringEngineVisual activeStep={engineStep} className="marketing-engine-visual" />
-          </div>
-        </motion.div>
-      </motion.div>
-    </section>
+      <p className="product-flow-footer-note mt-4 text-[10px] leading-relaxed text-white/58 sm:mt-5 sm:text-[11px]">
+        <Link href="/how-it-works" className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline">
+          Why Mastrify
+        </Link>
+        <span className="mx-1.5 text-white/48 sm:mx-2">·</span>
+        <Link href="/pricing" className="text-white/60 underline-offset-2 transition hover:text-white/75 hover:underline">
+          Pricing
+        </Link>
+      </p>
+    </ProductUploadHeroLayout>
   )
 }

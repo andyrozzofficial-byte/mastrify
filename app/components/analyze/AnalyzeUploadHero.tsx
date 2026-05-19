@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState, type RefObject } from "react"
-import { MarketingHeroOrbSlot } from "../HeroEngineOrb"
+import ProductUploadHeroLayout from "../product/ProductUploadHeroLayout"
 import AnalyzeStepRail, { type AnalyzePhase } from "./AnalyzeStepRail"
 import AnalyzeUploadCard from "./AnalyzeUploadCard"
 
@@ -40,97 +40,72 @@ export default function AnalyzeUploadHero({
   }, [reduce])
 
   return (
-    <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 w-full sm:pb-10 md:pb-12">
-      <div
-        className="marketing-ambient-pulse pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
-        aria-hidden
-      />
+    <ProductUploadHeroLayout engineStep={engineStep} showScanSweep>
+      <span className="hero-eyebrow-pill">Perceptual mix intelligence</span>
 
-      {/* Intro band — same grid/orb anchor as landing / pricing / why */}
-      <motion.div
-        className="marketing-hero-lockup relative grid gap-6 sm:gap-10"
-        initial={reduce ? false : { opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: EASE }}
-      >
-        <motion.div className="marketing-hero-copy relative z-10 flex min-w-0 flex-col max-lg:order-1">
-          <span className="hero-eyebrow-pill">Perceptual mix intelligence</span>
+      <h1 className="product-flow-hero-title mt-3 text-[1.48rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white min-[430px]:text-[1.55rem] sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
+        See what your mix
+        <span className="mt-0.5 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent sm:mt-1">
+          actually needs
+        </span>
+      </h1>
 
-          <h1 className="marketing-hero-title mt-3.5 text-[1.62rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white min-[430px]:text-[1.85rem] sm:mt-5 sm:text-[2.35rem]">
-            See what your mix
-            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
-              actually needs
-            </span>
-          </h1>
+      <p className="hero-lead text-[14px] sm:text-[15px] md:mt-6">
+        Perceptual analysis maps dynamics, balance, and release readiness — the first step in an intelligent mastering
+        journey, before you commit to the final master.
+      </p>
 
-          <p className="hero-lead">
-            Perceptual analysis maps dynamics, balance, and release readiness — the first step in an intelligent
-            mastering journey, before you commit to the final master.
-          </p>
+      <ul className="mt-4 hidden space-y-2 text-[13px] text-white/70 sm:block sm:space-y-2.5 sm:text-[14px] md:mt-6">
+        <li className="flex gap-2.5">
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
+          Understand loudness, width, and tone with engineer-level clarity
+        </li>
+        <li className="flex gap-2.5">
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
+          Know what to fix in the mix — and what is already working
+        </li>
+        <li className="flex gap-2.5 max-lg:hidden">
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
+          Flow straight into mastering when your material is ready
+        </li>
+      </ul>
 
-          <ul className="marketing-hero-bullets mt-4 space-y-2 text-[14px] text-white/70 sm:mt-6 sm:space-y-2.5">
-            <li className="flex gap-2.5">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
-              Understand loudness, width, and tone with engineer-level clarity
-            </li>
-            <li className="flex gap-2.5">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
-              Know what to fix in the mix — and what is already working
-            </li>
-            <li className="flex gap-2.5">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
-              Flow straight into mastering when your material is ready
-            </li>
-          </ul>
-        </motion.div>
+      <AnalyzeStepRail phase={phase} className="product-flow-step-rail mt-4 justify-start sm:mt-5 md:mt-8" />
 
-        <MarketingHeroOrbSlot activeStep={engineStep} className="homepage-hero-orb" />
-      </motion.div>
+      <div className="product-flow-upload-slot mt-4 w-full min-w-0 sm:mt-5">
+        <AnalyzeUploadCard
+          file={file}
+          fileInputRef={fileInputRef}
+          onFileInputChange={onFileInputChange}
+          onScanClick={onScanClick}
+        />
+      </div>
 
-      {/* Upload flow — below intro band so orb stays aligned with headline block on desktop */}
-      <motion.div
-        className="analyze-hero-actions relative z-10 mt-6 min-w-0 max-lg:order-2 sm:mt-8 lg:mt-10 lg:max-w-[36rem]"
-        initial={reduce ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, delay: 0.08, ease: EASE }}
-      >
-        <AnalyzeStepRail phase={phase} className="justify-start" />
-
-        <motion.div className="mt-6 w-full max-w-[29.5rem] min-w-0 sm:mt-8 lg:max-w-none">
-          <AnalyzeUploadCard
-            file={file}
-            fileInputRef={fileInputRef}
-            onFileInputChange={onFileInputChange}
-            onScanClick={onScanClick}
-          />
-        </motion.div>
-
-        <motion.div className="mt-5 grid gap-2 sm:mt-8 sm:grid-cols-3 sm:gap-2.5">
-          {TRUST.map((item, i) => (
-            <motion.div
-              key={item.title}
-              className="rounded-lg border border-white/[0.05] bg-black/[0.28] px-3 py-2.5 text-center backdrop-blur-md sm:py-3"
-              initial={reduce ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 + i * 0.05, ease: EASE }}
-            >
-              <p className="text-[11px] font-medium text-white/72">{item.title}</p>
-              <p className="mt-0.5 text-[10px] text-white/60">{item.sub}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        <p className="mt-4 text-[11px] text-white/60 sm:mt-6">
-          <Link
-            href="/how-it-works"
-            className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline"
+      <div className="product-flow-trust-row hidden gap-2 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-2.5 lg:mt-6">
+        {TRUST.map((item, i) => (
+          <motion.div
+            key={item.title}
+            className="product-flow-trust-chip rounded-lg border border-white/[0.05] bg-black/[0.28] px-3 py-3 text-center"
+            initial={reduce ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 + i * 0.05, ease: EASE }}
           >
-            Why Mastrify
-          </Link>
-          <span className="mx-2 text-white/48">·</span>
-          Supported formats &amp; tips
-        </p>
-      </motion.div>
-    </section>
+            <p className="text-[11px] font-medium text-white/72">{item.title}</p>
+            <p className="mt-0.5 text-[10px] text-white/60">{item.sub}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      <p className="product-flow-footer-note mt-4 text-[10px] leading-relaxed text-white/58 sm:mt-5 sm:text-[11px]">
+        <Link
+          href="/how-it-works"
+          className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline"
+        >
+          Why Mastrify
+        </Link>
+        <span className="mx-1.5 text-white/48 sm:mx-2">·</span>
+        Supported formats &amp; tips
+      </p>
+    </ProductUploadHeroLayout>
   )
 }
