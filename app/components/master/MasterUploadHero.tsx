@@ -1,13 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { motion, useReducedMotion } from "framer-motion"
-import { useEffect, useState, type RefObject } from "react"
-import ProductUploadHeroLayout from "../product/ProductUploadHeroLayout"
+import { useEngineStepRotation } from "../../../lib/useEngineStepRotation"
+import type { RefObject } from "react"
+import CinematicHeroLayout from "../cinematic/CinematicHeroLayout"
+import CinematicTrustRow from "../cinematic/CinematicTrustRow"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import MasterUploadCard from "./MasterUploadCard"
-
-const EASE = [0.22, 1, 0.36, 1] as const
 
 const FEATURES = [
   { title: "Musical intelligence", sub: "Adapts to your material" },
@@ -28,40 +27,30 @@ export default function MasterUploadHero({
   onFileSelected,
   onContinue,
 }: Props) {
-  const reduce = useReducedMotion()
-  const [engineStep, setEngineStep] = useState(0)
-
-  useEffect(() => {
-    if (reduce) return
-    const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 4000)
-    return () => clearInterval(id)
-  }, [reduce])
+  const engineStep = useEngineStepRotation()
 
   return (
-    <ProductUploadHeroLayout engineStep={engineStep} showScanSweep={false}>
-      <span className="hero-eyebrow-pill sm:tracking-[0.22em]">Spatial mastering engine</span>
+    <CinematicHeroLayout engineStep={engineStep}>
+      <span className="hero-eyebrow-pill">Spatial mastering engine</span>
 
-      <h1 className="product-flow-hero-title mt-3 text-[1.48rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white min-[430px]:text-[1.55rem] sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
+      <h1 className="marketing-hero-title mt-3.5 text-[1.65rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2.1rem] md:text-[3.1rem] md:leading-[1.08]">
         Release-ready masters
-        <span className="mt-0.5 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent sm:mt-1">
+        <span className="mt-2 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
           with musical depth
         </span>
       </h1>
 
-      <p className="hero-lead text-[14px] sm:text-[15px] md:mt-6">
-        <span className="lg:hidden">Intelligent mastering that preserves punch, space, and tone — shaped for release.</span>
-        <span className="hidden lg:inline">
-          Hand your mix to an intelligent mastering engine that listens with restraint — shaping loudness, space, and tone
-          while preserving what makes your music feel alive.
-        </span>
+      <p className="hero-lead lg:mx-0">
+        Hand your mix to an intelligent mastering engine that listens with restraint — shaping loudness,
+        space, and tone while preserving what makes your music feel alive.
       </p>
 
-      <ul className="mt-4 hidden space-y-2 text-[13px] text-white/70 sm:block sm:space-y-2.5 sm:text-[14px] md:mt-6">
+      <ul className="marketing-hero-bullets mx-auto mt-5 max-w-md space-y-2.5 text-left text-[14px] leading-[1.55] text-white/70 sm:mt-7 sm:space-y-3 lg:mx-0">
         <li className="flex gap-2.5">
           <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
           Perceptual processing tuned to your mix, not a one-size chain
         </li>
-        <li className="flex gap-2.5 max-md:hidden">
+        <li className="flex gap-2.5">
           <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
           Style and loudness goals you control before the final render
         </li>
@@ -71,9 +60,9 @@ export default function MasterUploadHero({
         </li>
       </ul>
 
-      <MasterFlowStepRail phase="upload" className="product-flow-step-rail mt-4 justify-start sm:mt-5 md:mt-8" />
+      <MasterFlowStepRail phase="upload" className="mt-6 justify-start sm:mt-8" />
 
-      <div className="product-flow-upload-slot mt-4 w-full min-w-0 sm:mt-5">
+      <div className="cinematic-upload-slot mt-6 sm:mt-8">
         <MasterUploadCard
           file={file}
           fileInputRef={fileInputRef}
@@ -82,30 +71,20 @@ export default function MasterUploadHero({
         />
       </div>
 
-      <div className="product-flow-trust-row hidden gap-2 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-2.5 lg:mt-6">
-        {FEATURES.map((item, i) => (
-          <motion.div
-            key={item.title}
-            className="product-flow-trust-chip rounded-lg border border-white/[0.05] bg-black/[0.28] px-3 py-3 text-center"
-            initial={reduce ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 + i * 0.05, ease: EASE }}
-          >
-            <p className="text-[11px] font-medium text-white/72">{item.title}</p>
-            <p className="mt-0.5 text-[10px] text-white/60">{item.sub}</p>
-          </motion.div>
-        ))}
-      </div>
+      <CinematicTrustRow items={FEATURES} className="mt-5 sm:mt-7 lg:mt-6" />
 
-      <p className="product-flow-footer-note mt-4 text-[10px] leading-relaxed text-white/58 sm:mt-5 sm:text-[11px]">
-        <Link href="/how-it-works" className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline">
+      <p className="mt-4 text-center text-[13px] text-support-68 sm:mt-5 lg:text-left">
+        <Link
+          href="/how-it-works"
+          className="transition hover:text-violet-200/70 hover:underline hover:underline-offset-2"
+        >
           Why Mastrify
         </Link>
-        <span className="mx-1.5 text-white/48 sm:mx-2">·</span>
-        <Link href="/pricing" className="text-white/60 underline-offset-2 transition hover:text-white/75 hover:underline">
+        <span className="mx-2 text-white/48">·</span>
+        <Link href="/pricing" className="transition hover:text-white/75 hover:underline hover:underline-offset-2">
           Pricing
         </Link>
       </p>
-    </ProductUploadHeroLayout>
+    </CinematicHeroLayout>
   )
 }

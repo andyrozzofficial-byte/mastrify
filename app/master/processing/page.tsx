@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
+import CinematicOrbCenter from "../../components/cinematic/CinematicOrbCenter"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
-import MasteringEngineVisual from "./MasteringEngineVisual"
 import ProcessingStageList, { PROCESSING_STEPS } from "./ProcessingStageList"
 import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
@@ -184,17 +184,15 @@ export default function MasterProcessingPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <CinematicBackground intensity="strong" />
+      <CinematicBackground intensity="strong" marketingLite />
 
       {/* Ambient lab depth */}
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_12%,rgba(99,102,241,0.14),transparent_58%),radial-gradient(ellipse_50%_40%_at_85%_75%,rgba(34,211,238,0.06),transparent_50%)]"
         aria-hidden
       />
-      <motion.div
-        className="pointer-events-none absolute left-1/2 top-[18%] h-[min(520px,70vw)] w-[min(680px,95vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.07] blur-[100px]"
-        animate={{ opacity: [0.5, 0.75, 0.5], scale: [1, 1.04, 1] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+      <div
+        className="pointer-events-none absolute left-1/2 top-[18%] h-[min(520px,70vw)] w-[min(680px,95vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.07] blur-[80px]"
         aria-hidden
       />
 
@@ -204,7 +202,7 @@ export default function MasterProcessingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       >
-        <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/70 backdrop-blur-md">
+        <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/70">
           Spatial mastering engine
         </span>
       </motion.header>
@@ -231,14 +229,7 @@ export default function MasterProcessingPage() {
           </p>
         </motion.div>
 
-        <motion.div
-          className="relative mt-8 min-h-[min(14rem,42vw)] w-full max-w-full overflow-hidden md:mt-10 md:min-h-[16rem]"
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <MasteringEngineVisual activeStep={activeStep} />
-        </motion.div>
+        <CinematicOrbCenter activeStep={activeStep} className="mt-8 max-w-full px-0 md:mt-10" />
 
         {(audioUrl || file) && (
           <motion.div
@@ -263,21 +254,17 @@ export default function MasterProcessingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
         >
-          <motion.div
-            className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-b from-violet-500/20 via-transparent to-cyan-500/10 opacity-60 blur-sm"
-            animate={{ opacity: [0.35, 0.55, 0.35] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          <div
+            className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-b from-violet-500/20 via-transparent to-cyan-500/10 opacity-50 blur-sm"
             aria-hidden
           />
-          <motion.div
-            className="fluid-surface relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-3.5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:px-4 sm:py-5 md:px-6 md:py-6"
-          >
+          <div className="fluid-surface relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-3.5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] sm:px-4 sm:py-5 md:px-6 md:py-6">
             <div
               className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,transparent_22%,transparent_100%)]"
               aria-hidden
             />
             <ProcessingStageList activeStep={activeStep} />
-          </motion.div>
+          </div>
         </motion.div>
 
         <motion.p

@@ -12,8 +12,7 @@ import {
 import AnalyzeProcessingView from "../components/analyze/AnalyzeProcessingView"
 import AnalyzeStepRail from "../components/analyze/AnalyzeStepRail"
 import AnalyzeUploadHero from "../components/analyze/AnalyzeUploadHero"
-import CinematicBackground from "../components/CinematicBackground"
-import MarketingPageAmbient from "../components/MarketingPageAmbient"
+import CinematicPageShell from "../components/cinematic/CinematicPageShell"
 import AnalyzeResultsCta from "../components/analyze/AnalyzeResultsCta"
 import {
   polishIssueDisplay,
@@ -306,22 +305,14 @@ export default function AnalyzePage() {
 
 
   return (
-    <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.45 }}
+    <CinematicPageShell
+      innerClassName={
+        result && !processing
+          ? "mx-auto w-full max-w-6xl px-5 pb-6 pt-3 sm:pb-10 md:max-w-7xl md:px-10 md:pb-16 md:pt-8"
+          : ""
+      }
     >
-      <CinematicBackground intensity="strong" marketingLite />
-      <MarketingPageAmbient />
-      <motion.div
-        className={`relative mx-auto w-full ${
-          result && !processing
-            ? "max-w-6xl px-5 pb-6 pt-3 sm:pb-10 md:max-w-7xl md:px-10 md:pb-16 md:pt-8"
-            : "product-flow-page-inner px-5 pb-4 pt-6 sm:pb-10 md:pb-16 md:px-10 md:pt-8"
-        }`}
-      >
-        <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait">
           {!result && !processing && (
             <motion.div
               key="upload"
@@ -634,10 +625,9 @@ export default function AnalyzePage() {
           />
         </motion.div>
           )}
-        </AnimatePresence>
-      </motion.div>
+      </AnimatePresence>
 
-{/* 🔥 WAITLIST POPUP */}
+      {/* 🔥 WAITLIST POPUP */}
 {showWaitlist && (
   <div
   className={`fixed inset-0 bg-black/70 flex items-center justify-center z-50 transition-all duration-300 ${
@@ -692,6 +682,6 @@ export default function AnalyzePage() {
   </div>
 )}
 
-    </motion.div>
+    </CinematicPageShell>
   )
 }

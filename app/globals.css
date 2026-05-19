@@ -224,61 +224,50 @@ body {
       gap: 3rem;
     }
   }
-  /* Product flow — /analyze + /master upload (shared layout; orb matches live processing) */
-  .product-flow-page-inner {
-    width: 100%;
-    max-width: 1080px;
-    margin-inline: auto;
-  }
-  .product-flow-upload-slot {
+  /* Cinematic product pages — same hero rhythm as landing */
+  .cinematic-upload-slot {
     width: 100%;
     max-width: 29.5rem;
     min-width: 0;
   }
   @media (min-width: 1024px) {
-    .product-flow-upload-slot {
+    .cinematic-upload-slot {
       max-width: none;
     }
-    .product-flow-hero-lockup.marketing-hero-lockup--top {
-      align-items: start;
-    }
-    .product-flow-orb-slot {
-      align-self: start;
-    }
-    .product-flow-hero-copy > .product-flow-hero-title {
-      margin-top: 0;
-    }
   }
-  @media (min-width: 768px) {
-    .product-flow-orb-slot {
-      contain: layout style paint;
-    }
-    .product-flow-orb-slot .product-flow-orb-cage {
-      width: 100%;
-      max-width: min(28rem, 100%);
-      margin-inline: auto;
-      aspect-ratio: 1 / 1;
-      overflow: hidden;
-    }
-  }
-  .product-flow-trust-chip {
+  .cinematic-trust-chip {
     background-color: rgba(0, 0, 0, 0.28);
   }
-  .product-upload-card-glow {
+  .cinematic-upload-card-glow {
     opacity: 0.45;
   }
-  .product-upload-card-panel {
+  .cinematic-upload-card-panel {
     border-radius: 1.3rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.045), rgba(0, 0, 0, 0.72));
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.06),
       0 24px 56px rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(12px);
   }
-  @media (max-width: 767px) {
-    .product-upload-card-panel {
-      backdrop-filter: blur(12px);
+  @media (min-width: 768px) {
+    .cinematic-orb-center .hero-engine-orb-cage {
+      aspect-ratio: 1 / 1;
+      width: clamp(340px, 36vw, 540px);
+      height: auto;
+      flex-shrink: 0;
+      margin-inline: auto;
+      overflow: visible;
+    }
+    .cinematic-orb-center .hero-engine-orb-stage {
+      width: 100%;
+      height: 100%;
+    }
+    .cinematic-orb-center .hero-engine-orb-cage .marketing-engine-visual {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      aspect-ratio: 1 / 1;
     }
   }
   /* Marketing scroll performance */
@@ -348,7 +337,11 @@ body {
     .marketing-hero-visual,
     .marketing-hero-visual .hero-engine-orb-cage,
     .marketing-hero-visual .hero-engine-orb-stage,
-    .marketing-hero-visual .hero-engine-orb-root {
+    .marketing-hero-visual .hero-engine-orb-root,
+    .cinematic-orb-center,
+    .cinematic-orb-center .hero-engine-orb-cage,
+    .cinematic-orb-center .hero-engine-orb-stage,
+    .cinematic-orb-center .hero-engine-orb-root {
       overflow: hidden;
       contain: layout style paint;
     }
