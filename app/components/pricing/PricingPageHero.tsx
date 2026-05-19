@@ -33,7 +33,7 @@ export default function PricingPageHero() {
       />
 
       <motion.div
-        className="marketing-hero-lockup relative grid gap-6 sm:gap-8"
+        className="marketing-hero-lockup relative grid gap-5 sm:gap-8"
         initial={reduce ? false : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
@@ -53,7 +53,7 @@ export default function PricingPageHero() {
             export, powered by the same cinematic engine as the rest of Mastrify.
           </p>
 
-          <ul className="mt-6 space-y-2.5 text-[14px] text-white/70">
+          <ul className="mt-4 space-y-2 text-[14px] text-white/70 sm:mt-6 sm:space-y-2.5">
             {BULLETS.map((text) => (
               <li key={text} className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
@@ -62,7 +62,7 @@ export default function PricingPageHero() {
             ))}
           </ul>
 
-          <p className="mt-6 text-[13px] text-white/64">
+          <p className="mt-4 text-[13px] text-white/64 sm:mt-6">
             <Link
               href="/master"
               className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline"

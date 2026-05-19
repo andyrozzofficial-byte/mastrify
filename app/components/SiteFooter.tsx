@@ -33,8 +33,8 @@ function FooterColumn({
       initial={false}
       className="min-w-0"
     >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-label-strong">{title}</p>
-      <ul className="mt-4 space-y-1 sm:space-y-2">
+      <p className="footer-column-title text-[11px] font-semibold uppercase tracking-[0.24em] text-label-strong">{title}</p>
+      <ul className="footer-column-links mt-3 flex flex-col space-y-0.5 sm:mt-4 sm:space-y-1 md:space-y-2">
         {links.map(({ href, label }) => (
           <li key={href + label}>
             <Link href={href} className="footer-tap-link">
@@ -86,10 +86,10 @@ export default function SiteFooter() {
   const onAnalyze = pathname === "/analyze"
   const onLanding = pathname === "/" || pathname === "/landing"
   const footerTopClass = onAnalyze
-    ? "pt-7 sm:pt-8 lg:pt-[3.25rem]"
+    ? "pt-5 sm:pt-7 lg:pt-[3.25rem]"
     : onLanding
-      ? "pt-3 sm:pt-4 lg:pt-8"
-      : "pt-8 sm:pt-9 lg:pt-[3.25rem]"
+      ? "pt-2 sm:pt-4 lg:pt-8"
+      : "pt-6 sm:pt-8 lg:pt-[3.25rem]"
   const year = new Date().getFullYear()
 
   return (
@@ -118,13 +118,13 @@ export default function SiteFooter() {
       />
 
       <motion.div
-        className={`footer-shell relative mx-auto w-full px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 md:px-10 md:pt-14 md:pb-12 ${footerTopClass}`}
+        className={`footer-shell relative mx-auto w-full px-4 pb-[max(1.35rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 sm:pb-10 md:px-10 md:pt-14 md:pb-12 ${footerTopClass}`}
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="grid min-w-0 items-start gap-6 sm:gap-8 md:gap-12 lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
+        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 sm:gap-7 md:gap-12 lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
           {/* Brand */}
           <motion.div
             className="min-w-0 lg:col-span-3 xl:col-span-3"
@@ -136,7 +136,7 @@ export default function SiteFooter() {
             <Link href="/" className="inline-flex items-center">
               <span className="text-[17px] font-semibold tracking-[-0.02em] text-white/92">Mastrify</span>
             </Link>
-            <p className="mt-3 max-w-[16.5rem] text-[13px] leading-[1.6] text-muted md:mt-4 lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
+            <p className="mt-2.5 max-w-[16.5rem] text-[13px] leading-[1.55] text-muted sm:mt-3 md:mt-4 lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
               Intelligent mastering for music that deserves its full emotional weight — release-ready, without the
               noise.
             </p>
@@ -177,15 +177,15 @@ export default function SiteFooter() {
               />
               <div className="relative flex h-full flex-col justify-center">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/58">Release ready</p>
-                <h2 className="mt-2.5 text-[1.2rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.3rem] lg:text-[1.35rem]">
+                <h2 className="mt-2 text-[1.15rem] font-semibold tracking-[-0.02em] text-white/92 sm:mt-2.5 sm:text-[1.3rem] lg:text-[1.35rem]">
                   Ready to master your track?
                 </h2>
-                <p className="mt-2.5 max-w-[22rem] text-[12px] leading-relaxed text-muted sm:text-[13px] lg:text-[13.5px]">
+                <p className="mt-2 max-w-[22rem] text-[12px] leading-relaxed text-muted sm:mt-2.5 sm:text-[13px] lg:text-[13.5px]">
                   Studio-grade loudness and tone — pay when your export is ready.
                 </p>
                 <PremiumButton
                   href="/master"
-                  className="mt-5 min-h-[46px] w-full px-7 text-[13px] min-[430px]:w-auto min-[430px]:min-w-[13rem] min-[430px]:px-8 lg:mt-7"
+                  className="mt-4 min-h-[46px] w-full px-7 text-[13px] min-[430px]:w-auto min-[430px]:min-w-[13rem] min-[430px]:px-8 sm:mt-5 lg:mt-7"
                 >
                   Start mastering
                 </PremiumButton>
@@ -196,7 +196,7 @@ export default function SiteFooter() {
 
         {/* Bottom metadata row */}
         <motion.div
-          className="mt-8 flex flex-col gap-4 border-t border-white/[0.07] pt-6 md:mt-14 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-9"
+          className="footer-mobile-meta mt-6 flex flex-col gap-3.5 border-t border-white/[0.07] pt-5 md:mt-14 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-9"
           initial={reduce ? false : { opacity: 0 }}
           whileInView={reduce ? undefined : { opacity: 1 }}
           viewport={{ once: true }}

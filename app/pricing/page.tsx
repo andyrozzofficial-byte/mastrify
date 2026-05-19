@@ -34,7 +34,7 @@ export default function Pricing() {
         transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <main className="page-container relative z-10 pb-12 pt-6 sm:pb-16 sm:pt-8 md:pb-24 md:pt-14">
+      <main className="page-container relative z-10 pb-10 pt-4 sm:pb-16 sm:pt-8 md:pb-24 md:pt-14">
         <PricingPageHero />
 
         <motion.div
@@ -50,7 +50,7 @@ export default function Pricing() {
           <PricingUnlockCard className="relative z-[1]" />
         </motion.div>
 
-        <motion.div className="mt-16 md:mt-20">
+        <motion.div className="mt-12 sm:mt-16 md:mt-20">
           <p className="mb-6 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/60">
             What you get
           </p>
@@ -58,7 +58,7 @@ export default function Pricing() {
         </motion.div>
 
         <motion.div
-          className="mt-16 md:mt-20"
+          className="mt-12 sm:mt-16 md:mt-20"
           initial={reduce ? false : { opacity: 0 }}
           whileInView={reduce ? undefined : { opacity: 1 }}
           viewport={{ once: true }}

@@ -49,7 +49,7 @@ export default function AnalyzeUploadHero({
       />
 
       <motion.div
-        className="marketing-hero-lockup marketing-hero-lockup--top relative isolate grid min-w-0 gap-7 max-lg:grid-cols-1 max-lg:gap-8"
+        className="marketing-hero-lockup marketing-hero-lockup--top relative isolate grid min-w-0 gap-5 max-lg:grid-cols-1 max-lg:gap-6"
         initial={reduce ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: EASE }}
@@ -69,7 +69,7 @@ export default function AnalyzeUploadHero({
             mastering journey, before you commit to the final master.
           </p>
 
-          <ul className="mt-6 space-y-2.5 text-[14px] text-white/70">
+          <ul className="mt-4 space-y-2 text-[14px] text-white/70 sm:mt-6 sm:space-y-2.5">
             <li className="flex gap-2.5">
               <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
               Understand loudness, width, and tone with engineer-level clarity
@@ -84,22 +84,22 @@ export default function AnalyzeUploadHero({
             </li>
           </ul>
 
-          <AnalyzeStepRail phase={phase} className="mt-8 justify-start md:mt-9" />
+          <AnalyzeStepRail phase={phase} className="mt-6 justify-start sm:mt-8 md:mt-9" />
 
-          <div className="mt-8 w-full max-w-[29.5rem] min-w-0 lg:max-w-none">
+          <motion.div className="mt-6 w-full max-w-[29.5rem] min-w-0 sm:mt-8 lg:max-w-none">
             <AnalyzeUploadCard
               file={file}
               fileInputRef={fileInputRef}
               onFileInputChange={onFileInputChange}
               onScanClick={onScanClick}
             />
-          </div>
+          </motion.div>
 
-          <motion.div className="mt-8 grid gap-2 sm:grid-cols-3 sm:gap-2.5">
+          <motion.div className="mt-5 grid gap-2 sm:mt-8 sm:grid-cols-3 sm:gap-2.5">
             {TRUST.map((item, i) => (
               <motion.div
                 key={item.title}
-                className="rounded-lg border border-white/[0.05] bg-black/[0.28] px-3 py-3 text-center backdrop-blur-md"
+                className="rounded-lg border border-white/[0.05] bg-black/[0.28] px-3 py-2.5 text-center backdrop-blur-md sm:py-3"
                 initial={reduce ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.15 + i * 0.05, ease: EASE }}
@@ -110,7 +110,7 @@ export default function AnalyzeUploadHero({
             ))}
           </motion.div>
 
-          <p className="mt-6 text-[11px] text-white/60">
+          <p className="mt-4 text-[11px] text-white/60 sm:mt-6">
             <Link
               href="/how-it-works"
               className="text-violet-200/55 underline-offset-2 transition hover:text-violet-200/80 hover:underline"
@@ -126,7 +126,7 @@ export default function AnalyzeUploadHero({
           activeStep={engineStep}
           compactAtmosphere
           mobileGlowBoost
-          className="marketing-hero-visual relative z-0 max-lg:order-2 max-lg:mt-1 lg:sticky lg:top-24"
+          className="marketing-hero-visual relative z-0 max-lg:order-2 max-lg:-mt-0.5 max-lg:mb-0 lg:sticky lg:top-24"
         />
       </motion.div>
     </section>

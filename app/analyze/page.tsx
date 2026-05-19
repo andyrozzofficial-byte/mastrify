@@ -319,7 +319,7 @@ export default function AnalyzePage() {
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className={`relative mx-auto w-full px-5 pb-10 pt-6 md:px-10 md:pb-16 md:pt-8 ${
+        className={`relative mx-auto w-full px-5 pb-8 pt-4 sm:pb-10 sm:pt-6 md:px-10 md:pb-16 md:pt-8 ${
           result && !processing
             ? "max-w-6xl pb-6 pt-3 md:max-w-7xl md:pb-16 md:pt-8"
             : "max-w-[1080px]"

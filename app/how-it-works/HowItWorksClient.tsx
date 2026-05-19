@@ -185,10 +185,10 @@ export default function HowItWorksClient() {
       />
 
       {/* Hero */}
-      <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 pb-20 md:pb-28">
+      <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 pb-12 md:pb-28">
         <HeroWaveBackdrop />
 
-        <div className="marketing-hero-lockup relative grid items-center gap-12">
+        <div className="marketing-hero-lockup relative grid items-center gap-6 sm:gap-10 md:gap-12">
           <Reveal className="marketing-hero-copy">
             <span className="hero-eyebrow-pill">
               Intelligent mastering
@@ -199,11 +199,11 @@ export default function HowItWorksClient() {
                 release-ready
               </span>
             </h1>
-            <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/75 md:text-[16px] md:leading-relaxed">
+            <p className="mt-4 max-w-lg text-[14px] leading-relaxed text-white/75 sm:mt-5 sm:text-[15px] md:text-[16px] md:leading-relaxed">
               Mastrify listens like an engineer who cares about the song — preserving dynamics, emotional movement,
               and the identity of your mix while bringing it to a confident, streaming-ready level.
             </p>
-            <ul className="mt-6 space-y-2.5 text-[14px] text-white/72">
+            <ul className="mt-4 space-y-2 text-[14px] text-white/72 sm:mt-6 sm:space-y-2.5">
               <li className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
                 Perceptual processing that follows the music, not a fixed template
@@ -218,7 +218,7 @@ export default function HowItWorksClient() {
               </li>
             </ul>
             <motion.div
-              className="mt-8 flex flex-wrap gap-3"
+              className="mt-6 flex flex-wrap gap-2.5 sm:mt-8 sm:gap-3"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.5, ease: EASE }}
@@ -243,13 +243,13 @@ export default function HowItWorksClient() {
               className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.14),transparent_65%)]"
               aria-hidden
             />
-            <MasteringEngineVisual activeStep={engineStep} className="relative z-[1]" />
+            <MasteringEngineVisual activeStep={engineStep} className="marketing-engine-visual relative z-[1]" />
           </Reveal>
         </div>
       </section>
 
       {/* Steps */}
-      <section className="relative z-10 border-t border-white/[0.05] bg-black/20 py-20 md:py-28">
+      <section className="relative z-10 border-t border-white/[0.05] bg-black/20 py-14 md:py-28">
         <div className="mx-auto max-w-[1080px] px-5 md:px-10">
           <Reveal className="text-center">
             <SectionLabel>The path to your master</SectionLabel>
@@ -303,7 +303,7 @@ export default function HowItWorksClient() {
       </section>
 
       {/* Philosophy */}
-      <section className="relative z-10 py-16 md:py-24">
+      <section className="relative z-10 py-12 md:py-24">
         <div className="mx-auto max-w-[1080px] px-5 md:px-10">
           <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-black/40 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_32px_80px_rgba(0,0,0,0.5),0_0_72px_rgba(124,58,237,0.08)] backdrop-blur-2xl md:p-10 lg:p-12">
             <Reveal>
@@ -332,7 +332,7 @@ export default function HowItWorksClient() {
       </section>
 
       {/* Headroom */}
-      <section className="relative z-10 border-t border-white/[0.05] py-16 md:py-24">
+      <section className="relative z-10 border-t border-white/[0.05] py-12 md:py-24">
         <motion.div className="mx-auto max-w-[1080px] px-5 md:px-10">
           <div className="marketing-split-grid grid gap-10">
             <Reveal>
@@ -373,7 +373,7 @@ export default function HowItWorksClient() {
       </section>
 
       {/* Trust */}
-      <section className="relative z-10 pb-20 pt-4 md:pb-28">
+      <section className="relative z-10 pb-14 pt-2 md:pb-28 md:pt-4">
         <div className="mx-auto max-w-[1080px] px-5 md:px-10">
           <Reveal className="text-center">
             <SectionLabel>Built for real music</SectionLabel>

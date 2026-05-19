@@ -51,7 +51,7 @@ export default function Landing() {
       {/* Hero */}
       <section className="marketing-hero-shell homepage-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
         <motion.div
-          className="marketing-hero-lockup homepage-hero-lockup relative grid items-center gap-8 sm:gap-10"
+          className="marketing-hero-lockup homepage-hero-lockup relative grid items-center gap-6 sm:gap-10"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
@@ -76,7 +76,7 @@ export default function Landing() {
               bringing your mix to a confident, streaming-ready level.
             </p>
 
-            <ul className="mx-auto mt-7 max-w-md space-y-3 text-left text-[14px] leading-[1.55] text-white/70 lg:mx-0">
+            <ul className="mx-auto mt-5 max-w-md space-y-2.5 text-left text-[14px] leading-[1.55] text-white/70 sm:mt-7 sm:space-y-3 lg:mx-0">
               <li className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
                 Transparent dynamics that respect what your mix already does well
@@ -88,7 +88,7 @@ export default function Landing() {
             </ul>
 
             <motion.div
-              className="mobile-cta-stack mt-5 sm:mt-8 lg:justify-start"
+              className="mobile-cta-stack mt-4 sm:mt-8 lg:justify-start"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
@@ -101,7 +101,7 @@ export default function Landing() {
               </PremiumButton>
             </motion.div>
 
-            <p className="mt-5 text-center text-[13px] text-support-68 lg:text-left">
+            <p className="mt-4 text-center text-[13px] text-support-68 sm:mt-5 lg:text-left">
               <Link
                 href="/how-it-works"
                 className="transition hover:text-violet-200/70 hover:underline hover:underline-offset-2"
@@ -146,7 +146,7 @@ export default function Landing() {
         />
 
         <motion.div
-          className="page-container landing-close-footer relative z-10 pt-7 md:pt-16 lg:pt-8"
+          className="page-container landing-close-footer marketing-section-tight relative z-10 pt-5 md:pt-16 lg:pt-8"
           initial={reduce ? false : { opacity: 0, y: 14 }}
           whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}
@@ -161,12 +161,12 @@ export default function Landing() {
               Perceptual analysis highlights dynamics, balance, and release readiness — so you know what your song
               needs before the final master.
             </p>
-            <PremiumButton href="/analyze" variant="secondary" className="mt-7 min-h-[48px] px-8">
+            <PremiumButton href="/analyze" variant="secondary" className="mt-5 min-h-[48px] px-8 sm:mt-7">
               Run a free mix analysis
             </PremiumButton>
           </CinematicReveal>
 
-          <CinematicReveal className="mx-auto mt-14 max-w-[920px] md:mt-[3.75rem] lg:mt-10" delay={0.08}>
+          <CinematicReveal className="mx-auto mt-10 max-w-[920px] sm:mt-14 md:mt-[3.75rem] lg:mt-10" delay={0.08}>
             <motion.div
               className="trust-band"
               initial={reduce ? false : { opacity: 0, y: 10 }}

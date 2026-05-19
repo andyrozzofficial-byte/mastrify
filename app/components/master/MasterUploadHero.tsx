@@ -47,7 +47,7 @@ export default function MasterUploadHero({
       />
 
       <motion.div
-        className="marketing-hero-lockup marketing-hero-lockup--top relative grid min-w-0 gap-6 max-lg:grid-cols-1"
+        className="marketing-hero-lockup marketing-hero-lockup--top relative grid min-w-0 gap-5 max-lg:grid-cols-1 sm:gap-6"
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
@@ -123,12 +123,12 @@ export default function MasterUploadHero({
         </motion.div>
 
         <motion.div
-          className="marketing-hero-visual relative mx-auto flex w-full max-w-full justify-center overflow-hidden max-lg:order-2 max-lg:mt-2 max-lg:min-h-[min(14rem,42vw)] max-lg:py-3 sm:max-lg:py-4 md:max-lg:min-h-[16rem] lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-start lg:py-0"
+          className="marketing-hero-visual marketing-hero-visual-slot relative mx-auto flex w-full max-w-full justify-center overflow-hidden max-lg:order-2 max-lg:mt-1 max-lg:py-2 sm:max-lg:py-3 lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-start lg:py-0"
           initial={reduce ? false : { opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
         >
-          <MasteringEngineVisual activeStep={engineStep} />
+          <MasteringEngineVisual activeStep={engineStep} className="marketing-engine-visual" />
         </motion.div>
       </motion.div>
     </section>
