@@ -13,7 +13,7 @@ const BULLETS = [
 
 export default function PricingPageHero() {
   return (
-    <MarketingDesktopHero>
+    <MarketingDesktopHero variant="product">
       <span className="hero-eyebrow-pill">Simple, honest pricing</span>
 
       <h1 className="marketing-hero-title">

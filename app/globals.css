@@ -97,10 +97,24 @@ body {
     min-width: 0;
     box-sizing: border-box;
   }
+  /* Marketing spacing scale — single rhythm for all interior pages */
+  :root {
+    --mkt-space-2: 0.5rem;
+    --mkt-space-3: 0.75rem;
+    --mkt-space-4: 1rem;
+    --mkt-space-5: 1.25rem;
+    --mkt-space-6: 1.5rem;
+    --mkt-space-8: 2rem;
+    --mkt-space-10: 2.5rem;
+    --mkt-space-12: 3rem;
+    --mkt-action-width: 29.5rem;
+    --mkt-content-max: 1080px;
+    --mkt-copy-max: 36rem;
+  }
   .page-container {
     margin-inline: auto;
     width: 100%;
-    max-width: 1080px;
+    max-width: var(--mkt-content-max);
     padding-left: max(1rem, env(safe-area-inset-left, 0px));
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
   }
@@ -190,9 +204,15 @@ body {
     }
     .marketing-hero-copy {
       width: 100%;
-      max-width: 36rem;
+      max-width: var(--mkt-copy-max);
       justify-self: end;
       margin-top: 0;
+    }
+    .marketing-hero-lockup--product {
+      align-items: start;
+    }
+    .marketing-hero-lockup--product .marketing-hero-visual {
+      align-self: start;
     }
     .marketing-hero-copy > .hero-eyebrow-pill {
       margin-block: 0;
@@ -296,41 +316,94 @@ body {
   .marketing-hero-action-slot,
   .cinematic-upload-slot {
     width: 100%;
-    max-width: 29.5rem;
+    max-width: var(--mkt-action-width);
     min-width: 0;
-    margin-top: 1.5rem;
+    margin-top: var(--mkt-space-6);
   }
   @media (min-width: 640px) {
     .marketing-hero-action-slot,
     .cinematic-upload-slot {
-      margin-top: 2rem;
+      margin-top: var(--mkt-space-8);
+    }
+  }
+  /* Product flows: upload/pricing card stays locked width, sits closer to copy */
+  .marketing-hero-copy--product > .marketing-hero-action-slot,
+  .marketing-hero-copy--product > .cinematic-upload-slot {
+    margin-top: var(--mkt-space-4);
+    max-width: var(--mkt-action-width);
+  }
+  @media (min-width: 640px) {
+    .marketing-hero-copy--product > .marketing-hero-action-slot,
+    .marketing-hero-copy--product > .cinematic-upload-slot {
+      margin-top: var(--mkt-space-5);
     }
   }
   @media (min-width: 1024px) {
-    .marketing-hero-action-slot,
-    .cinematic-upload-slot {
-      max-width: none;
+    .marketing-hero-copy--product > .marketing-hero-action-slot,
+    .marketing-hero-copy--product > .cinematic-upload-slot {
+      margin-top: var(--mkt-space-5);
     }
   }
   .marketing-hero-copy > .marketing-hero-step-rail {
-    margin-top: 1.5rem;
+    margin-top: var(--mkt-space-6);
   }
   @media (min-width: 640px) {
     .marketing-hero-copy > .marketing-hero-step-rail {
-      margin-top: 2rem;
+      margin-top: var(--mkt-space-8);
+    }
+  }
+  .marketing-hero-copy--product > .marketing-hero-step-rail {
+    margin-top: var(--mkt-space-4);
+  }
+  @media (min-width: 640px) {
+    .marketing-hero-copy--product > .marketing-hero-step-rail {
+      margin-top: var(--mkt-space-5);
     }
   }
   .marketing-hero-copy > .cinematic-trust-row {
-    margin-top: 1.25rem;
+    margin-top: var(--mkt-space-5);
   }
   @media (min-width: 640px) {
     .marketing-hero-copy > .cinematic-trust-row {
-      margin-top: 1.75rem;
+      margin-top: var(--mkt-space-6);
+    }
+  }
+  .marketing-hero-copy--product > .cinematic-trust-row {
+    margin-top: var(--mkt-space-4);
+  }
+  @media (min-width: 640px) {
+    .marketing-hero-copy--product > .cinematic-trust-row {
+      margin-top: var(--mkt-space-5);
     }
   }
   @media (min-width: 1024px) {
-    .marketing-hero-copy > .cinematic-trust-row {
-      margin-top: 1.5rem;
+    .marketing-hero-shell--product.page-hero-pad {
+      padding-top: 4rem;
+      padding-bottom: 2.5rem;
+    }
+    .marketing-hero-shell--product.hero-section {
+      padding-bottom: 2.5rem;
+    }
+  }
+  .marketing-section {
+    width: 100%;
+    min-width: 0;
+  }
+  .marketing-card-grid {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    gap: var(--mkt-space-4);
+  }
+  @media (min-width: 640px) {
+    .marketing-card-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .marketing-card-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--mkt-space-5);
     }
   }
   .cinematic-trust-chip {
@@ -601,17 +674,12 @@ body {
   }
   @media (min-width: 1024px) {
     .marketing-split-grid {
-      width: min(1040px, 100%);
+      width: 100%;
+      max-width: 100%;
       margin-inline: auto;
       grid-template-columns: minmax(0, 1fr) minmax(0, 0.84fr);
-      gap: 2.25rem;
+      gap: var(--mkt-space-10);
       align-items: center;
-    }
-  }
-  @media (min-width: 1440px) {
-    .marketing-split-grid {
-      width: min(1000px, 100%);
-      gap: 2rem;
     }
   }
   .hero-eyebrow-pill {

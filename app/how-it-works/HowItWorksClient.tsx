@@ -3,9 +3,8 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
-import CinematicBackground from "../components/CinematicBackground"
-import MarketingPageAmbient from "../components/MarketingPageAmbient"
 import MarketingDesktopHero from "../components/cinematic/MarketingDesktopHero"
+import MarketingPageFrame from "../components/cinematic/MarketingPageFrame"
 import PremiumButton from "../components/PremiumButton"
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -162,17 +161,8 @@ export default function HowItWorksClient() {
   const reduce = useReducedMotion()
 
   return (
-    <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.45 }}
-    >
-      <CinematicBackground intensity="strong" marketingLite />
-
-      <MarketingPageAmbient />
-
-      <MarketingDesktopHero>
+    <MarketingPageFrame>
+      <MarketingDesktopHero variant="marketing">
         <span className="hero-eyebrow-pill">Intelligent mastering</span>
 
         <h1 className="marketing-hero-title">
@@ -228,7 +218,7 @@ export default function HowItWorksClient() {
           </Reveal>
 
           <motion.div
-            className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5"
+            className="marketing-card-grid mt-10"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-40px" }}
@@ -282,7 +272,7 @@ export default function HowItWorksClient() {
               </p>
             </Reveal>
 
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+            <div className="marketing-card-grid mt-10">
               {PHILOSOPHY.map((item, i) => (
                 <Reveal key={item.title} delay={i * 0.05}>
                   <div className="rounded-xl border border-white/[0.06] bg-black/30 px-4 py-4 transition hover:border-white/[0.09] hover:bg-black/40 md:px-5 md:py-5">
@@ -315,7 +305,7 @@ export default function HowItWorksClient() {
             </Reveal>
 
             <Reveal delay={0.1}>
-              <div className="rounded-[1.15rem] border border-white/[0.07] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_24px_56px_rgba(0,0,0,0.4)] backdrop-blur-xl md:p-8">
+              <div className="marketing-stage-card md:p-8">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/64">Helpful habits</p>
                 <ul className="mt-5 space-y-4">
                   {[
@@ -350,7 +340,7 @@ export default function HowItWorksClient() {
             {TRUST.map((label) => (
               <span
                 key={label}
-                className="rounded-full border border-white/[0.07] bg-white/[0.04] px-3.5 py-1.5 text-[11px] font-medium tracking-wide text-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md transition hover:border-white/[0.1] hover:text-white/88"
+                className="rounded-full border border-white/[0.07] bg-white/[0.04] px-3.5 py-1.5 text-[11px] font-medium tracking-wide text-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:border-white/[0.1] hover:text-white/88"
               >
                 {label}
               </span>
@@ -368,6 +358,6 @@ export default function HowItWorksClient() {
           </Reveal>
         </div>
       </section>
-    </motion.div>
+    </MarketingPageFrame>
   )
 }

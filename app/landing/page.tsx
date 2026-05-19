@@ -2,11 +2,11 @@
 
 import { motion, useReducedMotion } from "framer-motion"
 import Link from "next/link"
-import CinematicBackground from "../components/CinematicBackground"
-import MarketingPageAmbient from "../components/MarketingPageAmbient"
 import CinematicDivider from "../components/CinematicDivider"
 import CinematicReveal from "../components/CinematicReveal"
+import MarketingPageAmbient from "../components/MarketingPageAmbient"
 import MarketingDesktopHero from "../components/cinematic/MarketingDesktopHero"
+import MarketingPageFrame from "../components/cinematic/MarketingPageFrame"
 import PremiumButton from "../components/PremiumButton"
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -17,17 +17,8 @@ export default function Landing() {
   const reduce = useReducedMotion()
 
   return (
-    <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, ease: EASE }}
-    >
-      <CinematicBackground intensity="strong" marketingLite />
-
-      <MarketingPageAmbient />
-
-      <MarketingDesktopHero>
+    <MarketingPageFrame>
+      <MarketingDesktopHero variant="marketing">
         <span className="hero-eyebrow-pill">Intelligent mastering engine</span>
 
         <h1 className="marketing-hero-title">
@@ -77,9 +68,8 @@ export default function Landing() {
         </p>
       </MarketingDesktopHero>
 
-      {/* Bridge — tightens hero → below fold */}
       <motion.div
-        className="relative z-10 mx-auto max-w-[1080px] px-5 md:px-10 lg:-mt-2"
+        className="page-container relative z-10 lg:-mt-2"
         initial={reduce ? false : { opacity: 0 }}
         whileInView={reduce ? undefined : { opacity: 1 }}
         viewport={{ once: true }}
@@ -88,7 +78,6 @@ export default function Landing() {
         <CinematicDivider />
       </motion.div>
 
-      {/* Below fold — mix intelligence */}
       <section className="section-after-hero relative z-10">
         <MarketingPageAmbient variant="section" />
 
@@ -105,8 +94,8 @@ export default function Landing() {
               Understand your mix with clarity
             </h2>
             <p className="mt-4 text-[14px] leading-relaxed text-white/70 md:text-[15px]">
-              Perceptual analysis highlights dynamics, balance, and release readiness — so you know what your song
-              needs before the final master.
+              Perceptual analysis highlights dynamics, balance, and release readiness — so you know what your song needs
+              before the final master.
             </p>
             <PremiumButton href="/analyze" variant="secondary" className="mt-5 min-h-[48px] px-8 sm:mt-7">
               Run a free mix analysis
@@ -143,6 +132,6 @@ export default function Landing() {
           </CinematicReveal>
         </motion.div>
       </section>
-    </motion.div>
+    </MarketingPageFrame>
   )
 }

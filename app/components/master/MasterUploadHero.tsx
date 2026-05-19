@@ -28,7 +28,7 @@ export default function MasterUploadHero({
   onContinue,
 }: Props) {
   return (
-    <MarketingDesktopHero>
+    <MarketingDesktopHero variant="product">
       <span className="hero-eyebrow-pill">Spatial mastering engine</span>
 
       <h1 className="marketing-hero-title">
