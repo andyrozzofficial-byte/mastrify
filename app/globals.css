@@ -1105,14 +1105,34 @@ body {
   }
   @media (max-width: 639px) {
     .preset-detail-overlay {
+      position: fixed;
+      inset: 0;
+      height: 100dvh;
+      max-height: 100dvh;
       overscroll-behavior: none;
     }
     .preset-detail-sheet {
-      touch-action: pan-y;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      height: 100dvh;
+      max-height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .preset-detail-sheet-layout {
+      display: contents;
     }
     .preset-detail-sheet-scroll {
-      touch-action: pan-y;
+      overflow-y: auto;
+      overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+      min-height: 0;
+    }
+    .preset-detail-sheet-footer {
+      position: relative;
+      z-index: 2;
     }
   }
   .hero-orb-radial-mobile {

@@ -311,7 +311,6 @@ function lockBodyScroll(lock: boolean) {
     bodyPosition: body.style.position,
     bodyTop: body.style.top,
     bodyWidth: body.style.width,
-    bodyTouchAction: body.style.touchAction,
     htmlOverflow: html.style.overflow,
   }
 
@@ -319,7 +318,6 @@ function lockBodyScroll(lock: boolean) {
   body.style.position = "fixed"
   body.style.top = `-${scrollY}px`
   body.style.width = "100%"
-  body.style.touchAction = "none"
   html.style.overflow = "hidden"
 
   return () => {
@@ -327,7 +325,6 @@ function lockBodyScroll(lock: boolean) {
     body.style.position = prev.bodyPosition
     body.style.top = prev.bodyTop
     body.style.width = prev.bodyWidth
-    body.style.touchAction = prev.bodyTouchAction
     html.style.overflow = prev.htmlOverflow
     window.scrollTo(0, scrollY)
   }
@@ -377,7 +374,7 @@ function StylePresetDetailSheet({
         >
           <button
             type="button"
-            className="fixed inset-0 bg-black/80 backdrop-blur-md max-sm:touch-none"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
             aria-label="Close preset details"
             onClick={onClose}
           />
@@ -392,15 +389,15 @@ function StylePresetDetailSheet({
             className="preset-detail-sheet relative z-10 flex w-full max-w-md flex-col overflow-hidden border border-white/[0.1] bg-[#090912] shadow-[0_-24px_80px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:rounded-none max-sm:border-x-0 max-sm:border-b-0 sm:max-h-[min(92dvh,720px)] sm:overflow-y-auto sm:rounded-2xl"
           >
             <motion.div
-              className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_80%_70%_at_50%_0%,rgba(124,58,237,0.2),transparent_70%)]"
+              className="pointer-events-none absolute inset-x-0 top-0 z-0 h-32 bg-[radial-gradient(ellipse_80%_70%_at_50%_0%,rgba(124,58,237,0.2),transparent_70%)]"
               aria-hidden
             />
             <motion.div
               className="pointer-events-none absolute inset-x-8 top-3 z-10 h-1 rounded-full bg-white/15 sm:hidden"
               aria-hidden
             />
-            <motion.div className="relative flex min-h-0 flex-1 flex-col max-sm:overflow-hidden">
-              <motion.div className="preset-detail-sheet-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5 [-webkit-overflow-scrolling:touch] sm:px-6 sm:pt-6">
+            <motion.div className="preset-detail-sheet-layout relative z-[1] flex min-h-0 flex-1 flex-col">
+              <motion.div className="preset-detail-sheet-scroll min-h-0 flex-1 basis-0 overflow-y-auto overscroll-y-contain px-5 pt-5 sm:px-6 sm:pt-6">
                 <motion.div className="flex items-start gap-4" layout>
                   <motion.div
                     layout
@@ -457,7 +454,7 @@ function StylePresetDetailSheet({
                 <motion.div className="mt-5 hidden pb-6 sm:block">{gotItButton}</motion.div>
               </motion.div>
 
-              <motion.div className="preset-detail-sheet-footer shrink-0 border-t border-white/[0.08] bg-[#090912]/95 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm sm:hidden">
+              <motion.div className="preset-detail-sheet-footer relative z-[1] shrink-0 border-t border-white/[0.08] bg-[#090912] px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:hidden">
                 {gotItButton}
               </motion.div>
             </motion.div>
