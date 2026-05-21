@@ -19,7 +19,6 @@ export default function CinematicReveal({ children, className = "", delay = 0 }:
       whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-56px" }}
       transition={{ ...revealTransition, delay }}
-      style={reduce ? undefined : { willChange: "opacity, transform" }}
     >
       {children}
     </motion.div>

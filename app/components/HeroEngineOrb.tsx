@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import { CINEMATIC_EASE } from "../../lib/cinematicMotion"
 import HeroWaveBackdrop from "./HeroWaveBackdrop"
 import LandingHeroAtmosphere from "./LandingHeroAtmosphere"
+import MarketingHeroOrbStatic from "./MarketingHeroOrbStatic"
 import MasteringEngineVisual from "../master/processing/MasteringEngineVisual"
 import OrbScene from "./cinematic/OrbScene"
 
@@ -12,6 +13,8 @@ type Props = {
   compactAtmosphere?: boolean
   mobileGlowBoost?: boolean
   className?: string
+  /** Landing: static orb, no loops/blur — scroll-safe compositing */
+  scrollSafe?: boolean
 }
 
 /**
@@ -22,8 +25,32 @@ export default function HeroEngineOrb({
   compactAtmosphere = false,
   mobileGlowBoost = false,
   className = "",
+  scrollSafe = false,
 }: Props) {
   const reduce = useReducedMotion()
+
+  if (scrollSafe) {
+    return (
+      <div
+        className={`hero-engine-orb-root relative isolate mx-auto w-full max-w-full min-w-0 px-2 py-2 max-md:mb-0 sm:px-3 sm:py-3 md:px-4 md:py-4 lg:px-0 lg:py-0 ${className}`}
+      >
+        <div className="hero-engine-orb-cage relative mx-auto w-full min-w-0">
+          <div
+            className="hero-orb-radial-mobile pointer-events-none absolute inset-0 z-0 lg:hidden"
+            aria-hidden
+          />
+          <div className="hero-engine-orb-stage relative z-[1] aspect-square w-full max-w-full">
+            <HeroWaveBackdrop
+              efficient
+              heightClass="h-[34%] md:h-[40%]"
+              className="opacity-[0.16] md:opacity-[0.2]"
+            />
+            <MarketingHeroOrbStatic className="marketing-engine-visual relative z-[1] mx-auto" />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <motion.div

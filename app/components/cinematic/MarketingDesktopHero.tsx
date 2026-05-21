@@ -2,7 +2,6 @@
 
 import { useReducedMotion } from "framer-motion"
 import type { ReactNode } from "react"
-import { useEngineStepRotation } from "../../../lib/useEngineStepRotation"
 import OrbScene from "./OrbScene"
 import "./marketing-hero-perf.css"
 
@@ -13,6 +12,8 @@ type Props = {
   /** marketing = homepage / why / short heroes; product = analyze / master / pricing with action card */
   variant?: MarketingHeroVariant
   engineStep?: number
+  /** Landing: static orb + no enter animations — prevents scroll compositing jank */
+  scrollSafe?: boolean
 }
 
 /**
@@ -22,23 +23,27 @@ export default function MarketingDesktopHero({
   children,
   variant = "marketing",
   engineStep: engineStepProp,
+  scrollSafe = false,
 }: Props) {
   const reduce = useReducedMotion()
   const isProduct = variant === "product"
-  const rotatedStep = useEngineStepRotation(4000, !isProduct)
-  const engineStep = engineStepProp ?? (isProduct ? 2 : rotatedStep)
+  const engineStep = engineStepProp ?? (isProduct ? 2 : 2)
+  const useEnter = !reduce && !scrollSafe
 
   return (
     <section
       className={[
         "marketing-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12",
         isProduct ? "marketing-hero-shell--product" : "",
+        scrollSafe ? "marketing-hero-shell--scroll-safe" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
       <div
-        className="marketing-ambient-pulse pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
+        className={`pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)] ${
+          scrollSafe ? "opacity-55" : "marketing-ambient-pulse"
+        }`}
         aria-hidden
       />
 
@@ -46,7 +51,7 @@ export default function MarketingDesktopHero({
         className={[
           "marketing-hero-lockup relative grid gap-6 sm:gap-10",
           isProduct ? "marketing-hero-lockup--product" : "",
-          reduce ? "" : "marketing-hero-lockup--enter",
+          useEnter ? "marketing-hero-lockup--enter" : "",
         ]
           .filter(Boolean)
           .join(" ")}
@@ -55,7 +60,7 @@ export default function MarketingDesktopHero({
           className={[
             "marketing-hero-copy text-center lg:text-left",
             isProduct ? "marketing-hero-copy--product" : "",
-            reduce ? "" : "marketing-hero-copy--enter",
+            useEnter ? "marketing-hero-copy--enter" : "",
           ]
             .filter(Boolean)
             .join(" ")}
@@ -63,7 +68,7 @@ export default function MarketingDesktopHero({
           {children}
         </div>
 
-        <OrbScene activeStep={engineStep} />
+        <OrbScene activeStep={engineStep} scrollSafe={scrollSafe} />
       </div>
     </section>
   )

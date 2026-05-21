@@ -1,0 +1,45 @@
+/* Landing page — scroll-safe compositing (import via MarketingPageFrame scrollSafe) */
+
+.marketing-page-root--scroll-safe {
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+.marketing-page-root--scroll-safe .hero-section {
+  overflow: visible;
+}
+
+.marketing-page-root--scroll-safe .marketing-hero-shell,
+.marketing-page-root--scroll-safe .marketing-hero-lockup,
+.marketing-page-root--scroll-safe .marketing-hero-visual,
+.marketing-page-root--scroll-safe .marketing-hero-visual .hero-engine-orb-root,
+.marketing-page-root--scroll-safe .marketing-hero-visual .hero-engine-orb-cage,
+.marketing-page-root--scroll-safe .marketing-hero-visual .hero-engine-orb-stage {
+  overflow: visible;
+  contain: none;
+}
+
+.marketing-page-root--scroll-safe .marketing-ambient-pulse,
+.marketing-page-root--scroll-safe .engine-halo-breathe,
+.marketing-page-root--scroll-safe .engine-ring-spin-cw,
+.marketing-page-root--scroll-safe .engine-ring-spin-ccw,
+.marketing-page-root--scroll-safe .marketing-wave-backdrop,
+.marketing-page-root--scroll-safe .landing-particle-drift {
+  animation: none !important;
+}
+
+.marketing-page-root--scroll-safe .hero-orb-radial-mobile {
+  filter: none;
+  opacity: 0.45;
+}
+
+.marketing-page-root--scroll-safe .section-after-hero {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
+}
+
+@supports not (content-visibility: auto) {
+  .marketing-page-root--scroll-safe .section-after-hero {
+    content-visibility: visible;
+  }
+}

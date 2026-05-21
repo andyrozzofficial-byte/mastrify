@@ -28,7 +28,7 @@ export default function SiteHeader() {
 
   return (
     <header
-      className={`site-header site-overflow-guard sticky top-0 z-[100] pt-[max(0px,env(safe-area-inset-top))] transition-[background-color,box-shadow,border-color,backdrop-filter] duration-300 ease-out backdrop-blur-2xl backdrop-saturate-150 md:duration-200 ${
+      className={`site-header site-overflow-guard sticky top-0 z-[100] pt-[max(0px,env(safe-area-inset-top))] transition-[background-color,box-shadow,border-color] duration-300 ease-out max-md:backdrop-blur-md md:backdrop-blur-xl md:backdrop-saturate-150 md:duration-200 ${
         scrolled
           ? "border-b border-white/[0.11] bg-black/82 shadow-[0_1px_0_rgba(255,255,255,0.07),0_12px_40px_rgba(0,0,0,0.5),0_4px_24px_rgba(0,0,0,0.35)] max-md:backdrop-blur-3xl"
           : "border-b border-white/[0.06] bg-black/58 shadow-[0_1px_0_rgba(255,255,255,0.03),0_4px_20px_rgba(0,0,0,0.28)]"

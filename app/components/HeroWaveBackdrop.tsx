@@ -65,9 +65,7 @@ export default function HeroWaveBackdrop({
 
   return (
     <div
-      className={`pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden opacity-[0.14] ${heightClass} ${className} ${
-        efficient ? "marketing-wave-backdrop" : ""
-      }`}
+      className={`pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden opacity-[0.14] ${heightClass} ${className}`}
       aria-hidden
     >
       <div className="flex h-full items-end justify-center gap-[3px] px-6">
