@@ -1,0 +1,29 @@
+/* Site header — baseline alignment for logo, nav, and CTA */
+
+.site-header-logo,
+.site-header-nav-link,
+.site-header-cta {
+  box-sizing: border-box;
+}
+
+.site-header-desktop {
+  align-items: center;
+}
+
+.site-header-logo {
+  display: inline-flex;
+  align-items: center;
+  height: 2.5rem;
+}
+
+.site-header-nav-link {
+  height: 2.5rem;
+  padding-block: 0;
+  padding-inline: 0;
+}
+
+.site-header-cta {
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding-block: 0;
+}
