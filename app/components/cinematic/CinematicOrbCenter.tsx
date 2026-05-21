@@ -1,10 +1,9 @@
 "use client"
 
-import { motion, useReducedMotion } from "framer-motion"
+import { useReducedMotion } from "framer-motion"
 import HeroEngineOrb from "../HeroEngineOrb"
 import "./cinematic-flow-layout.css"
-
-const EASE = [0.22, 1, 0.36, 1] as const
+import "./marketing-hero-perf.css"
 
 type Props = {
   activeStep: number
@@ -18,13 +17,12 @@ export default function CinematicOrbCenter({ activeStep, className = "" }: Props
   const reduce = useReducedMotion()
 
   return (
-    <motion.div
-      className={`cinematic-orb-center cinematic-orb-center--flow ${className}`.trim()}
-      initial={reduce ? false : { opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.65, delay: 0.08, ease: EASE }}
+    <div
+      className={`cinematic-orb-center cinematic-orb-center--flow ${
+        reduce ? "" : "cinematic-orb-center--enter"
+      } ${className}`.trim()}
     >
-      <HeroEngineOrb activeStep={activeStep} className="mx-auto w-full" />
-    </motion.div>
+      <HeroEngineOrb activeStep={activeStep} compactAtmosphere className="mx-auto w-full" />
+    </div>
   )
 }

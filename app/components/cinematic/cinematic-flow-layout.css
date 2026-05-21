@@ -1,12 +1,5 @@
 /* Product-flow orb layout (processing / analyze) — not marketing heroes */
 
-.master-processing-stage {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 52rem;
-  margin-inline: auto;
-}
-
 .cinematic-orb-center--flow {
   box-sizing: border-box;
   display: flex;

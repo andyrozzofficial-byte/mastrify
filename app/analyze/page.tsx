@@ -318,7 +318,7 @@ export default function AnalyzePage() {
               key="upload"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0, filter: "blur(4px)" }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
             >
               <AnalyzeUploadHero
@@ -343,8 +343,8 @@ export default function AnalyzePage() {
           {result && !processing && (
         <motion.div
           key="results"
-          initial={{ opacity: 0, filter: "blur(10px)", y: 16 }}
-          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
           className="mx-auto mt-0 w-full space-y-2.5 pb-2 md:mt-2 md:space-y-5 md:pb-5"
         >
@@ -382,10 +382,10 @@ export default function AnalyzePage() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.18, ease: ANALYZE_EASE }}
-            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_56px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:rounded-[1.25rem] md:p-7 lg:p-8"
+            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.05] to-black/[0.55] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_56px_rgba(0,0,0,0.5)] max-md:backdrop-blur-none md:rounded-[1.25rem] md:backdrop-blur-xl md:p-7 lg:p-8"
           >
             <div
-              className="pointer-events-none absolute right-0 top-1/2 hidden h-[min(320px,70%)] w-[min(380px,45%)] -translate-y-1/2 rounded-full bg-violet-600/[0.07] blur-[90px] md:block"
+              className="pointer-events-none absolute right-0 top-1/2 hidden h-[min(320px,70%)] w-[min(380px,45%)] -translate-y-1/2 rounded-full bg-violet-600/[0.07] blur-3xl md:block"
               aria-hidden
             />
             <div className="relative grid grid-cols-1 items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-10 lg:gap-14">

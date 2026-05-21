@@ -1,0 +1,166 @@
+/* Shared live processing layout (analyze + master) — import only in those views */
+@import "./marketing-hero-perf.css";
+
+.product-processing-view {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  min-height: min(88vh, 920px);
+  flex: 1 1 auto;
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+  .product-processing-view {
+    overflow-x: hidden;
+  }
+}
+
+.product-processing-view__ambient {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 12%, rgba(99, 102, 241, 0.14), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 85% 75%, rgba(34, 211, 238, 0.06), transparent 50%);
+}
+
+.product-processing-view__glow {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 14%;
+  width: min(640px, 90vw);
+  height: min(480px, 65vw);
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.12) 0%, transparent 70%);
+}
+
+@media (min-width: 768px) {
+  .product-processing-view__glow {
+    filter: blur(48px);
+  }
+}
+
+.product-processing-header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 1.5rem 0;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .product-processing-header {
+    padding-top: 1rem;
+  }
+}
+
+.product-processing-header__copy {
+  width: 100%;
+  max-width: 42rem;
+}
+
+.product-processing-stage {
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  width: 100%;
+  max-width: 52rem;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+  margin-top: 1.5rem;
+  min-height: 0;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .product-processing-stage {
+    padding-inline: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .product-processing-stage {
+    margin-top: 2rem;
+  }
+}
+
+.product-processing-stage .cinematic-orb-center--flow {
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .product-processing-stage .cinematic-orb-center--flow {
+    margin-top: 1rem;
+  }
+
+  .product-processing-stage .hero-engine-orb-root {
+    padding-block: 0;
+  }
+}
+
+.product-processing-stage .cinematic-waveform-slot {
+  width: 100%;
+  max-width: 32rem;
+  align-self: stretch;
+  margin-top: 1.25rem;
+  padding-inline: 0.125rem;
+}
+
+@media (min-width: 768px) {
+  .product-processing-stage .cinematic-waveform-slot {
+    max-width: 36rem;
+    margin-top: 1.5rem;
+  }
+}
+
+.product-processing-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 28rem;
+  margin-inline: auto;
+  margin-top: 0.5rem;
+  min-width: 0;
+  padding-inline: 1.25rem;
+  padding-bottom: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .product-processing-card {
+    max-width: 32rem;
+    margin-top: 1rem;
+    padding-bottom: 3rem;
+  }
+}
+
+.product-processing-card__halo {
+  pointer-events: none;
+  position: absolute;
+  inset: -1px;
+  border-radius: 1.35rem;
+  background: linear-gradient(
+    to bottom,
+    rgba(139, 92, 246, 0.2),
+    transparent 45%,
+    rgba(34, 211, 238, 0.1)
+  );
+  opacity: 0.5;
+}
+
+.product-processing-footnote {
+  margin-top: 1.5rem;
+  width: 100%;
+  text-align: center;
+}

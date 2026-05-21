@@ -20,7 +20,7 @@ export default function MarketingPageAmbient({ variant = "hero", className = "" 
   if (variant === "section") {
     return (
       <div
-        className={`pointer-events-none absolute left-1/2 top-8 h-40 w-[min(560px,80vw)] -translate-x-1/2 rounded-full bg-indigo-600/[0.04] blur-3xl max-md:blur-2xl ${pulse} ${className}`}
+        className={`pointer-events-none absolute left-1/2 top-8 h-40 w-[min(560px,80vw)] -translate-x-1/2 rounded-full bg-indigo-600/[0.04] max-md:opacity-90 md:blur-3xl ${pulse} ${className}`}
         aria-hidden
       />
     )
@@ -33,7 +33,7 @@ export default function MarketingPageAmbient({ variant = "hero", className = "" 
         aria-hidden
       />
       <div
-        className={`pointer-events-none absolute left-1/2 top-[10%] h-[min(420px,55vw)] w-[min(560px,82vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.05] blur-3xl max-md:h-[min(320px,50vw)] max-md:w-[min(420px,88vw)] max-md:blur-2xl ${pulse}`}
+        className={`pointer-events-none absolute left-1/2 top-[10%] h-[min(420px,55vw)] w-[min(560px,82vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.06] max-md:opacity-90 max-md:blur-2xl md:blur-3xl ${pulse}`}
         aria-hidden
       />
     </>

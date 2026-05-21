@@ -567,7 +567,6 @@ body {
   }
   .marketing-ambient-pulse {
     animation: marketing-ambient-pulse 9s ease-in-out infinite;
-    will-change: opacity;
   }
   @keyframes engine-halo-breathe {
     0%,
@@ -580,7 +579,6 @@ body {
   }
   .engine-halo-breathe:not([style*="opacity"]) {
     animation: engine-halo-breathe 5.5s ease-in-out infinite;
-    will-change: opacity;
   }
   @keyframes engine-ring-spin-cw {
     to {
@@ -595,16 +593,13 @@ body {
   .engine-ring-spin-cw {
     animation: engine-ring-spin-cw linear infinite;
     transform-origin: center;
-    will-change: transform;
   }
   .engine-ring-spin-ccw {
     animation: engine-ring-spin-ccw linear infinite;
     transform-origin: center;
-    will-change: transform;
   }
   .marketing-wave-backdrop {
     animation: marketing-ambient-pulse 7s ease-in-out infinite;
-    will-change: opacity;
   }
   @media (prefers-reduced-motion: reduce) {
     .marketing-ambient-pulse,
@@ -614,6 +609,13 @@ body {
     .marketing-wave-backdrop {
       animation: none !important;
     }
+  }
+  html.marketing-scroll-active .marketing-ambient-pulse,
+  html.marketing-scroll-active .engine-halo-breathe,
+  html.marketing-scroll-active .engine-ring-spin-cw,
+  html.marketing-scroll-active .engine-ring-spin-ccw,
+  html.marketing-scroll-active .marketing-wave-backdrop {
+    animation-play-state: paused !important;
   }
   @media (min-width: 768px) {
     .marketing-hero-visual,
@@ -648,7 +650,8 @@ body {
       width: 100%;
       max-width: min(11.5rem, calc(100vw - 2.5rem));
       margin-inline: auto;
-      overflow: hidden;
+      overflow-x: clip;
+      overflow-y: visible;
       contain: paint;
       aspect-ratio: 1 / 1;
     }
@@ -661,7 +664,8 @@ body {
     .marketing-hero-visual-slot {
       min-height: 0 !important;
       max-width: 100%;
-      overflow: hidden;
+      overflow-x: clip;
+      overflow-y: visible;
       padding-top: 0.35rem;
       padding-bottom: 0.35rem;
     }

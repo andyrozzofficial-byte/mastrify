@@ -1,0 +1,205 @@
+/* Marketing / product-flow motion performance (heroes, processing, orb) */
+
+@keyframes marketing-page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.marketing-page-root--enter {
+  animation: marketing-page-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes marketing-hero-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes marketing-hero-copy-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.marketing-hero-lockup--enter {
+  animation: marketing-hero-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.marketing-hero-copy--enter {
+  animation: marketing-hero-copy-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.05s forwards;
+}
+
+@keyframes product-processing-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.product-processing-view--enter {
+  animation: product-processing-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes cinematic-orb-enter {
+  from {
+    opacity: 0;
+    transform: scale3d(0.98, 0.98, 1);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.cinematic-orb-center--enter {
+  animation: cinematic-orb-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
+}
+
+/* Stage list — CSS loops instead of Framer repeat: Infinity */
+@keyframes stage-progress-shimmer {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes stage-row-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(99, 102, 241, 0.08);
+  }
+}
+
+@keyframes stage-active-scale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes landing-particle-drift {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
+.landing-particle-drift {
+  animation: landing-particle-drift 5.5s ease-in-out infinite;
+}
+
+@keyframes stage-active-dot {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.stage-progress-shimmer {
+  animation: stage-progress-shimmer 2s ease-in-out infinite;
+}
+
+.stage-row-active-glow {
+  animation: stage-row-glow 2.4s ease-in-out infinite;
+}
+
+.stage-active-scale {
+  animation: stage-active-scale 2s ease-in-out infinite;
+}
+
+.stage-active-dot {
+  animation: stage-active-dot 1.6s ease-in-out infinite;
+}
+
+/* Mobile hero — static ambient (no full-screen opacity loop) */
+@media (max-width: 767px) {
+  .marketing-hero-shell .marketing-ambient-pulse {
+    animation: none !important;
+    opacity: 0.55;
+  }
+
+  .marketing-page-root .marketing-ambient-pulse {
+    opacity: 0.52;
+  }
+
+  .product-processing-view__glow {
+    filter: none !important;
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .marketing-hero-visual .hero-engine-orb-cage {
+    contain: layout style paint;
+  }
+}
+
+/* Pause decorative loops while scrolling (touch / narrow) */
+html.marketing-scroll-active .marketing-ambient-pulse,
+html.marketing-scroll-active .engine-halo-breathe,
+html.marketing-scroll-active .engine-ring-spin-cw,
+html.marketing-scroll-active .engine-ring-spin-ccw,
+html.marketing-scroll-active .marketing-wave-backdrop,
+html.marketing-scroll-active .stage-progress-shimmer,
+html.marketing-scroll-active .stage-row-active-glow,
+html.marketing-scroll-active .stage-active-scale,
+html.marketing-scroll-active .stage-active-dot,
+html.marketing-scroll-active .landing-particle-drift,
+html.marketing-scroll-active .product-processing-view__glow {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-page-root--enter,
+  .marketing-hero-lockup--enter,
+  .marketing-hero-copy--enter,
+  .product-processing-view--enter,
+  .cinematic-orb-center--enter,
+  .stage-progress-shimmer,
+  .stage-row-active-glow,
+  .stage-active-scale,
+  .stage-active-dot,
+  .landing-particle-drift {
+    animation: none !important;
+  }
+
+  .marketing-hero-lockup--enter,
+  .marketing-hero-copy--enter,
+  .product-processing-view--enter,
+  .cinematic-orb-center--enter {
+    opacity: 1;
+    transform: none;
+  }
+}

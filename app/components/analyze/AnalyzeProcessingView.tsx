@@ -1,10 +1,11 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useMemo } from "react"
 import CinematicOrbCenter from "../cinematic/CinematicOrbCenter"
 import CinematicWaveform from "../audio/CinematicWaveform"
 import AnalysisStageList from "./AnalysisStageList"
+import "../cinematic/product-processing-view.css"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -15,6 +16,7 @@ type Props = {
 }
 
 export default function AnalyzeProcessingView({ activeStep, file, fileName }: Props) {
+  const reduce = useReducedMotion()
   const orbStep = Math.min(activeStep, 4)
 
   const audioUrl = useMemo(() => {
@@ -29,52 +31,37 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
   }, [audioUrl])
 
   return (
-    <motion.div
-      className="relative flex min-h-[min(88vh,920px)] w-full flex-col overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, filter: "blur(6px)" }}
-      transition={{ duration: 0.55, ease: EASE }}
-    >
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_12%,rgba(99,102,241,0.14),transparent_58%),radial-gradient(ellipse_50%_40%_at_85%_75%,rgba(34,211,238,0.06),transparent_50%)]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute left-1/2 top-[14%] h-[min(480px,65vw)] w-[min(640px,90vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.07] blur-[80px]"
-        aria-hidden
-      />
+    <div className={`product-processing-view ${reduce ? "" : "product-processing-view--enter"}`}>
+      <div className="product-processing-view__ambient" aria-hidden />
+      <div className="product-processing-view__glow" aria-hidden />
 
-      <motion.header
-        className="relative z-20 flex shrink-0 flex-col items-center px-6 pt-2 md:pt-4"
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: EASE }}
-      >
+      <header className="product-processing-header">
         <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/70">
           Perceptual mix intelligence
         </span>
-        <p className="mt-5 text-[11px] font-medium uppercase tracking-[0.32em] text-cyan-200/45 md:text-xs">
-          Listening to your music
-        </p>
-        <h1 className="mt-3 max-w-2xl text-center text-[1.65rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:text-[2rem] md:text-[2.35rem]">
-          Analyzing your mix
-          <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
-            with spatial perception
-          </span>
-        </h1>
-        {fileName ? (
-          <p className="mt-3 max-w-md truncate text-center text-[12px] text-white/62 md:text-[13px]">{fileName}</p>
-        ) : null}
-      </motion.header>
+        <div className="product-processing-header__copy">
+          <p className="mt-5 text-[11px] font-medium uppercase tracking-[0.32em] text-cyan-200/45 md:text-xs">
+            Listening to your music
+          </p>
+          <h1 className="mt-3 text-[1.65rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:text-[2rem] md:text-[2.35rem]">
+            Analyzing your mix
+            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+              with spatial perception
+            </span>
+          </h1>
+          {fileName ? (
+            <p className="mt-3 truncate text-[12px] text-white/62 md:text-[13px]">{fileName}</p>
+          ) : null}
+        </div>
+      </header>
 
-      <div className="master-processing-stage relative z-10 mx-auto mt-6 flex w-full max-w-[52rem] flex-1 flex-col items-center justify-center px-4 sm:px-5 md:mt-8">
-        <CinematicOrbCenter activeStep={orbStep} className="mt-2 md:mt-4" />
+      <div className="product-processing-stage">
+        <CinematicOrbCenter activeStep={orbStep} />
 
         {(file || audioUrl) && (
           <motion.div
-            className="cinematic-waveform-slot relative mt-5 min-h-[4.75rem] w-full max-w-lg overflow-hidden px-0.5 md:mt-6 md:min-h-[5rem] md:max-w-xl"
-            initial={{ opacity: 0, y: 8 }}
+            className="cinematic-waveform-slot relative min-h-[4.75rem] overflow-hidden"
+            initial={reduce ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.12, ease: EASE }}
           >
@@ -89,16 +76,8 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
         )}
       </div>
 
-      <motion.div
-        className="relative z-10 mx-auto mt-2 w-full max-w-md min-w-0 px-5 pb-10 md:mt-4 md:max-w-lg md:pb-12"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, delay: 0.15, ease: EASE }}
-      >
-        <div
-          className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-b from-violet-500/20 via-transparent to-cyan-500/10 opacity-50 blur-sm"
-          aria-hidden
-        />
+      <div className="product-processing-card">
+        <div className="product-processing-card__halo" aria-hidden />
         <div className="fluid-surface relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-3.5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] sm:px-4 sm:py-5 md:px-6 md:py-6">
           <div
             className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,transparent_22%,transparent_100%)]"
@@ -106,15 +85,10 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
           />
           <AnalysisStageList activeStep={activeStep} />
         </div>
-        <motion.p
-          className="mt-6 text-center text-[12px] tracking-wide text-white/60 md:text-[13px]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35, duration: 0.5 }}
-        >
+        <p className="product-processing-footnote text-[12px] tracking-wide text-white/60 md:text-[13px]">
           The engine is mapping your mix — this usually takes a moment
-        </motion.p>
-      </motion.div>
-    </motion.div>
+        </p>
+      </div>
+    </div>
   )
 }

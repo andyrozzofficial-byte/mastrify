@@ -1,13 +1,11 @@
 "use client"
 
-import { motion, useReducedMotion } from "framer-motion"
+import { useReducedMotion } from "framer-motion"
 
 const PARTICLES_FULL = Array.from({ length: 14 }, (_, i) => ({
   left: `${8 + ((i * 13.7) % 84)}%`,
   top: `${10 + ((i * 17.3) % 80)}%`,
   size: 1 + (i % 3) * 0.45,
-  duration: 5.5 + (i % 4) * 0.8,
-  delay: i * 0.35,
 }))
 
 const PARTICLES_LITE = PARTICLES_FULL.slice(0, 6)
@@ -33,9 +31,13 @@ export default function LandingHeroAtmosphere({
     : compact
       ? "lg:inset-[-6%] xl:inset-[-10%]"
       : "lg:inset-[-12%] xl:inset-[-16%] 2xl:inset-[-18%]"
+  const animateParticles = !reduce && !efficient
 
   return (
-    <div className={`pointer-events-none absolute ${inset} max-lg:overflow-hidden ${className}`} aria-hidden>
+    <div
+      className={`pointer-events-none absolute ${inset} max-lg:overflow-x-clip max-lg:overflow-y-visible ${className}`}
+      aria-hidden
+    >
       <div
         className={`engine-halo-breathe absolute left-1/2 top-1/2 h-[88%] w-[88%] -translate-x-1/2 -translate-y-1/2 rounded-full ${
           efficient ? "blur-xl" : "blur-2xl"
@@ -47,54 +49,31 @@ export default function LandingHeroAtmosphere({
         style={reduce ? { opacity: 0.58 } : undefined}
       />
       {!efficient ? (
-        <motion.div
-          className={`absolute left-1/2 top-[42%] h-[55%] w-[70%] -translate-x-1/2 rounded-full blur-3xl ${
+        <div
+          className={`marketing-ambient-pulse absolute left-1/2 top-[42%] h-[55%] w-[70%] -translate-x-1/2 rounded-full blur-3xl max-md:opacity-45 ${
             mobileGlowBoost || compact
               ? "bg-[radial-gradient(ellipse,rgba(56,189,248,0.11)_0%,transparent_72%)]"
               : "bg-[radial-gradient(ellipse,rgba(56,189,248,0.08)_0%,transparent_70%)]"
           }`}
-          animate={reduce ? undefined : { opacity: mobileGlowBoost || compact ? [0.38, 0.58, 0.38] : [0.35, 0.55, 0.35] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          style={reduce ? { opacity: 0.45 } : undefined}
         />
       ) : null}
-      {!efficient ? (
-        <motion.div
-          className="absolute inset-[8%] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(167,139,250,0.04)_60deg,transparent_120deg,rgba(125,211,252,0.03)_200deg,transparent_300deg)]"
-          animate={reduce ? undefined : { rotate: 360 }}
-          transition={{ duration: 48, repeat: Infinity, ease: "linear" }}
-        />
-      ) : (
-        <div
-          className="absolute inset-[8%] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(167,139,250,0.04)_60deg,transparent_120deg,rgba(125,211,252,0.03)_200deg,transparent_300deg)] opacity-80"
-          aria-hidden
-        />
-      )}
+      <div
+        className="absolute inset-[8%] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(167,139,250,0.04)_60deg,transparent_120deg,rgba(125,211,252,0.03)_200deg,transparent_300deg)] opacity-80"
+        aria-hidden
+      />
       {particles.map((p, i) => (
-        <motion.span
+        <span
           key={i}
-          className={`absolute rounded-full bg-violet-200/80 ${efficient ? "" : "shadow-[0_0_6px_rgba(167,139,250,0.35)]"}`}
+          className={`absolute rounded-full bg-violet-200/80 ${
+            animateParticles ? "landing-particle-drift" : "opacity-[0.28]"
+          }`}
           style={{
             left: p.left,
             top: p.top,
             width: p.size,
             height: p.size,
-          }}
-          animate={
-            reduce
-              ? { opacity: 0.25 }
-              : efficient
-                ? { opacity: [0.15, 0.38, 0.15] }
-                : {
-                    opacity: [0.12, 0.45, 0.12],
-                    y: [0, -6 - (i % 3), 0],
-                    x: [0, (i % 2 === 0 ? 3 : -3), 0],
-                  }
-          }
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: p.delay,
+            animationDelay: animateParticles ? `${i * 0.35}s` : undefined,
           }}
         />
       ))}

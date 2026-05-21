@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
-import { motion } from "framer-motion"
-import CinematicBackground from "../../components/CinematicBackground"
+import { motion, useReducedMotion } from "framer-motion"
+import MarketingPageFrame from "../../components/cinematic/MarketingPageFrame"
 import CinematicOrbCenter from "../../components/cinematic/CinematicOrbCenter"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import ProcessingStageList, { PROCESSING_STEPS } from "./ProcessingStageList"
-import "./master-processing-layout.css"
+import "../../components/cinematic/product-processing-view.css"
 import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
@@ -39,8 +39,11 @@ function sliderDebugEnabled() {
   }
 }
 
+const PROCESSING_EASE = [0.22, 1, 0.36, 1] as const
+
 export default function MasterProcessingPage() {
   const router = useRouter()
+  const reduce = useReducedMotion()
   const {
     file,
     audioUrl,
@@ -179,67 +182,41 @@ export default function MasterProcessingPage() {
   ])
 
   return (
-    <motion.div
-      className="master-processing-page relative flex w-full flex-col text-white"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <CinematicBackground intensity="strong" marketingLite />
+    <MarketingPageFrame>
+      <div className={`product-processing-view ${reduce ? "" : "product-processing-view--enter"}`}>
+        <div className="product-processing-view__ambient" aria-hidden />
+        <div className="product-processing-view__glow" aria-hidden />
 
-      {/* Ambient lab depth */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_12%,rgba(99,102,241,0.14),transparent_58%),radial-gradient(ellipse_50%_40%_at_85%_75%,rgba(34,211,238,0.06),transparent_50%)]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute left-1/2 top-[18%] h-[min(520px,70vw)] w-[min(680px,95vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.07] blur-[80px]"
-        aria-hidden
-      />
-
-      <div className="master-processing-stage--processing relative z-10">
-        <motion.header
-          className="master-processing-badge relative z-20 flex w-full shrink-0 items-center justify-center"
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        >
+        <header className="product-processing-header">
           <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/70">
             Spatial mastering engine
           </span>
-        </motion.header>
+          <div className="product-processing-header__copy">
+            <p className="mt-5 text-[11px] font-medium uppercase tracking-[0.32em] text-cyan-200/45 md:text-xs">
+              Intelligent signal processing
+            </p>
+            <h1 className="mt-3 text-[1.65rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white sm:text-[2rem] md:text-[2.35rem]">
+              Mastering your track
+              <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+                with musical depth
+              </span>
+            </h1>
+            <p className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed text-white/72 md:text-[15px] md:leading-relaxed">
+              Perceptual analysis, transparent dynamics, and spatial balance — tuned to preserve what
+              makes your mix unique.
+            </p>
+          </div>
+        </header>
 
-        <motion.div className="master-processing-stack">
-          <motion.div
-            className="master-processing-copy w-full min-w-0"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-cyan-200/45 md:text-xs">
-            Intelligent signal processing
-          </p>
-          <h1 className="mt-4 text-[1.62rem] font-semibold leading-[1.13] tracking-[-0.03em] text-white min-[430px]:text-[1.75rem] sm:text-[2.15rem] md:text-[2.65rem] md:leading-[1.08]">
-            Mastering your track
-            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
-              with musical depth
-            </span>
-          </h1>
-          <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-white/72 md:text-[15px] md:leading-relaxed">
-            Perceptual analysis, transparent dynamics, and spatial balance — tuned to preserve what
-            makes your mix unique.
-          </p>
-        </motion.div>
-
-        <div className="master-processing-visuals">
+        <div className="product-processing-stage">
           <CinematicOrbCenter activeStep={activeStep} />
 
           {(audioUrl || file) && (
             <motion.div
-              className="cinematic-waveform-slot relative min-h-[4.75rem] overflow-hidden px-0.5 sm:min-h-[4.75rem]"
-              initial={{ opacity: 0, y: 8 }}
+              className="cinematic-waveform-slot relative min-h-[4.75rem] overflow-hidden"
+              initial={reduce ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.55, delay: 0.12, ease: PROCESSING_EASE }}
             >
               <CinematicWaveform
                 mode="processing"
@@ -252,16 +229,8 @@ export default function MasterProcessingPage() {
           )}
         </div>
 
-        <motion.div
-          className="master-processing-status relative w-full min-w-0"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <div
-            className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-b from-violet-500/20 via-transparent to-cyan-500/10 opacity-50 blur-sm"
-            aria-hidden
-          />
+        <div className="product-processing-card">
+          <div className="product-processing-card__halo" aria-hidden />
           <div className="fluid-surface relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-3.5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] sm:px-4 sm:py-5 md:px-6 md:py-6">
             <div
               className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,transparent_22%,transparent_100%)]"
@@ -269,18 +238,11 @@ export default function MasterProcessingPage() {
             />
             <ProcessingStageList activeStep={activeStep} />
           </div>
-        </motion.div>
-
-        <motion.p
-          className="master-processing-footnote text-[12px] tracking-wide text-white/60 md:text-[13px]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35, duration: 0.5 }}
-        >
-          Typically 30–60 seconds · Do not close this window
-        </motion.p>
-        </motion.div>
+          <p className="product-processing-footnote text-[12px] tracking-wide text-white/60 md:text-[13px]">
+            Typically 30–60 seconds · Do not close this window
+          </p>
+        </div>
       </div>
-    </motion.div>
+    </MarketingPageFrame>
   )
 }

@@ -1,11 +1,11 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { motion } from "framer-motion"
+import { useReducedMotion } from "framer-motion"
 import CinematicBackground from "../CinematicBackground"
 import MarketingPageAmbient from "../MarketingPageAmbient"
-
-const EASE = [0.22, 1, 0.36, 1] as const
+import { useMarketingScrollPause } from "../../../lib/useMarketingScrollPause"
+import "./marketing-hero-perf.css"
 
 type Props = {
   children: ReactNode
@@ -19,14 +19,16 @@ export default function MarketingPageFrame({
   showBottomFade = false,
   innerClassName = "",
 }: Props) {
+  const reduce = useReducedMotion()
+  useMarketingScrollPause()
+
   return (
-    <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.45, ease: EASE }}
+    <div
+      className={`marketing-page-root relative min-h-screen overflow-x-clip text-white ${
+        reduce ? "" : "marketing-page-root--enter"
+      }`}
     >
-      <CinematicBackground intensity="strong" marketingLite />
+      <CinematicBackground intensity="strong" marketingLite gradientOnly />
       <MarketingPageAmbient />
 
       {showBottomFade ? (
@@ -37,6 +39,6 @@ export default function MarketingPageFrame({
       ) : null}
 
       <div className={`relative z-10 ${innerClassName}`.trim()}>{children}</div>
-    </motion.div>
+    </div>
   )
 }
