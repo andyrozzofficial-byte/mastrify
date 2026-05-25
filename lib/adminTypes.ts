@@ -1,3 +1,5 @@
+import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
+
 export const ADMIN_FEEDBACK_STATUSES = ["new", "read", "resolved"] as const
 export type AdminFeedbackStatus = (typeof ADMIN_FEEDBACK_STATUSES)[number]
 
@@ -82,16 +84,23 @@ export type AdminFeedbackRow = {
   status: AdminFeedbackStatus
   session_id: string | null
   track_name: string | null
+  track_duration: number | null
   mastering_style: string | null
   contact_email: string | null
   contact_discord: string | null
   recommend_score: number
   use_again_score: number
+  ease_rating: number
   genre: string
+  role: string
   release_ready: string
   admin_notes: string | null
   processing_time_ms: number | null
   master_lufs: number | null
+  stereo_width: number | null
+  low_end: number | null
+  /** Full survey JSON from beta_master_feedback.responses */
+  survey: BetaFeedbackPayload
 }
 
 export type AdminSupportRow = {

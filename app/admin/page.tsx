@@ -189,7 +189,12 @@ export default function AdminOverviewPage() {
                 className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-[#141416]/80 px-4 py-3"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-[14px] text-white/88">{r.track_name ?? "Untitled"}</p>
+                  <Link
+                    href={`/admin/feedback/${r.id}`}
+                    className="truncate text-[14px] font-medium text-white/88 hover:text-violet-200"
+                  >
+                    {r.track_name ?? "Untitled"}
+                  </Link>
                   <p className="text-[10px] text-white/38">{formatAdminDate(r.created_at)}</p>
                 </div>
                 <FeedbackStatusBadge status={r.status} />

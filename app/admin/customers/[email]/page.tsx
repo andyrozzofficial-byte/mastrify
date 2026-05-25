@@ -147,10 +147,17 @@ export default function AdminCustomerProfilePage() {
               profile.feedback.map((f) => (
                 <li key={f.id} className="rounded-lg border border-white/[0.05] px-3 py-2">
                   <div className="flex justify-between gap-2">
-                    <span className="text-sm text-white/85">{f.track_name ?? "Untitled"}</span>
+                    <Link
+                      href={`/admin/feedback/${f.id}`}
+                      className="text-sm text-violet-200/90 hover:text-violet-100"
+                    >
+                      {f.track_name ?? "Untitled"}
+                    </Link>
                     <FeedbackStatusBadge status={f.status} />
                   </div>
-                  <p className="text-[10px] text-white/45">{formatAdminDate(f.created_at)}</p>
+                  <p className="text-[10px] text-white/45">
+                    {formatAdminDate(f.created_at)} · {f.recommend_score}/10
+                  </p>
                 </li>
               ))
             )}

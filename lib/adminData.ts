@@ -38,8 +38,96 @@ function startOfTodayIso(): string {
   return d.toISOString()
 }
 
-function payloadOf(r: { responses: BetaFeedbackPayload }): BetaFeedbackPayload {
-  return r.responses
+function payloadOf(r: { responses: BetaFeedbackPayload | null }): BetaFeedbackPayload {
+  const raw = r.responses
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as BetaFeedbackPayload
+  return {
+    role: "",
+    genre: "",
+    comparison: "",
+    stoodOut: [],
+    soundedOff: [],
+    easeRating: 0,
+    speedPerception: "",
+    releaseReady: "",
+    wouldRelease: "",
+    useAgainScore: 0,
+    recommendScore: 0,
+    missing: "",
+    oneChange: "",
+    worthPaying: "",
+    additional: "",
+    contactEmail: "",
+    contactDiscord: "",
+    futureBetaContact: null,
+    masterObjectKey: null,
+    trackTitle: null,
+    sessionId: "",
+    trackName: null,
+    trackDuration: null,
+    masteringStyle: "",
+    stereoWidth: 50,
+    lowEnd: 50,
+    masterLufs: null,
+    processingTimeMs: null,
+  }
+}
+
+type BetaFeedbackDbRow = {
+  id: string
+  created_at: string
+  updated_at?: string | null
+  status?: string | null
+  session_id: string | null
+  track_name: string | null
+  track_duration?: number | null
+  mastering_style: string | null
+  contact_email: string | null
+  contact_discord: string | null
+  admin_notes: string | null
+  responses: BetaFeedbackPayload | null
+  stereo_width?: number | null
+  low_end?: number | null
+  master_lufs?: number | null
+  processing_time_ms?: number | null
+}
+
+const FEEDBACK_SELECT =
+  "id, created_at, updated_at, status, session_id, track_name, track_duration, mastering_style, contact_email, contact_discord, admin_notes, responses, stereo_width, low_end, master_lufs, processing_time_ms"
+
+function mapAdminFeedbackRow(row: BetaFeedbackDbRow): AdminFeedbackRow {
+  const p = payloadOf(row)
+  const trackName =
+    row.track_name?.trim() || p.trackName?.trim() || p.trackTitle?.trim() || null
+  return {
+    id: row.id,
+    created_at: row.created_at,
+    updated_at: row.updated_at ?? row.created_at,
+    status: normalizeFeedbackStatus(row.status),
+    session_id: row.session_id,
+    track_name: trackName,
+    track_duration: row.track_duration ?? p.trackDuration ?? null,
+    mastering_style: row.mastering_style?.trim() || p.masteringStyle?.trim() || null,
+    contact_email: row.contact_email ?? (p.contactEmail?.trim() || null),
+    contact_discord: row.contact_discord ?? (p.contactDiscord?.trim() || null),
+    recommend_score: Number.isFinite(p.recommendScore) ? p.recommendScore : 0,
+    use_again_score: Number.isFinite(p.useAgainScore) ? p.useAgainScore : 0,
+    ease_rating: Number.isFinite(p.easeRating) ? p.easeRating : 0,
+    genre: p.genre?.trim() || "Unknown",
+    role: p.role?.trim() || "—",
+    release_ready: p.releaseReady || "—",
+    admin_notes: row.admin_notes,
+    processing_time_ms: row.processing_time_ms ?? p.processingTimeMs ?? null,
+    master_lufs:
+      row.master_lufs != null
+        ? Number(row.master_lufs)
+        : p.masterLufs != null && Number.isFinite(p.masterLufs)
+          ? Number(p.masterLufs)
+          : null,
+    stereo_width: row.stereo_width ?? p.stereoWidth ?? null,
+    low_end: row.low_end ?? p.lowEnd ?? null,
+    survey: p,
+  }
 }
 
 function normalizeFeedbackStatus(raw: unknown): AdminFeedbackStatus {
@@ -301,7 +389,7 @@ export async function fetchAdminOverview(): Promise<AdminOverview | { error: str
       title: f.track_name ?? "Feedback",
       subtitle: f.status,
       created_at: f.created_at,
-      href: "/admin/feedback",
+      href: `/admin/feedback/${f.id}`,
     })),
     ...recentSupport.map((s) => ({
       id: `support-${s.id}`,
@@ -337,34 +425,29 @@ export async function fetchAdminFeedback(): Promise<AdminFeedbackRow[] | { error
 
   const { data, error } = await supabase
     .from(BETA_FEEDBACK_TABLE)
-    .select(
-      "id, created_at, updated_at, status, session_id, track_name, mastering_style, contact_email, contact_discord, admin_notes, responses",
-    )
+    .select(FEEDBACK_SELECT)
     .order("created_at", { ascending: false })
 
   if (error) return { error: error.message }
 
-  return (data ?? []).map((row) => {
-    const p = payloadOf(row as { responses: BetaFeedbackPayload })
-    return {
-      id: row.id,
-      created_at: row.created_at,
-      updated_at: row.updated_at ?? row.created_at,
-      status: normalizeFeedbackStatus(row.status),
-      session_id: row.session_id,
-      track_name: row.track_name,
-      mastering_style: row.mastering_style,
-      contact_email: row.contact_email,
-      contact_discord: row.contact_discord,
-      recommend_score: p.recommendScore,
-      use_again_score: p.useAgainScore,
-      genre: p.genre || "Unknown",
-      release_ready: p.releaseReady || "—",
-      admin_notes: row.admin_notes,
-      processing_time_ms: p.processingTimeMs,
-      master_lufs: p.masterLufs,
-    }
-  })
+  return (data ?? []).map((row) => mapAdminFeedbackRow(row as BetaFeedbackDbRow))
+}
+
+export async function fetchAdminFeedbackById(
+  id: string,
+): Promise<AdminFeedbackRow | { error: string }> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return { error: "Database unavailable" }
+
+  const { data, error } = await supabase
+    .from(BETA_FEEDBACK_TABLE)
+    .select(FEEDBACK_SELECT)
+    .eq("id", id)
+    .maybeSingle()
+
+  if (error) return { error: error.message }
+  if (!data) return { error: "Feedback not found" }
+  return mapAdminFeedbackRow(data as BetaFeedbackDbRow)
 }
 
 export async function updateFeedbackItem(

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAdminApi } from "../../../../lib/adminApi"
+import { buildAdminFeedbackAnalytics } from "../../../../lib/adminFeedbackAnalytics"
+import { buildAdminFeedbackInsights } from "../../../../lib/adminFeedbackInsights"
 import { fetchAdminFeedback, updateFeedbackItem } from "../../../../lib/adminData"
 import { isAdminFeedbackStatus } from "../../../../lib/adminTypes"
 
@@ -11,7 +13,11 @@ export async function GET() {
   if ("error" in data) {
     return NextResponse.json({ error: data.error }, { status: 500 })
   }
-  return NextResponse.json({ rows: data })
+  return NextResponse.json({
+    rows: data,
+    analytics: buildAdminFeedbackAnalytics(data),
+    insights: buildAdminFeedbackInsights(data),
+  })
 }
 
 export async function PATCH(request: Request) {
