@@ -9,11 +9,24 @@ import {
   safeAccessRedirect,
   verifyAccessToken,
 } from "./lib/access"
-import { isAdminApiPath } from "./lib/admin"
+
+/** Admin UI, admin API, and beta-feedback API — never redirect to /landing. */
+function isAdminOrFeedbackApiBypass(pathname: string): boolean {
+  const path = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
+  return (
+    path.startsWith("/admin") ||
+    path.startsWith("/api/admin") ||
+    path === "/api/beta-feedback"
+  )
+}
 
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   const pathname = url.pathname
+
+  if (isAdminOrFeedbackApiBypass(pathname)) {
+    return NextResponse.next()
+  }
 
   // 🔥 SKIP AUDIO FILES (DETTA ÄR FIXEN)
   if (pathname.startsWith("/audio")) {
@@ -27,10 +40,6 @@ export async function middleware(request: NextRequest) {
 
   // 🔓 Flow bypass
   if (url.searchParams.get("from") === "flow") {
-    return NextResponse.next()
-  }
-
-  if (isAdminApiPath(pathname)) {
     return NextResponse.next()
   }
 
@@ -75,8 +84,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/privacy" ||
     pathname === "/terms" ||
     pathname === "/contact" ||
-    pathname === "/access" ||
-    pathname.startsWith("/admin")
+    pathname === "/access"
   ) {
     return NextResponse.next()
   }
@@ -87,9 +95,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/icon") ||
     pathname.startsWith("/audio") ||
     pathname.startsWith("/og-image") ||
-    pathname.startsWith("/api/access") ||
-    pathname.startsWith("/api/admin") ||
-    pathname === "/api/beta-feedback"
+    pathname.startsWith("/api/access")
   ) {
     return NextResponse.next()
   }
