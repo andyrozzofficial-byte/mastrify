@@ -9,18 +9,14 @@ import {
   safeAccessRedirect,
   verifyAccessToken,
 } from "./lib/access"
-import {
-  ADMIN_COOKIE_NAME,
-  getAdminSecret,
-  isAdminApiPath,
-  isAdminPath,
-  verifyAdminToken,
-} from "./lib/admin"
-import { ADMIN_ROLE_COOKIE, isAdminRole, roleCanAccessPath } from "./lib/adminRoles"
 
-/** Admin UI, admin API, and beta-feedback API — never redirect to /landing. */
+function normalizePathname(pathname: string): string {
+  return pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
+}
+
+/** Admin UI, admin API, and beta-feedback API — must never hit the /landing catch-all below. */
 function isAdminOrFeedbackApiBypass(pathname: string): boolean {
-  const path = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
+  const path = normalizePathname(pathname)
   return (
     path.startsWith("/admin") ||
     path.startsWith("/api/admin") ||
@@ -32,33 +28,8 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   const pathname = url.pathname
 
+  // Admin + beta-feedback: pass through immediately (auth/roles enforced in AdminShell + /api/admin/*).
   if (isAdminOrFeedbackApiBypass(pathname)) {
-    const normalized =
-      pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
-
-    if (
-      normalized !== "/api/admin/auth" &&
-      (isAdminPath(normalized) || isAdminApiPath(normalized))
-    ) {
-      const adminOk = await verifyAdminToken(
-        request.cookies.get(ADMIN_COOKIE_NAME)?.value,
-        getAdminSecret(),
-      )
-      if (adminOk) {
-        const roleRaw = request.cookies.get(ADMIN_ROLE_COOKIE)?.value
-        const role = roleRaw && isAdminRole(roleRaw) ? roleRaw : "owner"
-        if (!roleCanAccessPath(role, normalized)) {
-          if (isAdminApiPath(normalized)) {
-            return NextResponse.json({ error: "Forbidden for your role" }, { status: 403 })
-          }
-          const redirectUrl = request.nextUrl.clone()
-          redirectUrl.pathname = "/admin"
-          redirectUrl.search = ""
-          return NextResponse.redirect(redirectUrl)
-        }
-      }
-    }
-
     return NextResponse.next()
   }
 
@@ -139,7 +110,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 🚫 Allt annat → landing
+  // 🚫 Allt annat → landing (only redirect to /landing in this codebase)
   url.pathname = "/landing"
   return NextResponse.redirect(url)
 }
