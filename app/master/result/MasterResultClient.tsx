@@ -36,6 +36,7 @@ import {
 import { parseTrackDisplayName } from "../../../lib/parseTrackDisplayName"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import BetaFeedbackFlow from "../../components/master/BetaFeedbackFlow"
+import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
 
@@ -111,6 +112,8 @@ export default function MasterResultClient() {
     sessionId,
     trackDurationSec,
     trackName,
+    masterLufs,
+    processingTimeMs,
     targetLufs,
     stylePreset,
     stereoEnhance,
@@ -814,17 +817,29 @@ export default function MasterResultClient() {
     return parseTrackDisplayName(file.name)
   }, [file?.name])
 
-  const feedbackSessionAnalytics = useMemo(
-    (): BetaFeedbackSessionAnalytics => ({
+  const feedbackSessionAnalytics = useMemo((): BetaFeedbackSessionAnalytics => {
+    const measuredLufs = extractMasterLufs(analysisAfter) ?? masterLufs
+    return {
       sessionId: sessionId || "",
       trackName,
       trackDuration: trackDurationSec,
       masteringStyle: masteringStyleLabel(stylePreset),
       stereoWidth: stereoEnhance,
       lowEnd: lowEndControl,
-    }),
-    [sessionId, trackName, trackDurationSec, stylePreset, stereoEnhance, lowEndControl]
-  )
+      masterLufs: measuredLufs,
+      processingTimeMs,
+    }
+  }, [
+    sessionId,
+    trackName,
+    trackDurationSec,
+    stylePreset,
+    stereoEnhance,
+    lowEndControl,
+    masterLufs,
+    processingTimeMs,
+    analysisAfter,
+  ])
 
   if (!mounted) return null
 

@@ -83,6 +83,11 @@ export async function POST(request: Request) {
     mastering_style: body.masteringStyle.trim(),
     stereo_width: intOrNull(body.stereoWidth),
     low_end: intOrNull(body.lowEnd),
+    master_lufs:
+      body.masterLufs != null && Number.isFinite(body.masterLufs)
+        ? Number(Number(body.masterLufs).toFixed(2))
+        : null,
+    processing_time_ms: intOrNull(body.processingTimeMs),
   }
 
   try {

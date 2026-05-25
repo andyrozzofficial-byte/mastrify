@@ -126,6 +126,8 @@ const emptyForm = (): BetaFeedbackPayload => ({
   masteringStyle: "",
   stereoWidth: 50,
   lowEnd: 50,
+  masterLufs: null,
+  processingTimeMs: null,
 })
 
 export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnalytics }: Props) {
@@ -180,6 +182,8 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
       masteringStyle: sessionAnalytics.masteringStyle,
       stereoWidth: Math.round(sessionAnalytics.stereoWidth),
       lowEnd: Math.round(sessionAnalytics.lowEnd),
+      masterLufs: sessionAnalytics.masterLufs,
+      processingTimeMs: sessionAnalytics.processingTimeMs,
     }
 
     const res = await fetch("/api/beta-feedback", {
@@ -204,6 +208,8 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
         mastering_style: payload.masteringStyle,
         stereo_width: payload.stereoWidth,
         low_end: payload.lowEnd,
+        master_lufs: payload.masterLufs,
+        processing_time_ms: payload.processingTimeMs,
       },
     ])
 

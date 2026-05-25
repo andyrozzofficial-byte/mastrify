@@ -6,6 +6,8 @@ export type BetaFeedbackSessionAnalytics = {
   masteringStyle: string
   stereoWidth: number
   lowEnd: number
+  masterLufs: number | null
+  processingTimeMs: number | null
 }
 
 export type BetaFeedbackPayload = {
@@ -35,6 +37,8 @@ export type BetaFeedbackPayload = {
   masteringStyle: string
   stereoWidth: number
   lowEnd: number
+  masterLufs: number | null
+  processingTimeMs: number | null
 }
 
 export const BETA_FEEDBACK_ROLE_OPTIONS = [

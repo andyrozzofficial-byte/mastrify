@@ -54,6 +54,7 @@ export default function MasterProcessingPage() {
     setMasterExpiresAt,
     setAnalysisBefore,
     setAnalysisAfter,
+    recordProcessingComplete,
     stylePreset,
     targetLufs,
     stereoEnhance,
@@ -74,6 +75,7 @@ export default function MasterProcessingPage() {
     const ac = new AbortController()
 
     const run = async () => {
+      const processingStartedAt = Date.now()
       for (let i = 0; i < PROCESSING_STEPS.length; i++) {
         if (cancelled) return
         setActiveStep(i)
@@ -117,8 +119,11 @@ export default function MasterProcessingPage() {
           })
         }
 
-        setAnalysisBefore((res.data.analysisBefore ?? null) as Record<string, unknown> | null)
-        setAnalysisAfter((res.data.analysisAfter ?? null) as Record<string, unknown> | null)
+        const analysisBeforePayload = (res.data.analysisBefore ?? null) as Record<string, unknown> | null
+        const analysisAfterPayload = (res.data.analysisAfter ?? null) as Record<string, unknown> | null
+        setAnalysisBefore(analysisBeforePayload)
+        setAnalysisAfter(analysisAfterPayload)
+        recordProcessingComplete(Date.now() - processingStartedAt, analysisAfterPayload)
 
         const mastered =
           res.data.afterUrl || res.data.fullUrl || (res.data.after ? `${API}${res.data.after}` : "")
@@ -174,6 +179,7 @@ export default function MasterProcessingPage() {
     setMasterExpiresAt,
     setAnalysisBefore,
     setAnalysisAfter,
+    recordProcessingComplete,
     stylePreset,
     targetLufs,
     stereoEnhance,

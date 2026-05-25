@@ -11,6 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import { extractMasterLufs } from "../../lib/extractMasterLufs"
 import { formatTrackNameForAnalytics } from "../../lib/formatTrackNameForAnalytics"
 import { createMasterSessionId } from "../../lib/masterSessionId"
 import { readAudioDurationSec } from "../../lib/readAudioDurationSec"
@@ -39,6 +40,8 @@ type MasterSessionSnapshotV2 = {
   fileName: string
   sessionId: string
   trackDurationSec: number | null
+  masterLufs: number | null
+  processingTimeMs: number | null
 }
 
 type MasterSession = {
@@ -74,6 +77,9 @@ type MasterSession = {
   sessionId: string
   trackDurationSec: number | null
   trackName: string | null
+  masterLufs: number | null
+  processingTimeMs: number | null
+  recordProcessingComplete: (processingTimeMs: number, analysisAfter: Record<string, unknown> | null) => void
   resetSession: () => void
   /** True after first client storage hydrate attempt (for /master/settings gating). */
   sessionHydrated: boolean
@@ -129,16 +135,29 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const [masterExpiresAt, setMasterExpiresAt] = useState("")
   const [sessionId, setSessionId] = useState("")
   const [trackDurationSec, setTrackDurationSec] = useState<number | null>(null)
+  const [masterLufs, setMasterLufs] = useState<number | null>(null)
+  const [processingTimeMs, setProcessingTimeMs] = useState<number | null>(null)
   const [sessionHydrated, setSessionHydrated] = useState(false)
   const hydrateRan = useRef(false)
 
   const beginMasterSession = useCallback((f: File) => {
     setSessionId(createMasterSessionId())
     setTrackDurationSec(null)
+    setMasterLufs(null)
+    setProcessingTimeMs(null)
     void readAudioDurationSec(f).then((sec) => {
       if (sec != null) setTrackDurationSec(sec)
     })
   }, [])
+
+  const recordProcessingComplete = useCallback(
+    (elapsedMs: number, analysisAfter: Record<string, unknown> | null) => {
+      const ms = Math.max(0, Math.round(elapsedMs))
+      setProcessingTimeMs(ms)
+      setMasterLufs(extractMasterLufs(analysisAfter))
+    },
+    []
+  )
 
   const setFile = useCallback(
     (f: File | null) => {
@@ -157,6 +176,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       else {
         setSessionId("")
         setTrackDurationSec(null)
+        setMasterLufs(null)
+        setProcessingTimeMs(null)
       }
       clearMasterStorageKeys()
     },
@@ -209,6 +230,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setDeliveryEmail("")
     setSessionId("")
     setTrackDurationSec(null)
+    setMasterLufs(null)
+    setProcessingTimeMs(null)
     clearMasterStorageKeys()
   }, [])
 
@@ -245,6 +268,12 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
         }
         if (typeof s.trackDurationSec === "number" && Number.isFinite(s.trackDurationSec)) {
           setTrackDurationSec(s.trackDurationSec)
+        }
+        if (typeof s.masterLufs === "number" && Number.isFinite(s.masterLufs)) {
+          setMasterLufs(s.masterLufs)
+        }
+        if (typeof s.processingTimeMs === "number" && Number.isFinite(s.processingTimeMs)) {
+          setProcessingTimeMs(Math.round(s.processingTimeMs))
         }
       } else if (snap.v === 1) {
         const mastered = typeof snap.masteredUrl === "string" ? snap.masteredUrl : ""
@@ -283,6 +312,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       fileName: file?.name ?? "",
       sessionId,
       trackDurationSec,
+      masterLufs,
+      processingTimeMs,
     }
     const hasPayload =
       !!masteredUrl ||
@@ -327,6 +358,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     file,
     sessionId,
     trackDurationSec,
+    masterLufs,
+    processingTimeMs,
   ])
 
   const trackName = useMemo(
@@ -367,6 +400,9 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       sessionId,
       trackDurationSec,
       trackName,
+      masterLufs,
+      processingTimeMs,
+      recordProcessingComplete,
       resetSession,
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,
@@ -392,6 +428,9 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       sessionId,
       trackDurationSec,
       trackName,
+      masterLufs,
+      processingTimeMs,
+      recordProcessingComplete,
       resetSession,
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,

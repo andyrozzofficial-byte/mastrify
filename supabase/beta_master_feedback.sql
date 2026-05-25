@@ -13,7 +13,9 @@ create table if not exists public.beta_master_feedback (
   track_duration numeric,
   mastering_style text,
   stereo_width integer,
-  low_end integer
+  low_end integer,
+  master_lufs numeric,
+  processing_time_ms integer
 );
 
 -- Migrate existing deployments
@@ -23,6 +25,8 @@ alter table public.beta_master_feedback add column if not exists track_duration 
 alter table public.beta_master_feedback add column if not exists mastering_style text;
 alter table public.beta_master_feedback add column if not exists stereo_width integer;
 alter table public.beta_master_feedback add column if not exists low_end integer;
+alter table public.beta_master_feedback add column if not exists master_lufs numeric;
+alter table public.beta_master_feedback add column if not exists processing_time_ms integer;
 
 create index if not exists beta_master_feedback_created_at_idx
   on public.beta_master_feedback (created_at desc);
