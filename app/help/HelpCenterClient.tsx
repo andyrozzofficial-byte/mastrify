@@ -7,7 +7,8 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { useMasterSession } from "../master/MasterSessionProvider"
 import {
   ContentPageLayout,
-  ContentPageShell,
+  HelpCenterGrid,
+  PageContainer,
   PageHero,
 } from "../components/content/ContentPageLayout"
 import { HELP_FAQ_ITEMS, POPULAR_HELP_FAQ, searchHelpFaq, type HelpFaqItem } from "../../lib/helpFaq"
@@ -145,7 +146,7 @@ export default function HelpCenterClient() {
 
   return (
     <ContentPageLayout>
-      <ContentPageShell className="pb-16 pt-8 sm:pb-20 sm:pt-10 md:pt-12">
+      <PageContainer>
         <PageHero
           label="Help center"
           title="How can we help?"
@@ -153,7 +154,7 @@ export default function HelpCenterClient() {
         />
 
         <motion.div
-          className="relative mx-auto mt-6 max-w-2xl"
+          className="relative mt-6 w-full"
           initial={reduce ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.05, ease: EASE }}
@@ -173,7 +174,7 @@ export default function HelpCenterClient() {
         </motion.div>
 
         {showSearchResults ? (
-          <section className="mx-auto mt-5 max-w-3xl space-y-2.5">
+          <section className="mt-5 w-full space-y-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
               {searchResults.length > 0 ? "Matching answers" : "No matches"}
             </p>
@@ -188,51 +189,52 @@ export default function HelpCenterClient() {
             )}
           </section>
         ) : (
-          <div className="mt-6 lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-8">
-            <aside className="lg:sticky lg:top-24">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
-                Popular questions
-              </p>
-              <ul className="mt-3 flex flex-col gap-2">
-                {POPULAR_HELP_FAQ.map((item) => (
-                  <li key={item.id}>
-                    <FaqNavButton
-                      item={item}
-                      active={activeFaqId === item.id}
-                      onSelect={() => selectFaq(item)}
-                    />
-                  </li>
-                ))}
-              </ul>
+          <HelpCenterGrid
+            className="mt-6"
+            sidebar={
+              <div className="lg:sticky lg:top-24">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
+                  Popular questions
+                </p>
+                <ul className="mt-3 flex flex-col gap-2">
+                  {POPULAR_HELP_FAQ.map((item) => (
+                    <li key={item.id}>
+                      <FaqNavButton
+                        item={item}
+                        active={activeFaqId === item.id}
+                        onSelect={() => selectFaq(item)}
+                      />
+                    </li>
+                  ))}
+                </ul>
 
-              <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
-                All topics
-              </p>
-              <ul className="mt-3 hidden max-h-[min(50vh,420px)] flex-col gap-1.5 overflow-y-auto pr-1 lg:flex">
-                {HELP_FAQ_ITEMS.map((item) => (
-                  <li key={item.id}>
-                    <FaqNavButton
-                      item={item}
-                      active={activeFaqId === item.id}
-                      onSelect={() => selectFaq(item)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </aside>
-
-            <div className="mt-6 min-w-0 lg:mt-0">
-              {activeFaq ? <FaqCard item={activeFaq} highlight /> : null}
-              <div className="mt-5 space-y-2.5 lg:hidden">
-                {HELP_FAQ_ITEMS.filter((i) => i.id !== activeFaqId).map((item) => (
-                  <FaqCard key={item.id} item={item} compact />
-                ))}
+                <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
+                  All topics
+                </p>
+                <ul className="mt-3 hidden max-h-[min(50vh,420px)] flex-col gap-1.5 overflow-y-auto pr-1 lg:flex">
+                  {HELP_FAQ_ITEMS.map((item) => (
+                    <li key={item.id}>
+                      <FaqNavButton
+                        item={item}
+                        active={activeFaqId === item.id}
+                        onSelect={() => selectFaq(item)}
+                      />
+                    </li>
+                  ))}
+                </ul>
               </div>
+            }
+          >
+            {activeFaq ? <FaqCard item={activeFaq} highlight /> : null}
+            <div className="mt-5 space-y-2.5 lg:hidden">
+              {HELP_FAQ_ITEMS.filter((i) => i.id !== activeFaqId).map((item) => (
+                <FaqCard key={item.id} item={item} compact />
+              ))}
             </div>
-          </div>
+          </HelpCenterGrid>
         )}
 
-        <section className="mx-auto mt-8 max-w-2xl rounded-[1.35rem] border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:p-6">
+        <section className="mt-8 w-full rounded-[1.35rem] border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:p-6">
           <h2 className="text-2xl font-semibold text-white/92">Still need help?</h2>
           <p className="mt-1.5 text-[16px] leading-[1.8] text-white/[0.85]">
             Create a support ticket and we&apos;ll follow up by email. Session details attach automatically when
@@ -256,12 +258,12 @@ export default function HelpCenterClient() {
           </p>
         </section>
 
-        <p className="mx-auto mt-6 max-w-2xl text-center text-[12px] text-white/38">
+        <p className="mt-6 w-full text-center text-[12px] text-white/38">
           <Link href="/master" className="text-violet-200/70 hover:text-violet-100">
             ← Back to mastering
           </Link>
         </p>
-      </ContentPageShell>
+      </PageContainer>
 
       <SupportTicketModal
         open={ticketModalOpen}

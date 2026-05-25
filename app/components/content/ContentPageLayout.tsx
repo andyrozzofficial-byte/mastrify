@@ -12,12 +12,15 @@ export const contentPageProseClass =
 
 export const contentPageSectionsClass = "flex flex-col gap-8"
 
+const pageContainerClass =
+  "mx-auto box-border w-full max-w-[1200px] min-w-0 px-8 pb-[100px] pt-16"
+
 type ContentPageLayoutProps = {
   children: ReactNode
   className?: string
 }
 
-/** Full-page shell: cinematic background + centered page stack */
+/** Full-page shell: cinematic background + page stack */
 export function ContentPageLayout({ children, className = "" }: ContentPageLayoutProps) {
   return (
     <motion.div
@@ -31,23 +34,72 @@ export function ContentPageLayout({ children, className = "" }: ContentPageLayou
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
         aria-hidden
       />
-      <div className="relative z-10">{children}</div>
+      <div className="relative z-10 w-full">{children}</div>
     </motion.div>
   )
 }
 
-type PageShellProps = {
+type PageContainerProps = {
   children: ReactNode
-  /** Outer centered rail — 1200 for help grids, 900 for reading pages */
-  maxWidth?: "1200" | "900"
   className?: string
 }
 
-/** Centers a page block horizontally (help grid, wide layouts) */
-export function ContentPageShell({ children, maxWidth = "1200", className = "" }: PageShellProps) {
-  const maxClass = maxWidth === "900" ? "max-w-[900px]" : "max-w-[1200px]"
+/**
+ * Global centered page rail — entire page content lives inside this box.
+ * max 1200px, horizontal padding 32px (20px on very small screens), pt 64px, pb 100px.
+ */
+export function PageContainer({ children, className = "" }: PageContainerProps) {
+  return <div className={`${pageContainerClass} ${className}`}>{children}</div>
+}
+
+/** @deprecated Use PageContainer */
+export function ContentPageShell({ children, className = "" }: PageContainerProps) {
+  return <PageContainer className={className}>{children}</PageContainer>
+}
+
+type ReadingColumnProps = {
+  children: ReactNode
+  className?: string
+}
+
+/** Privacy, Terms, About, Blog — flex-centered reading column (850px) */
+export function ReadingColumn({ children, className = "" }: ReadingColumnProps) {
   return (
-    <div className={`mx-auto w-full ${maxClass} px-5 sm:px-8 ${className}`}>{children}</div>
+    <div className={`flex w-full justify-center ${className}`}>
+      <div className="w-full min-w-0 max-w-[850px]">{children}</div>
+    </div>
+  )
+}
+
+type HelpCenterGridProps = {
+  sidebar: ReactNode
+  children: ReactNode
+  className?: string
+}
+
+/** Help Center FAQ layout — 320px sidebar + fluid content inside PageContainer */
+export function HelpCenterGrid({ sidebar, children, className = "" }: HelpCenterGridProps) {
+  return (
+    <div
+      className={`grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-10 ${className}`}
+    >
+      <aside className="w-full min-w-0 shrink-0 lg:w-[320px]">{sidebar}</aside>
+      <div className="min-w-0 w-full max-w-none">{children}</div>
+    </div>
+  )
+}
+
+type TicketFormFrameProps = {
+  children: ReactNode
+  className?: string
+}
+
+/** Support ticket body — centered form column (700px) */
+export function TicketFormFrame({ children, className = "" }: TicketFormFrameProps) {
+  return (
+    <div className={`flex w-full justify-center ${className}`}>
+      <div className="w-full min-w-0 max-w-[700px]">{children}</div>
+    </div>
   )
 }
 
@@ -61,11 +113,11 @@ type PageHeroProps = {
 
 export function PageHero({ label, title, lead, align = "center", className = "" }: PageHeroProps) {
   const reduce = useReducedMotion()
-  const alignClass = align === "center" ? "mx-auto text-center" : "text-left"
+  const textAlign = align === "center" ? "text-center" : "text-left"
 
   return (
     <motion.header
-      className={`${alignClass} max-w-3xl ${className}`}
+      className={`w-full min-w-0 ${textAlign} ${className}`}
       initial={reduce ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: EASE }}
@@ -76,36 +128,27 @@ export function PageHero({ label, title, lead, align = "center", className = "" 
         </span>
       ) : null}
       <h1 className={label ? "mt-4" : ""}>{title}</h1>
-      {lead ? <p className={`mt-3 ${align === "center" ? "mx-auto max-w-xl" : "max-w-2xl"}`}>{lead}</p> : null}
+      {lead ? (
+        <p className={`mt-3 ${align === "center" ? "mx-auto max-w-xl" : "max-w-2xl"}`}>{lead}</p>
+      ) : null}
     </motion.header>
   )
 }
 
-type CenteredContentProps = {
-  children: ReactNode
-  className?: string
-  /** Reading column width; use full width inside a ContentPageShell */
-  maxWidth?: "900" | "full"
-  as?: "div" | "main"
-}
-
-/**
- * Centered reading column — default 900px, auto margins, spec padding.
- * Tablet: full width of parent. Mobile: 20px horizontal padding.
- */
+/** @deprecated Use PageContainer + ReadingColumn */
 export function CenteredContent({
   children,
   className = "",
-  maxWidth = "900",
-  as: Tag = "main",
-}: CenteredContentProps) {
-  const widthClass = maxWidth === "full" ? "max-w-full" : "max-w-[900px]"
-
+  as: Tag = "div",
+}: {
+  children: ReactNode
+  className?: string
+  maxWidth?: "900" | "full"
+  as?: "div" | "main"
+}) {
   return (
-    <Tag
-      className={`mx-auto w-full ${widthClass} px-5 pb-[100px] pt-16 sm:px-8 ${className}`}
-    >
-      {children}
+    <Tag className={className}>
+      <ReadingColumn>{children}</ReadingColumn>
     </Tag>
   )
 }
