@@ -25,7 +25,7 @@ function TierColumn({
         <p className="mt-3 text-sm text-slate-500">{empty}</p>
       ) : (
         <ul className="mt-4 space-y-3">
-          {items.slice(0, 8).map((item) => {
+          {(items ?? []).slice(0, 8).map((item) => {
             const max = items[0]?.count ?? 1
             return (
               <li key={item.label}>

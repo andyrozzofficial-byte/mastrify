@@ -35,7 +35,7 @@ function BarChart({
   items: { label: string; count: number }[]
   maxBars?: number
 }) {
-  const slice = items.slice(0, maxBars)
+  const slice = (items ?? []).slice(0, maxBars)
   const max = Math.max(1, ...slice.map((i) => i.count))
   if (slice.length === 0) {
     return (

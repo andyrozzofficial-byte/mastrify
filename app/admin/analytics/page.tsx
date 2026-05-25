@@ -22,12 +22,20 @@ export default function AdminAnalyticsPage() {
         setError(json?.error ?? "Could not load analytics")
         return
       }
-      setData(json as AdminAnalyticsExtended)
+      const payload = json as AdminAnalyticsExtended
+      console.error("[analytics-data]", payload)
+      setData(payload)
     })()
   }, [])
 
   if (error) return <p className="text-sm text-rose-300/90">{error}</p>
   if (!data) return <p className="text-sm text-white/50">Loading analytics…</p>
+
+  const funnel = data.funnel ?? []
+  const dailyTrend = data.dailyTrend ?? []
+  const weeklyTrend = data.weeklyTrend ?? []
+  const genreDistribution = data.genreDistribution ?? []
+  const recommendOverTime = data.recommendOverTime ?? []
 
   const styleItems = data.topStyle
     ? [{ label: data.topStyle.style, count: data.topStyle.count }]
@@ -67,15 +75,15 @@ export default function AdminAnalyticsPage() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <FunnelChart steps={data.funnel} />
-        <BarChartCard title="Genre distribution" items={data.genreDistribution} />
+        <FunnelChart steps={funnel} />
+        <BarChartCard title="Genre distribution" items={genreDistribution} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <SparklineChart title="Upload trends (daily)" points={data.dailyTrend} dataKey="uploads" />
+        <SparklineChart title="Upload trends (daily)" points={dailyTrend} dataKey="uploads" />
         <SparklineChart
           title="Purchase trends (daily)"
-          points={data.dailyTrend}
+          points={dailyTrend}
           dataKey="downloads"
           color="bg-emerald-500/75"
         />
@@ -85,7 +93,7 @@ export default function AdminAnalyticsPage() {
         <BarChartCard title="Mastering styles usage" items={styleItems} empty="No style data yet" />
         <BarChartCard
           title="Recommendation over time"
-          items={data.recommendOverTime.map((r) => ({
+          items={recommendOverTime.map((r) => ({
             label: r.date,
             count: Math.round(r.avgRecommend * 10),
           }))}
@@ -95,7 +103,7 @@ export default function AdminAnalyticsPage() {
       <div className="mt-6">
         <SparklineChart
           title="Weekly overview — masters"
-          points={data.weeklyTrend}
+          points={weeklyTrend}
           dataKey="masters"
         />
       </div>

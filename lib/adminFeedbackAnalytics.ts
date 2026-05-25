@@ -141,7 +141,7 @@ export function buildAdminFeedbackAnalytics(rows: AdminFeedbackRow[]): AdminFeed
 
   const byDay = new Map<string, { scores: number[]; count: number }>()
   for (const row of rows) {
-    const day = row.created_at.slice(0, 10)
+    const day = (row.created_at ?? "").slice(0, 10)
     const score = getNumericSurveyScore(row.survey, recommendKey)
     if (score == null) continue
     const entry = byDay.get(day) ?? { scores: [], count: 0 }

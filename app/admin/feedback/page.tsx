@@ -40,8 +40,9 @@ function RatingDistributionChart({
   title: string
   items: { label: string; count: number }[]
 }) {
-  const max = Math.max(1, ...items.map((i) => i.count))
-  const hasData = items.some((i) => i.count > 0)
+  const safeItems = items ?? []
+  const max = Math.max(1, ...safeItems.map((i) => i.count))
+  const hasData = safeItems.some((i) => i.count > 0)
   return (
     <AdminCard>
       <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
@@ -49,7 +50,7 @@ function RatingDistributionChart({
         <p className="mt-3 text-sm text-slate-500">No ratings yet</p>
       ) : (
         <div className="mt-5 flex h-32 items-end gap-1">
-          {items.map((item) => (
+          {safeItems.map((item) => (
             <div key={item.label} className="flex flex-1 flex-col items-center gap-1.5">
               <div
                 className="w-full max-w-[18px] rounded-t bg-violet-500 transition-all"
@@ -176,7 +177,9 @@ export default function AdminFeedbackPage() {
       return
     }
     setRows(json?.rows ?? [])
-    setAnalytics(json?.analytics ?? null)
+    const nextAnalytics = json?.analytics ?? null
+    console.error("[analytics-data]", nextAnalytics)
+    setAnalytics(nextAnalytics)
     setInsights(json?.insights ?? [])
     setActionCenter(json?.actionCenter ?? [])
     setIssueTiers(json?.issueTiers ?? null)
@@ -323,29 +326,44 @@ export default function AdminFeedbackPage() {
         </AdminCard>
       ) : null}
 
+      {!analytics && !error ? (
+        <AdminEmpty message="No analytics data yet" />
+      ) : null}
+
       {analytics ? (
         <div className="mb-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-          <FunnelChart steps={analytics.stages.dropOff.map((d) => ({ step: d.step, count: d.count }))} />
-          <BarChartCard title={analytics.chartLabels.genre} items={analytics.charts.genreDistribution} />
-          <BarChartCard title={analytics.chartLabels.commonIssues} items={analytics.charts.commonIssues} />
-          <BarChartCard title={analytics.chartLabels.topPositives} items={analytics.charts.topPositives} />
-          <RatingDistributionChart
-            title={analytics.chartLabels.useAgainScores}
-            items={analytics.charts.ratingDistribution}
+          <FunnelChart
+            steps={(analytics.stages?.dropOff ?? []).map((d) => ({ step: d.step, count: d.count }))}
+          />
+          <BarChartCard
+            title={analytics.chartLabels?.genre ?? "Genre"}
+            items={analytics.charts?.genreDistribution ?? []}
+          />
+          <BarChartCard
+            title={analytics.chartLabels?.commonIssues ?? "Issues"}
+            items={analytics.charts?.commonIssues ?? []}
+          />
+          <BarChartCard
+            title={analytics.chartLabels?.topPositives ?? "Positives"}
+            items={analytics.charts?.topPositives ?? []}
           />
           <RatingDistributionChart
-            title={analytics.chartLabels.recommendScores}
-            items={analytics.charts.recommendRatingDistribution}
+            title={analytics.chartLabels?.useAgainScores ?? "Use again"}
+            items={analytics.charts?.ratingDistribution ?? []}
+          />
+          <RatingDistributionChart
+            title={analytics.chartLabels?.recommendScores ?? "Recommend"}
+            items={analytics.charts?.recommendRatingDistribution ?? []}
           />
           <SparklineChart
             title="Daily submissions"
-            points={analytics.charts.dailyTrend.map((d) => ({ date: d.date, count: d.count }))}
+            points={(analytics.charts?.dailyTrend ?? []).map((d) => ({ date: d.date, count: d.count }))}
             dataKey="count"
             color="bg-sky-500/80"
           />
           <SparklineChart
             title="Weekly avg. recommend"
-            points={analytics.charts.weeklyTrend.map((w) => ({
+            points={(analytics.charts?.weeklyTrend ?? []).map((w) => ({
               week: w.week,
               avgRecommend: w.avgRecommend,
             }))}
@@ -353,8 +371,8 @@ export default function AdminFeedbackPage() {
             color="bg-emerald-500/75"
           />
           <BarChartCard
-            title={analytics.chartLabels.textSnippets}
-            items={analytics.charts.requestedFeatureSnippets}
+            title={analytics.chartLabels?.textSnippets ?? "Written answers"}
+            items={analytics.charts?.requestedFeatureSnippets ?? []}
             empty="No written survey answers yet"
           />
         </div>

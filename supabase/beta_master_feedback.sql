@@ -20,7 +20,7 @@ create table if not exists public.beta_master_feedback (
   future_beta_contact boolean,
   master_object_key text,
   track_title text,
-  feedback_stage text default 'completed'
+  feedback_stage text default 'new'
 );
 
 -- Backfill columns on older partial deployments
@@ -38,8 +38,15 @@ alter table public.beta_master_feedback add column if not exists contact_discord
 alter table public.beta_master_feedback add column if not exists future_beta_contact boolean;
 alter table public.beta_master_feedback add column if not exists master_object_key text;
 alter table public.beta_master_feedback add column if not exists track_title text;
-alter table public.beta_master_feedback add column if not exists feedback_stage text;
+alter table public.beta_master_feedback add column if not exists feedback_stage text default 'new';
+alter table public.beta_master_feedback add column if not exists status text default 'new';
+alter table public.beta_master_feedback add column if not exists admin_notes text;
+alter table public.beta_master_feedback add column if not exists updated_at timestamptz default now();
 alter table public.beta_master_feedback add column if not exists created_at timestamptz;
+
+update public.beta_master_feedback set feedback_stage = 'new' where feedback_stage is null;
+update public.beta_master_feedback set status = 'new' where status is null;
+update public.beta_master_feedback set updated_at = coalesce(created_at, now()) where updated_at is null;
 
 update public.beta_master_feedback
 set responses = '{}'::jsonb

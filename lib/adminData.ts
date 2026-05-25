@@ -69,6 +69,12 @@ type BetaFeedbackDbRow = {
 const FEEDBACK_SELECT =
   "id, created_at, updated_at, status, session_id, track_name, track_duration, mastering_style, contact_email, contact_discord, admin_notes, responses, stereo_width, low_end, master_lufs, processing_time_ms, feedback_stage"
 
+const FEEDBACK_SELECT_WITHOUT_STAGE = FEEDBACK_SELECT.replace(", feedback_stage", "")
+
+function isMissingFeedbackStageColumn(message: string): boolean {
+  return /feedback_stage/i.test(message) && /does not exist/i.test(message)
+}
+
 function normalizeFeedbackStage(raw: unknown, survey: BetaFeedbackPayload): BetaFeedbackStage {
   if (typeof raw === "string" && isBetaFeedbackStage(raw)) return raw
   const fromJson = (survey as Record<string, unknown>).feedbackStage
@@ -405,10 +411,21 @@ export async function fetchAdminFeedback(): Promise<AdminFeedbackRow[] | { error
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const { data, error } = await supabase
+  let select = FEEDBACK_SELECT
+  let { data, error } = await supabase
     .from(BETA_FEEDBACK_TABLE)
-    .select(FEEDBACK_SELECT)
+    .select(select)
     .order("created_at", { ascending: false })
+
+  if (error && isMissingFeedbackStageColumn(error.message)) {
+    select = FEEDBACK_SELECT_WITHOUT_STAGE
+    const retry = await supabase
+      .from(BETA_FEEDBACK_TABLE)
+      .select(select)
+      .order("created_at", { ascending: false })
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) return { error: error.message }
 
@@ -421,11 +438,23 @@ export async function fetchAdminFeedbackById(
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const { data, error } = await supabase
+  let select = FEEDBACK_SELECT
+  let { data, error } = await supabase
     .from(BETA_FEEDBACK_TABLE)
-    .select(FEEDBACK_SELECT)
+    .select(select)
     .eq("id", id)
     .maybeSingle()
+
+  if (error && isMissingFeedbackStageColumn(error.message)) {
+    select = FEEDBACK_SELECT_WITHOUT_STAGE
+    const retry = await supabase
+      .from(BETA_FEEDBACK_TABLE)
+      .select(select)
+      .eq("id", id)
+      .maybeSingle()
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) return { error: error.message }
   if (!data) return { error: "Feedback not found" }
@@ -932,8 +961,11 @@ export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExten
     dropOffStep,
     dailyTrend,
     weeklyTrend,
-    genreDistribution: legacy.genreDistribution,
-    recommendOverTime,
+    genreDistribution: legacy.charts.genreDistribution ?? [],
+    recommendOverTime: recommendOverTime ?? [],
+    dailyTrend: dailyTrend ?? [],
+    weeklyTrend: weeklyTrend ?? [],
+    funnel: funnel ?? [],
   }
 }
 

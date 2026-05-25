@@ -362,12 +362,13 @@ export function AdminTable({ children }: { children: React.ReactNode }) {
 }
 
 export function FunnelChart({ steps }: { steps: { step: string; count: number }[] }) {
-  const max = Math.max(1, ...steps.map((s) => s.count))
+  const safeSteps = steps ?? []
+  const max = Math.max(1, ...(safeSteps.map((s) => s.count) ?? [0]))
   return (
     <AdminCard>
       <h3 className="text-[15px] font-semibold text-slate-900">Conversion funnel</h3>
       <ul className="mt-5 space-y-4">
-        {steps.map((item) => (
+        {safeSteps.map((item) => (
           <li key={item.step}>
             <div className="mb-2 flex justify-between text-[13px] text-slate-600">
               <span>{item.step}</span>
@@ -395,7 +396,7 @@ export function BarChartCard({
   items: { label: string; count: number }[]
   empty?: string
 }) {
-  const slice = items.slice(0, 12)
+  const slice = (items ?? []).slice(0, 12)
   const max = Math.max(1, ...slice.map((i) => i.count))
   if (slice.length === 0) {
     return (
@@ -439,11 +440,12 @@ export function SparklineChart({
   dataKey: string
   color?: string
 }) {
-  const values = points.map((p) => Number(p[dataKey]) || 0)
+  const safePoints = points ?? []
+  const values = safePoints.map((p) => Number(p[dataKey]) || 0)
   const max = Math.max(1, ...values)
-  const dateKey = points[0]?.date != null ? "date" : "week"
+  const dateKey = safePoints[0]?.date != null ? "date" : "week"
 
-  if (points.length === 0) {
+  if (safePoints.length === 0) {
     return (
       <AdminCard>
       <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
@@ -456,7 +458,7 @@ export function SparklineChart({
     <AdminCard>
       <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
       <div className="mt-5 flex h-28 items-end gap-1.5">
-        {points.map((p, i) => (
+        {safePoints.map((p, i) => (
           <div key={String(p[dateKey]) + i} className="flex flex-1 flex-col items-center gap-2">
             <div
               className={`w-full min-w-[6px] max-w-[20px] rounded-t-md ${color} transition-all duration-300`}
@@ -467,8 +469,8 @@ export function SparklineChart({
         ))}
       </div>
       <div className="mt-3 flex justify-between text-[10px] text-slate-400">
-        <span>{String(points[0]?.[dateKey])}</span>
-        <span>{String(points[points.length - 1]?.[dateKey])}</span>
+        <span>{String(safePoints[0]?.[dateKey])}</span>
+        <span>{String(safePoints[safePoints.length - 1]?.[dateKey])}</span>
       </div>
     </AdminCard>
   )
