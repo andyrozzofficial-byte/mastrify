@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
+import MastrifyAssistant from "./assistant/MastrifyAssistant"
 import SiteFooter from "./SiteFooter"
 import SiteHeader from "./SiteHeader"
 
@@ -25,6 +26,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
       <SiteHeader />
       <main className="site-overflow-guard flex flex-1 flex-col">{children}</main>
       <SiteFooter />
+      <MastrifyAssistant />
     </>
   )
 }
