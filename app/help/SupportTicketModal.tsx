@@ -128,7 +128,7 @@ export default function SupportTicketModal({
             transition={{ duration: reduce ? 0 : 0.28 }}
             onClick={onClose}
           />
-          <div className="pointer-events-none relative flex h-full w-full max-w-[1152px] px-6 sm:px-8">
+          <div className="pointer-events-none relative flex h-full w-full max-w-[1200px] px-5 sm:px-8">
             <motion.div
               role="dialog"
               aria-modal="true"

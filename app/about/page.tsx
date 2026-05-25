@@ -1,26 +1,28 @@
-export default function About() {
+import {
+  CenteredContent,
+  ContentPageLayout,
+  contentPageProseClass,
+  contentPageSectionsClass,
+  PageHero,
+} from "../components/content/ContentPageLayout"
+
+export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-black text-white px-6 py-20">
-      
-      <div className="max-w-3xl mx-auto space-y-8">
-        
-        <h1 className="text-4xl font-bold">About Mastrify</h1>
-
-        <p className="text-gray-400">
-          Mastrify is an AI-powered mastering tool built for modern artists.
-        </p>
-
-        <p className="text-gray-400">
-          We believe every creator should be able to get professional sound
-          without expensive engineers or complicated workflows.
-        </p>
-
-        <p className="text-gray-400">
-          Upload your track. Get a master that sounds like Spotify-ready releases.
-        </p>
-
-      </div>
-
-    </main>
+    <ContentPageLayout>
+      <CenteredContent>
+        <PageHero title="About Mastrify" align="center" />
+        <div className={`${contentPageSectionsClass} ${contentPageProseClass}`}>
+          <section>
+            <p>
+              Mastrify is an AI-powered mastering tool built for modern artists. We believe every creator should
+              be able to get professional sound without expensive engineers or complicated workflows.
+            </p>
+          </section>
+          <section>
+            <p>Upload your track. Get a master that sounds release-ready for streaming and download.</p>
+          </section>
+        </div>
+      </CenteredContent>
+    </ContentPageLayout>
   )
 }

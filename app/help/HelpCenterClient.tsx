@@ -5,7 +5,11 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { motion, useReducedMotion } from "framer-motion"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { useMasterSession } from "../master/MasterSessionProvider"
-import CinematicBackground from "../components/CinematicBackground"
+import {
+  ContentPageLayout,
+  ContentPageShell,
+  PageHero,
+} from "../components/content/ContentPageLayout"
 import { HELP_FAQ_ITEMS, POPULAR_HELP_FAQ, searchHelpFaq, type HelpFaqItem } from "../../lib/helpFaq"
 import { masteringStyleLabel } from "../../lib/masterStyleLabels"
 import { readSupportSessionContext } from "../../lib/readSupportSessionContext"
@@ -13,7 +17,6 @@ import type { SupportSessionContext, SupportTicketCategory } from "../../lib/sup
 import SupportTicketModal from "./SupportTicketModal"
 
 const EASE = [0.22, 1, 0.36, 1] as const
-const HELP_MAX_W = "max-w-[1152px]"
 
 function FaqCard({ item, highlight, compact }: { item: HelpFaqItem; highlight?: boolean; compact?: boolean }) {
   return (
@@ -28,7 +31,7 @@ function FaqCard({ item, highlight, compact }: { item: HelpFaqItem; highlight?: 
       }`}
     >
       <h3 className="text-[15px] font-semibold tracking-[-0.02em] text-white/92">{item.question}</h3>
-      <p className={`${compact ? "mt-2" : "mt-2.5"} text-[14px] leading-[1.65] text-muted`}>{item.answer}</p>
+      <p className={`${compact ? "mt-2" : "mt-2.5"} text-[16px] leading-[1.8] text-white/[0.85]`}>{item.answer}</p>
     </article>
   )
 }
@@ -141,37 +144,13 @@ export default function HelpCenterClient() {
   }
 
   return (
-    <motion.div
-      className="relative min-h-screen overflow-x-hidden text-white"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.45, ease: EASE }}
-    >
-      <CinematicBackground intensity="strong" />
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
-        aria-hidden
-      />
-
-      <main
-        className={`page-container relative z-10 mx-auto w-full ${HELP_MAX_W} px-6 pb-16 pt-7 sm:px-8 sm:pb-20 sm:pt-9 md:pt-11`}
-      >
-        <motion.header
-          initial={reduce ? false : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: EASE }}
-          className="mx-auto max-w-xl text-center"
-        >
-          <span className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70">
-            Help center
-          </span>
-          <h1 className="mt-4 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white/95 sm:text-[2.2rem]">
-            How can we help?
-          </h1>
-          <p className="mx-auto mt-3 text-[15px] leading-[1.65] text-muted">
-            Search common questions first — most answers are instant. Tickets are only when you still need a human.
-          </p>
-        </motion.header>
+    <ContentPageLayout>
+      <ContentPageShell className="pb-16 pt-8 sm:pb-20 sm:pt-10 md:pt-12">
+        <PageHero
+          label="Help center"
+          title="How can we help?"
+          lead="Search common questions first — most answers are instant. Tickets are only when you still need a human."
+        />
 
         <motion.div
           className="relative mx-auto mt-6 max-w-2xl"
@@ -194,12 +173,12 @@ export default function HelpCenterClient() {
         </motion.div>
 
         {showSearchResults ? (
-          <section className="mt-5 space-y-2.5">
+          <section className="mx-auto mt-5 max-w-3xl space-y-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
               {searchResults.length > 0 ? "Matching answers" : "No matches"}
             </p>
             {searchResults.length === 0 ? (
-              <p className="text-sm text-muted">Try different keywords, or browse topics below.</p>
+              <p className="text-[16px] leading-[1.8] text-white/[0.85]">Try different keywords, or browse topics below.</p>
             ) : (
               <div className="space-y-2.5">
                 {searchResults.map((item) => (
@@ -243,10 +222,7 @@ export default function HelpCenterClient() {
             </aside>
 
             <div className="mt-6 min-w-0 lg:mt-0">
-              {activeFaq ? (
-                <FaqCard item={activeFaq} highlight />
-              ) : null}
-
+              {activeFaq ? <FaqCard item={activeFaq} highlight /> : null}
               <div className="mt-5 space-y-2.5 lg:hidden">
                 {HELP_FAQ_ITEMS.filter((i) => i.id !== activeFaqId).map((item) => (
                   <FaqCard key={item.id} item={item} compact />
@@ -257,12 +233,11 @@ export default function HelpCenterClient() {
         )}
 
         <section className="mx-auto mt-8 max-w-2xl rounded-[1.35rem] border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:p-6">
-          <h2 className="text-lg font-semibold text-white/92">Still need help?</h2>
-          <p className="mt-1.5 text-[14px] leading-relaxed text-muted">
+          <h2 className="text-2xl font-semibold text-white/92">Still need help?</h2>
+          <p className="mt-1.5 text-[16px] leading-[1.8] text-white/[0.85]">
             Create a support ticket and we&apos;ll follow up by email. Session details attach automatically when
             you&apos;re mastering.
           </p>
-
           <button
             type="button"
             onClick={() => {
@@ -273,7 +248,6 @@ export default function HelpCenterClient() {
           >
             Create support ticket
           </button>
-
           <p className="mt-4 text-center text-[12px] text-white/40">
             Prefer email only?{" "}
             <a href="mailto:hello@mastrify.com" className="text-violet-200/75 hover:text-violet-100">
@@ -282,12 +256,12 @@ export default function HelpCenterClient() {
           </p>
         </section>
 
-        <p className="mx-auto mt-6 text-center text-[12px] text-white/38">
+        <p className="mx-auto mt-6 max-w-2xl text-center text-[12px] text-white/38">
           <Link href="/master" className="text-violet-200/70 hover:text-violet-100">
             ← Back to mastering
           </Link>
         </p>
-      </main>
+      </ContentPageShell>
 
       <SupportTicketModal
         open={ticketModalOpen}
@@ -306,6 +280,6 @@ export default function HelpCenterClient() {
         ticketSuccess={ticketSuccess}
         onSubmit={onSubmitTicket}
       />
-    </motion.div>
+    </ContentPageLayout>
   )
 }
