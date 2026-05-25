@@ -7,7 +7,6 @@ import {
 import { getNumericSurveyScore, getSurveyValue } from "./betaFeedbackSurveyDisplay"
 import type { AdminFeedbackRow } from "./adminTypes"
 import { ANALYSIS_ACCURACY_OPTIONS, PREVIEW_COMPARISON_OPTIONS } from "./betaFeedbackPulseTypes"
-import { getSurveyValue } from "./betaFeedbackSurveyDisplay"
 
 export type AdminFeedbackStageAnalytics = {
   byStage: { stage: string; count: number }[]
