@@ -42,6 +42,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 ```
 
+Beta feedback (optional): `ENABLE_BETA_FEEDBACK=true` on Vercel is mirrored to the client at build via `next.config.ts`.
+
 ## Admin analytics dashboard
 
 Route: `/admin/beta-feedback` (internal only).

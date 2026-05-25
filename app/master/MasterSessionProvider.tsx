@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react"
 import { extractMasterLufs } from "../../lib/extractMasterLufs"
+import { isBetaFeedbackEnabled } from "../../lib/betaFeedbackFeature"
 import { formatTrackNameForAnalytics } from "../../lib/formatTrackNameForAnalytics"
 import { createMasterSessionId } from "../../lib/masterSessionId"
 import { readAudioDurationSec } from "../../lib/readAudioDurationSec"
@@ -141,6 +142,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const hydrateRan = useRef(false)
 
   const beginMasterSession = useCallback((f: File) => {
+    if (!isBetaFeedbackEnabled()) return
     setSessionId(createMasterSessionId())
     setTrackDurationSec(null)
     setMasterLufs(null)
@@ -152,6 +154,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
 
   const recordProcessingComplete = useCallback(
     (elapsedMs: number, analysisAfter: Record<string, unknown> | null) => {
+      if (!isBetaFeedbackEnabled()) return
       const ms = Math.max(0, Math.round(elapsedMs))
       setProcessingTimeMs(ms)
       setMasterLufs(extractMasterLufs(analysisAfter))

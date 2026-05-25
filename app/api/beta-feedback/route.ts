@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import {
   BETA_FEEDBACK_TABLE,
   betaFeedbackErrorForClient,
@@ -64,6 +65,10 @@ function devErrorResponse(
 }
 
 export async function POST(request: Request) {
+  if (!isBetaFeedbackEnabled()) {
+    return NextResponse.json({ error: "Beta feedback is disabled" }, { status: 404 })
+  }
+
   let body: unknown
   try {
     body = await request.json()

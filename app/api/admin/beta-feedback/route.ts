@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { isBetaFeedbackEnabled } from "../../../../lib/betaFeedbackFeature"
 import {
   buildBetaFeedbackDashboard,
   type BetaFeedbackRecord,
@@ -21,6 +22,10 @@ type DbRow = {
 }
 
 export async function GET() {
+  if (!isBetaFeedbackEnabled()) {
+    return NextResponse.json({ error: "Beta feedback is disabled" }, { status: 404 })
+  }
+
   if (!isAdminGateEnabled()) {
     return NextResponse.json(
       { error: "Admin access is not configured. Set MASTRIFY_ADMIN_PASSWORD." },

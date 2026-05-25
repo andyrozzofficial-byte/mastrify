@@ -1,5 +1,6 @@
 "use client"
 
+import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import type { BetaFeedbackDashboardData } from "../../../lib/betaFeedbackAnalytics"
 import { filterAndSortTableRows } from "../../../lib/betaFeedbackAnalytics"
@@ -282,6 +283,18 @@ export default function BetaFeedbackDashboard() {
       sort,
     })
   }, [data, search, genreFilter, styleFilter, releaseFilter, sort])
+
+  if (!isBetaFeedbackEnabled()) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-20 text-center text-white/70">
+        <h1 className="text-xl font-semibold text-white">Beta feedback is disabled</h1>
+        <p className="mt-3 text-sm">
+          Set <code className="text-violet-300">ENABLE_BETA_FEEDBACK=true</code> and{" "}
+          <code className="text-violet-300">NEXT_PUBLIC_ENABLE_BETA_FEEDBACK=true</code> to use this dashboard.
+        </p>
+      </div>
+    )
+  }
 
   if (auth === "loading") {
     return (
