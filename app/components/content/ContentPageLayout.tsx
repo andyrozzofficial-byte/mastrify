@@ -88,13 +88,13 @@ type HelpCenterGridProps = {
   className?: string
 }
 
-/** Help Center FAQ layout — 320px sidebar + answer column */
+/** Help Center FAQ layout — 300px sidebar + answer column */
 export function HelpCenterGrid({ sidebar, children, className = "" }: HelpCenterGridProps) {
   return (
     <div
-      className={`grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr] lg:gap-10 ${className}`}
+      className={`grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-[300px_1fr] lg:gap-10 ${className}`}
     >
-      <aside className="w-full min-w-0 shrink-0 lg:sticky lg:top-24 lg:w-[320px]">{sidebar}</aside>
+      <aside className="w-full min-w-0 shrink-0 lg:sticky lg:top-24 lg:w-[300px]">{sidebar}</aside>
       <div className="min-w-0 w-full">{children}</div>
     </div>
   )
