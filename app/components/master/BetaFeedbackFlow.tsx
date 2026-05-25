@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { supabase } from "../../../lib/supabase"
 import { readBetaFeedbackStatus, writeBetaFeedbackStatus } from "../../../lib/betaFeedbackStorage"
 import { createMasterSessionId } from "../../../lib/masterSessionId"
 import type { BetaFeedbackPayload, BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
@@ -135,6 +134,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
   const [form, setForm] = useState<BetaFeedbackPayload>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  const [submitFailed, setSubmitFailed] = useState(false)
 
   useEffect(() => {
     if (readBetaFeedbackStatus()) {
@@ -194,33 +194,12 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
 
     if (res.ok) return
 
-    const { error } = await supabase.from("beta_master_feedback").insert([
-      {
-        responses: payload,
-        contact_email: payload.contactEmail || null,
-        contact_discord: payload.contactDiscord || null,
-        future_beta_contact: payload.futureBetaContact,
-        master_object_key: payload.masterObjectKey,
-        track_title: trackName,
-        session_id: sessionId,
-        track_name: trackName,
-        track_duration: payload.trackDuration,
-        mastering_style: payload.masteringStyle,
-        stereo_width: payload.stereoWidth,
-        low_end: payload.lowEnd,
-        master_lufs: payload.masterLufs,
-        processing_time_ms: payload.processingTimeMs,
-      },
-    ])
+    if (process.env.NODE_ENV === "development") {
+      const data = await res.json().catch(() => null)
+      console.warn("[beta-feedback] submit failed", res.status, data)
+    }
 
-    if (!error) return
-
-    const data = await res.json().catch(() => null)
-    throw new Error(
-      (data && typeof data.error === "string" ? data.error : null) ||
-        error.message ||
-        "Could not save feedback"
-    )
+    throw new Error("submit_failed")
   }, [form, masterObjectKey, sessionAnalytics])
 
   const handleSubmit = useCallback(async () => {
@@ -231,17 +210,23 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
     }
     setSubmitting(true)
     setSubmitError("")
+    setSubmitFailed(false)
     try {
       await persistFeedback()
       writeBetaFeedbackStatus("submitted")
       setPhase("success")
       window.setTimeout(() => setPhase("hidden"), 4200)
-    } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : "Could not save feedback. Please try again.")
+    } catch {
+      setSubmitFailed(true)
     } finally {
       setSubmitting(false)
     }
   }, [validate, persistFeedback])
+
+  const handleRetrySubmit = useCallback(() => {
+    setSubmitFailed(false)
+    void handleSubmit()
+  }, [handleSubmit])
 
   if (phase === "hidden") return null
 
@@ -269,6 +254,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                   onClick={() => {
                     setForm(emptyForm())
                     setSubmitError("")
+                    setSubmitFailed(false)
                     setPhase("survey")
                   }}
                   className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-5 text-sm font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12)] ring-1 ring-white/[0.08] transition hover:brightness-[1.06] active:scale-[0.99]"
@@ -305,10 +291,35 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
             >
               {phase === "success" ? (
                 <div className="flex flex-1 flex-col items-center justify-center px-6 py-14 text-center">
-                  <p className="text-2xl font-semibold text-white">Feedback completed ✓</p>
-                  <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/68">
-                    Thanks for helping improve Mastrify
+                  <p className="max-w-sm text-xl font-semibold leading-snug text-white sm:text-2xl">
+                    Feedback completed ✓ Thanks for helping improve Mastrify
                   </p>
+                </div>
+              ) : submitFailed ? (
+                <div className="flex flex-1 flex-col items-center justify-center px-6 py-14 text-center">
+                  <h2 className="text-xl font-semibold text-white">Couldn&apos;t send feedback</h2>
+                  <p className="mt-2 text-sm text-white/62">Please try again</p>
+                  <div className="mt-8 flex w-full max-w-xs flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={handleRetrySubmit}
+                      disabled={submitting}
+                      className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-4 text-sm font-semibold text-white transition hover:brightness-[1.06] disabled:opacity-60"
+                    >
+                      {submitting ? "Sending…" : "Retry"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubmitFailed(false)
+                        setPhase("invite")
+                      }}
+                      disabled={submitting}
+                      className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 text-sm font-semibold text-white/76 transition hover:bg-white/[0.05] disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -549,7 +560,10 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                   <div className="shrink-0 flex gap-2 border-t border-white/[0.06] p-4 sm:p-5">
                     <button
                       type="button"
-                      onClick={() => setPhase("invite")}
+                      onClick={() => {
+                        setSubmitFailed(false)
+                        setPhase("invite")
+                      }}
                       disabled={submitting}
                       className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 text-sm font-semibold text-white/76 transition hover:bg-white/[0.05] disabled:opacity-50"
                     >

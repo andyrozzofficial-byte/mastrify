@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:beta-feedback": "node scripts/apply-beta-feedback-schema.mjs",
+    "db:beta-feedback:check": "node scripts/check-beta-feedback-table.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.3",

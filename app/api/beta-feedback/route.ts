@@ -1,24 +1,20 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import {
+  BETA_FEEDBACK_TABLE,
+  betaFeedbackErrorForClient,
+  buildBetaFeedbackRow,
+} from "../../../lib/betaFeedbackDb"
 import type { BetaFeedbackPayload } from "../../../lib/betaFeedbackTypes"
+import {
+  createSupabaseServerClient,
+  getSupabaseUrl,
+  isSupabaseDevLogging,
+} from "../../../lib/supabaseServer"
 
-const SUPABASE_URL =
-  process.env.SUPABASE_URL?.trim() || "https://wyuxkmrnzqvlqshlqfiw.supabase.co"
-const SUPABASE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
-  process.env.SUPABASE_ANON_KEY?.trim() ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
-  "sb_publishable_j-if6EVRN-M3q-DS5s4q_w_5K0Tiw3n"
-
-function numOrNull(v: unknown): number | null {
-  if (typeof v !== "number" || !Number.isFinite(v)) return null
-  return v
-}
-
-function intOrNull(v: unknown): number | null {
-  const n = numOrNull(v)
-  if (n == null) return null
-  return Math.round(n)
+function logDev(message: string, detail?: Record<string, unknown>) {
+  if (!isSupabaseDevLogging) return
+  if (detail) console.log(`[beta-feedback] ${message}`, detail)
+  else console.log(`[beta-feedback] ${message}`)
 }
 
 function isValidPayload(body: unknown): body is BetaFeedbackPayload {
@@ -50,56 +46,63 @@ export async function POST(request: Request) {
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    return NextResponse.json({ error: "Could not save feedback" }, { status: 400 })
   }
 
   if (!isValidPayload(body)) {
-    return NextResponse.json({ error: "Missing required feedback fields" }, { status: 400 })
+    logDev("validation failed", { bodyKeys: body && typeof body === "object" ? Object.keys(body) : [] })
+    return NextResponse.json({ error: "Could not save feedback" }, { status: 400 })
   }
 
-  const contactEmail = typeof body.contactEmail === "string" ? body.contactEmail.trim() : ""
-  const contactDiscord = typeof body.contactDiscord === "string" ? body.contactDiscord.trim() : ""
-  const trackName =
-    typeof body.trackName === "string" && body.trackName.trim()
-      ? body.trackName.trim()
-      : typeof body.trackTitle === "string" && body.trackTitle.trim()
-        ? body.trackTitle.trim()
-        : null
-
-  const row = {
-    responses: body,
-    contact_email: contactEmail || null,
-    contact_discord: contactDiscord || null,
-    future_beta_contact:
-      typeof body.futureBetaContact === "boolean" ? body.futureBetaContact : null,
-    master_object_key:
-      typeof body.masterObjectKey === "string" && body.masterObjectKey.trim()
-        ? body.masterObjectKey.trim()
-        : null,
-    track_title: trackName,
-    session_id: body.sessionId.trim(),
-    track_name: trackName,
-    track_duration: numOrNull(body.trackDuration),
-    mastering_style: body.masteringStyle.trim(),
-    stereo_width: intOrNull(body.stereoWidth),
-    low_end: intOrNull(body.lowEnd),
-    master_lufs:
-      body.masterLufs != null && Number.isFinite(body.masterLufs)
-        ? Number(Number(body.masterLufs).toFixed(2))
-        : null,
-    processing_time_ms: intOrNull(body.processingTimeMs),
+  const supabase = createSupabaseServerClient()
+  if (!supabase) {
+    logDev("supabase client unavailable", { url: getSupabaseUrl() })
+    return NextResponse.json({ error: "Could not save feedback" }, { status: 503 })
   }
 
-  try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-    const { error } = await supabase.from("beta_master_feedback").insert([row])
-    if (error) {
-      console.error("[beta-feedback] insert failed:", error.message)
-      return NextResponse.json({ error: "Could not save feedback" }, { status: 500 })
+  const row = buildBetaFeedbackRow(body)
+
+  logDev("insert start", {
+    table: `public.${BETA_FEEDBACK_TABLE}`,
+    sessionId: row.session_id,
+    masteringStyle: row.mastering_style,
+    hasResponses: Boolean(row.responses),
+  })
+
+  const { data, error } = await supabase
+    .schema("public")
+    .from(BETA_FEEDBACK_TABLE)
+    .insert([row])
+    .select("id")
+    .single()
+
+  if (error) {
+    const mapped = betaFeedbackErrorForClient(error)
+    if (isSupabaseDevLogging) {
+      console.error("[beta-feedback] insert failed", {
+        table: `public.${BETA_FEEDBACK_TABLE}`,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        tableMissing: mapped.tableMissing,
+      })
+      if (mapped.tableMissing) {
+        console.error(
+          "[beta-feedback] Run supabase/beta_master_feedback.sql in the Supabase SQL Editor, then wait a few seconds for schema cache reload."
+        )
+      }
     }
-    return NextResponse.json({ ok: true })
-  } catch (err) {
-    console.error("[beta-feedback] unexpected error:", err)
-    return NextResponse.json({ error: "Server error" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: mapped.message,
+        ...(isSupabaseDevLogging && mapped.tableMissing ? { code: "table_missing" } : {}),
+      },
+      { status: mapped.tableMissing ? 503 : 500 }
+    )
   }
+
+  logDev("insert ok", { id: data?.id ?? null })
+
+  return NextResponse.json({ ok: true, id: data?.id ?? null })
 }
