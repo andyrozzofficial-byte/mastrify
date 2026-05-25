@@ -44,8 +44,18 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 Beta feedback (optional): `ENABLE_BETA_FEEDBACK=true` on Vercel is mirrored to the client at build via `next.config.ts`.
 
-## Admin analytics dashboard
+## Admin dashboard
 
-Route: `/admin/beta-feedback` (internal only).
+Routes (internal only):
+
+- `/admin` — overview
+- `/admin/feedback` — feedback management (status: new / read / resolved)
+- `/admin/support` — support inbox
+- `/admin/customers` — customer history by email
+- `/admin/analytics` — charts and trends
+
+Run [`admin_dashboard.sql`](./admin_dashboard.sql) after `beta_master_feedback.sql` (adds `status`, `admin_support_inbox` table).
+
+Legacy `/admin/beta-feedback` redirects to `/admin/feedback`.
 
 Requires `MASTRIFY_ADMIN_PASSWORD` (or `MASTRIFY_ACCESS_PASSWORD`) and `SUPABASE_SERVICE_ROLE_KEY` for reading all rows server-side.

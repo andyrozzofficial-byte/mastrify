@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-import { isBetaFeedbackEnabled } from "../../../../lib/betaFeedbackFeature"
 import {
   ADMIN_COOKIE_NAME,
   createAdminToken,
@@ -9,10 +8,6 @@ import {
 } from "../../../../lib/admin"
 
 export async function POST(request: Request) {
-  if (!isBetaFeedbackEnabled()) {
-    return NextResponse.json({ error: "Beta feedback is disabled" }, { status: 404 })
-  }
-
   if (!isAdminGateEnabled()) {
     return NextResponse.json(
       { error: "Admin access is not configured. Set MASTRIFY_ADMIN_PASSWORD." },
