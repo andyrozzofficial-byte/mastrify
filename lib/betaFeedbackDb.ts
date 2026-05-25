@@ -1,15 +1,11 @@
 import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
+import { createMasterSessionId } from "./masterSessionId"
 
 /** PostgREST table: public.beta_master_feedback */
 export const BETA_FEEDBACK_TABLE = "beta_master_feedback"
 
-export type BetaFeedbackRow = {
-  responses: BetaFeedbackPayload
-  contact_email: string | null
-  contact_discord: string | null
-  future_beta_contact: boolean | null
-  master_object_key: string | null
-  track_title: string | null
+/** Columns accepted by public.beta_master_feedback (no id / created_at). */
+export type BetaFeedbackInsertRow = {
   session_id: string
   track_name: string | null
   track_duration: number | null
@@ -18,6 +14,12 @@ export type BetaFeedbackRow = {
   low_end: number | null
   master_lufs: number | null
   processing_time_ms: number | null
+  responses: Record<string, unknown>
+  contact_email: string | null
+  contact_discord: string | null
+  future_beta_contact: boolean | null
+  master_object_key: string | null
+  track_title: string | null
 }
 
 function numOrNull(v: unknown): number | null {
@@ -31,18 +33,18 @@ function intOrNull(v: unknown): number | null {
   return Math.round(n)
 }
 
-/** Remove undefined so PostgREST does not reject the payload. */
-export function sanitizeBetaFeedbackInsert(row: BetaFeedbackRow): BetaFeedbackRow {
-  const out = { ...row }
-  for (const key of Object.keys(out) as (keyof BetaFeedbackRow)[]) {
-    if (out[key] === undefined) {
-      delete out[key]
-    }
-  }
-  return out
+/** Strip undefined from JSON-safe survey payload stored in responses. */
+function responsesJson(body: BetaFeedbackPayload): Record<string, unknown> {
+  const raw = JSON.parse(JSON.stringify(body)) as Record<string, unknown>
+  return raw && typeof raw === "object" ? raw : {}
 }
 
-export function buildBetaFeedbackRow(body: BetaFeedbackPayload): BetaFeedbackRow {
+export function resolveSessionId(body: BetaFeedbackPayload): string {
+  const fromBody = typeof body.sessionId === "string" ? body.sessionId.trim() : ""
+  return fromBody || createMasterSessionId()
+}
+
+export function buildBetaFeedbackRow(body: BetaFeedbackPayload): BetaFeedbackInsertRow {
   const contactEmail = typeof body.contactEmail === "string" ? body.contactEmail.trim() : ""
   const contactDiscord = typeof body.contactDiscord === "string" ? body.contactDiscord.trim() : ""
   const trackName =
@@ -52,8 +54,24 @@ export function buildBetaFeedbackRow(body: BetaFeedbackPayload): BetaFeedbackRow
         ? body.trackTitle.trim()
         : null
 
+  const masteringStyle =
+    typeof body.masteringStyle === "string" && body.masteringStyle.trim()
+      ? body.masteringStyle.trim()
+      : "Unknown"
+
   return {
-    responses: body,
+    session_id: resolveSessionId(body),
+    track_name: trackName,
+    track_duration: numOrNull(body.trackDuration),
+    mastering_style: masteringStyle,
+    stereo_width: intOrNull(body.stereoWidth),
+    low_end: intOrNull(body.lowEnd),
+    master_lufs:
+      body.masterLufs != null && Number.isFinite(body.masterLufs)
+        ? Number(Number(body.masterLufs).toFixed(2))
+        : null,
+    processing_time_ms: intOrNull(body.processingTimeMs),
+    responses: responsesJson(body),
     contact_email: contactEmail || null,
     contact_discord: contactDiscord || null,
     future_beta_contact:
@@ -63,21 +81,34 @@ export function buildBetaFeedbackRow(body: BetaFeedbackPayload): BetaFeedbackRow
         ? body.masterObjectKey.trim()
         : null,
     track_title: trackName,
-    session_id: body.sessionId.trim(),
-    track_name: trackName,
-    track_duration: numOrNull(body.trackDuration),
-    mastering_style: body.masteringStyle.trim() || "Unknown",
-    stereo_width: intOrNull(body.stereoWidth),
-    low_end: intOrNull(body.lowEnd),
-    master_lufs:
-      body.masterLufs != null && Number.isFinite(body.masterLufs)
-        ? Number(Number(body.masterLufs).toFixed(2))
-        : null,
-    processing_time_ms: intOrNull(body.processingTimeMs),
   }
 }
 
-/** Map PostgREST errors to a safe client message (no raw DB text). */
+/** Exact table columns only; omit undefined (PostgREST rejects undefined). */
+export function sanitizeBetaFeedbackInsert(row: BetaFeedbackInsertRow): BetaFeedbackInsertRow {
+  const out: BetaFeedbackInsertRow = {
+    session_id: row.session_id,
+    track_name: row.track_name ?? null,
+    track_duration: row.track_duration ?? null,
+    mastering_style: row.mastering_style || "Unknown",
+    stereo_width: row.stereo_width ?? null,
+    low_end: row.low_end ?? null,
+    master_lufs: row.master_lufs ?? null,
+    processing_time_ms: row.processing_time_ms ?? null,
+    responses:
+      row.responses && typeof row.responses === "object" && !Array.isArray(row.responses)
+        ? row.responses
+        : {},
+    contact_email: row.contact_email ?? null,
+    contact_discord: row.contact_discord ?? null,
+    future_beta_contact: row.future_beta_contact ?? null,
+    master_object_key: row.master_object_key ?? null,
+    track_title: row.track_title ?? null,
+  }
+  return out
+}
+
+/** Map PostgREST errors (optional generic fallback). */
 export function betaFeedbackErrorForClient(error: { code?: string; message?: string } | null): {
   message: string
   tableMissing: boolean
@@ -91,7 +122,7 @@ export function betaFeedbackErrorForClient(error: { code?: string; message?: str
     /relation.*does not exist/i.test(msg)
 
   return {
-    message: "Could not save feedback",
+    message: msg || "Could not save feedback",
     tableMissing,
   }
 }

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import {
   BETA_FEEDBACK_TABLE,
-  betaFeedbackErrorForClient,
   buildBetaFeedbackRow,
   sanitizeBetaFeedbackInsert,
 } from "../../../lib/betaFeedbackDb"
@@ -14,12 +13,14 @@ import {
   getSupabaseUrl,
 } from "../../../lib/supabaseServer"
 
-const isDev = process.env.NODE_ENV === "development"
-
-function logDev(message: string, detail?: unknown) {
-  if (!isDev) return
+function logBeta(message: string, detail?: unknown) {
   if (detail !== undefined) console.log(`[beta-feedback] ${message}`, detail)
   else console.log(`[beta-feedback] ${message}`)
+}
+
+function logBetaError(message: string, detail?: unknown) {
+  if (detail !== undefined) console.error(`[beta-feedback] ${message}`, detail)
+  else console.error(`[beta-feedback] ${message}`)
 }
 
 function validationFailureDetail(body: unknown): string | null {
@@ -37,8 +38,6 @@ function validationFailureDetail(body: unknown): string | null {
   if (typeof b.wouldRelease !== "string") missing.push("wouldRelease")
   if (typeof b.useAgainScore !== "number") missing.push("useAgainScore")
   if (typeof b.recommendScore !== "number") missing.push("recommendScore")
-  if (typeof b.sessionId !== "string" || !b.sessionId) missing.push("sessionId")
-  if (typeof b.masteringStyle !== "string") missing.push("masteringStyle")
   if (typeof b.stereoWidth !== "number") missing.push("stereoWidth")
   if (typeof b.lowEnd !== "number") missing.push("lowEnd")
   return missing.length ? `Missing or invalid: ${missing.join(", ")}` : null
@@ -48,20 +47,12 @@ function isValidPayload(body: unknown): body is BetaFeedbackPayload {
   return validationFailureDetail(body) === null
 }
 
-function devErrorResponse(
+function apiError(
   status: number,
-  clientMessage: string,
-  devMessage?: string,
+  message: string,
   extra?: Record<string, unknown>,
 ) {
-  return NextResponse.json(
-    {
-      error: clientMessage,
-      ...(isDev && devMessage ? { devError: devMessage } : {}),
-      ...extra,
-    },
-    { status },
-  )
+  return NextResponse.json({ error: message, ...extra }, { status })
 }
 
 export async function POST(request: Request) {
@@ -73,86 +64,99 @@ export async function POST(request: Request) {
   try {
     body = await request.json()
   } catch (e) {
-    logDev("JSON parse failed", e)
-    return devErrorResponse(400, "Could not save feedback", isDev ? "Invalid JSON body" : undefined)
+    logBetaError("JSON parse failed", e)
+    return apiError(400, "Invalid JSON body")
   }
 
-  logDev("incoming payload", body)
+  logBeta("incoming payload", body)
 
   if (!isValidPayload(body)) {
     const detail = validationFailureDetail(body)
-    logDev("validation failed", { detail, bodyKeys: body && typeof body === "object" ? Object.keys(body) : [] })
-    return devErrorResponse(
-      400,
-      "Could not save feedback",
-      detail ?? "Validation failed",
-    )
+    logBetaError("validation failed", { detail, bodyKeys: body && typeof body === "object" ? Object.keys(body) : [] })
+    return apiError(400, detail ?? "Validation failed")
   }
 
   const envStatus = getSupabaseEnvStatus()
-  logDev("Supabase env", envStatus)
+  logBeta("Supabase env", envStatus)
 
   const supabase = createSupabaseServerClient()
   if (!supabase) {
-    logDev("Supabase client unavailable — set NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_SERVICE_ROLE_KEY")
-    return devErrorResponse(
+    logBetaError("Supabase client unavailable")
+    return apiError(
       503,
-      "Could not save feedback",
-      isDev
-        ? "No Supabase API key configured (SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, or NEXT_PUBLIC_SUPABASE_ANON_KEY)"
-        : undefined,
+      "No Supabase API key configured (SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, or NEXT_PUBLIC_SUPABASE_ANON_KEY)",
     )
   }
 
   const row = sanitizeBetaFeedbackInsert(buildBetaFeedbackRow(body))
   const keySource = getSupabaseKeySource()
 
-  logDev("Supabase insert payload", {
+  logBeta("Supabase insert payload", {
     table: `public.${BETA_FEEDBACK_TABLE}`,
     url: getSupabaseUrl(),
     keySource,
     row,
   })
 
-  // Anon RLS allows INSERT only — .select() after insert fails without service_role.
-  const insertQuery = supabase.from(BETA_FEEDBACK_TABLE).insert([row])
-  const result =
-    keySource === "service_role"
-      ? await insertQuery.select("id").single()
-      : await insertQuery
+  try {
+    const insertQuery = supabase.from(BETA_FEEDBACK_TABLE).insert([row])
+    const result =
+      keySource === "service_role"
+        ? await insertQuery.select("id").single()
+        : await insertQuery
 
-  logDev("Supabase response", { data: result.data, error: result.error })
-
-  if (result.error) {
-    const mapped = betaFeedbackErrorForClient(result.error)
-    if (isDev) {
-      console.error("[beta-feedback] insert failed", {
-        code: result.error.code,
-        message: result.error.message,
-        details: result.error.details,
-        hint: result.error.hint,
-      })
-    }
-    return devErrorResponse(
-      mapped.tableMissing ? 503 : 500,
-      mapped.message,
-      result.error.message,
-      isDev
+    logBeta("Supabase insert response", {
+      data: result.data,
+      error: result.error
         ? {
+            message: result.error.message,
+            details: result.error.details,
             code: result.error.code,
             hint: result.error.hint,
-            details: result.error.details,
           }
-        : undefined,
+        : null,
+    })
+
+    if (result.error) {
+      const error = result.error
+      logBetaError("insert failed", {
+        message: error.message,
+        details: error.details,
+        code: error.code,
+        hint: error.hint,
+      })
+      return NextResponse.json(
+        {
+          success: false,
+          error: error.message || "Unknown error",
+          details: error.details || null,
+          code: error.code || null,
+          hint: error.hint || null,
+        },
+        { status: 500 },
+      )
+    }
+
+    const id =
+      result.data && typeof result.data === "object" && "id" in result.data
+        ? (result.data as { id: string }).id
+        : null
+
+    logBeta("insert ok", { id })
+
+    return NextResponse.json({ ok: true, success: true, id })
+  } catch (err) {
+    const error = err as { message?: string; details?: string; code?: string; hint?: string }
+    logBetaError("insert exception", err)
+    return NextResponse.json(
+      {
+        success: false,
+        error: error?.message || "Unknown error",
+        details: error?.details || null,
+        code: error?.code || null,
+        hint: error?.hint || null,
+      },
+      { status: 500 },
     )
   }
-
-  const id =
-    result.data && typeof result.data === "object" && "id" in result.data
-      ? (result.data as { id: string }).id
-      : null
-
-  logDev("insert ok", { id })
-
-  return NextResponse.json({ ok: true, id })
 }

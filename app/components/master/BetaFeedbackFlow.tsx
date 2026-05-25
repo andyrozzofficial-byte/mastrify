@@ -136,7 +136,6 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
   const [submitError, setSubmitError] = useState("")
   const [submitFailed, setSubmitFailed] = useState(false)
   const [submitDevError, setSubmitDevError] = useState<string | null>(null)
-  const isDev = process.env.NODE_ENV === "development"
 
   useEffect(() => {
     if (readBetaFeedbackStatus()) {
@@ -194,29 +193,29 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
       body: JSON.stringify(payload),
     })
 
-    if (res.ok) return
-
     const data = (await res.json().catch(() => null)) as {
+      success?: boolean
       error?: string
-      devError?: string
-      code?: string
+      details?: string | null
+      code?: string | null
+      hint?: string | null
     } | null
 
-    if (isDev) {
-      console.warn("[beta-feedback] submit failed", res.status, data)
-    }
+    console.log("Feedback response:", data)
 
-    const devMessage =
-      isDev && typeof data?.devError === "string"
-        ? data.devError
-        : isDev && typeof data?.error === "string"
-          ? data.error
-          : null
+    if (res.ok) return
+
+    const apiMessage =
+      typeof data?.error === "string"
+        ? data.details
+          ? `${data.error} (${data.details})`
+          : data.error
+        : null
 
     const err = new Error("submit_failed") as Error & { devMessage?: string | null }
-    err.devMessage = devMessage
+    err.devMessage = apiMessage
     throw err
-  }, [form, masterObjectKey, sessionAnalytics, isDev])
+  }, [form, masterObjectKey, sessionAnalytics])
 
   const handleSubmit = useCallback(async () => {
     const err = validate()
@@ -236,7 +235,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
     } catch (e) {
       setSubmitFailed(true)
       const devMessage =
-        isDev && e && typeof e === "object" && "devMessage" in e
+        e && typeof e === "object" && "devMessage" in e
           ? (e as { devMessage?: string | null }).devMessage
           : null
       setSubmitDevError(devMessage ?? null)
@@ -321,12 +320,9 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
               ) : submitFailed ? (
                 <div className="flex flex-1 flex-col items-center justify-center px-6 py-14 text-center">
                   <h2 className="text-xl font-semibold text-white">Couldn&apos;t send feedback</h2>
-                  <p className="mt-2 text-sm text-white/62">Please try again</p>
-                  {isDev && submitDevError ? (
-                    <p className="mt-4 max-w-sm rounded-lg border border-rose-400/25 bg-rose-950/30 px-3 py-2 text-left text-xs text-rose-200/90">
-                      Database error: {submitDevError}
-                    </p>
-                  ) : null}
+                  <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/62">
+                    {submitDevError || "Please try again"}
+                  </p>
                   <div className="mt-8 flex w-full max-w-xs flex-col gap-2 sm:flex-row">
                     <button
                       type="button"
