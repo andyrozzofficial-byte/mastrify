@@ -1,10 +1,11 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { motion, useReducedMotion } from "framer-motion"
+import { useEffect, useState } from "react"
 import { CINEMATIC_EASE } from "../../lib/cinematicMotion"
 import HeroWaveBackdrop from "./HeroWaveBackdrop"
 import LandingHeroAtmosphere from "./LandingHeroAtmosphere"
-import MarketingHeroOrbStatic from "./MarketingHeroOrbStatic"
 import MasteringEngineVisual from "../master/processing/MasteringEngineVisual"
 import OrbScene from "./cinematic/OrbScene"
 
@@ -13,7 +14,7 @@ type Props = {
   compactAtmosphere?: boolean
   mobileGlowBoost?: boolean
   className?: string
-  /** Landing: static orb, no loops/blur — scroll-safe compositing */
+  /** Landing: lighter layers + scroll-safe overflow — still animated */
   scrollSafe?: boolean
 }
 
@@ -28,60 +29,56 @@ export default function HeroEngineOrb({
   scrollSafe = false,
 }: Props) {
   const reduce = useReducedMotion()
+  const pathname = usePathname()
+  const [hydrated, setHydrated] = useState(false)
 
-  if (scrollSafe) {
-    return (
-      <div
-        className={`hero-engine-orb-root relative isolate mx-auto w-full max-w-full min-w-0 px-2 py-2 max-md:mb-0 sm:px-3 sm:py-3 md:px-4 md:py-4 lg:px-0 lg:py-0 ${className}`}
-      >
-        <div className="hero-engine-orb-cage relative mx-auto w-full min-w-0">
-          <div
-            className="hero-orb-radial-mobile pointer-events-none absolute inset-0 z-0 lg:hidden"
-            aria-hidden
-          />
-          <div className="hero-engine-orb-stage relative z-[1] aspect-square w-full max-w-full">
-            <HeroWaveBackdrop
-              efficient
-              heightClass="h-[34%] md:h-[40%]"
-              className="opacity-[0.16] md:opacity-[0.2]"
-            />
-            <MarketingHeroOrbStatic className="marketing-engine-visual relative z-[1] mx-auto" />
-          </div>
-        </div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
-  return (
-    <motion.div
-      className={`hero-engine-orb-root relative isolate mx-auto w-full max-w-full min-w-0 px-2 py-2 max-md:mb-0 sm:px-3 sm:py-3 md:px-4 md:py-4 lg:px-0 lg:py-0 ${className}`}
-      initial={reduce ? false : { opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.65, ease: CINEMATIC_EASE }}
-    >
-      <div className="hero-engine-orb-cage relative mx-auto w-full min-w-0 overflow-hidden">
-        <div className="hero-orb-radial-mobile pointer-events-none absolute inset-0 z-0 lg:hidden" aria-hidden />
+  /** Remount orb after hydration / when returning to homepage so loops restart cleanly */
+  const orbKey = `${pathname ?? "/"}-${hydrated ? "h" : "s"}`
+
+  const rootClass = `hero-engine-orb-root relative isolate mx-auto w-full max-w-full min-w-0 px-2 py-2 max-md:mb-0 sm:px-3 sm:py-3 md:px-4 md:py-4 lg:px-0 lg:py-0 ${className}`
+
+  const orbContent = (
+    <div className="hero-engine-orb-cage relative mx-auto w-full min-w-0 overflow-hidden">
+      <div className="hero-orb-radial-mobile pointer-events-none absolute inset-0 z-0 lg:hidden" aria-hidden />
+      {!scrollSafe ? (
         <LandingHeroAtmosphere
           compact={compactAtmosphere}
           mobileGlowBoost={mobileGlowBoost || compactAtmosphere}
           efficient
         />
-        <motion.div
-          className="hero-engine-orb-stage relative z-[1] aspect-square w-full max-w-full overflow-hidden"
-          aria-hidden
-        >
-          <HeroWaveBackdrop
-            efficient
-            heightClass="h-[34%] md:h-[40%]"
-            className="opacity-[0.18] md:opacity-[0.22]"
-          />
-          <MasteringEngineVisual
-            activeStep={activeStep}
-            efficient
-            className="marketing-engine-visual relative z-[1] mx-auto"
-          />
-        </motion.div>
+      ) : null}
+      <div className="hero-engine-orb-stage relative z-[1] aspect-square w-full max-w-full overflow-hidden">
+        <HeroWaveBackdrop
+          efficient={scrollSafe}
+          heightClass="h-[34%] md:h-[40%]"
+          className={scrollSafe ? "opacity-[0.16] md:opacity-[0.2]" : "opacity-[0.18] md:opacity-[0.22]"}
+        />
+        <MasteringEngineVisual
+          key={orbKey}
+          activeStep={activeStep}
+          efficient={scrollSafe}
+          className="marketing-engine-visual relative z-[1] mx-auto"
+        />
       </div>
+    </div>
+  )
+
+  if (scrollSafe) {
+    return <div className={rootClass}>{orbContent}</div>
+  }
+
+  return (
+    <motion.div
+      className={rootClass}
+      initial={reduce ? false : { opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.65, ease: CINEMATIC_EASE }}
+    >
+      {orbContent}
     </motion.div>
   )
 }

@@ -239,7 +239,10 @@ export default function MasteringEngineVisual({ activeStep, className, efficient
             {/* Harmonic shimmer */}
             {efficient ? (
               <div
-                className="pointer-events-none absolute inset-0 bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(196,181,253,0.08)_40deg,transparent_80deg,rgba(125,211,252,0.06)_140deg,transparent_200deg)]"
+                className={`pointer-events-none absolute inset-0 bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(196,181,253,0.08)_40deg,transparent_80deg,rgba(125,211,252,0.06)_140deg,transparent_200deg)] ${
+                  reduceMotion ? "" : "engine-ring-spin-cw"
+                }`}
+                style={reduceMotion ? undefined : { animationDuration: "24s" }}
                 aria-hidden
               />
             ) : (

@@ -41,14 +41,15 @@ export default function HeroWaveBackdrop({
   const heights = efficient ? HERO_WAVE_BAR_HEIGHTS_LITE : HERO_WAVE_BAR_HEIGHTS
 
   useEffect(() => {
-    if (efficient || !mounted || reduce) return
+    if (!mounted || reduce) return
 
     let raf = 0
     const start = performance.now()
+    const barCount = heights.length
 
     const tick = (now: number) => {
       const phase = (now - start) / 1000
-      for (let i = 0; i < HERO_WAVE_BAR_HEIGHTS.length; i++) {
+      for (let i = 0; i < barCount; i++) {
         const el = barRefs.current[i]
         if (!el) continue
         const wobble = 1 + Math.sin(phase * 2.15 + i * 0.17) * (0.05 + (i % 5) * 0.004)
@@ -61,7 +62,7 @@ export default function HeroWaveBackdrop({
 
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [efficient, mounted, reduce])
+  }, [mounted, reduce, heights.length])
 
   return (
     <div
@@ -72,13 +73,9 @@ export default function HeroWaveBackdrop({
         {heights.map((heightPct, i) => (
           <span
             key={i}
-            ref={
-              efficient
-                ? undefined
-                : (el) => {
-                    barRefs.current[i] = el
-                  }
-            }
+            ref={(el) => {
+              barRefs.current[i] = el
+            }}
             className="w-[2px] origin-bottom rounded-full bg-gradient-to-t from-violet-500/40 via-indigo-300/35 to-cyan-300/25"
             style={{
               height: `${heightPct}%`,

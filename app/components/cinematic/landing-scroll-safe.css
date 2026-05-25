@@ -19,12 +19,8 @@
   contain: none;
 }
 
-.marketing-page-root--scroll-safe .marketing-ambient-pulse,
-.marketing-page-root--scroll-safe .engine-halo-breathe,
-.marketing-page-root--scroll-safe .engine-ring-spin-cw,
-.marketing-page-root--scroll-safe .engine-ring-spin-ccw,
-.marketing-page-root--scroll-safe .marketing-wave-backdrop,
-.marketing-page-root--scroll-safe .landing-particle-drift {
+/* Page-level ambient only — keep hero globe rings / wave motion alive */
+.marketing-page-root--scroll-safe .marketing-ambient-pulse {
   animation: none !important;
 }
 
