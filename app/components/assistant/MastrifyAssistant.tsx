@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
-  ASSISTANT_START_SUGGESTIONS,
   processingStatusLabel,
   respondAssistant,
   type AssistantReply,
@@ -18,6 +17,14 @@ import { useMasterSession } from "../../master/MasterSessionProvider"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
+const QUICK_SUGGESTIONS = [
+  "What is LUFS?",
+  "Why is my track still processing?",
+  "Download my master",
+  "Master sounds wrong",
+  "Payment help",
+] as const
+
 type ChatMessage = {
   id: string
   role: "user" | "assistant"
@@ -29,12 +36,27 @@ function newId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
+function CloseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M4 4l8 8M12 4l-8 8"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 function SessionContextStrip({
   ctx,
   processingStatus,
+  compact,
 }: {
   ctx: SupportSessionContext
   processingStatus: string | null
+  compact?: boolean
 }) {
   const rows = [
     ctx.sessionId ? `Session: ${ctx.sessionId}` : null,
@@ -47,13 +69,17 @@ function SessionContextStrip({
   if (rows.length === 0) return null
 
   return (
-    <div className="rounded-xl border border-violet-400/20 bg-violet-500/[0.06] px-3.5 py-2.5 text-[11px] leading-relaxed text-violet-100/85">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-200/70">
-        Session attached
-      </p>
-      <ul className="mt-1.5 space-y-0.5">
+    <div
+      className={`rounded-lg border border-violet-400/20 bg-violet-500/[0.08] text-violet-100/85 ${
+        compact ? "px-2.5 py-2 text-[10px] leading-snug" : "px-3 py-2 text-[11px] leading-relaxed"
+      }`}
+    >
+      <p className="font-semibold uppercase tracking-[0.14em] text-violet-200/70">Session attached</p>
+      <ul className={compact ? "mt-1 space-y-0.5" : "mt-1.5 space-y-0.5"}>
         {rows.map((line) => (
-          <li key={line}>{line}</li>
+          <li key={line} className="truncate">
+            {line}
+          </li>
         ))}
       </ul>
     </div>
@@ -103,21 +129,13 @@ export default function MastrifyAssistant() {
   )
 
   const inMasterSession = Boolean(sessionContext.sessionId?.trim())
+  const showWelcome = messages.length === 0 && !ticketMode
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
     })
   }, [])
-
-  useEffect(() => {
-    if (!open) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -132,21 +150,18 @@ export default function MastrifyAssistant() {
     scrollToBottom()
   }, [messages, ticketMode, scrollToBottom])
 
-  const appendExchange = useCallback(
-    (userText: string) => {
-      const reply = respondAssistant(userText)
-      setMessages((prev) => [
-        ...prev,
-        { id: newId(), role: "user", text: userText },
-        { id: newId(), role: "assistant", text: reply.answer, reply },
-      ])
-      if (reply.suggestTicket && reply.ticketCategory) {
-        setTicketCategory(reply.ticketCategory)
-      }
-      return reply
-    },
-    [],
-  )
+  const appendExchange = useCallback((userText: string) => {
+    const reply = respondAssistant(userText)
+    setMessages((prev) => [
+      ...prev,
+      { id: newId(), role: "user", text: userText },
+      { id: newId(), role: "assistant", text: reply.answer, reply },
+    ])
+    if (reply.suggestTicket && reply.ticketCategory) {
+      setTicketCategory(reply.ticketCategory)
+    }
+    return reply
+  }, [])
 
   function handleSend(text?: string) {
     const trimmed = (text ?? input).trim()
@@ -189,243 +204,226 @@ export default function MastrifyAssistant() {
       {
         id: newId(),
         role: "assistant",
-        text: `Ticket received — we'll reply to ${ticketEmail} when there's an update.`,
+        text: `Ticket received — we'll reply to ${ticketEmail} soon.`,
       },
     ])
   }
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Open Mastrify Assistant"
-        className="fixed bottom-6 right-6 z-[70] inline-flex items-center gap-2.5 rounded-full border border-violet-400/35 bg-gradient-to-b from-violet-600/95 via-indigo-700/95 to-indigo-900/95 px-5 py-3 text-[13px] font-semibold text-white shadow-[0_12px_40px_rgba(0,0,0,0.45),0_0_0_1px_rgba(167,139,250,0.2)] transition hover:brightness-[1.06] active:scale-[0.98]"
-      >
-        <span
-          className="flex h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"
-          aria-hidden
-        />
-        Mastrify Assistant
-      </button>
-
+    <div className="pointer-events-none fixed bottom-6 right-6 z-[70] flex flex-col items-end">
       <AnimatePresence>
         {open ? (
-          <div className="fixed inset-0 z-[75] flex justify-end">
-            <motion.button
-              type="button"
-              aria-label="Close assistant"
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: reduce ? 0 : 0.25 }}
-              onClick={() => setOpen(false)}
-            />
-            <motion.aside
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="mastrify-assistant-title"
-              className="relative flex h-full w-full max-w-[min(100%,420px)] flex-col border-l border-white/[0.1] bg-gradient-to-b from-[#101018] to-black shadow-[-24px_0_80px_rgba(0,0,0,0.55)]"
-              initial={reduce ? false : { x: "100%" }}
-              animate={{ x: 0 }}
-              exit={reduce ? undefined : { x: "100%" }}
-              transition={{ duration: 0.36, ease: EASE }}
-            >
-              <div
-                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/40 to-transparent"
-                aria-hidden
-              />
+          <motion.div
+            key="chat"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mastrify-assistant-title"
+            className="pointer-events-auto mb-0 flex h-[min(520px,calc(100dvh-3rem))] w-[min(360px,calc(100vw-3rem))] max-h-[560px] flex-col overflow-hidden rounded-[20px] border border-white/[0.12] bg-[rgba(12,12,18,0.88)] shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.12)] backdrop-blur-xl backdrop-saturate-150"
+            initial={reduce ? false : { opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduce ? undefined : { opacity: 0, y: 8, scale: 0.98 }}
+            transition={{ duration: 0.28, ease: EASE }}
+          >
+            <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/[0.08] px-3.5 py-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.75)]"
+                  aria-hidden
+                />
+                <h2 id="mastrify-assistant-title" className="truncate text-[14px] font-semibold text-white/92">
+                  Mastrify Assistant
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Close assistant"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/50 transition hover:bg-white/[0.06] hover:text-white/90"
+              >
+                <CloseIcon />
+              </button>
+            </header>
 
-              <header className="shrink-0 border-b border-white/[0.08] px-5 py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/65">
-                      Mastrify
-                    </p>
-                    <h2 id="mastrify-assistant-title" className="text-lg font-semibold text-white/92">
-                      Mastrify Assistant
-                    </h2>
-                    <p className="mt-1 text-[13px] leading-snug text-white/55">
-                      Get help with mastering, settings and exports.
-                    </p>
+            <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+              {showWelcome ? (
+                <div className="space-y-3">
+                  <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-[13px] leading-snug text-white/[0.88]">
+                    Hi 👋 Need help with mastering?
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setOpen(false)}
-                    className="shrink-0 rounded-lg border border-white/[0.1] px-3 py-1.5 text-xs text-white/55 transition hover:border-white/[0.18] hover:text-white/85"
-                  >
-                    Close
-                  </button>
-                </div>
-              </header>
-
-              <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4">
-                {messages.length === 0 && !ticketMode ? (
-                  <div className="space-y-4">
-                    <p className="text-[12px] leading-relaxed text-white/45">
-                      Answers come from the Help Center — mastering, Analyze, LUFS, downloads, and payments only.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {ASSISTANT_START_SUGGESTIONS.map((label) => (
-                        <button
-                          key={label}
-                          type="button"
-                          onClick={() => handleSend(label)}
-                          className="rounded-full border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-left text-[12px] font-medium leading-snug text-white/82 transition hover:border-violet-400/30 hover:bg-violet-500/[0.08] hover:text-violet-100"
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                    {inMasterSession ? (
-                      <SessionContextStrip ctx={sessionContext} processingStatus={processingStatus} />
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  <div className="flex flex-col gap-1.5">
+                    {QUICK_SUGGESTIONS.map((label) => (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => handleSend(label)}
+                        className="rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2 text-left text-[12px] font-medium text-white/78 transition hover:border-violet-400/28 hover:bg-violet-500/[0.08] hover:text-violet-100"
                       >
-                        <div
-                          className={`max-w-[92%] rounded-2xl px-4 py-3 text-[14px] leading-[1.65] ${
-                            msg.role === "user"
-                              ? "bg-violet-600/90 text-white"
-                              : "border border-white/[0.09] bg-white/[0.04] text-white/[0.88]"
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap">{msg.text}</p>
-                          {msg.role === "assistant" && msg.reply?.faqId ? (
-                            <Link
-                              href={`/help#${msg.reply.faqId}`}
-                              className="mt-2 inline-block text-[12px] font-medium text-violet-200/90 underline-offset-2 hover:underline"
-                              onClick={() => setOpen(false)}
-                            >
-                              Read more in Help Center →
-                            </Link>
-                          ) : null}
-                          {msg.role === "assistant" && msg.reply?.suggestTicket ? (
-                            <button
-                              type="button"
-                              onClick={() => openTicketForm(lastUserQuery, msg.reply?.ticketCategory)}
-                              className="mt-3 inline-flex min-h-[40px] items-center rounded-lg border border-violet-400/35 bg-violet-500/15 px-4 text-[12px] font-semibold text-violet-100 transition hover:bg-violet-500/25"
-                            >
-                              Create support ticket
-                            </button>
-                          ) : null}
-                        </div>
-                      </div>
+                        {label}
+                      </button>
                     ))}
                   </div>
-                )}
-
-                {ticketMode ? (
-                  <form onSubmit={submitTicket} className="mt-4 space-y-3 rounded-xl border border-white/[0.1] bg-white/[0.03] p-4">
-                    <p className="text-[13px] font-semibold text-white/90">Create support ticket</p>
-                    <div>
-                      <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">
-                        Category
-                      </label>
-                      <select
-                        value={ticketCategory}
-                        onChange={(e) => setTicketCategory(e.target.value as SupportTicketCategory)}
-                        className="mt-1.5 w-full rounded-lg border border-white/[0.1] bg-black/50 px-3 py-2 text-sm text-white/90 outline-none focus:border-violet-400/45"
-                      >
-                        {Object.entries(SUPPORT_CATEGORY_LABELS).map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={ticketEmail}
-                        onChange={(e) => setTicketEmail(e.target.value)}
-                        className="mt-1.5 w-full rounded-lg border border-white/[0.1] bg-black/50 px-3 py-2 text-sm text-white/90 outline-none focus:border-violet-400/45"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">
-                        What happened?
-                      </label>
-                      <textarea
-                        required
-                        minLength={10}
-                        rows={4}
-                        value={ticketBody}
-                        onChange={(e) => setTicketBody(e.target.value)}
-                        className="mt-1.5 w-full rounded-lg border border-white/[0.1] bg-black/50 px-3 py-2 text-sm text-white/90 outline-none focus:border-violet-400/45"
-                      />
-                    </div>
-                    <SessionContextStrip ctx={sessionContext} processingStatus={processingStatus} />
-                    {ticketError ? <p className="text-sm text-rose-300/90">{ticketError}</p> : null}
-                    <div className="flex gap-2">
-                      <button
-                        type="submit"
-                        disabled={ticketSubmitting}
-                        className="min-h-[42px] flex-1 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-                      >
-                        {ticketSubmitting ? "Sending…" : "Submit ticket"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setTicketMode(false)}
-                        className="rounded-lg border border-white/[0.1] px-4 text-sm text-white/55"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                ) : null}
-              </div>
-
-              {inMasterSession && messages.length > 0 ? (
-                <div className="shrink-0 border-t border-white/[0.06] px-5 py-3">
-                  <SessionContextStrip ctx={sessionContext} processingStatus={processingStatus} />
+                  {inMasterSession ? (
+                    <SessionContextStrip
+                      ctx={sessionContext}
+                      processingStatus={processingStatus}
+                      compact
+                    />
+                  ) : null}
                 </div>
               ) : null}
 
-              <footer className="shrink-0 border-t border-white/[0.08] p-4">
+              {messages.length > 0 ? (
+                <div className={`space-y-2.5 ${showWelcome ? "mt-3" : ""}`}>
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[88%] rounded-2xl px-3 py-2 text-[13px] leading-[1.55] ${
+                          msg.role === "user"
+                            ? "bg-violet-600/95 text-white"
+                            : "border border-white/[0.08] bg-white/[0.04] text-white/[0.86]"
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap">{msg.text}</p>
+                        {msg.role === "assistant" && msg.reply?.faqId ? (
+                          <Link
+                            href={`/help#${msg.reply.faqId}`}
+                            className="mt-1.5 inline-block text-[11px] font-medium text-violet-200/90 hover:underline"
+                            onClick={() => setOpen(false)}
+                          >
+                            Help Center →
+                          </Link>
+                        ) : null}
+                        {msg.role === "assistant" && msg.reply?.suggestTicket ? (
+                          <button
+                            type="button"
+                            onClick={() => openTicketForm(lastUserQuery, msg.reply?.ticketCategory)}
+                            className="mt-2 inline-flex min-h-[32px] items-center rounded-lg border border-violet-400/35 bg-violet-500/15 px-3 text-[11px] font-semibold text-violet-100 transition hover:bg-violet-500/25"
+                          >
+                            Create ticket
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {ticketMode ? (
                 <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    handleSend()
-                  }}
-                  className="flex gap-2"
+                  onSubmit={submitTicket}
+                  className={`space-y-2 rounded-xl border border-white/[0.1] bg-white/[0.03] p-3 ${showWelcome || messages.length > 0 ? "mt-3" : ""}`}
                 >
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask about mastering, LUFS, downloads…"
-                    className="min-w-0 flex-1 rounded-xl border border-white/[0.11] bg-black/40 px-4 py-2.5 text-[14px] text-white/90 outline-none placeholder:text-white/35 focus:border-violet-400/45 focus:ring-2 focus:ring-violet-500/15"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!input.trim()}
-                    className="shrink-0 rounded-xl bg-violet-600 px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-violet-500 disabled:opacity-40"
+                  <p className="text-[12px] font-semibold text-white/90">Support ticket</p>
+                  <select
+                    value={ticketCategory}
+                    onChange={(e) => setTicketCategory(e.target.value as SupportTicketCategory)}
+                    className="w-full rounded-lg border border-white/[0.1] bg-black/50 px-2.5 py-1.5 text-[12px] text-white/90 outline-none focus:border-violet-400/45"
                   >
-                    Send
-                  </button>
+                    {Object.entries(SUPPORT_CATEGORY_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="email"
+                    required
+                    placeholder="Email"
+                    value={ticketEmail}
+                    onChange={(e) => setTicketEmail(e.target.value)}
+                    className="w-full rounded-lg border border-white/[0.1] bg-black/50 px-2.5 py-1.5 text-[12px] text-white/90 outline-none focus:border-violet-400/45"
+                  />
+                  <textarea
+                    required
+                    minLength={10}
+                    rows={3}
+                    placeholder="Describe the issue"
+                    value={ticketBody}
+                    onChange={(e) => setTicketBody(e.target.value)}
+                    className="w-full rounded-lg border border-white/[0.1] bg-black/50 px-2.5 py-1.5 text-[12px] text-white/90 outline-none focus:border-violet-400/45"
+                  />
+                  <SessionContextStrip
+                    ctx={sessionContext}
+                    processingStatus={processingStatus}
+                    compact
+                  />
+                  {ticketError ? <p className="text-[11px] text-rose-300/90">{ticketError}</p> : null}
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={ticketSubmitting}
+                      className="min-h-[36px] flex-1 rounded-lg bg-violet-600 text-[12px] font-semibold text-white disabled:opacity-60"
+                    >
+                      {ticketSubmitting ? "Sending…" : "Submit"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTicketMode(false)}
+                      className="rounded-lg border border-white/[0.1] px-3 text-[12px] text-white/55"
+                    >
+                      Back
+                    </button>
+                  </div>
                 </form>
-                <p className="mt-2 text-center text-[10px] text-white/35">
-                  <Link href="/help" className="text-violet-200/60 hover:text-violet-100" onClick={() => setOpen(false)}>
-                    Full Help Center
-                  </Link>
-                </p>
-              </footer>
-            </motion.aside>
-          </div>
+              ) : null}
+
+              {inMasterSession && messages.length > 0 && !ticketMode ? (
+                <div className="mt-2">
+                  <SessionContextStrip
+                    ctx={sessionContext}
+                    processingStatus={processingStatus}
+                    compact
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            <footer className="shrink-0 border-t border-white/[0.08] p-3">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleSend()
+                }}
+                className="flex gap-2"
+              >
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask about mastering..."
+                  className="min-w-0 flex-1 rounded-xl border border-white/[0.1] bg-black/45 px-3 py-2 text-[13px] text-white/90 outline-none placeholder:text-white/35 focus:border-violet-400/45"
+                />
+                <button
+                  type="submit"
+                  disabled={!input.trim()}
+                  className="shrink-0 rounded-xl bg-violet-600 px-3.5 py-2 text-[12px] font-semibold text-white transition hover:bg-violet-500 disabled:opacity-40"
+                >
+                  Send
+                </button>
+              </form>
+            </footer>
+          </motion.div>
         ) : null}
       </AnimatePresence>
-    </>
+
+      {!open ? (
+        <motion.button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open Mastrify Assistant"
+          className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-violet-400/35 bg-gradient-to-b from-violet-600/95 via-indigo-700/95 to-indigo-900/95 px-4 py-2.5 text-[12px] font-semibold text-white shadow-[0_10px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(167,139,250,0.18)] transition hover:brightness-[1.06] active:scale-[0.98]"
+          whileTap={reduce ? undefined : { scale: 0.98 }}
+        >
+          <span
+            className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+            aria-hidden
+          />
+          Mastrify Assistant
+        </motion.button>
+      ) : null}
+    </div>
   )
 }
