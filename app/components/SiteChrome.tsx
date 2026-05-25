@@ -5,7 +5,7 @@ import type { ReactNode } from "react"
 import SiteFooter from "./SiteFooter"
 import SiteHeader from "./SiteHeader"
 
-const MINIMAL_ROUTES = ["/access", "/admin"] as const
+const MINIMAL_ROUTES = ["/access", "/admin", "/login"] as const
 
 function isMinimalRoute(pathname: string | null): boolean {
   if (!pathname) return false

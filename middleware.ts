@@ -18,6 +18,7 @@ function normalizePathname(pathname: string): string {
 function isAdminOrFeedbackApiBypass(pathname: string): boolean {
   const path = normalizePathname(pathname)
   return (
+    path === "/login" ||
     path.startsWith("/admin") ||
     path.startsWith("/api/admin") ||
     path === "/api/beta-feedback"
@@ -90,6 +91,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/terms" ||
     pathname === "/contact" ||
     pathname === "/access" ||
+    pathname === "/login" ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/api/admin") ||
     pathname === "/api/beta-feedback"

@@ -44,12 +44,20 @@ export default function SiteHeader() {
             >
               Mastrify
             </Link>
-            <Link
-              href="/master"
-              className={`${navCtaClass} min-h-[40px] rounded-xl px-3.5 py-2 text-[11px] sm:min-h-[44px] sm:px-5 sm:py-2.5 sm:text-[12px]`}
-            >
-              Start
-            </Link>
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <Link
+                href="/login"
+                className="text-[11px] font-medium text-white/45 transition hover:text-white/75 sm:text-xs"
+              >
+                Login
+              </Link>
+              <Link
+                href="/master"
+                className={`${navCtaClass} min-h-[40px] rounded-xl px-3.5 py-2 text-[11px] sm:min-h-[44px] sm:px-5 sm:py-2.5 sm:text-[12px]`}
+              >
+                Start
+              </Link>
+            </div>
           </div>
 
           <nav
@@ -110,9 +118,17 @@ export default function SiteHeader() {
             })}
           </nav>
 
-          <Link href="/master" className={navCtaClass}>
-            Start mastering
-          </Link>
+          <div className="flex shrink-0 items-center gap-4">
+            <Link
+              href="/login"
+              className="text-[12px] font-medium text-white/45 transition hover:text-white/75"
+            >
+              Login
+            </Link>
+            <Link href="/master" className={navCtaClass}>
+              Start mastering
+            </Link>
+          </div>
         </div>
       </div>
     </header>
