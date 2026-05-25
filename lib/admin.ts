@@ -6,19 +6,13 @@ export function isAdminGateEnabled(): boolean {
 }
 
 export function getAdminPassword(): string {
-  return (
-    process.env.MASTRIFY_ADMIN_PASSWORD?.trim() ||
-    process.env.MASTRIFY_ACCESS_PASSWORD?.trim() ||
-    ""
-  )
+  return process.env.MASTRIFY_ADMIN_PASSWORD?.trim() || ""
 }
 
 export function getAdminSecret(): string {
   const secret = process.env.MASTRIFY_ADMIN_SECRET?.trim()
   if (secret) return secret
-  const password = getAdminPassword()
-  if (password) return password
-  return ""
+  return process.env.MASTRIFY_ADMIN_PASSWORD?.trim() || ""
 }
 
 export function isAdminPath(pathname: string): boolean {

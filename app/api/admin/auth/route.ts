@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server"
-import {
-  ADMIN_COOKIE_NAME,
-  createAdminToken,
-  getAdminPassword,
-  getAdminSecret,
-} from "../../../../lib/admin"
+import { ADMIN_COOKIE_NAME, createAdminToken } from "../../../../lib/admin"
 import { ADMIN_ROLE_COOKIE, defaultAdminRole } from "../../../../lib/adminRoles"
 
 export async function POST(request: Request) {
-  console.log("[admin-auth] reached")
-  console.log("[admin-auth] password env exists:", !!process.env.MASTRIFY_ADMIN_PASSWORD)
+  console.log("[admin-auth]", !!process.env.MASTRIFY_ADMIN_PASSWORD)
 
   try {
-    if (!process.env.MASTRIFY_ADMIN_PASSWORD?.trim()) {
+    const adminPassword = process.env.MASTRIFY_ADMIN_PASSWORD?.trim() ?? ""
+    if (!adminPassword) {
       return NextResponse.json(
         { success: false, error: "MASTRIFY_ADMIN_PASSWORD missing" },
         { status: 500 },
@@ -26,22 +21,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Invalid request" }, { status: 400 })
     }
 
-    const submitted = typeof body.password === "string" ? body.password : ""
-    const expected = getAdminPassword()
-
-    if (!submitted || submitted !== expected) {
+    const submitted = typeof body.password === "string" ? body.password.trim() : ""
+    if (!submitted || submitted !== adminPassword) {
       return NextResponse.json({ success: false, error: "Invalid password" }, { status: 401 })
     }
 
-    const secret = getAdminSecret()
-    if (!secret) {
-      return NextResponse.json(
-        { success: false, error: "Admin signing secret is not configured" },
-        { status: 500 },
-      )
-    }
-
-    const token = await createAdminToken(secret)
+    const token = await createAdminToken(adminPassword)
     const response = NextResponse.json({ success: true, ok: true })
     response.cookies.set(ADMIN_COOKIE_NAME, token, {
       httpOnly: true,
