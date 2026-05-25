@@ -63,15 +63,17 @@ function FaqNavButton({
 
 function StillNeedHelpCard({ onOpenTicket }: { onOpenTicket: () => void }) {
   return (
-    <section className="mt-12 w-full rounded-[1.35rem] border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]">
-      <h2 className="text-2xl font-semibold text-white/92">Still need help?</h2>
-      <p className="mt-2 text-[16px] leading-[1.8] text-white/[0.85]">
-        Create a support ticket and we&apos;ll follow up by email.
-      </p>
+    <section className="mt-16 flex w-full flex-col items-start justify-between gap-6 rounded-[1.35rem] border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:flex-row sm:items-center">
+      <div className="min-w-0">
+        <h2 className="text-2xl font-semibold text-white/92">Still need help?</h2>
+        <p className="mt-2 text-[16px] leading-[1.8] text-white/[0.85]">
+          Create a support ticket and we&apos;ll follow up by email.
+        </p>
+      </div>
       <button
         type="button"
         onClick={onOpenTicket}
-        className="mt-5 inline-flex min-h-[46px] items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-7 text-[13px] font-semibold text-white shadow-[0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
+        className="inline-flex shrink-0 min-h-[46px] items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-7 text-[13px] font-semibold text-white shadow-[0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
       >
         Create support ticket
       </button>
@@ -254,11 +256,10 @@ export default function HelpCenterClient() {
                 <FaqCard key={item.id} item={item} compact />
               ))}
             </div>
-            <StillNeedHelpCard onOpenTicket={openTicketModal} />
           </HelpCenterGrid>
         )}
 
-        {showSearchResults ? <StillNeedHelpCard onOpenTicket={openTicketModal} /> : null}
+        <StillNeedHelpCard onOpenTicket={openTicketModal} />
 
         <p className="mt-6 w-full text-center text-[12px] text-white/38">
           <Link href="/master" className="text-violet-200/70 hover:text-violet-100">
