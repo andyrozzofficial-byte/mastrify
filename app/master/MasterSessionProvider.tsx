@@ -11,6 +11,9 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import { formatTrackNameForAnalytics } from "../../lib/formatTrackNameForAnalytics"
+import { createMasterSessionId } from "../../lib/masterSessionId"
+import { readAudioDurationSec } from "../../lib/readAudioDurationSec"
 
 /** @deprecated use MASTER_SESSION_STORAGE_KEY — kept for one-time migration from older builds */
 export const MASTER_RESULT_STORAGE_KEY = "mastrify:master-result-v1"
@@ -34,6 +37,8 @@ type MasterSessionSnapshotV2 = {
   masterObjectKey: string
   masterExpiresAt: string
   fileName: string
+  sessionId: string
+  trackDurationSec: number | null
 }
 
 type MasterSession = {
@@ -65,6 +70,10 @@ type MasterSession = {
   setMasterObjectKey: (key: string) => void
   masterExpiresAt: string
   setMasterExpiresAt: (expiresAt: string) => void
+  /** Stable ID for the current upload → master run (feedback analytics). */
+  sessionId: string
+  trackDurationSec: number | null
+  trackName: string | null
   resetSession: () => void
   /** True after first client storage hydrate attempt (for /master/settings gating). */
   sessionHydrated: boolean
@@ -118,23 +127,41 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const [deliveryEmail, setDeliveryEmail] = useState("")
   const [masterObjectKey, setMasterObjectKey] = useState("")
   const [masterExpiresAt, setMasterExpiresAt] = useState("")
+  const [sessionId, setSessionId] = useState("")
+  const [trackDurationSec, setTrackDurationSec] = useState<number | null>(null)
   const [sessionHydrated, setSessionHydrated] = useState(false)
   const hydrateRan = useRef(false)
 
-  const setFile = useCallback((f: File | null) => {
-    setFileState(f)
-    setAudioUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return f ? URL.createObjectURL(f) : ""
+  const beginMasterSession = useCallback((f: File) => {
+    setSessionId(createMasterSessionId())
+    setTrackDurationSec(null)
+    void readAudioDurationSec(f).then((sec) => {
+      if (sec != null) setTrackDurationSec(sec)
     })
-    setMasteredUrl("")
-    setMasteredPreviewMp3Url("")
-    setMasterObjectKey("")
-    setMasterExpiresAt("")
-    setAnalysisBefore(null)
-    setAnalysisAfter(null)
-    clearMasterStorageKeys()
   }, [])
+
+  const setFile = useCallback(
+    (f: File | null) => {
+      setFileState(f)
+      setAudioUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return f ? URL.createObjectURL(f) : ""
+      })
+      setMasteredUrl("")
+      setMasteredPreviewMp3Url("")
+      setMasterObjectKey("")
+      setMasterExpiresAt("")
+      setAnalysisBefore(null)
+      setAnalysisAfter(null)
+      if (f) beginMasterSession(f)
+      else {
+        setSessionId("")
+        setTrackDurationSec(null)
+      }
+      clearMasterStorageKeys()
+    },
+    [beginMasterSession]
+  )
 
   const reconnectSourceFile = useCallback((f: File) => {
     setFileState(f)
@@ -144,19 +171,23 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const seedAnalyzeIntoMasterFlow = useCallback((f: File, analysis: Record<string, unknown> | null) => {
-    setFileState(f)
-    setAudioUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return URL.createObjectURL(f)
-    })
-    setAnalysisBefore(cloneAnalysis(analysis))
-    setAnalysisAfter(null)
-    setMasteredUrl("")
-    setMasteredPreviewMp3Url("")
-    setMasterObjectKey("")
-    setMasterExpiresAt("")
-  }, [])
+  const seedAnalyzeIntoMasterFlow = useCallback(
+    (f: File, analysis: Record<string, unknown> | null) => {
+      setFileState(f)
+      setAudioUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return URL.createObjectURL(f)
+      })
+      setAnalysisBefore(cloneAnalysis(analysis))
+      setAnalysisAfter(null)
+      setMasteredUrl("")
+      setMasteredPreviewMp3Url("")
+      setMasterObjectKey("")
+      setMasterExpiresAt("")
+      beginMasterSession(f)
+    },
+    [beginMasterSession]
+  )
 
   const resetSession = useCallback(() => {
     setAudioUrl((prev) => {
@@ -176,6 +207,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setLowEndControl(50)
     setClarityPresence(50)
     setDeliveryEmail("")
+    setSessionId("")
+    setTrackDurationSec(null)
     clearMasterStorageKeys()
   }, [])
 
@@ -205,6 +238,14 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
         if (typeof s.masterObjectKey === "string") setMasterObjectKey(s.masterObjectKey)
         if (typeof s.masterExpiresAt === "string") setMasterExpiresAt(s.masterExpiresAt)
         if (typeof s.deliveryEmail === "string") setDeliveryEmail(s.deliveryEmail)
+        if (typeof s.sessionId === "string" && s.sessionId.trim()) {
+          setSessionId(s.sessionId.trim())
+        } else if (s.masteredUrl || s.fileName) {
+          setSessionId(createMasterSessionId())
+        }
+        if (typeof s.trackDurationSec === "number" && Number.isFinite(s.trackDurationSec)) {
+          setTrackDurationSec(s.trackDurationSec)
+        }
       } else if (snap.v === 1) {
         const mastered = typeof snap.masteredUrl === "string" ? snap.masteredUrl : ""
         if (mastered) setMasteredUrl(mastered)
@@ -240,6 +281,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       masterObjectKey,
       masterExpiresAt,
       fileName: file?.name ?? "",
+      sessionId,
+      trackDurationSec,
     }
     const hasPayload =
       !!masteredUrl ||
@@ -282,7 +325,14 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     masterObjectKey,
     masterExpiresAt,
     file,
+    sessionId,
+    trackDurationSec,
   ])
+
+  const trackName = useMemo(
+    () => formatTrackNameForAnalytics(file?.name),
+    [file?.name]
+  )
 
   const value = useMemo(
     () => ({
@@ -314,6 +364,9 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       setMasterObjectKey,
       masterExpiresAt,
       setMasterExpiresAt,
+      sessionId,
+      trackDurationSec,
+      trackName,
       resetSession,
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,
@@ -336,6 +389,9 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       lowEndControl,
       clarityPresence,
       deliveryEmail,
+      sessionId,
+      trackDurationSec,
+      trackName,
       resetSession,
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,

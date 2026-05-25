@@ -10,6 +10,17 @@ const SUPABASE_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
   "sb_publishable_j-if6EVRN-M3q-DS5s4q_w_5K0Tiw3n"
 
+function numOrNull(v: unknown): number | null {
+  if (typeof v !== "number" || !Number.isFinite(v)) return null
+  return v
+}
+
+function intOrNull(v: unknown): number | null {
+  const n = numOrNull(v)
+  if (n == null) return null
+  return Math.round(n)
+}
+
 function isValidPayload(body: unknown): body is BetaFeedbackPayload {
   if (!body || typeof body !== "object") return false
   const b = body as Record<string, unknown>
@@ -25,7 +36,12 @@ function isValidPayload(body: unknown): body is BetaFeedbackPayload {
     typeof b.releaseReady === "string" &&
     typeof b.wouldRelease === "string" &&
     typeof b.useAgainScore === "number" &&
-    typeof b.recommendScore === "number"
+    typeof b.recommendScore === "number" &&
+    typeof b.sessionId === "string" &&
+    b.sessionId.length > 0 &&
+    typeof b.masteringStyle === "string" &&
+    typeof b.stereoWidth === "number" &&
+    typeof b.lowEnd === "number"
   )
 }
 
@@ -43,6 +59,12 @@ export async function POST(request: Request) {
 
   const contactEmail = typeof body.contactEmail === "string" ? body.contactEmail.trim() : ""
   const contactDiscord = typeof body.contactDiscord === "string" ? body.contactDiscord.trim() : ""
+  const trackName =
+    typeof body.trackName === "string" && body.trackName.trim()
+      ? body.trackName.trim()
+      : typeof body.trackTitle === "string" && body.trackTitle.trim()
+        ? body.trackTitle.trim()
+        : null
 
   const row = {
     responses: body,
@@ -54,10 +76,13 @@ export async function POST(request: Request) {
       typeof body.masterObjectKey === "string" && body.masterObjectKey.trim()
         ? body.masterObjectKey.trim()
         : null,
-    track_title:
-      typeof body.trackTitle === "string" && body.trackTitle.trim()
-        ? body.trackTitle.trim()
-        : null,
+    track_title: trackName,
+    session_id: body.sessionId.trim(),
+    track_name: trackName,
+    track_duration: numOrNull(body.trackDuration),
+    mastering_style: body.masteringStyle.trim(),
+    stereo_width: intOrNull(body.stereoWidth),
+    low_end: intOrNull(body.lowEnd),
   }
 
   try {

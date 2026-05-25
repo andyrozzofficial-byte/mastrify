@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "../../../lib/supabase"
 import { readBetaFeedbackStatus, writeBetaFeedbackStatus } from "../../../lib/betaFeedbackStorage"
-import type { BetaFeedbackPayload } from "../../../lib/betaFeedbackTypes"
+import { createMasterSessionId } from "../../../lib/masterSessionId"
+import type { BetaFeedbackPayload, BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
 import {
   BETA_FEEDBACK_COMPARISON_OPTIONS,
   BETA_FEEDBACK_GENRE_OPTIONS,
@@ -19,7 +20,7 @@ import {
 type Props = {
   engaged: boolean
   masterObjectKey?: string | null
-  trackTitle?: string | null
+  sessionAnalytics: BetaFeedbackSessionAnalytics
 }
 
 type Phase = "hidden" | "invite" | "survey" | "success"
@@ -119,9 +120,15 @@ const emptyForm = (): BetaFeedbackPayload => ({
   futureBetaContact: null,
   masterObjectKey: null,
   trackTitle: null,
+  sessionId: "",
+  trackName: null,
+  trackDuration: null,
+  masteringStyle: "",
+  stereoWidth: 50,
+  lowEnd: 50,
 })
 
-export default function BetaFeedbackFlow({ engaged, masterObjectKey, trackTitle }: Props) {
+export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnalytics }: Props) {
   const [phase, setPhase] = useState<Phase>("hidden")
   const [form, setForm] = useState<BetaFeedbackPayload>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
@@ -161,10 +168,18 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, trackTitle 
   }, [form])
 
   const persistFeedback = useCallback(async () => {
+    const sessionId = sessionAnalytics.sessionId.trim() || createMasterSessionId()
+    const trackName = sessionAnalytics.trackName ?? null
     const payload: BetaFeedbackPayload = {
       ...form,
       masterObjectKey: masterObjectKey ?? null,
-      trackTitle: trackTitle ?? null,
+      trackTitle: trackName,
+      sessionId,
+      trackName,
+      trackDuration: sessionAnalytics.trackDuration,
+      masteringStyle: sessionAnalytics.masteringStyle,
+      stereoWidth: Math.round(sessionAnalytics.stereoWidth),
+      lowEnd: Math.round(sessionAnalytics.lowEnd),
     }
 
     const res = await fetch("/api/beta-feedback", {
@@ -182,7 +197,13 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, trackTitle 
         contact_discord: payload.contactDiscord || null,
         future_beta_contact: payload.futureBetaContact,
         master_object_key: payload.masterObjectKey,
-        track_title: payload.trackTitle,
+        track_title: trackName,
+        session_id: sessionId,
+        track_name: trackName,
+        track_duration: payload.trackDuration,
+        mastering_style: payload.masteringStyle,
+        stereo_width: payload.stereoWidth,
+        low_end: payload.lowEnd,
       },
     ])
 
@@ -194,7 +215,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, trackTitle 
         error.message ||
         "Could not save feedback"
     )
-  }, [form, masterObjectKey, trackTitle])
+  }, [form, masterObjectKey, sessionAnalytics])
 
   const handleSubmit = useCallback(async () => {
     const err = validate()

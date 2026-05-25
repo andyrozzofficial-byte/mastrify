@@ -36,6 +36,8 @@ import {
 import { parseTrackDisplayName } from "../../../lib/parseTrackDisplayName"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import BetaFeedbackFlow from "../../components/master/BetaFeedbackFlow"
+import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
+import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
 
 const STYLE_LABELS: Record<MasterStylePreset, string> = {
   STREAM: "Balanced",
@@ -106,6 +108,9 @@ export default function MasterResultClient() {
     masteredUrl,
     masteredPreviewMp3Url,
     masterObjectKey,
+    sessionId,
+    trackDurationSec,
+    trackName,
     targetLufs,
     stylePreset,
     stereoEnhance,
@@ -809,6 +814,18 @@ export default function MasterResultClient() {
     return parseTrackDisplayName(file.name)
   }, [file?.name])
 
+  const feedbackSessionAnalytics = useMemo(
+    (): BetaFeedbackSessionAnalytics => ({
+      sessionId: sessionId || "",
+      trackName,
+      trackDuration: trackDurationSec,
+      masteringStyle: masteringStyleLabel(stylePreset),
+      stereoWidth: stereoEnhance,
+      lowEnd: lowEndControl,
+    }),
+    [sessionId, trackName, trackDurationSec, stylePreset, stereoEnhance, lowEndControl]
+  )
+
   if (!mounted) return null
 
   if (!masteredWavUrl) {
@@ -1094,7 +1111,7 @@ export default function MasterResultClient() {
       <BetaFeedbackFlow
         engaged={masterEngaged}
         masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}
-        trackTitle={trackMeta?.title || file?.name || null}
+        sessionAnalytics={feedbackSessionAnalytics}
       />
 
       <motion.div

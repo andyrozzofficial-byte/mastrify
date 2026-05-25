@@ -1,3 +1,13 @@
+/** Auto-attached session/settings metadata (not shown in the survey UI). */
+export type BetaFeedbackSessionAnalytics = {
+  sessionId: string
+  trackName: string | null
+  trackDuration: number | null
+  masteringStyle: string
+  stereoWidth: number
+  lowEnd: number
+}
+
 export type BetaFeedbackPayload = {
   role: string
   genre: string
@@ -19,6 +29,12 @@ export type BetaFeedbackPayload = {
   futureBetaContact: boolean | null
   masterObjectKey: string | null
   trackTitle: string | null
+  sessionId: string
+  trackName: string | null
+  trackDuration: number | null
+  masteringStyle: string
+  stereoWidth: number
+  lowEnd: number
 }
 
 export const BETA_FEEDBACK_ROLE_OPTIONS = [
