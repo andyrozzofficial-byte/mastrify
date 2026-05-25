@@ -38,6 +38,7 @@ import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import BetaFeedbackFlow from "../../components/master/BetaFeedbackFlow"
+import BetaFeedbackPulse from "../../components/master/BetaFeedbackPulse"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
@@ -140,6 +141,7 @@ export default function MasterResultClient() {
   const [deliverySending, setDeliverySending] = useState(false)
   const [deliveryError, setDeliveryError] = useState("")
   const [masterEngaged, setMasterEngaged] = useState(false)
+  const [showPreviewPulse, setShowPreviewPulse] = useState(false)
   const masteredListenAccumRef = useRef(0)
   const betaFeedbackOn = isBetaFeedbackEnabled()
 
@@ -709,6 +711,7 @@ export default function MasterResultClient() {
 
   const markMasterEngaged = useCallback(() => {
     setMasterEngaged(true)
+    setShowPreviewPulse(true)
   }, [])
 
   useEffect(() => {
@@ -1209,6 +1212,17 @@ export default function MasterResultClient() {
               </button>
             </div>
           </motion.div>
+        </div>
+      ) : null}
+
+      {betaFeedbackOn && showPreviewPulse ? (
+        <div className="mx-auto w-full max-w-lg px-4 pb-4">
+          <BetaFeedbackPulse
+            stage="preview"
+            sessionId={feedbackSessionAnalytics.sessionId}
+            trackName={feedbackSessionAnalytics.trackName}
+            masteringStyle={feedbackSessionAnalytics.masteringStyle}
+          />
         </div>
       ) : null}
 

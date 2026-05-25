@@ -19,7 +19,8 @@ create table if not exists public.beta_master_feedback (
   contact_discord text,
   future_beta_contact boolean,
   master_object_key text,
-  track_title text
+  track_title text,
+  feedback_stage text default 'completed'
 );
 
 -- Backfill columns on older partial deployments
@@ -37,6 +38,7 @@ alter table public.beta_master_feedback add column if not exists contact_discord
 alter table public.beta_master_feedback add column if not exists future_beta_contact boolean;
 alter table public.beta_master_feedback add column if not exists master_object_key text;
 alter table public.beta_master_feedback add column if not exists track_title text;
+alter table public.beta_master_feedback add column if not exists feedback_stage text;
 alter table public.beta_master_feedback add column if not exists created_at timestamptz;
 
 update public.beta_master_feedback

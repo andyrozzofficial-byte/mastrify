@@ -23,6 +23,7 @@ import {
   isAdminSupportStatus,
 } from "./adminTypes"
 import { BETA_FEEDBACK_TABLE } from "./betaFeedbackDb"
+import { isBetaFeedbackStage, type BetaFeedbackStage } from "./betaFeedbackPulseTypes"
 import { createSupabaseServerClient } from "./supabaseServer"
 
 export const SUPPORT_INBOX_TABLE = "admin_support_inbox"
@@ -62,10 +63,18 @@ type BetaFeedbackDbRow = {
   low_end?: number | null
   master_lufs?: number | null
   processing_time_ms?: number | null
+  feedback_stage?: string | null
 }
 
 const FEEDBACK_SELECT =
-  "id, created_at, updated_at, status, session_id, track_name, track_duration, mastering_style, contact_email, contact_discord, admin_notes, responses, stereo_width, low_end, master_lufs, processing_time_ms"
+  "id, created_at, updated_at, status, session_id, track_name, track_duration, mastering_style, contact_email, contact_discord, admin_notes, responses, stereo_width, low_end, master_lufs, processing_time_ms, feedback_stage"
+
+function normalizeFeedbackStage(raw: unknown, survey: BetaFeedbackPayload): BetaFeedbackStage {
+  if (typeof raw === "string" && isBetaFeedbackStage(raw)) return raw
+  const fromJson = (survey as Record<string, unknown>).feedbackStage
+  if (typeof fromJson === "string" && isBetaFeedbackStage(fromJson)) return fromJson
+  return "completed"
+}
 
 function mapAdminFeedbackRow(row: BetaFeedbackDbRow): AdminFeedbackRow {
   const p = payloadOf(row)
@@ -99,6 +108,7 @@ function mapAdminFeedbackRow(row: BetaFeedbackDbRow): AdminFeedbackRow {
     stereo_width: row.stereo_width ?? p.stereoWidth ?? null,
     low_end: row.low_end ?? p.lowEnd ?? null,
     survey: p,
+    feedback_stage: normalizeFeedbackStage(row.feedback_stage, p),
   }
 }
 

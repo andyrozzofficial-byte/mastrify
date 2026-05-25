@@ -37,7 +37,7 @@ export function AvatarCircle({ email, size = "md" }: { email: string; size?: "sm
   const dim = size === "lg" ? "h-12 w-12 text-sm" : size === "sm" ? "h-8 w-8 text-[10px]" : "h-10 w-10 text-xs"
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-[#252528] font-semibold text-white/85 ring-1 ring-white/[0.08] ${dim}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-violet-100 font-semibold text-violet-800 ring-1 ring-violet-200/80 ${dim}`}
     >
       {avatarInitials(email)}
     </span>
@@ -45,32 +45,32 @@ export function AvatarCircle({ email, size = "md" }: { email: string; size?: "sm
 }
 
 const FEEDBACK_STATUS_STYLES: Record<AdminFeedbackStatus, string> = {
-  new: "bg-violet-500/15 text-violet-200 ring-violet-500/25",
-  read: "bg-sky-500/12 text-sky-200 ring-sky-500/20",
-  resolved: "bg-emerald-500/12 text-emerald-200 ring-emerald-500/22",
+  new: "bg-violet-100 text-violet-800 ring-violet-200",
+  read: "bg-sky-100 text-sky-800 ring-sky-200",
+  resolved: "bg-emerald-100 text-emerald-800 ring-emerald-200",
 }
 
 const SUPPORT_STATUS_STYLES: Record<AdminSupportStatus, string> = {
-  open: "bg-violet-500/15 text-violet-200 ring-violet-500/25",
-  waiting_for_customer: "bg-amber-500/12 text-amber-100 ring-amber-500/22",
-  resolved: "bg-emerald-500/12 text-emerald-200 ring-emerald-500/22",
-  closed: "bg-[#2a2a2e] text-white/50 ring-white/[0.08]",
+  open: "bg-violet-100 text-violet-800 ring-violet-200",
+  waiting_for_customer: "bg-amber-100 text-amber-900 ring-amber-200",
+  resolved: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+  closed: "bg-slate-100 text-slate-600 ring-slate-200",
 }
 
 const PRIORITY_STYLES: Record<AdminSupportPriority, string> = {
-  low: "bg-[#222226] text-white/55 ring-white/[0.08]",
-  medium: "bg-sky-500/10 text-sky-100 ring-sky-500/18",
-  high: "bg-rose-500/12 text-rose-100 ring-rose-500/22",
+  low: "bg-slate-100 text-slate-600 ring-slate-200",
+  medium: "bg-sky-100 text-sky-800 ring-sky-200",
+  high: "bg-rose-100 text-rose-800 ring-rose-200",
 }
 
 const JOB_STATUS_STYLES: Record<AdminJobStatus, string> = {
-  processing: "bg-amber-500/12 text-amber-100 ring-amber-500/22",
-  complete: "bg-emerald-500/12 text-emerald-200 ring-emerald-500/22",
-  failed: "bg-rose-500/12 text-rose-100 ring-rose-500/22",
+  processing: "bg-amber-100 text-amber-900 ring-amber-200",
+  complete: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+  failed: "bg-rose-100 text-rose-800 ring-rose-200",
 }
 
 function badgeClass(styles: Record<string, string>, key: string) {
-  return styles[key] ?? "bg-[#222226] text-white/60 ring-white/[0.08]"
+  return styles[key] ?? "bg-slate-100 text-slate-600 ring-slate-200"
 }
 
 function formatLabel(s: string) {
@@ -135,8 +135,8 @@ export function AdminCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-white/[0.07] bg-[#18181c] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.28)] transition duration-200 ${
-        hover ? "hover:border-white/[0.11] hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)]" : ""
+      className={`rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm shadow-slate-200/60 transition duration-200 ${
+        hover ? "hover:border-violet-200/80 hover:shadow-md hover:shadow-violet-100/40" : ""
       } ${className}`}
     >
       {children}
@@ -167,11 +167,11 @@ export function KpiCard({
             : "from-white/20 to-transparent"
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#18181c] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.28)] transition duration-200 hover:-translate-y-0.5 hover:border-white/[0.1] hover:shadow-[0_14px_44px_rgba(0,0,0,0.38)]">
-      <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accentBar}`} />
-      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/42">{label}</p>
-      <p className="mt-3 text-3xl font-semibold tracking-tight tabular-nums text-white">{value}</p>
-      {hint ? <p className="mt-2 text-[13px] leading-relaxed text-white/48">{hint}</p> : null}
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm shadow-slate-200/60 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200/70 hover:shadow-md hover:shadow-violet-100/30">
+      <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accentBar}`} />
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+      <p className="mt-3 text-4xl font-bold tracking-tight tabular-nums text-slate-900">{value}</p>
+      {hint ? <p className="mt-2 text-[13px] leading-relaxed text-slate-500">{hint}</p> : null}
     </div>
   )
 }
@@ -193,9 +193,9 @@ export function AdminPageHeader({
   return (
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/38">Mastrify Admin</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-[2rem]">{title}</h1>
-        {subtitle ? <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-white/52">{subtitle}</p> : null}
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/80">Mastrify Admin</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-[2rem]">{title}</h1>
+        {subtitle ? <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-slate-600">{subtitle}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </div>
@@ -219,7 +219,7 @@ export function AdminSearchInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder ?? "Search…"}
-      className={`w-full min-w-[12rem] flex-1 rounded-xl border border-white/[0.08] bg-[#141416] px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-violet-500/40 focus:ring-2 focus:ring-violet-500/15 sm:max-w-sm ${className}`}
+      className={`w-full min-w-[12rem] flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 sm:max-w-sm ${className}`}
     />
   )
 }
@@ -239,7 +239,7 @@ export function AdminSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`rounded-xl border border-white/[0.08] bg-[#141416] px-3 py-2.5 text-sm text-white outline-none transition focus:border-violet-500/40 ${className}`}
+      className={`rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-violet-400 ${className}`}
     >
       {children}
     </select>
@@ -260,7 +260,7 @@ export function FeedbackStatusSelect({
       value={value}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value as AdminFeedbackStatus)}
-      className="rounded-lg border border-white/[0.08] bg-[#141416] px-2.5 py-1.5 text-xs text-white"
+      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-800"
     >
       {ADMIN_FEEDBACK_STATUSES.map((s) => (
         <option key={s} value={s}>
@@ -285,7 +285,7 @@ export function SupportStatusSelect({
       value={value}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value as AdminSupportStatus)}
-      className="rounded-lg border border-white/[0.08] bg-[#141416] px-2.5 py-1.5 text-xs text-white"
+      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-800"
     >
       {ADMIN_SUPPORT_STATUSES.map((s) => (
         <option key={s} value={s}>
@@ -310,7 +310,7 @@ export function PrioritySelect({
       value={value}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value as AdminSupportPriority)}
-      className="rounded-lg border border-white/[0.08] bg-[#141416] px-2.5 py-1.5 text-xs text-white"
+      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-800"
     >
       {ADMIN_SUPPORT_PRIORITIES.map((p) => (
         <option key={p} value={p}>
@@ -323,7 +323,7 @@ export function PrioritySelect({
 
 export function AdminEmpty({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-white/[0.1] bg-[#141416]/60 px-8 py-14 text-center text-sm text-white/48">
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-8 py-14 text-center text-sm text-slate-500">
       {message}
     </div>
   )
@@ -341,9 +341,9 @@ export function AdminPanel({
   return (
     <AdminCard>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-[15px] font-semibold text-white">{title}</h2>
+        <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
         {href ? (
-          <Link href={href} className="text-xs font-medium text-violet-300/90 transition hover:text-violet-200">
+          <Link href={href} className="text-xs font-medium text-violet-600 transition hover:text-violet-800">
             View all →
           </Link>
         ) : null}
@@ -355,7 +355,7 @@ export function AdminPanel({
 
 export function AdminTable({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-white/[0.07] bg-[#18181c] shadow-[0_8px_32px_rgba(0,0,0,0.28)]">
+    <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-sm shadow-slate-200/50">
       <table className="w-full min-w-[640px] text-left text-[13px]">{children}</table>
     </div>
   )
@@ -365,17 +365,17 @@ export function FunnelChart({ steps }: { steps: { step: string; count: number }[
   const max = Math.max(1, ...steps.map((s) => s.count))
   return (
     <AdminCard>
-      <h3 className="text-[15px] font-semibold text-white">Conversion funnel</h3>
+      <h3 className="text-[15px] font-semibold text-slate-900">Conversion funnel</h3>
       <ul className="mt-5 space-y-4">
         {steps.map((item) => (
           <li key={item.step}>
-            <div className="mb-2 flex justify-between text-[13px] text-white/62">
+            <div className="mb-2 flex justify-between text-[13px] text-slate-600">
               <span>{item.step}</span>
-              <span className="tabular-nums text-white/80">{item.count}</span>
+              <span className="tabular-nums font-medium text-slate-900">{item.count}</span>
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-[#252528]">
+            <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-violet-600/90 to-violet-400/70 transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-violet-600 to-violet-400 transition-all duration-500"
                 style={{ width: `${(item.count / max) * 100}%` }}
               />
             </div>
@@ -400,24 +400,24 @@ export function BarChartCard({
   if (slice.length === 0) {
     return (
       <AdminCard>
-        <h3 className="text-[15px] font-semibold text-white">{title}</h3>
-        <p className="mt-3 text-sm text-white/45">{empty}</p>
+        <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
+        <p className="mt-3 text-sm text-slate-500">{empty}</p>
       </AdminCard>
     )
   }
   return (
     <AdminCard>
-      <h3 className="text-[15px] font-semibold text-white">{title}</h3>
+      <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
       <ul className="mt-5 space-y-3">
         {slice.map((item) => (
           <li key={item.label}>
-            <div className="mb-1.5 flex justify-between gap-2 text-[12px] text-white/58">
+            <div className="mb-1.5 flex justify-between gap-2 text-[12px] text-slate-600">
               <span className="truncate">{item.label}</span>
-              <span className="shrink-0 tabular-nums text-white/75">{item.count}</span>
+              <span className="shrink-0 tabular-nums font-medium text-slate-800">{item.count}</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-[#252528]">
+            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-violet-500/75 transition-all duration-500"
+                className="h-full rounded-full bg-violet-500 transition-all duration-500"
                 style={{ width: `${(item.count / max) * 100}%` }}
               />
             </div>
@@ -446,15 +446,15 @@ export function SparklineChart({
   if (points.length === 0) {
     return (
       <AdminCard>
-        <h3 className="text-[15px] font-semibold text-white">{title}</h3>
-        <p className="mt-3 text-sm text-white/45">No trend data yet</p>
+      <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
+      <p className="mt-3 text-sm text-slate-500">No trend data yet</p>
       </AdminCard>
     )
   }
 
   return (
     <AdminCard>
-      <h3 className="text-[15px] font-semibold text-white">{title}</h3>
+      <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
       <div className="mt-5 flex h-28 items-end gap-1.5">
         {points.map((p, i) => (
           <div key={String(p[dateKey]) + i} className="flex flex-1 flex-col items-center gap-2">
@@ -466,7 +466,7 @@ export function SparklineChart({
           </div>
         ))}
       </div>
-      <div className="mt-3 flex justify-between text-[10px] text-white/38">
+      <div className="mt-3 flex justify-between text-[10px] text-slate-400">
         <span>{String(points[0]?.[dateKey])}</span>
         <span>{String(points[points.length - 1]?.[dateKey])}</span>
       </div>
@@ -549,13 +549,13 @@ export function AdminNavLink({
       href={href}
       className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition duration-200 ${
         active
-          ? "bg-[#252528] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.08]"
-          : "text-white/55 hover:bg-[#1f1f23] hover:text-white/90"
+          ? "bg-violet-50 text-violet-900 shadow-sm ring-1 ring-violet-200/80"
+          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
       }`}
     >
       <span
         className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${
-          active ? "bg-violet-500/15 text-violet-300" : "bg-[#141416] text-white/45 group-hover:text-white/70"
+          active ? "bg-violet-100 text-violet-700" : "bg-slate-100 text-slate-500 group-hover:text-slate-700"
         }`}
       >
         <Icon />

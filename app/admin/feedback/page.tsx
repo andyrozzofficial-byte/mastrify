@@ -3,10 +3,13 @@
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { AdminFeedbackAnalytics } from "../../../lib/adminFeedbackAnalytics"
-import { getBetaSurveyField } from "../../../lib/betaFeedbackSurveySchema"
+import type { ActionCenterItem, RankedIssue } from "../../../lib/adminFeedbackActionCenter"
 import { feedbackSentiment, FEEDBACK_SENTIMENT_STYLES } from "../../../lib/adminFeedbackSentiment"
 import type { AdminFeedbackRow, AdminFeedbackStatus } from "../../../lib/adminTypes"
 import { ADMIN_FEEDBACK_STATUSES } from "../../../lib/adminTypes"
+import { AdminActionCenter } from "../../components/admin/AdminActionCenter"
+import { FeedbackQuickBadges, feedbackHoverPreviewLines } from "../../components/admin/FeedbackQuickBadges"
+import { IssuePrioritizationPanel } from "../../components/admin/IssuePrioritizationPanel"
 import { FeedbackSurveyDetail } from "../../components/admin/FeedbackSurveyDetail"
 import {
   AdminCard,
@@ -14,6 +17,7 @@ import {
   AdminPageHeader,
   AdminSearchInput,
   BarChartCard,
+  FunnelChart,
   FeedbackStatusBadge,
   formatAdminDate,
   KpiCard,
@@ -24,6 +28,8 @@ type FeedbackApiResponse = {
   rows?: AdminFeedbackRow[]
   analytics?: AdminFeedbackAnalytics
   insights?: string[]
+  actionCenter?: ActionCenterItem[]
+  issueTiers?: { critical: RankedIssue[]; medium: RankedIssue[]; positive: RankedIssue[] }
   error?: string
 }
 
@@ -37,20 +43,20 @@ function RatingDistributionChart({
   const max = Math.max(1, ...items.map((i) => i.count))
   const hasData = items.some((i) => i.count > 0)
   return (
-    <AdminCard className="!bg-[#222228]">
-      <h3 className="text-[15px] font-semibold text-white">{title}</h3>
+    <AdminCard>
+      <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
       {!hasData ? (
-        <p className="mt-3 text-sm text-white/45">No ratings yet</p>
+        <p className="mt-3 text-sm text-slate-500">No ratings yet</p>
       ) : (
         <div className="mt-5 flex h-32 items-end gap-1">
           {items.map((item) => (
             <div key={item.label} className="flex flex-1 flex-col items-center gap-1.5">
               <div
-                className="w-full max-w-[18px] rounded-t bg-violet-500/75 transition-all"
+                className="w-full max-w-[18px] rounded-t bg-violet-500 transition-all"
                 style={{ height: `${Math.max(6, (item.count / max) * 100)}%` }}
                 title={`${item.label}: ${item.count}`}
               />
-              <span className="text-[9px] tabular-nums text-white/38">{item.label}</span>
+              <span className="text-[9px] tabular-nums text-slate-400">{item.label}</span>
             </div>
           ))}
         </div>
@@ -70,69 +76,76 @@ function FeedbackListCard({
 }) {
   const sentiment = feedbackSentiment(row)
   const styles = FEEDBACK_SENTIMENT_STYLES[sentiment]
-  const preview = row.survey.additional?.trim() || row.survey.missing?.trim() || row.survey.oneChange?.trim()
+  const hoverLines = feedbackHoverPreviewLines(row)
+  const stageBadge =
+    row.feedback_stage === "completed"
+      ? "Full survey"
+      : row.feedback_stage === "preview"
+        ? "Preview pulse"
+        : "Analysis pulse"
 
   return (
     <article
-      className={`rounded-2xl border bg-[#222228] transition duration-200 ${styles.border} ${expanded ? "p-0" : "hover:border-white/[0.14]"}`}
+      className={`group relative rounded-2xl border bg-white transition duration-200 ${styles.border} ${styles.glow} ${expanded ? "" : "hover:border-violet-300"}`}
     >
-      <div className="flex w-full flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <Link href={`/admin/feedback/${row.id}`} className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-lg font-semibold text-white transition hover:text-violet-200">
-              {row.track_name ?? "Untitled track"}
-            </h3>
-            <FeedbackStatusBadge status={row.status} />
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            onToggle()
+          }
+        }}
+        className="cursor-pointer p-5"
+      >
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="truncate text-lg font-semibold text-slate-900">
+                {row.track_name ?? "Untitled track"}
+              </h3>
+              <FeedbackStatusBadge status={row.status} />
+              <span className="rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-medium uppercase text-violet-800">
+                {stageBadge}
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-slate-500">
+              {formatAdminDate(row.created_at)}
+              {row.feedback_stage === "completed" ? ` · ${row.role}` : ""}
+            </p>
+            <div className="mt-3">
+              <FeedbackQuickBadges row={row} />
+            </div>
           </div>
-          <p className="mt-1 text-sm text-white/55">
-            {row.genre} · {row.role} · {formatAdminDate(row.created_at)}
-          </p>
-          {preview && !expanded ? (
-            <p className="mt-2 line-clamp-2 text-[13px] text-white/50">{preview}</p>
-          ) : null}
-        </Link>
-        <div className="flex shrink-0 items-center gap-3">
-          <Link
-            href={`/admin/feedback/${row.id}`}
-            className="text-right"
-          >
-            <p className="text-[10px] uppercase tracking-wide text-white/40 line-clamp-2 max-w-[8rem]">
-              {getBetaSurveyField("recommendScore")?.label.replace(/^\d+\.\s*/, "") ?? "Recommend"}
-            </p>
-            <p
-              className={`text-xl font-semibold tabular-nums ${
-                row.recommend_score >= 8
-                  ? "text-emerald-300"
-                  : row.recommend_score <= 5
-                    ? "text-rose-300"
-                    : "text-white"
-              }`}
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href={`/admin/feedback/${row.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="rounded-lg bg-violet-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-violet-700"
             >
-              {row.recommend_score}/10
+              Detail
+            </Link>
+            <span className="rounded-lg border border-slate-200 px-2.5 py-2 text-xs text-slate-500">
+              {expanded ? "▲" : "▼"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute left-1/2 top-full z-20 hidden w-[min(20rem,90vw)] -translate-x-1/2 pt-2 group-hover:block">
+        <div className="rounded-xl border border-slate-200 bg-white p-3 text-[12px] leading-relaxed text-slate-700 shadow-lg shadow-slate-300/40">
+          {hoverLines.map((line) => (
+            <p key={line} className="border-b border-slate-100 py-1 last:border-0">
+              {line}
             </p>
-          </Link>
-          <button
-            type="button"
-            onClick={onToggle}
-            className="rounded-lg border border-white/[0.1] px-2.5 py-2 text-xs text-white/50 transition hover:bg-white/[0.04] hover:text-white/80"
-            aria-expanded={expanded}
-            aria-label={expanded ? "Collapse preview" : "Expand preview"}
-          >
-            {expanded ? "▲" : "▼"}
-          </button>
+          ))}
         </div>
       </div>
 
       {expanded ? (
-        <div className="border-t border-white/[0.08] px-5 pb-5 pt-2">
-          <div className="mb-4 flex flex-wrap gap-2">
-            <Link
-              href={`/admin/feedback/${row.id}`}
-              className="rounded-lg bg-violet-600/90 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-violet-500"
-            >
-              Open full detail →
-            </Link>
-          </div>
+        <div className="border-t border-slate-200 px-5 pb-5 pt-2">
           <FeedbackSurveyDetail row={row} showAdminControls={false} />
         </div>
       ) : null}
@@ -144,6 +157,12 @@ export default function AdminFeedbackPage() {
   const [rows, setRows] = useState<AdminFeedbackRow[]>([])
   const [analytics, setAnalytics] = useState<AdminFeedbackAnalytics | null>(null)
   const [insights, setInsights] = useState<string[]>([])
+  const [actionCenter, setActionCenter] = useState<ActionCenterItem[]>([])
+  const [issueTiers, setIssueTiers] = useState<{
+    critical: RankedIssue[]
+    medium: RankedIssue[]
+    positive: RankedIssue[]
+  } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<AdminFeedbackStatus | "">("")
@@ -159,6 +178,8 @@ export default function AdminFeedbackPage() {
     setRows(json?.rows ?? [])
     setAnalytics(json?.analytics ?? null)
     setInsights(json?.insights ?? [])
+    setActionCenter(json?.actionCenter ?? [])
+    setIssueTiers(json?.issueTiers ?? null)
     setError(null)
   }, [])
 
@@ -189,13 +210,23 @@ export default function AdminFeedbackPage() {
   }, [rows, search, statusFilter])
 
   return (
-    <div className="text-white/90">
+    <div>
       <AdminPageHeader
         title="Feedback"
-        subtitle="Full beta survey responses, product analytics, and actionable insights."
+        subtitle="Scan submissions fast — expand any row for full survey answers without leaving the list."
       />
 
-      {error ? <p className="mb-4 text-sm text-rose-300/90">{error}</p> : null}
+      {error ? <p className="mb-4 text-sm text-rose-600">{error}</p> : null}
+
+      <AdminActionCenter items={actionCenter} />
+
+      {issueTiers ? (
+        <IssuePrioritizationPanel
+          critical={issueTiers.critical}
+          medium={issueTiers.medium}
+          positive={issueTiers.positive}
+        />
+      ) : null}
 
       {analytics ? (
         <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -237,17 +268,52 @@ export default function AdminFeedbackPage() {
         </div>
       ) : null}
 
+      {analytics?.stages ? (
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiCard
+            label="Analysis accuracy"
+            value={
+              analytics.stages.analysisAccuracyScore != null
+                ? `${analytics.stages.analysisAccuracyScore}%`
+                : "—"
+            }
+            hint="“Yes” on analysis pulse"
+            accent="sky"
+          />
+          <KpiCard
+            label="Preview satisfaction"
+            value={
+              analytics.stages.previewSatisfactionScore != null
+                ? `${analytics.stages.previewSatisfactionScore}%`
+                : "—"
+            }
+            hint="“Better” vs original"
+            accent="emerald"
+          />
+          <KpiCard
+            label="Analysis pulses"
+            value={String(analytics.stages.byStage.find((s) => s.stage === "analysis")?.count ?? 0)}
+            accent="violet"
+          />
+          <KpiCard
+            label="Preview pulses"
+            value={String(analytics.stages.byStage.find((s) => s.stage === "preview")?.count ?? 0)}
+            accent="amber"
+          />
+        </div>
+      ) : null}
+
       {insights.length > 0 ? (
-        <AdminCard className="mb-8 !bg-[#25252c]">
-          <h2 className="text-[15px] font-semibold text-white">Insights</h2>
-          <p className="mt-1 text-[13px] text-white/48">Auto-generated from survey patterns (no external AI).</p>
+        <AdminCard className="mb-8">
+          <h2 className="text-[15px] font-semibold text-slate-900">Insights</h2>
+          <p className="mt-1 text-[13px] text-slate-500">Auto-generated from survey patterns (no external AI).</p>
           <ul className="mt-4 space-y-2.5">
             {insights.map((line) => (
               <li
                 key={line}
-                className="flex gap-2.5 rounded-xl border border-violet-500/15 bg-violet-500/[0.06] px-4 py-3 text-[14px] leading-relaxed text-white/82"
+                className="flex gap-2.5 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-[14px] leading-relaxed text-slate-800"
               >
-                <span className="text-violet-300/80" aria-hidden>
+                <span className="text-violet-600" aria-hidden>
                   •
                 </span>
                 {line}
@@ -258,7 +324,8 @@ export default function AdminFeedbackPage() {
       ) : null}
 
       {analytics ? (
-        <div className="mb-10 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="mb-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+          <FunnelChart steps={analytics.stages.dropOff.map((d) => ({ step: d.step, count: d.count }))} />
           <BarChartCard title={analytics.chartLabels.genre} items={analytics.charts.genreDistribution} />
           <BarChartCard title={analytics.chartLabels.commonIssues} items={analytics.charts.commonIssues} />
           <BarChartCard title={analytics.chartLabels.topPositives} items={analytics.charts.topPositives} />
@@ -298,12 +365,11 @@ export default function AdminFeedbackPage() {
           value={search}
           onChange={setSearch}
           placeholder="Track, genre, email, comments…"
-          className="!bg-[#222228]"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as AdminFeedbackStatus | "")}
-          className="rounded-xl border border-white/[0.1] bg-[#222228] px-3 py-2.5 text-sm text-white"
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900"
         >
           <option value="">All statuses</option>
           {ADMIN_FEEDBACK_STATUSES.map((s) => (

@@ -59,7 +59,7 @@ export default function AdminShell({ children }: Props) {
 
   if (auth === "loading" || auth === "login") {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[#141416] text-white/50">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#F5F7FA] text-slate-500">
         {auth === "loading" ? "Loading workspace…" : "Redirecting to login…"}
       </div>
     )
@@ -67,33 +67,33 @@ export default function AdminShell({ children }: Props) {
 
   return (
     <AdminBadgeContext.Provider value={badges}>
-      <div className="min-h-[100dvh] bg-[#141416] text-white">
-        <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#141416]/95 backdrop-blur-md">
+      <div className="min-h-[100dvh] bg-[#F5F7FA] text-slate-900">
+        <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md">
           <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                className="rounded-xl border border-white/[0.08] bg-[#18181c] px-3 py-2 text-xs text-white/70 transition hover:bg-[#1f1f23] lg:hidden"
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 transition hover:bg-slate-50 lg:hidden"
                 onClick={() => setMobileNav((v) => !v)}
               >
                 Menu
               </button>
               <Link href="/admin" className="flex items-center gap-2">
-                <span className="text-base font-semibold tracking-tight text-white">Mastrify</span>
-                <span className="rounded-md bg-[#252528] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white/45">
+                <span className="text-base font-semibold tracking-tight text-slate-900">Mastrify</span>
+                <span className="rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-violet-700">
                   Admin
                 </span>
               </Link>
             </div>
             <div className="flex items-center gap-4">
               {role ? (
-                <span className="hidden rounded-lg bg-[#18181c] px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-white/45 ring-1 ring-white/[0.06] sm:inline">
+                <span className="hidden rounded-lg bg-slate-100 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-slate-500 ring-1 ring-slate-200/80 sm:inline">
                   {role}
                 </span>
               ) : null}
               <Link
                 href="/master"
-                className="text-xs font-medium text-white/42 transition hover:text-white/75"
+                className="text-xs font-medium text-violet-600 transition hover:text-violet-800"
               >
                 Open app →
               </Link>
@@ -103,7 +103,7 @@ export default function AdminShell({ children }: Props) {
 
         <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 lg:flex-row lg:px-8">
           <aside className={`lg:w-60 lg:shrink-0 ${mobileNav ? "block" : "hidden lg:block"}`}>
-            <nav className="space-y-1 rounded-2xl border border-white/[0.07] bg-[#18181c] p-2 shadow-[0_8px_32px_rgba(0,0,0,0.22)]">
+            <nav className="space-y-1 rounded-2xl border border-slate-200/80 bg-white p-2 shadow-sm shadow-slate-200/50">
               {ADMIN_NAV.map((item) => (
                 <AdminNavLink
                   key={item.href}

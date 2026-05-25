@@ -5,6 +5,19 @@ import { getBetaSurveyFieldsByAnalyticsRole } from "./betaFeedbackSurveySchema"
 export type FeedbackSentiment = "positive" | "negative" | "neutral"
 
 export function feedbackSentiment(row: AdminFeedbackRow): FeedbackSentiment {
+  if (row.feedback_stage === "analysis") {
+    const acc = String(getSurveyValue(row.survey, "analysisAccuracy") ?? "")
+    if (acc === "No") return "negative"
+    if (acc === "Yes") return "positive"
+    return "neutral"
+  }
+  if (row.feedback_stage === "preview") {
+    const cmp = String(getSurveyValue(row.survey, "previewComparison") ?? "")
+    if (cmp === "Worse") return "negative"
+    if (cmp === "Better") return "positive"
+    return "neutral"
+  }
+
   const issuesField = getBetaSurveyFieldsByAnalyticsRole("sounded_off_tags")[0]
   const recommendField = getBetaSurveyFieldsByAnalyticsRole("recommend_score")[0]
   const issuesKey = issuesField?.key ?? "soundedOff"
@@ -26,18 +39,18 @@ export const FEEDBACK_SENTIMENT_STYLES: Record<
   { border: string; glow: string; badge: string }
 > = {
   positive: {
-    border: "border-emerald-500/35",
-    glow: "shadow-[0_0_0_1px_rgba(16,185,129,0.12)]",
-    badge: "bg-emerald-500/15 text-emerald-100 ring-emerald-500/25",
+    border: "border-emerald-300",
+    glow: "shadow-sm shadow-emerald-100/80",
+    badge: "bg-emerald-100 text-emerald-800 ring-emerald-200",
   },
   negative: {
-    border: "border-rose-500/40",
-    glow: "shadow-[0_0_0_1px_rgba(244,63,94,0.15)]",
-    badge: "bg-rose-500/15 text-rose-100 ring-rose-500/25",
+    border: "border-rose-300",
+    glow: "shadow-sm shadow-rose-100/80",
+    badge: "bg-rose-100 text-rose-800 ring-rose-200",
   },
   neutral: {
-    border: "border-white/[0.1]",
-    glow: "",
-    badge: "bg-[#2a2a30] text-white/65 ring-white/[0.1]",
+    border: "border-slate-200",
+    glow: "shadow-sm shadow-slate-200/50",
+    badge: "bg-slate-100 text-slate-600 ring-slate-200",
   },
 }

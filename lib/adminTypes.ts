@@ -101,6 +101,7 @@ export type AdminFeedbackRow = {
   low_end: number | null
   /** Full survey JSON from beta_master_feedback.responses */
   survey: BetaFeedbackPayload
+  feedback_stage: "analysis" | "preview" | "completed"
 }
 
 export type AdminSupportRow = {

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { requireAdminApi } from "../../../../lib/adminApi"
 import { buildAdminFeedbackAnalytics } from "../../../../lib/adminFeedbackAnalytics"
+import {
+  buildAdminActionCenter,
+  buildRankedFeedbackIssues,
+} from "../../../../lib/adminFeedbackActionCenter"
 import { buildAdminFeedbackInsights } from "../../../../lib/adminFeedbackInsights"
 import { fetchAdminFeedback, updateFeedbackItem } from "../../../../lib/adminData"
 import { isAdminFeedbackStatus } from "../../../../lib/adminTypes"
@@ -17,6 +21,8 @@ export async function GET() {
     rows: data,
     analytics: buildAdminFeedbackAnalytics(data),
     insights: buildAdminFeedbackInsights(data),
+    actionCenter: buildAdminActionCenter(data),
+    issueTiers: buildRankedFeedbackIssues(data),
   })
 }
 

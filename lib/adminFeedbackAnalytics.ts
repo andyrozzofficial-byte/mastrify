@@ -6,6 +6,17 @@ import {
 } from "./betaFeedbackSurveySchema"
 import { getNumericSurveyScore, getSurveyValue } from "./betaFeedbackSurveyDisplay"
 import type { AdminFeedbackRow } from "./adminTypes"
+import { ANALYSIS_ACCURACY_OPTIONS, PREVIEW_COMPARISON_OPTIONS } from "./betaFeedbackPulseTypes"
+import { getSurveyValue } from "./betaFeedbackSurveyDisplay"
+
+export type AdminFeedbackStageAnalytics = {
+  byStage: { stage: string; count: number }[]
+  analysisAccuracy: { label: string; count: number }[]
+  previewComparison: { label: string; count: number }[]
+  analysisAccuracyScore: number | null
+  previewSatisfactionScore: number | null
+  dropOff: { step: string; count: number }[]
+}
 
 export type AdminFeedbackAnalytics = {
   summary: {
@@ -15,6 +26,7 @@ export type AdminFeedbackAnalytics = {
     recommendHighPercent: number | null
     promoterPercent: number | null
   }
+  stages: AdminFeedbackStageAnalytics
   chartLabels: {
     genre: string
     useAgainScores: string
@@ -174,7 +186,61 @@ export function buildAdminFeedbackAnalytics(rows: AdminFeedbackRow[]): AdminFeed
   const useAgainDef = getBetaSurveyField(useAgainKey)
   const recommendDef = getBetaSurveyField(recommendKey)
 
+  const stageCounts = { analysis: 0, preview: 0, completed: 0 }
+  const analysisAccMap = new Map<string, number>()
+  const previewCompMap = new Map<string, number>()
+  let analysisPositive = 0
+  let analysisTotal = 0
+  let previewPositive = 0
+  let previewTotal = 0
+
+  for (const row of rows) {
+    stageCounts[row.feedback_stage] = (stageCounts[row.feedback_stage] ?? 0) + 1
+    if (row.feedback_stage === "analysis") {
+      const acc = String(getSurveyValue(row.survey, "analysisAccuracy") ?? "")
+      if (acc) {
+        analysisAccMap.set(acc, (analysisAccMap.get(acc) ?? 0) + 1)
+        analysisTotal += 1
+        if (acc === "Yes") analysisPositive += 1
+      }
+    }
+    if (row.feedback_stage === "preview") {
+      const cmp = String(getSurveyValue(row.survey, "previewComparison") ?? "")
+      if (cmp) {
+        previewCompMap.set(cmp, (previewCompMap.get(cmp) ?? 0) + 1)
+        previewTotal += 1
+        if (cmp === "Better") previewPositive += 1
+      }
+    }
+  }
+
+  const stages: AdminFeedbackStageAnalytics = {
+    byStage: [
+      { stage: "analysis", count: stageCounts.analysis },
+      { stage: "preview", count: stageCounts.preview },
+      { stage: "completed", count: stageCounts.completed },
+    ],
+    analysisAccuracy: ANALYSIS_ACCURACY_OPTIONS.map((label) => ({
+      label,
+      count: analysisAccMap.get(label) ?? 0,
+    })).filter((x) => x.count > 0),
+    previewComparison: PREVIEW_COMPARISON_OPTIONS.map((label) => ({
+      label,
+      count: previewCompMap.get(label) ?? 0,
+    })).filter((x) => x.count > 0),
+    analysisAccuracyScore:
+      analysisTotal > 0 ? round1((analysisPositive / analysisTotal) * 100) : null,
+    previewSatisfactionScore:
+      previewTotal > 0 ? round1((previewPositive / previewTotal) * 100) : null,
+    dropOff: [
+      { step: "Analysis pulse", count: stageCounts.analysis },
+      { step: "Preview pulse", count: stageCounts.preview },
+      { step: "Full survey", count: stageCounts.completed },
+    ],
+  }
+
   return {
+    stages,
     summary: {
       totalSubmissions: rows.length,
       avgRecommendScore: mean(recommendScores) != null ? round1(mean(recommendScores)!) : null,

@@ -39,6 +39,8 @@ import { appendHistory } from "../../lib/history"
 import { publicBackendUrl } from "../../lib/publicBackendUrl"
 import { AUDIO_UPLOAD_REJECT_MESSAGE, isAcceptedAudioUpload } from "../../lib/audioUploadAccept"
 import { useMasterSession } from "../master/MasterSessionProvider"
+import { isBetaFeedbackEnabled } from "../../lib/betaFeedbackFeature"
+import BetaFeedbackPulse from "../components/master/BetaFeedbackPulse"
 
 
 function generateFixes(result: any) {
@@ -514,6 +516,17 @@ export default function AnalyzePage() {
               })()}
             </div>
           </motion.section>
+
+          {isBetaFeedbackEnabled() ? (
+            <motion.section
+              className="mt-6"
+              initial={reduce ? false : { opacity: 0, y: 8 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: ANALYZE_EASE }}
+            >
+              <BetaFeedbackPulse stage="analysis" trackName={file?.name ?? null} />
+            </motion.section>
+          ) : null}
 
           {/* No issues — compact status */}
           {(result.issues?.length || 0) === 0 && (

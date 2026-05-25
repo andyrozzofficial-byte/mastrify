@@ -1,4 +1,5 @@
 import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
+import type { BetaFeedbackPulseBody } from "./betaFeedbackPulseTypes"
 import { createMasterSessionId } from "./masterSessionId"
 
 /** PostgREST table: public.beta_master_feedback */
@@ -20,6 +21,7 @@ export type BetaFeedbackInsertRow = {
   future_beta_contact: boolean | null
   master_object_key: string | null
   track_title: string | null
+  feedback_stage: string
 }
 
 function numOrNull(v: unknown): number | null {
@@ -59,6 +61,9 @@ export function buildBetaFeedbackRow(body: BetaFeedbackPayload): BetaFeedbackIns
       ? body.masteringStyle.trim()
       : "Unknown"
 
+  const responses = responsesJson(body) as Record<string, unknown>
+  responses.feedbackStage = "completed"
+
   return {
     session_id: resolveSessionId(body),
     track_name: trackName,
@@ -71,7 +76,7 @@ export function buildBetaFeedbackRow(body: BetaFeedbackPayload): BetaFeedbackIns
         ? Number(Number(body.masterLufs).toFixed(2))
         : null,
     processing_time_ms: intOrNull(body.processingTimeMs),
-    responses: responsesJson(body),
+    responses,
     contact_email: contactEmail || null,
     contact_discord: contactDiscord || null,
     future_beta_contact:
@@ -81,6 +86,52 @@ export function buildBetaFeedbackRow(body: BetaFeedbackPayload): BetaFeedbackIns
         ? body.masterObjectKey.trim()
         : null,
     track_title: trackName,
+    feedback_stage: "completed",
+  }
+}
+
+export function buildBetaFeedbackPulseRow(body: BetaFeedbackPulseBody): BetaFeedbackInsertRow {
+  const sessionId =
+    typeof body.sessionId === "string" && body.sessionId.trim()
+      ? body.sessionId.trim()
+      : createMasterSessionId()
+  const trackName =
+    typeof body.trackName === "string" && body.trackName.trim() ? body.trackName.trim() : null
+
+  const responses: Record<string, unknown> = {
+    feedbackStage: body.feedbackStage,
+    sessionId,
+    trackName,
+  }
+
+  if (body.feedbackStage === "analysis") {
+    responses.analysisAccuracy = body.analysisAccuracy
+    if (body.analysisFeelsWrong?.trim()) responses.analysisFeelsWrong = body.analysisFeelsWrong.trim()
+  } else {
+    responses.previewComparison = body.previewComparison
+    responses.previewStoodOut = body.previewStoodOut
+    if (body.masteringStyle) responses.masteringStyle = body.masteringStyle
+  }
+
+  return {
+    session_id: sessionId,
+    track_name: trackName,
+    track_duration: null,
+    mastering_style:
+      body.feedbackStage === "preview" && body.masteringStyle?.trim()
+        ? body.masteringStyle.trim()
+        : "Unknown",
+    stereo_width: null,
+    low_end: null,
+    master_lufs: null,
+    processing_time_ms: null,
+    responses,
+    contact_email: null,
+    contact_discord: null,
+    future_beta_contact: null,
+    master_object_key: null,
+    track_title: trackName,
+    feedback_stage: body.feedbackStage,
   }
 }
 
@@ -104,6 +155,7 @@ export function sanitizeBetaFeedbackInsert(row: BetaFeedbackInsertRow): BetaFeed
     future_beta_contact: row.future_beta_contact ?? null,
     master_object_key: row.master_object_key ?? null,
     track_title: row.track_title ?? null,
+    feedback_stage: row.feedback_stage || "completed",
   }
   return out
 }
