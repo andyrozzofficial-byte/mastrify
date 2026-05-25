@@ -30,3 +30,9 @@ Or with Supabase CLI: `supabase db push` (uses `migrations/20260520120000_beta_m
 - `SUPABASE_SERVICE_ROLE_KEY` — recommended for `/api/beta-feedback` inserts (bypasses RLS issues during setup)
 
 Anonymous users can still submit via RLS insert policies once the table exists.
+
+## Admin analytics dashboard
+
+Route: `/admin/beta-feedback` (internal only).
+
+Requires `MASTRIFY_ADMIN_PASSWORD` (or `MASTRIFY_ACCESS_PASSWORD`) and `SUPABASE_SERVICE_ROLE_KEY` for reading all rows server-side.

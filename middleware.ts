@@ -9,6 +9,7 @@ import {
   safeAccessRedirect,
   verifyAccessToken,
 } from "./lib/access"
+import { isAdminApiPath } from "./lib/admin"
 
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
@@ -26,6 +27,10 @@ export async function middleware(request: NextRequest) {
 
   // 🔓 Flow bypass
   if (url.searchParams.get("from") === "flow") {
+    return NextResponse.next()
+  }
+
+  if (isAdminApiPath(pathname)) {
     return NextResponse.next()
   }
 
@@ -70,7 +75,8 @@ export async function middleware(request: NextRequest) {
     pathname === "/privacy" ||
     pathname === "/terms" ||
     pathname === "/contact" ||
-    pathname === "/access"
+    pathname === "/access" ||
+    pathname.startsWith("/admin")
   ) {
     return NextResponse.next()
   }
@@ -81,7 +87,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/icon") ||
     pathname.startsWith("/audio") ||
     pathname.startsWith("/og-image") ||
-    pathname.startsWith("/api/access")
+    pathname.startsWith("/api/access") ||
+    pathname.startsWith("/api/admin")
   ) {
     return NextResponse.next()
   }
