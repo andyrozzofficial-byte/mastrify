@@ -49,14 +49,23 @@ function CloseIcon() {
   )
 }
 
+function AnswerParagraphs({ text }: { text: string }) {
+  const parts = text.split(/\n\n+/).filter(Boolean)
+  return (
+    <div className="space-y-2">
+      {parts.map((part, i) => (
+        <p key={i}>{part}</p>
+      ))}
+    </div>
+  )
+}
+
 function SessionContextStrip({
   ctx,
   processingStatus,
-  compact,
 }: {
   ctx: SupportSessionContext
   processingStatus: string | null
-  compact?: boolean
 }) {
   const rows = [
     ctx.sessionId ? `Session: ${ctx.sessionId}` : null,
@@ -69,13 +78,9 @@ function SessionContextStrip({
   if (rows.length === 0) return null
 
   return (
-    <div
-      className={`rounded-lg border border-violet-400/20 bg-violet-500/[0.08] text-violet-100/85 ${
-        compact ? "px-2.5 py-2 text-[10px] leading-snug" : "px-3 py-2 text-[11px] leading-relaxed"
-      }`}
-    >
+    <div className="rounded-lg border border-violet-400/20 bg-violet-500/[0.08] px-2.5 py-2 text-[10px] leading-snug text-violet-100/85">
       <p className="font-semibold uppercase tracking-[0.14em] text-violet-200/70">Session attached</p>
-      <ul className={compact ? "mt-1 space-y-0.5" : "mt-1.5 space-y-0.5"}>
+      <ul className="mt-1 space-y-0.5">
         {rows.map((line) => (
           <li key={line} className="truncate">
             {line}
@@ -86,11 +91,39 @@ function SessionContextStrip({
   )
 }
 
+function QuickSuggestions({
+  compact,
+  onPick,
+}: {
+  compact?: boolean
+  onPick: (label: string) => void
+}) {
+  return (
+    <div className={compact ? "flex flex-wrap gap-1.5" : "flex flex-col gap-1.5"}>
+      {QUICK_SUGGESTIONS.map((label) => (
+        <button
+          key={label}
+          type="button"
+          onClick={() => onPick(label)}
+          className={
+            compact
+              ? "rounded-full border border-white/[0.09] bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-white/75 transition hover:border-violet-400/28 hover:bg-violet-500/[0.08] hover:text-violet-100"
+              : "rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2 text-left text-[12px] font-medium text-white/78 transition hover:border-violet-400/28 hover:bg-violet-500/[0.08] hover:text-violet-100"
+          }
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export default function MastrifyAssistant() {
   const reduce = useReducedMotion()
   const pathname = usePathname()
   const master = useMasterSession()
   const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
@@ -129,7 +162,7 @@ export default function MastrifyAssistant() {
   )
 
   const inMasterSession = Boolean(sessionContext.sessionId?.trim())
-  const showWelcome = messages.length === 0 && !ticketMode
+  const hasMessages = messages.length > 0
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -147,8 +180,8 @@ export default function MastrifyAssistant() {
   }, [open])
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages, ticketMode, scrollToBottom])
+    if (open) scrollToBottom()
+  }, [messages, ticketMode, open, scrollToBottom])
 
   const appendExchange = useCallback((userText: string) => {
     const reply = respondAssistant(userText)
@@ -167,8 +200,16 @@ export default function MastrifyAssistant() {
     const trimmed = (text ?? input).trim()
     if (!trimmed) return
     setInput("")
+    if (inputRef.current) inputRef.current.style.height = ""
     setLastUserQuery(trimmed)
     appendExchange(trimmed)
+  }
+
+  function onInputKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
   }
 
   function openTicketForm(prefill?: string, category?: SupportTicketCategory) {
@@ -209,8 +250,16 @@ export default function MastrifyAssistant() {
     ])
   }
 
+  const messageMotion = reduce
+    ? {}
+    : {
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.28, ease: EASE },
+      }
+
   return (
-    <div className="pointer-events-none fixed bottom-6 right-6 z-[70] flex flex-col items-end">
+    <div className="pointer-events-none fixed bottom-12 right-6 z-[70] flex flex-col items-end">
       <AnimatePresence>
         {open ? (
           <motion.div
@@ -218,13 +267,13 @@ export default function MastrifyAssistant() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="mastrify-assistant-title"
-            className="pointer-events-auto mb-0 flex h-[min(520px,calc(100dvh-3rem))] w-[min(360px,calc(100vw-3rem))] max-h-[560px] flex-col overflow-hidden rounded-[20px] border border-white/[0.12] bg-[rgba(12,12,18,0.88)] shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.12)] backdrop-blur-xl backdrop-saturate-150"
+            className="pointer-events-auto flex h-[min(440px,calc(100dvh-6rem))] w-[min(340px,calc(100vw-3rem))] max-h-[460px] flex-col overflow-hidden rounded-[20px] border border-white/[0.12] bg-[rgba(12,12,18,0.88)] shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.12)] backdrop-blur-xl backdrop-saturate-150"
             initial={reduce ? false : { opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? undefined : { opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.28, ease: EASE }}
           >
-            <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/[0.08] px-3.5 py-3">
+            <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/[0.08] px-3.5 py-2.5">
               <div className="flex min-w-0 items-center gap-2">
                 <span
                   className="h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.75)]"
@@ -245,77 +294,72 @@ export default function MastrifyAssistant() {
             </header>
 
             <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-              {showWelcome ? (
-                <div className="space-y-3">
-                  <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-[13px] leading-snug text-white/[0.88]">
-                    Hi 👋 Need help with mastering?
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    {QUICK_SUGGESTIONS.map((label) => (
-                      <button
-                        key={label}
-                        type="button"
-                        onClick={() => handleSend(label)}
-                        className="rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2 text-left text-[12px] font-medium text-white/78 transition hover:border-violet-400/28 hover:bg-violet-500/[0.08] hover:text-violet-100"
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  {inMasterSession ? (
-                    <SessionContextStrip
-                      ctx={sessionContext}
-                      processingStatus={processingStatus}
-                      compact
-                    />
+              {!ticketMode ? (
+                <div className="space-y-3 border-b border-white/[0.06] pb-3">
+                  {!hasMessages ? (
+                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-[13px] leading-snug text-white/[0.88]">
+                      Hi 👋 Need help with mastering?
+                    </div>
                   ) : null}
+                  <QuickSuggestions compact={hasMessages} onPick={handleSend} />
                 </div>
               ) : null}
 
-              {messages.length > 0 ? (
-                <div className={`space-y-2.5 ${showWelcome ? "mt-3" : ""}`}>
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[88%] rounded-2xl px-3 py-2 text-[13px] leading-[1.55] ${
-                          msg.role === "user"
-                            ? "bg-violet-600/95 text-white"
-                            : "border border-white/[0.08] bg-white/[0.04] text-white/[0.86]"
-                        }`}
+              {hasMessages ? (
+                <div className="mt-3 space-y-2.5">
+                  <AnimatePresence initial={false}>
+                    {messages.map((msg) => (
+                      <motion.div
+                        key={msg.id}
+                        layout
+                        className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                        {...messageMotion}
                       >
-                        <p className="whitespace-pre-wrap">{msg.text}</p>
-                        {msg.role === "assistant" && msg.reply?.faqId ? (
-                          <Link
-                            href={`/help#${msg.reply.faqId}`}
-                            className="mt-1.5 inline-block text-[11px] font-medium text-violet-200/90 hover:underline"
-                            onClick={() => setOpen(false)}
-                          >
-                            Help Center →
-                          </Link>
-                        ) : null}
-                        {msg.role === "assistant" && msg.reply?.suggestTicket ? (
-                          <button
-                            type="button"
-                            onClick={() => openTicketForm(lastUserQuery, msg.reply?.ticketCategory)}
-                            className="mt-2 inline-flex min-h-[32px] items-center rounded-lg border border-violet-400/35 bg-violet-500/15 px-3 text-[11px] font-semibold text-violet-100 transition hover:bg-violet-500/25"
-                          >
-                            Create ticket
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
-                  ))}
+                        <div
+                          className={`max-w-[88%] rounded-2xl px-3 py-2 text-[13px] leading-[1.5] ${
+                            msg.role === "user"
+                              ? "bg-violet-600/95 text-white"
+                              : "border border-white/[0.08] bg-white/[0.04] text-white/[0.86]"
+                          }`}
+                        >
+                          {msg.role === "assistant" ? (
+                            <AnswerParagraphs text={msg.text} />
+                          ) : (
+                            <p className="whitespace-pre-wrap">{msg.text}</p>
+                          )}
+                          {msg.role === "assistant" ? (
+                            <Link
+                              href={msg.reply?.faqId ? `/help#${msg.reply.faqId}` : "/help"}
+                              className="mt-2 inline-block text-[11px] font-medium text-violet-200/90 transition hover:text-violet-100 hover:underline"
+                              onClick={() => setOpen(false)}
+                            >
+                              Open Help Center →
+                            </Link>
+                          ) : null}
+                          {msg.role === "assistant" && msg.reply?.suggestTicket ? (
+                            <button
+                              type="button"
+                              onClick={() => openTicketForm(lastUserQuery, msg.reply?.ticketCategory)}
+                              className="mt-2 inline-flex min-h-[32px] items-center rounded-lg border border-violet-400/35 bg-violet-500/15 px-3 text-[11px] font-semibold text-violet-100 transition hover:bg-violet-500/25"
+                            >
+                              Create ticket
+                            </button>
+                          ) : null}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              ) : null}
+
+              {!hasMessages && inMasterSession && !ticketMode ? (
+                <div className="mt-3">
+                  <SessionContextStrip ctx={sessionContext} processingStatus={processingStatus} />
                 </div>
               ) : null}
 
               {ticketMode ? (
-                <form
-                  onSubmit={submitTicket}
-                  className={`space-y-2 rounded-xl border border-white/[0.1] bg-white/[0.03] p-3 ${showWelcome || messages.length > 0 ? "mt-3" : ""}`}
-                >
+                <form onSubmit={submitTicket} className="mt-3 space-y-2 rounded-xl border border-white/[0.1] bg-white/[0.03] p-3">
                   <p className="text-[12px] font-semibold text-white/90">Support ticket</p>
                   <select
                     value={ticketCategory}
@@ -345,11 +389,7 @@ export default function MastrifyAssistant() {
                     onChange={(e) => setTicketBody(e.target.value)}
                     className="w-full rounded-lg border border-white/[0.1] bg-black/50 px-2.5 py-1.5 text-[12px] text-white/90 outline-none focus:border-violet-400/45"
                   />
-                  <SessionContextStrip
-                    ctx={sessionContext}
-                    processingStatus={processingStatus}
-                    compact
-                  />
+                  <SessionContextStrip ctx={sessionContext} processingStatus={processingStatus} />
                   {ticketError ? <p className="text-[11px] text-rose-300/90">{ticketError}</p> : null}
                   <div className="flex gap-2">
                     <button
@@ -370,13 +410,9 @@ export default function MastrifyAssistant() {
                 </form>
               ) : null}
 
-              {inMasterSession && messages.length > 0 && !ticketMode ? (
+              {inMasterSession && hasMessages && !ticketMode ? (
                 <div className="mt-2">
-                  <SessionContextStrip
-                    ctx={sessionContext}
-                    processingStatus={processingStatus}
-                    compact
-                  />
+                  <SessionContextStrip ctx={sessionContext} processingStatus={processingStatus} />
                 </div>
               ) : null}
             </div>
@@ -387,19 +423,25 @@ export default function MastrifyAssistant() {
                   e.preventDefault()
                   handleSend()
                 }}
-                className="flex gap-2"
+                className="flex items-end gap-2"
               >
-                <input
-                  type="text"
+                <textarea
+                  ref={inputRef}
+                  rows={1}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => {
+                    setInput(e.target.value)
+                    e.target.style.height = "auto"
+                    e.target.style.height = `${Math.min(e.target.scrollHeight, 88)}px`
+                  }}
+                  onKeyDown={onInputKeyDown}
                   placeholder="Ask about mastering..."
-                  className="min-w-0 flex-1 rounded-xl border border-white/[0.1] bg-black/45 px-3 py-2 text-[13px] text-white/90 outline-none placeholder:text-white/35 focus:border-violet-400/45"
+                  className="max-h-[88px] min-h-[40px] min-w-0 flex-1 resize-none rounded-xl border border-white/[0.1] bg-black/45 px-3 py-2 text-[13px] leading-snug text-white/90 outline-none placeholder:text-white/35 focus:border-violet-400/45"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="shrink-0 rounded-xl bg-violet-600 px-3.5 py-2 text-[12px] font-semibold text-white transition hover:bg-violet-500 disabled:opacity-40"
+                  className="mb-0.5 shrink-0 rounded-xl bg-violet-600 px-3.5 py-2 text-[12px] font-semibold text-white transition hover:bg-violet-500 disabled:opacity-40"
                 >
                   Send
                 </button>

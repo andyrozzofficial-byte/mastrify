@@ -61,12 +61,103 @@ const SUGGESTION_FAQ_ID: Record<string, string> = {
   "payment help": "payment-issue",
 }
 
-const CANNED_SUGGESTIONS: Record<string, { answer: string; category?: SupportTicketCategory }> = {
+/** Short chat-style lines — not full FAQ paragraphs */
+const CHAT_ANSWERS: Record<string, string[]> = {
+  "what-is-lufs": [
+    "LUFS measures how loud your track feels over time.",
+    "Streaming platforms use it for level matching.",
+    "Mastrify targets release-ready loudness without crushing your mix.",
+  ],
+  "stereo-width": [
+    "Stereo Width controls how wide your mix feels left to right.",
+    "Higher = more space on synths and guitars.",
+    "Lower = tighter center for vocals, kick, and bass.",
+    "Go subtle if your mix already has heavy stereo effects.",
+  ],
+  "warm-vs-balanced": [
+    "Balanced (Streaming) = modern, even loudness and clear mids.",
+    "Warm = softer highs and fuller low-mids — less bright overall.",
+    "A/B on your chorus and pick what keeps vocals forward.",
+  ],
+  "still-processing": [
+    "Most tracks finish within a minute on our engine.",
+    "Longer files or high load can take a few minutes.",
+    "Keep this tab open while processing runs.",
+    "Over ~10 minutes? Refresh and check History — don't start duplicate jobs.",
+  ],
+  "download-master": [
+    "When the preview sounds right, complete checkout on the result page.",
+    "Your full-resolution export unlocks for download and email.",
+    "Use the same browser session — exports link to your session ID.",
+  ],
+  "low-end-control": [
+    "Low End Control tames sub and bass buildup.",
+    "Too boomy? Turn it up a touch. Too thin? Turn it down.",
+    "Always compare against your unmastered mix.",
+  ],
+  "clarity-presence": [
+    "Clarity / Presence shapes upper mids — vocals, snare, guitars.",
+    "A little more helps dull mixes cut through.",
+    "Too much can sound harsh — use small moves and A/B on the result page.",
+  ],
+  "preview-vs-full": [
+    "Preview = fast compressed stream for A/B on the site.",
+    "Paid export = full-quality master file.",
+    "Tone and loudness should match closely.",
+  ],
+  "payment-issue": [
+    "Check your email (and spam) for the delivery link.",
+    "Payments tie to the session that created the master.",
+    "Charged but no download? Open a ticket with your receipt email.",
+  ],
+  "analyze-step": [
+    "Analyze is optional but recommended.",
+    "It shows LUFS, stereo balance, and suggestions before you master.",
+    "You can also go straight to Master with your own settings.",
+  ],
+}
+
+const CANNED_SUGGESTIONS: Record<string, { lines: string[]; category?: SupportTicketCategory }> = {
   "master sounds wrong": {
-    answer:
-      "Use the A/B toggle on your result page to compare the master with your mix. Try a different style preset (Warm vs Balanced) or small clarity/low-end tweaks. If preview and export sound different, or the tone still feels wrong after A/B, we can review your session — create a ticket and we'll take a listen.",
+    lines: [
+      "Use A/B on the result page — compare master vs your mix.",
+      "Try Warm vs Balanced, or small clarity / low-end tweaks.",
+      "Preview and export should match. Still off? We can review your session.",
+    ],
     category: "master_quality",
   },
+}
+
+function linesToAnswer(lines: string[]): string {
+  return lines.join("\n\n")
+}
+
+/** Split long FAQ prose into short chat lines (max 3–4 sentences). */
+function splitToConversational(text: string): string {
+  const sentences = text
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  const lines: string[] = []
+  for (const s of sentences) {
+    if (lines.length >= 4) break
+    if (s.length <= 120) {
+      lines.push(s)
+    } else {
+      const parts = s.split(/[,;—–-]\s+/).filter((p) => p.length > 10)
+      for (const p of parts.slice(0, 2)) {
+        if (lines.length >= 4) break
+        lines.push(p.endsWith(".") ? p : `${p}.`)
+      }
+    }
+  }
+  return linesToAnswer(lines.length > 0 ? lines : [text.slice(0, 200)])
+}
+
+export function formatConversationalAnswer(text: string, faqId?: string): string {
+  if (faqId && CHAT_ANSWERS[faqId]) return linesToAnswer(CHAT_ANSWERS[faqId])
+  return splitToConversational(text)
 }
 
 function normalizeQuery(q: string): string {
@@ -123,7 +214,7 @@ function inferTicketCategory(query: string): SupportTicketCategory {
 
 function replyFromFaq(item: HelpFaqItem, category?: SupportTicketCategory): AssistantReply {
   return {
-    answer: item.answer,
+    answer: formatConversationalAnswer(item.answer, item.id),
     confidence: "high",
     faqId: item.id,
     suggestTicket: false,
@@ -138,7 +229,10 @@ export function respondAssistant(query: string): AssistantReply {
   const q = normalizeQuery(query)
   if (!q) {
     return {
-      answer: "Ask about mastering, LUFS, downloads, payments, or processing — or pick a suggestion above.",
+      answer: linesToAnswer([
+        "Ask about mastering, LUFS, downloads, payments, or processing.",
+        "Or tap a suggestion above to get started.",
+      ]),
       confidence: "low",
       suggestTicket: false,
     }
@@ -146,8 +240,11 @@ export function respondAssistant(query: string): AssistantReply {
 
   if (q === "contact support" || q === "contact" || q === "talk to support") {
     return {
-      answer:
-        "I can connect you with the Mastrify team. Create a support ticket below and we'll follow up by email — your mastering session details attach automatically when you're in a session.",
+      answer: linesToAnswer([
+        "I can connect you with the Mastrify team.",
+        "Create a support ticket and we'll follow up by email.",
+        "Session details attach automatically when you're mastering.",
+      ]),
       confidence: "low",
       suggestTicket: true,
       ticketCategory: "other",
@@ -156,8 +253,10 @@ export function respondAssistant(query: string): AssistantReply {
 
   if (!isInScope(q)) {
     return {
-      answer:
-        "I'm the Mastrify Assistant — I help with mastering, Analyze, audio settings, LUFS, downloads, payments, and support. For general questions outside the product, visit our Help Center or open a ticket.",
+      answer: linesToAnswer([
+        "I help with mastering, Analyze, settings, LUFS, downloads, and payments.",
+        "For topics outside Mastrify, open the Help Center or a support ticket.",
+      ]),
       confidence: "low",
       suggestTicket: true,
       outOfScope: true,
@@ -172,7 +271,7 @@ export function respondAssistant(query: string): AssistantReply {
       const canned = CANNED_SUGGESTIONS[q]
       if (canned) {
         return {
-          answer: canned.answer,
+          answer: linesToAnswer(canned.lines),
           confidence: "high",
           faqId: item.id,
           suggestTicket: false,
@@ -186,7 +285,7 @@ export function respondAssistant(query: string): AssistantReply {
   const canned = CANNED_SUGGESTIONS[q]
   if (canned) {
     return {
-      answer: canned.answer,
+      answer: linesToAnswer(canned.lines),
       confidence: "high",
       suggestTicket: false,
       ticketCategory: canned.category,
@@ -200,7 +299,10 @@ export function respondAssistant(query: string): AssistantReply {
 
   if (match && match.score >= 2) {
     return {
-      answer: `${match.item.answer}\n\nIf this doesn't solve it, I can open a support ticket for you.`,
+      answer: linesToAnswer([
+        ...(CHAT_ANSWERS[match.item.id] ?? splitToConversational(match.item.answer).split("\n\n")),
+        "If that doesn't help, I can open a support ticket for you.",
+      ]),
       confidence: "low",
       faqId: match.item.id,
       suggestTicket: true,
@@ -209,8 +311,10 @@ export function respondAssistant(query: string): AssistantReply {
   }
 
   return {
-    answer:
-      "I couldn't find a confident answer in our Help Center for that. Would you like to create a support ticket? We'll attach your session details if you're mastering.",
+    answer: linesToAnswer([
+      "I couldn't find a strong match in our Help Center.",
+      "Want to create a support ticket? We'll attach your session if you're mastering.",
+    ]),
     confidence: "low",
     suggestTicket: true,
     ticketCategory: inferTicketCategory(q),
