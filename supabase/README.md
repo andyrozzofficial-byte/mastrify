@@ -54,7 +54,11 @@ Routes (internal only):
 - `/admin/customers` — customer history by email
 - `/admin/analytics` — charts and trends
 
-Run [`admin_dashboard.sql`](./admin_dashboard.sql) after `beta_master_feedback.sql` (adds `status`, `admin_support_inbox` table).
+Run [`beta_master_feedback_admin_columns.sql`](./beta_master_feedback_admin_columns.sql) if admin queries fail with **column `status` does not exist** (adds `status`, `admin_notes`, `updated_at`, `resolved_at`).
+
+Run [`admin_dashboard.sql`](./admin_dashboard.sql) after `beta_master_feedback.sql` (support inbox + RLS; includes the same feedback columns).
+
+Migration: `migrations/20260521120000_beta_master_feedback_admin_columns.sql` (safe for `supabase db push`).
 
 Legacy `/admin/beta-feedback` redirects to `/admin/feedback`.
 

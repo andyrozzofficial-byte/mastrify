@@ -1,12 +1,13 @@
 -- Mastrify admin dashboard — run in Supabase SQL Editor after beta_master_feedback.sql
 
--- Feedback status workflow
-alter table public.beta_master_feedback add column if not exists status text;
+-- Feedback status workflow (see beta_master_feedback_admin_columns.sql)
+alter table public.beta_master_feedback add column if not exists status text default 'new';
 alter table public.beta_master_feedback add column if not exists admin_notes text;
-alter table public.beta_master_feedback add column if not exists updated_at timestamptz;
+alter table public.beta_master_feedback add column if not exists updated_at timestamptz default now();
+alter table public.beta_master_feedback add column if not exists resolved_at timestamptz;
 
 update public.beta_master_feedback set status = 'new' where status is null;
-update public.beta_master_feedback set updated_at = created_at where updated_at is null;
+update public.beta_master_feedback set updated_at = coalesce(created_at, now()) where updated_at is null;
 
 alter table public.beta_master_feedback alter column status set default 'new';
 alter table public.beta_master_feedback alter column updated_at set default now();
