@@ -1,22 +1,22 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import type { AdminFeedbackRow, AdminItemStatus } from "../../../lib/adminTypes"
-import { ADMIN_ITEM_STATUSES } from "../../../lib/adminTypes"
+import type { AdminFeedbackRow, AdminFeedbackStatus } from "../../../lib/adminTypes"
+import { ADMIN_FEEDBACK_STATUSES } from "../../../lib/adminTypes"
 import {
   AdminEmpty,
   AdminPageHeader,
   AdminSearchInput,
+  FeedbackStatusBadge,
+  FeedbackStatusSelect,
   formatAdminDate,
-  StatusBadge,
-  StatusSelect,
 } from "../../components/admin/admin-shared"
 
 export default function AdminFeedbackPage() {
   const [rows, setRows] = useState<AdminFeedbackRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<AdminItemStatus | "">("")
+  const [statusFilter, setStatusFilter] = useState<AdminFeedbackStatus | "">("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -50,7 +50,7 @@ export default function AdminFeedbackPage() {
 
   const selected = filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null
 
-  async function patchItem(id: string, patch: { status?: AdminItemStatus; admin_notes?: string | null }) {
+  async function patchItem(id: string, patch: { status?: AdminFeedbackStatus; admin_notes?: string | null }) {
     setSaving(true)
     const res = await fetch("/api/admin/feedback", {
       method: "PATCH",
@@ -69,11 +69,11 @@ export default function AdminFeedbackPage() {
         <AdminSearchInput value={search} onChange={setSearch} placeholder="Track, genre, email, session…" />
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as AdminItemStatus | "")}
+          onChange={(e) => setStatusFilter(e.target.value as AdminFeedbackStatus | "")}
           className="rounded-xl border border-white/[0.08] bg-[#090912] px-3 py-2 text-sm text-white"
         >
           <option value="">All statuses</option>
-          {ADMIN_ITEM_STATUSES.map((s) => (
+          {ADMIN_FEEDBACK_STATUSES.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
@@ -112,7 +112,7 @@ export default function AdminFeedbackPage() {
                     <td className="px-3 py-2">{r.genre}</td>
                     <td className="px-3 py-2 tabular-nums text-cyan-300/85">{r.recommend_score}</td>
                     <td className="px-3 py-2">
-                      <StatusBadge status={r.status} />
+                      <FeedbackStatusBadge status={r.status} />
                     </td>
                   </tr>
                 ))}
@@ -143,7 +143,7 @@ export default function AdminFeedbackPage() {
               </dl>
               <div className="mt-4">
                 <p className="text-[10px] uppercase tracking-wide text-white/45">Status</p>
-                <StatusSelect
+                <FeedbackStatusSelect
                   value={selected.status}
                   disabled={saving}
                   onChange={(status) => patchItem(selected.id, { status })}

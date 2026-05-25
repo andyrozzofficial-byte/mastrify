@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
 import { requireAdminApi } from "../../../../lib/adminApi"
 import { createSupportItem, fetchAdminSupport, updateSupportItem } from "../../../../lib/adminData"
-import { isAdminItemStatus } from "../../../../lib/adminTypes"
+import { isAdminSupportPriority, isAdminSupportStatus } from "../../../../lib/adminTypes"
 
 export async function GET() {
-  const auth = await requireAdminApi()
+  const auth = await requireAdminApi("/api/admin/support")
   if (auth.error) return auth.error
 
   const data = await fetchAdminSupport()
@@ -15,10 +15,17 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdminApi()
+  const auth = await requireAdminApi("/api/admin/support")
   if (auth.error) return auth.error
 
-  let body: { email?: string; name?: string; subject?: string; message?: string; source?: string }
+  let body: {
+    email?: string
+    name?: string
+    subject?: string
+    message?: string
+    source?: string
+    priority?: string
+  }
   try {
     body = await request.json()
   } catch {
@@ -31,12 +38,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email and message required" }, { status: 400 })
   }
 
+  const priority =
+    typeof body.priority === "string" && isAdminSupportPriority(body.priority)
+      ? body.priority
+      : undefined
+
   const result = await createSupportItem({
     email,
     name: body.name,
     subject: body.subject,
     message,
     source: body.source,
+    priority,
   })
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 })
@@ -45,10 +58,10 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireAdminApi()
+  const auth = await requireAdminApi("/api/admin/support")
   if (auth.error) return auth.error
 
-  let body: { id?: string; status?: string; admin_notes?: string | null }
+  let body: { id?: string; status?: string; priority?: string; admin_notes?: string | null }
   try {
     body = await request.json()
   } catch {
@@ -58,12 +71,16 @@ export async function PATCH(request: Request) {
   if (!body.id || typeof body.id !== "string") {
     return NextResponse.json({ error: "Missing id" }, { status: 400 })
   }
-  if (body.status && !isAdminItemStatus(body.status)) {
+  if (body.status && !isAdminSupportStatus(body.status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 })
+  }
+  if (body.priority && !isAdminSupportPriority(body.priority)) {
+    return NextResponse.json({ error: "Invalid priority" }, { status: 400 })
   }
 
   const result = await updateSupportItem(body.id, {
     status: body.status,
+    priority: body.priority,
     admin_notes: body.admin_notes,
   })
   if ("error" in result) {

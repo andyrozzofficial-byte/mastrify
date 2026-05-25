@@ -1,25 +1,61 @@
-export const ADMIN_ITEM_STATUSES = ["new", "read", "resolved"] as const
-export type AdminItemStatus = (typeof ADMIN_ITEM_STATUSES)[number]
+export const ADMIN_FEEDBACK_STATUSES = ["new", "read", "resolved"] as const
+export type AdminFeedbackStatus = (typeof ADMIN_FEEDBACK_STATUSES)[number]
 
-export function isAdminItemStatus(v: string): v is AdminItemStatus {
-  return (ADMIN_ITEM_STATUSES as readonly string[]).includes(v)
+export const ADMIN_SUPPORT_STATUSES = [
+  "open",
+  "waiting_for_customer",
+  "resolved",
+  "closed",
+] as const
+export type AdminSupportStatus = (typeof ADMIN_SUPPORT_STATUSES)[number]
+
+export const ADMIN_SUPPORT_PRIORITIES = ["low", "medium", "high"] as const
+export type AdminSupportPriority = (typeof ADMIN_SUPPORT_PRIORITIES)[number]
+
+export const ADMIN_JOB_STATUSES = ["processing", "complete", "failed"] as const
+export type AdminJobStatus = (typeof ADMIN_JOB_STATUSES)[number]
+
+export function isAdminFeedbackStatus(v: string): v is AdminFeedbackStatus {
+  return (ADMIN_FEEDBACK_STATUSES as readonly string[]).includes(v)
 }
 
-export type AdminOverview = {
+export function isAdminSupportStatus(v: string): v is AdminSupportStatus {
+  return (ADMIN_SUPPORT_STATUSES as readonly string[]).includes(v)
+}
+
+export function isAdminSupportPriority(v: string): v is AdminSupportPriority {
+  return (ADMIN_SUPPORT_PRIORITIES as readonly string[]).includes(v)
+}
+
+export function isAdminJobStatus(v: string): v is AdminJobStatus {
+  return (ADMIN_JOB_STATUSES as readonly string[]).includes(v)
+}
+
+export type AdminKpis = {
+  uploadsToday: number
+  mastersCompletedToday: number
+  paidDownloadsToday: number
+  revenueToday: number
+  conversionRate: number | null
+  activeUsers: number
+  failedJobs: number
+}
+
+export type AdminOverview = AdminKpis & {
   feedbackTotal: number
   feedbackNew: number
   supportTotal: number
-  supportNew: number
+  supportOpen: number
   avgRecommendScore: number | null
-  recentFeedback: { id: string; created_at: string; track_name: string | null; status: AdminItemStatus }[]
-  recentSupport: { id: string; created_at: string; email: string; subject: string | null; status: AdminItemStatus }[]
+  recentFeedback: { id: string; created_at: string; track_name: string | null; status: AdminFeedbackStatus }[]
+  recentSupport: { id: string; created_at: string; email: string; subject: string | null; status: AdminSupportStatus; priority: AdminSupportPriority }[]
 }
 
 export type AdminFeedbackRow = {
   id: string
   created_at: string
   updated_at: string
-  status: AdminItemStatus
+  status: AdminFeedbackStatus
   session_id: string | null
   track_name: string | null
   mastering_style: string | null
@@ -30,17 +66,21 @@ export type AdminFeedbackRow = {
   genre: string
   release_ready: string
   admin_notes: string | null
+  processing_time_ms: number | null
+  master_lufs: number | null
 }
 
 export type AdminSupportRow = {
   id: string
   created_at: string
   updated_at: string
+  resolved_at: string | null
   email: string
   name: string | null
   subject: string | null
   message: string
-  status: AdminItemStatus
+  status: AdminSupportStatus
+  priority: AdminSupportPriority
   source: string
   admin_notes: string | null
 }
@@ -50,7 +90,49 @@ export type AdminCustomerRow = {
   name: string | null
   feedbackCount: number
   supportCount: number
+  exportCount: number
+  purchased: boolean
   lastActivity: string
   lastTrack: string | null
   avgRecommend: number | null
+}
+
+export type AdminCustomerProfile = {
+  email: string
+  name: string | null
+  notes: string | null
+  purchased: boolean
+  totalTracksMastered: number
+  exportCount: number
+  lastActivity: string | null
+  feedback: AdminFeedbackRow[]
+  support: AdminSupportRow[]
+  sessions: string[]
+}
+
+export type AdminJobRow = {
+  id: string
+  created_at: string
+  updated_at: string
+  session_id: string | null
+  track_name: string | null
+  user_email: string | null
+  status: AdminJobStatus
+  processing_time_ms: number | null
+  master_lufs: number | null
+  mastering_style: string | null
+  error_log: string | null
+  source: string
+}
+
+export type AdminAnalyticsExtended = {
+  funnel: { step: string; count: number }[]
+  avgLufs: number | null
+  topStyle: { style: string; count: number } | null
+  avgProcessingMs: number | null
+  dropOffStep: string | null
+  dailyTrend: { date: string; uploads: number; masters: number; downloads: number }[]
+  weeklyTrend: { week: string; uploads: number; masters: number; downloads: number }[]
+  genreDistribution: { label: string; count: number }[]
+  recommendOverTime: { date: string; avgRecommend: number; count: number }[]
 }

@@ -1,22 +1,24 @@
 "use client"
 
+import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
-import type { AdminItemStatus, AdminSupportRow } from "../../../lib/adminTypes"
-import { ADMIN_ITEM_STATUSES } from "../../../lib/adminTypes"
+import type { AdminSupportPriority, AdminSupportRow, AdminSupportStatus } from "../../../lib/adminTypes"
+import { ADMIN_SUPPORT_PRIORITIES, ADMIN_SUPPORT_STATUSES } from "../../../lib/adminTypes"
 import {
   AdminEmpty,
   AdminPageHeader,
   AdminSearchInput,
   formatAdminDate,
-  StatusBadge,
-  StatusSelect,
+  PriorityBadge,
+  SupportStatusBadge,
 } from "../../components/admin/admin-shared"
 
 export default function AdminSupportPage() {
   const [rows, setRows] = useState<AdminSupportRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<AdminItemStatus | "">("")
+  const [statusFilter, setStatusFilter] = useState<AdminSupportStatus | "">("")
+  const [priorityFilter, setPriorityFilter] = useState<AdminSupportPriority | "">("")
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -39,11 +41,15 @@ export default function AdminSupportPage() {
     const q = search.trim().toLowerCase()
     return rows.filter((r) => {
       if (statusFilter && r.status !== statusFilter) return false
+      if (priorityFilter && r.priority !== priorityFilter) return false
       if (!q) return true
-      const hay = [r.email, r.name, r.subject, r.message].filter(Boolean).join(" ").toLowerCase()
+      const hay = [r.email, r.name, r.subject, r.message, r.admin_notes]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
       return hay.includes(q)
     })
-  }, [rows, search, statusFilter])
+  }, [rows, search, statusFilter, priorityFilter])
 
   async function onCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -57,6 +63,7 @@ export default function AdminSupportPage() {
         name: fd.get("name"),
         subject: fd.get("subject"),
         message: fd.get("message"),
+        priority: fd.get("priority"),
         source: "manual",
       }),
     })
@@ -67,22 +74,11 @@ export default function AdminSupportPage() {
     }
   }
 
-  async function patchStatus(id: string, status: AdminItemStatus) {
-    setSaving(true)
-    await fetch("/api/admin/support", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
-    })
-    setSaving(false)
-    void load()
-  }
-
   return (
     <div>
       <AdminPageHeader
-        title="Support inbox"
-        subtitle="Customer messages and internal tickets."
+        title="Support"
+        subtitle="Tickets with status workflow, priority, and internal notes."
         actions={
           <button
             type="button"
@@ -118,6 +114,17 @@ export default function AdminSupportPage() {
             placeholder="Subject"
             className="rounded-lg border border-white/[0.08] bg-black/30 px-3 py-2 text-sm text-white sm:col-span-2"
           />
+          <select
+            name="priority"
+            defaultValue="medium"
+            className="rounded-lg border border-white/[0.08] bg-black/30 px-3 py-2 text-sm text-white"
+          >
+            {ADMIN_SUPPORT_PRIORITIES.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
           <textarea
             name="message"
             required
@@ -130,22 +137,34 @@ export default function AdminSupportPage() {
             disabled={saving}
             className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white sm:col-span-2"
           >
-            {saving ? "Saving…" : "Add to inbox"}
+            {saving ? "Saving…" : "Add ticket"}
           </button>
         </form>
       ) : null}
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <AdminSearchInput value={search} onChange={setSearch} placeholder="Email, subject, message…" />
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as AdminItemStatus | "")}
+          onChange={(e) => setStatusFilter(e.target.value as AdminSupportStatus | "")}
           className="rounded-xl border border-white/[0.08] bg-[#090912] px-3 py-2 text-sm text-white"
         >
           <option value="">All statuses</option>
-          {ADMIN_ITEM_STATUSES.map((s) => (
+          {ADMIN_SUPPORT_STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {s.replace(/_/g, " ")}
+            </option>
+          ))}
+        </select>
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value as AdminSupportPriority | "")}
+          className="rounded-xl border border-white/[0.08] bg-[#090912] px-3 py-2 text-sm text-white"
+        >
+          <option value="">All priorities</option>
+          {ADMIN_SUPPORT_PRIORITIES.map((p) => (
+            <option key={p} value={p}>
+              {p}
             </option>
           ))}
         </select>
@@ -154,32 +173,34 @@ export default function AdminSupportPage() {
       {error ? <p className="mb-4 text-sm text-rose-300/90">{error}</p> : null}
 
       {filtered.length === 0 ? (
-        <AdminEmpty message="No support tickets yet." />
+        <AdminEmpty message="No support tickets match your filters." />
       ) : (
         <ul className="space-y-3">
           {filtered.map((r) => (
             <li key={r.id} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-medium text-white">{r.subject ?? "(No subject)"}</p>
+                <div className="min-w-0">
+                  <Link
+                    href={`/admin/support/${r.id}`}
+                    className="font-medium text-white hover:text-violet-200"
+                  >
+                    {r.subject ?? "(No subject)"}
+                  </Link>
                   <p className="text-xs text-white/50">
                     {r.email}
-                    {r.name ? ` · ${r.name}` : ""} · {formatAdminDate(r.created_at)}
+                    {r.name ? ` · ${r.name}` : ""}
+                  </p>
+                  <p className="mt-1 text-[10px] text-white/40">
+                    Created {formatAdminDate(r.created_at)}
+                    {r.updated_at !== r.created_at ? ` · Updated ${formatAdminDate(r.updated_at)}` : ""}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={r.status} />
-                  <StatusSelect
-                    value={r.status}
-                    disabled={saving}
-                    onChange={(status) => patchStatus(r.id, status)}
-                  />
+                <div className="flex flex-wrap items-center gap-2">
+                  <PriorityBadge priority={r.priority} />
+                  <SupportStatusBadge status={r.status} />
                 </div>
               </div>
-              <p className="mt-3 text-sm leading-relaxed text-white/72">{r.message}</p>
-              {r.admin_notes ? (
-                <p className="mt-2 text-xs text-white/45">Notes: {r.admin_notes}</p>
-              ) : null}
+              <p className="mt-3 line-clamp-2 text-sm text-white/72">{r.message}</p>
             </li>
           ))}
         </ul>

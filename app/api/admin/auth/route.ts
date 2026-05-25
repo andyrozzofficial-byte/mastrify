@@ -6,6 +6,7 @@ import {
   getAdminSecret,
   isAdminGateEnabled,
 } from "../../../../lib/admin"
+import { ADMIN_ROLE_COOKIE, defaultAdminRole } from "../../../../lib/adminRoles"
 
 export async function POST(request: Request) {
   if (!isAdminGateEnabled()) {
@@ -32,6 +33,13 @@ export async function POST(request: Request) {
   const token = await createAdminToken(getAdminSecret())
   const response = NextResponse.json({ ok: true })
   response.cookies.set(ADMIN_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 14,
+  })
+  response.cookies.set(ADMIN_ROLE_COOKIE, defaultAdminRole(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

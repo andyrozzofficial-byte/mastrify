@@ -1,21 +1,15 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import type { BetaFeedbackDashboardData } from "../../../lib/betaFeedbackAnalytics"
-import { filterAndSortTableRows } from "../../../lib/betaFeedbackAnalytics"
+import { useEffect, useState } from "react"
+import type { AdminAnalyticsExtended } from "../../../lib/adminTypes"
 import {
   AdminPageHeader,
-  AdminSearchInput,
+  FunnelChart,
   SummaryCard,
+  TrendChart,
 } from "../../components/admin/admin-shared"
 
-function BarChart({
-  title,
-  items,
-}: {
-  title: string
-  items: { label: string; count: number }[]
-}) {
+function BarList({ title, items }: { title: string; items: { label: string; count: number }[] }) {
   const slice = items.slice(0, 10)
   const max = Math.max(1, ...slice.map((i) => i.count))
   if (slice.length === 0) {
@@ -50,10 +44,8 @@ function BarChart({
 }
 
 export default function AdminAnalyticsPage() {
-  const [data, setData] = useState<BetaFeedbackDashboardData | null>(null)
+  const [data, setData] = useState<AdminAnalyticsExtended | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState("")
-  const [sort, setSort] = useState<"newest" | "highest_score">("newest")
 
   useEffect(() => {
     void (async () => {
@@ -63,82 +55,82 @@ export default function AdminAnalyticsPage() {
         setError(json?.error ?? "Could not load analytics")
         return
       }
-      setData(json as BetaFeedbackDashboardData)
+      setData(json as AdminAnalyticsExtended)
     })()
   }, [])
-
-  const tableRows = useMemo(() => {
-    if (!data) return []
-    return filterAndSortTableRows(data.rows, {
-      search,
-      genre: "",
-      masteringStyle: "",
-      releaseReady: "",
-      sort,
-    })
-  }, [data, search, sort])
 
   if (error) return <p className="text-sm text-rose-300/90">{error}</p>
   if (!data) return <p className="text-sm text-white/50">Loading analytics…</p>
 
-  const s = data.summary
-
   return (
     <div>
-      <AdminPageHeader title="Analytics" subtitle="Beta feedback trends and distributions." />
+      <AdminPageHeader
+        title="Analytics"
+        subtitle="Funnel, loudness, styles, processing time, and trends."
+      />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <SummaryCard label="Submissions" value={String(s.totalSubmissions)} />
-        <SummaryCard label="Avg recommend" value={s.avgRecommendScore != null ? String(s.avgRecommendScore) : "—"} />
-        <SummaryCard label="Avg use-again" value={s.avgUseAgainScore != null ? String(s.avgUseAgainScore) : "—"} />
-        <SummaryCard label="Release-ready %" value={s.releaseReadyPercent != null ? `${s.releaseReadyPercent}%` : "—"} />
-        <SummaryCard label="Genres" value={String(s.totalGenres)} />
-        <SummaryCard label="Styles" value={String(s.totalMasteringStyles)} />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard
+          label="Avg LUFS"
+          value={data.avgLufs != null ? String(data.avgLufs) : "—"}
+        />
+        <SummaryCard
+          label="Avg processing"
+          value={
+            data.avgProcessingMs != null
+              ? `${(data.avgProcessingMs / 1000).toFixed(1)}s`
+              : "—"
+          }
+        />
+        <SummaryCard
+          label="Top style"
+          value={data.topStyle?.style ?? "—"}
+          hint={data.topStyle ? `${data.topStyle.count} uses` : undefined}
+        />
+        <SummaryCard
+          label="Biggest drop-off"
+          value={data.dropOffStep ?? "—"}
+          hint="Largest funnel step loss"
+        />
       </div>
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-2">
-        <BarChart title="Genre distribution" items={data.charts.genreDistribution} />
-        <BarChart title="Mastering styles" items={data.charts.masteringStyleDistribution} />
-        <BarChart title="Common issues" items={data.charts.commonIssues} />
-        <BarChart title="Requested features" items={data.charts.requestedFeatures} />
-        <BarChart title="Processing speed" items={data.analytics.processingSpeedSatisfaction} />
-        <BarChart title="Release-ready" items={data.charts.releaseReadyBreakdown} />
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <FunnelChart steps={data.funnel} />
+        <BarList
+          title="Genre distribution"
+          items={data.genreDistribution.map((g) => ({ label: g.label, count: g.count }))}
+        />
       </div>
 
-      <div className="mt-8">
-        <div className="mb-3 flex flex-wrap gap-3">
-          <AdminSearchInput value={search} onChange={setSearch} />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as "newest" | "highest_score")}
-            className="rounded-xl border border-white/[0.08] bg-[#090912] px-3 py-2 text-sm text-white"
-          >
-            <option value="newest">Newest</option>
-            <option value="highest_score">Highest score</option>
-          </select>
-        </div>
-        <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
-          <table className="w-full min-w-[640px] text-left text-xs">
-            <thead className="bg-white/[0.03] text-white/50">
-              <tr>
-                <th className="px-3 py-2">Track</th>
-                <th className="px-3 py-2">Genre</th>
-                <th className="px-3 py-2">Rec.</th>
-                <th className="px-3 py-2">Release</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableRows.slice(0, 50).map((r) => (
-                <tr key={r.id} className="border-t border-white/[0.05]">
-                  <td className="px-3 py-2">{r.trackName ?? "—"}</td>
-                  <td className="px-3 py-2">{r.genre}</td>
-                  <td className="px-3 py-2 text-cyan-300/85">{r.recommendScore}</td>
-                  <td className="px-3 py-2">{r.releaseReady}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <TrendChart
+          title="Daily trends"
+          points={data.dailyTrend}
+          keys={[
+            { key: "uploads", label: "Uploads", color: "bg-violet-500" },
+            { key: "masters", label: "Masters", color: "bg-indigo-500" },
+            { key: "downloads", label: "Downloads", color: "bg-cyan-500" },
+          ]}
+        />
+        <TrendChart
+          title="Weekly trends"
+          points={data.weeklyTrend}
+          keys={[
+            { key: "uploads", label: "Uploads", color: "bg-violet-500" },
+            { key: "masters", label: "Masters", color: "bg-indigo-500" },
+            { key: "downloads", label: "Downloads", color: "bg-cyan-500" },
+          ]}
+        />
+      </div>
+
+      <div className="mt-4">
+        <BarList
+          title="Recommendation score over time"
+          items={data.recommendOverTime.map((r) => ({
+            label: r.date,
+            count: Math.round(r.avgRecommend * 10),
+          }))}
+        />
       </div>
     </div>
   )

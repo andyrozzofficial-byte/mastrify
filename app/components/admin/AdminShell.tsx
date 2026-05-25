@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { FormEvent, useCallback, useEffect, useState } from "react"
+import type { AdminRole } from "../../../lib/adminRoles"
 import { ADMIN_NAV, AdminNavLink } from "./admin-shared"
 
 type Props = { children: React.ReactNode }
@@ -69,6 +70,7 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
 export default function AdminShell({ children }: Props) {
   const pathname = usePathname()
   const [auth, setAuth] = useState<"loading" | "login" | "ready">("loading")
+  const [role, setRole] = useState<AdminRole | null>(null)
   const [mobileNav, setMobileNav] = useState(false)
 
   const checkAuth = useCallback(async () => {
@@ -82,6 +84,9 @@ export default function AdminShell({ children }: Props) {
         setAuth("login")
         return
       }
+      const me = await fetch("/api/admin/me", { cache: "no-store" })
+      const meJson = await me.json().catch(() => null)
+      if (me.ok && meJson?.role) setRole(meJson.role as AdminRole)
       setAuth("ready")
     } catch {
       setAuth("login")
@@ -120,9 +125,16 @@ export default function AdminShell({ children }: Props) {
               Mastrify <span className="text-violet-300/80">Admin</span>
             </Link>
           </div>
-          <Link href="/master" className="text-xs text-white/45 hover:text-white/70">
-            Open app →
-          </Link>
+          <div className="flex items-center gap-3">
+            {role ? (
+              <span className="hidden text-[10px] uppercase tracking-wide text-violet-300/70 sm:inline">
+                {role}
+              </span>
+            ) : null}
+            <Link href="/master" className="text-xs text-white/45 hover:text-white/70">
+              Open app →
+            </Link>
+          </div>
         </div>
       </div>
 
