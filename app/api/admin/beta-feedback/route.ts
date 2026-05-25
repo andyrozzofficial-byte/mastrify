@@ -38,7 +38,6 @@ export async function GET() {
   }
 
   const { data, error } = await supabase
-    .schema("public")
     .from(BETA_FEEDBACK_TABLE)
     .select(
       "id, created_at, session_id, track_name, mastering_style, stereo_width, low_end, responses",

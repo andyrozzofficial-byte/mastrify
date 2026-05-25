@@ -31,6 +31,17 @@ Or with Supabase CLI: `supabase db push` (uses `migrations/20260520120000_beta_m
 
 Anonymous users can still submit via RLS insert policies once the table exists.
 
+**Feedback API (`/api/beta-feedback`):** uses `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or `SUPABASE_ANON_KEY`) for inserts. Anon can **insert** but not **select** rows — the API must not call `.select()` after insert unless `SUPABASE_SERVICE_ROLE_KEY` is set (optional, for returning `id`).
+
+Recommended `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+# Optional — admin dashboard + insert returning id:
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+```
+
 ## Admin analytics dashboard
 
 Route: `/admin/beta-feedback` (internal only).

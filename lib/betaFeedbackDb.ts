@@ -31,6 +31,17 @@ function intOrNull(v: unknown): number | null {
   return Math.round(n)
 }
 
+/** Remove undefined so PostgREST does not reject the payload. */
+export function sanitizeBetaFeedbackInsert(row: BetaFeedbackRow): BetaFeedbackRow {
+  const out = { ...row }
+  for (const key of Object.keys(out) as (keyof BetaFeedbackRow)[]) {
+    if (out[key] === undefined) {
+      delete out[key]
+    }
+  }
+  return out
+}
+
 export function buildBetaFeedbackRow(body: BetaFeedbackPayload): BetaFeedbackRow {
   const contactEmail = typeof body.contactEmail === "string" ? body.contactEmail.trim() : ""
   const contactDiscord = typeof body.contactDiscord === "string" ? body.contactDiscord.trim() : ""
@@ -55,7 +66,7 @@ export function buildBetaFeedbackRow(body: BetaFeedbackPayload): BetaFeedbackRow
     session_id: body.sessionId.trim(),
     track_name: trackName,
     track_duration: numOrNull(body.trackDuration),
-    mastering_style: body.masteringStyle.trim(),
+    mastering_style: body.masteringStyle.trim() || "Unknown",
     stereo_width: intOrNull(body.stereoWidth),
     low_end: intOrNull(body.lowEnd),
     master_lufs:

@@ -27,17 +27,20 @@ function loadEnvFile(filePath) {
 loadEnvFile(path.join(root, ".env.local"))
 loadEnvFile(path.join(root, ".env"))
 
-const url = process.env.SUPABASE_URL || "https://wyuxkmrnzqvlqshlqfiw.supabase.co"
+const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const key =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_ANON_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "sb_publishable_j-if6EVRN-M3q-DS5s4q_w_5K0Tiw3n"
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!url || !key) {
+  console.error("Missing SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL or anon/service key in .env.local")
+  process.exit(1)
+}
 
 const supabase = createClient(url, key)
 
 const { data, error } = await supabase
-  .schema("public")
   .from("beta_master_feedback")
   .select("id")
   .limit(1)
