@@ -24,7 +24,7 @@ function FaqCard({ item, highlight, compact }: { item: HelpFaqItem; highlight?: 
     <article
       id={item.id}
       className={`rounded-[1.15rem] border transition duration-300 ${
-        compact ? "px-4 py-3.5" : highlight ? "min-h-[180px] p-7" : "px-5 py-4"
+        compact ? "px-4 py-3.5" : highlight ? "min-h-[180px] p-8" : "px-5 py-4"
       } ${
         highlight
           ? "border-violet-400/35 bg-violet-500/[0.08] shadow-[0_0_0_1px_rgba(167,139,250,0.12)]"
@@ -63,7 +63,7 @@ function FaqNavButton({
 
 function StillNeedHelpCard({ onOpenTicket }: { onOpenTicket: () => void }) {
   return (
-    <section className="mt-16 flex w-full flex-col items-start justify-between gap-6 rounded-[1.35rem] border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:flex-row sm:items-center">
+    <section className="mt-16 flex w-full flex-col items-start justify-between gap-6 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:flex-row sm:items-center">
       <div className="min-w-0">
         <h2 className="text-2xl font-semibold text-white/92">Still need help?</h2>
         <p className="mt-2 text-[16px] leading-[1.8] text-white/[0.85]">
@@ -172,14 +172,17 @@ export default function HelpCenterClient() {
   return (
     <ContentPageLayout>
       <HelpPageContainer>
-        <PageHero
-          label="Help center"
-          title="How can we help?"
-          lead="Search common questions first — most answers are instant. Tickets are only when you still need a human."
-        />
+        <div className="mx-auto mb-12 max-w-[700px] text-center">
+          <PageHero
+            label="Help center"
+            title="How can we help?"
+            lead="Search common questions first — most answers are instant. Tickets are only when you still need a human."
+            align="center"
+          />
+        </div>
 
         <motion.div
-          className="relative mt-6 w-full"
+          className="relative mx-auto mt-6 w-full max-w-[720px]"
           initial={reduce ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.05, ease: EASE }}

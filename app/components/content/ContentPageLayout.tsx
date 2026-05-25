@@ -52,11 +52,11 @@ export function PageContainer({ children, className = "" }: PageContainerProps) 
   return <div className={`${pageContainerClass} ${className}`}>{children}</div>
 }
 
-/** Help Center — wider documentation rail (1400px) */
+/** Help Center — centered documentation rail (1200px) */
 export function HelpPageContainer({ children, className = "" }: PageContainerProps) {
   return (
     <div
-      className={`mx-auto box-border w-full max-w-[1400px] min-w-0 px-8 pb-[100px] pt-16 ${className}`}
+      className={`mx-auto box-border w-full max-w-[1200px] min-w-0 px-8 pb-[100px] pt-16 ${className}`}
     >
       {children}
     </div>
@@ -88,14 +88,14 @@ type HelpCenterGridProps = {
   className?: string
 }
 
-/** Help Center FAQ layout — 360px sticky sidebar + fluid answer column */
+/** Help Center FAQ layout — 320px sidebar + answer column */
 export function HelpCenterGrid({ sidebar, children, className = "" }: HelpCenterGridProps) {
   return (
     <div
-      className={`grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-[360px_minmax(700px,1fr)] lg:gap-12 ${className}`}
+      className={`grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr] lg:gap-10 ${className}`}
     >
-      <aside className="w-full min-w-0 shrink-0 lg:sticky lg:top-[120px] lg:w-[360px]">{sidebar}</aside>
-      <div className="min-w-0 w-full max-w-none">{children}</div>
+      <aside className="w-full min-w-0 shrink-0 lg:sticky lg:top-24 lg:w-[320px]">{sidebar}</aside>
+      <div className="min-w-0 w-full">{children}</div>
     </div>
   )
 }
