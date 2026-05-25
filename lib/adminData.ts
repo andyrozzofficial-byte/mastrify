@@ -1,4 +1,5 @@
 import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
+import { emptyBetaFeedbackPayload } from "./betaFeedbackSurveySchema"
 import { buildBetaFeedbackDashboard, type BetaFeedbackRecord } from "./betaFeedbackAnalytics"
 import type {
   AdminActivityItem,
@@ -41,36 +42,7 @@ function startOfTodayIso(): string {
 function payloadOf(r: { responses: BetaFeedbackPayload | null }): BetaFeedbackPayload {
   const raw = r.responses
   if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as BetaFeedbackPayload
-  return {
-    role: "",
-    genre: "",
-    comparison: "",
-    stoodOut: [],
-    soundedOff: [],
-    easeRating: 0,
-    speedPerception: "",
-    releaseReady: "",
-    wouldRelease: "",
-    useAgainScore: 0,
-    recommendScore: 0,
-    missing: "",
-    oneChange: "",
-    worthPaying: "",
-    additional: "",
-    contactEmail: "",
-    contactDiscord: "",
-    futureBetaContact: null,
-    masterObjectKey: null,
-    trackTitle: null,
-    sessionId: "",
-    trackName: null,
-    trackDuration: null,
-    masteringStyle: "",
-    stereoWidth: 50,
-    lowEnd: 50,
-    masterLufs: null,
-    processingTimeMs: null,
-  }
+  return emptyBetaFeedbackPayload()
 }
 
 type BetaFeedbackDbRow = {

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { AdminFeedbackAnalytics } from "../../../lib/adminFeedbackAnalytics"
+import { getBetaSurveyField } from "../../../lib/betaFeedbackSurveySchema"
 import { feedbackSentiment, FEEDBACK_SENTIMENT_STYLES } from "../../../lib/adminFeedbackSentiment"
 import type { AdminFeedbackRow, AdminFeedbackStatus } from "../../../lib/adminTypes"
 import { ADMIN_FEEDBACK_STATUSES } from "../../../lib/adminTypes"
@@ -95,7 +96,9 @@ function FeedbackListCard({
             href={`/admin/feedback/${row.id}`}
             className="text-right"
           >
-            <p className="text-[10px] uppercase tracking-wide text-white/40">Recommend</p>
+            <p className="text-[10px] uppercase tracking-wide text-white/40 line-clamp-2 max-w-[8rem]">
+              {getBetaSurveyField("recommendScore")?.label.replace(/^\d+\.\s*/, "") ?? "Recommend"}
+            </p>
             <p
               className={`text-xl font-semibold tabular-nums ${
                 row.recommend_score >= 8
@@ -168,18 +171,15 @@ export default function AdminFeedbackPage() {
     return rows.filter((r) => {
       if (statusFilter && r.status !== statusFilter) return false
       if (!q) return true
+      const surveyBits = Object.values(r.survey).flatMap((v) =>
+        Array.isArray(v) ? v : typeof v === "string" || typeof v === "number" ? [String(v)] : [],
+      )
       const hay = [
         r.track_name,
-        r.genre,
-        r.role,
         r.session_id,
         r.contact_email,
         r.mastering_style,
-        r.survey.missing,
-        r.survey.additional,
-        r.survey.oneChange,
-        ...(r.survey.stoodOut ?? []),
-        ...(r.survey.soundedOff ?? []),
+        ...surveyBits,
       ]
         .filter(Boolean)
         .join(" ")
@@ -211,7 +211,7 @@ export default function AdminFeedbackPage() {
                 ? `${analytics.summary.avgRecommendScore}/10`
                 : "—"
             }
-            hint="Would recommend Mastrify"
+            hint={analytics.chartLabels.recommendScores}
             accent="sky"
           />
           <KpiCard
@@ -221,6 +221,7 @@ export default function AdminFeedbackPage() {
                 ? `${analytics.summary.avgUseAgainScore}/10`
                 : "—"
             }
+            hint={analytics.chartLabels.useAgainScores}
             accent="emerald"
           />
           <KpiCard
@@ -230,7 +231,7 @@ export default function AdminFeedbackPage() {
                 ? `${analytics.summary.recommendHighPercent}%`
                 : "—"
             }
-            hint="Scored 7–10 on recommend"
+            hint={`Scored 7–10 · ${analytics.chartLabels.recommendScores}`}
             accent="amber"
           />
         </div>
@@ -258,18 +259,15 @@ export default function AdminFeedbackPage() {
 
       {analytics ? (
         <div className="mb-10 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-          <BarChartCard
-            title="Genre distribution"
-            items={analytics.charts.genreDistribution}
-          />
-          <BarChartCard title="Most common issues" items={analytics.charts.commonIssues} />
-          <BarChartCard title="What sounded good (top)" items={analytics.charts.topPositives} />
+          <BarChartCard title={analytics.chartLabels.genre} items={analytics.charts.genreDistribution} />
+          <BarChartCard title={analytics.chartLabels.commonIssues} items={analytics.charts.commonIssues} />
+          <BarChartCard title={analytics.chartLabels.topPositives} items={analytics.charts.topPositives} />
           <RatingDistributionChart
-            title="Use-again score distribution"
+            title={analytics.chartLabels.useAgainScores}
             items={analytics.charts.ratingDistribution}
           />
           <RatingDistributionChart
-            title="Recommend score distribution"
+            title={analytics.chartLabels.recommendScores}
             items={analytics.charts.recommendRatingDistribution}
           />
           <SparklineChart
@@ -288,9 +286,9 @@ export default function AdminFeedbackPage() {
             color="bg-emerald-500/75"
           />
           <BarChartCard
-            title="Feature requests (snippets)"
+            title={analytics.chartLabels.textSnippets}
             items={analytics.charts.requestedFeatureSnippets}
-            empty="No written feature requests yet"
+            empty="No written survey answers yet"
           />
         </div>
       ) : null}

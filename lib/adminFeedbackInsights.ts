@@ -1,4 +1,10 @@
 import type { AdminFeedbackRow } from "./adminTypes"
+import {
+  BETA_FEEDBACK_SOUNDED_OFF_OPTIONS,
+  BETA_FEEDBACK_STOOD_OUT_OPTIONS,
+} from "./betaFeedbackTypes"
+import { getNumericSurveyScore, getSurveyValue } from "./betaFeedbackSurveyDisplay"
+import { getBetaSurveyFieldsByAnalyticsRole } from "./betaFeedbackSurveySchema"
 
 function round1(n: number): number {
   return Math.round(n * 10) / 10
@@ -27,17 +33,30 @@ function topEntry(map: Map<string, number>): { label: string; count: number } | 
   return best
 }
 
-/** Rule-based insight bullets for the admin feedback dashboard (no external AI). */
+/** Rule-based insight bullets derived from beta survey schema fields. */
 export function buildAdminFeedbackInsights(rows: AdminFeedbackRow[]): string[] {
   if (rows.length === 0) return ["No survey submissions yet — insights will appear after the first response."]
+
+  const recommendField = getBetaSurveyFieldsByAnalyticsRole("recommend_score")[0]
+  const genreField = getBetaSurveyFieldsByAnalyticsRole("genre_distribution")[0]
+  const stoodField = getBetaSurveyFieldsByAnalyticsRole("stood_out_tags")[0]
+  const issuesField = getBetaSurveyFieldsByAnalyticsRole("sounded_off_tags")[0]
+  const missingField = getBetaSurveyFieldsByAnalyticsRole("text_snippets").find((f) => f.key === "missing")
+
+  const recommendKey = recommendField?.key ?? "recommendScore"
+  const genreKey = genreField?.key ?? "genre"
+  const stoodKey = stoodField?.key ?? "stoodOut"
+  const issuesKey = issuesField?.key ?? "soundedOff"
 
   const insights: string[] = []
   const stoodOut: string[] = []
   const issues: string[] = []
 
   for (const row of rows) {
-    for (const item of row.survey.stoodOut ?? []) stoodOut.push(item)
-    for (const item of row.survey.soundedOff ?? []) issues.push(item)
+    const stood = getSurveyValue(row.survey, stoodKey)
+    const off = getSurveyValue(row.survey, issuesKey)
+    if (Array.isArray(stood)) stoodOut.push(...stood.map(String))
+    if (Array.isArray(off)) issues.push(...off.map(String))
   }
 
   const stoodMap = countLabels(stoodOut)
@@ -51,9 +70,11 @@ export function buildAdminFeedbackInsights(rows: AdminFeedbackRow[]): string[] {
     )
   }
 
-  const punchClarity = ["Loudness / punch", "Clarity", "Stereo width"].filter((l) => (stoodMap.get(l) ?? 0) > 0)
+  const punchClarity = BETA_FEEDBACK_STOOD_OUT_OPTIONS.filter(
+    (l) => (stoodMap.get(l) ?? 0) > 0 && l !== "Other",
+  ).slice(0, 3)
   if (punchClarity.length >= 2) {
-    insights.push("Users frequently mention punch, clarity, and stereo width as strengths.")
+    insights.push(`Users frequently mention ${punchClarity.map((l) => l.toLowerCase()).join(", ")}.`)
   }
 
   if (topIssue && topIssue.count >= 2) {
@@ -62,16 +83,19 @@ export function buildAdminFeedbackInsights(rows: AdminFeedbackRow[]): string[] {
     )
   }
 
-  const harsh = issueMap.get("Harsh highs") ?? 0
+  const harshLabel = BETA_FEEDBACK_SOUNDED_OFF_OPTIONS.find((o) => o === "Harsh highs") ?? "Harsh highs"
+  const harsh = issueMap.get(harshLabel) ?? 0
   if (harsh > 0) {
     insights.push(`${harsh} user${harsh === 1 ? "" : "s"} reported harsh highs.`)
   }
 
   const byGenre = new Map<string, number[]>()
   for (const row of rows) {
-    const g = row.genre || "Unknown"
+    const g = String(getSurveyValue(row.survey, genreKey) ?? "").trim() || "Unknown"
+    const score = getNumericSurveyScore(row.survey, recommendKey)
+    if (score == null) continue
     const scores = byGenre.get(g) ?? []
-    scores.push(row.recommend_score)
+    scores.push(score)
     byGenre.set(g, scores)
   }
 
@@ -84,26 +108,33 @@ export function buildAdminFeedbackInsights(rows: AdminFeedbackRow[]): string[] {
       bestGenre = { genre, avg: round1(avg), count: scores.length }
     }
   }
-  if (bestGenre) {
-    insights.push(`${bestGenre.genre} tracks average ${bestGenre.avg}/10 recommendation (${bestGenre.count} submissions).`)
+  if (bestGenre && recommendField) {
+    const q = recommendField.label.replace(/^\d+\.\s*/, "")
+    insights.push(`${bestGenre.genre} tracks average ${bestGenre.avg}/10 on “${q}” (${bestGenre.count} submissions).`)
   }
 
-  const promoters = rows.filter((r) => r.recommend_score >= 9).length
+  const promoters = rows.filter((r) => (getNumericSurveyScore(r.survey, recommendKey) ?? -1) >= 9).length
   const pct = round1((promoters / rows.length) * 100)
-  if (promoters > 0) {
-    insights.push(`${pct}% of respondents scored 9–10 on “would recommend Mastrify”.`)
+  if (promoters > 0 && recommendField) {
+    insights.push(
+      `${pct}% scored 9–10 on “${recommendField.label.replace(/^\d+\.\s*/, "")}”.`,
+    )
   }
 
-  const lowScores = rows.filter((r) => r.recommend_score <= 5).length
-  if (lowScores > 0) {
-    insights.push(`${lowScores} submission${lowScores === 1 ? "" : "s"} scored 5 or below on recommendation — worth a closer read.`)
+  const lowScores = rows.filter((r) => (getNumericSurveyScore(r.survey, recommendKey) ?? 99) <= 5).length
+  if (lowScores > 0 && recommendField) {
+    insights.push(
+      `${lowScores} submission${lowScores === 1 ? "" : "s"} scored ≤5 on “${recommendField.label.replace(/^\d+\.\s*/, "")}”.`,
+    )
   }
 
-  const missingTexts = rows
-    .map((r) => r.survey.missing?.trim())
-    .filter((t): t is string => Boolean(t))
-  if (missingTexts.length >= 3) {
-    insights.push(`${missingTexts.length} users left written notes on missing features.`)
+  if (missingField) {
+    const missingTexts = rows
+      .map((r) => getSurveyValue(r.survey, missingField.key))
+      .filter((t): t is string => typeof t === "string" && Boolean(t.trim()))
+    if (missingTexts.length >= 3) {
+      insights.push(`${missingTexts.length} users answered “${missingField.label.replace(/^\d+\.\s*/, "")}”.`)
+    }
   }
 
   return insights.slice(0, 8)

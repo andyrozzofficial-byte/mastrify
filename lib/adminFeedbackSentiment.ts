@@ -1,11 +1,23 @@
 import type { AdminFeedbackRow } from "./adminTypes"
+import { getNumericSurveyScore, getSurveyValue } from "./betaFeedbackSurveyDisplay"
+import { getBetaSurveyFieldsByAnalyticsRole } from "./betaFeedbackSurveySchema"
 
 export type FeedbackSentiment = "positive" | "negative" | "neutral"
 
 export function feedbackSentiment(row: AdminFeedbackRow): FeedbackSentiment {
-  const issues = (row.survey.soundedOff ?? []).filter((s) => s !== "No, it sounded good")
-  if (row.recommend_score <= 5 || issues.length >= 2) return "negative"
-  if (row.recommend_score >= 8 && issues.length === 0) return "positive"
+  const issuesField = getBetaSurveyFieldsByAnalyticsRole("sounded_off_tags")[0]
+  const recommendField = getBetaSurveyFieldsByAnalyticsRole("recommend_score")[0]
+  const issuesKey = issuesField?.key ?? "soundedOff"
+  const recommendKey = recommendField?.key ?? "recommendScore"
+
+  const off = getSurveyValue(row.survey, issuesKey)
+  const issues = Array.isArray(off)
+    ? off.map(String).filter((s) => s !== "No, it sounded good")
+    : []
+  const recommend = getNumericSurveyScore(row.survey, recommendKey) ?? row.recommend_score
+
+  if (recommend <= 5 || issues.length >= 2) return "negative"
+  if (recommend >= 8 && issues.length === 0) return "positive"
   return "neutral"
 }
 

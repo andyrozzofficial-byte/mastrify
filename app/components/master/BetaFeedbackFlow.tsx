@@ -6,6 +6,11 @@ import { readBetaFeedbackStatus, writeBetaFeedbackStatus } from "../../../lib/be
 import { createMasterSessionId } from "../../../lib/masterSessionId"
 import type { BetaFeedbackPayload, BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
 import {
+  emptyBetaFeedbackPayload,
+  BETA_FEEDBACK_CONTACT_FIELDS,
+  BETA_FEEDBACK_SURVEY_FIELDS,
+} from "../../../lib/betaFeedbackSurveySchema"
+import {
   BETA_FEEDBACK_COMPARISON_OPTIONS,
   BETA_FEEDBACK_GENRE_OPTIONS,
   BETA_FEEDBACK_RELEASE_READY_OPTIONS,
@@ -15,6 +20,18 @@ import {
   BETA_FEEDBACK_STOOD_OUT_OPTIONS,
   BETA_FEEDBACK_WOULD_RELEASE_OPTIONS,
 } from "../../../lib/betaFeedbackTypes"
+
+function surveyLabel(key: string) {
+  return BETA_FEEDBACK_SURVEY_FIELDS.find((f) => f.key === key)?.label ?? key
+}
+
+function surveyHint(key: string) {
+  return BETA_FEEDBACK_SURVEY_FIELDS.find((f) => f.key === key)?.hint
+}
+
+function contactLabel(key: string) {
+  return BETA_FEEDBACK_CONTACT_FIELDS.find((f) => f.key === key)?.label ?? key
+}
 
 type Props = {
   engaged: boolean
@@ -98,36 +115,7 @@ function CheckboxOptions({
   )
 }
 
-const emptyForm = (): BetaFeedbackPayload => ({
-  role: "",
-  genre: "",
-  comparison: "",
-  stoodOut: [],
-  soundedOff: [],
-  easeRating: 3,
-  speedPerception: "",
-  releaseReady: "",
-  wouldRelease: "",
-  useAgainScore: 7,
-  recommendScore: 7,
-  missing: "",
-  oneChange: "",
-  worthPaying: "",
-  additional: "",
-  contactEmail: "",
-  contactDiscord: "",
-  futureBetaContact: null,
-  masterObjectKey: null,
-  trackTitle: null,
-  sessionId: "",
-  trackName: null,
-  trackDuration: null,
-  masteringStyle: "",
-  stereoWidth: 50,
-  lowEnd: 50,
-  masterLufs: null,
-  processingTimeMs: null,
-})
+const emptyForm = (): BetaFeedbackPayload => emptyBetaFeedbackPayload()
 
 export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnalytics }: Props) {
   const [phase, setPhase] = useState<Phase>("hidden")
@@ -363,7 +351,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                   <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
                     <div className="space-y-6">
                       <section>
-                        <FieldLabel required>1. Which best describes you?</FieldLabel>
+                        <FieldLabel required>{surveyLabel("role")}</FieldLabel>
                         <RadioOptions
                           name="role"
                           options={BETA_FEEDBACK_ROLE_OPTIONS}
@@ -373,7 +361,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel required>2. What genre did you test with?</FieldLabel>
+                        <FieldLabel required>{surveyLabel("genre")}</FieldLabel>
                         <RadioOptions
                           name="genre"
                           options={BETA_FEEDBACK_GENRE_OPTIONS}
@@ -383,7 +371,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel required>3. How did the mastered version compare to your original mix?</FieldLabel>
+                        <FieldLabel required>{surveyLabel("comparison")}</FieldLabel>
                         <RadioOptions
                           name="comparison"
                           options={BETA_FEEDBACK_COMPARISON_OPTIONS}
@@ -393,7 +381,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel required>4. What stood out most about the master? (Select all that apply)</FieldLabel>
+                        <FieldLabel required>{surveyLabel("stoodOut")}</FieldLabel>
                         <CheckboxOptions
                           options={BETA_FEEDBACK_STOOD_OUT_OPTIONS}
                           values={form.stoodOut}
@@ -402,7 +390,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel required>5. Did anything sound off?</FieldLabel>
+                        <FieldLabel required>{surveyLabel("soundedOff")}</FieldLabel>
                         <CheckboxOptions
                           options={BETA_FEEDBACK_SOUNDED_OFF_OPTIONS}
                           values={form.soundedOff}
@@ -411,8 +399,10 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel required>6. How easy was the experience?</FieldLabel>
-                        <p className="mt-1 text-[11px] text-white/48">1 = Confusing · 5 = Extremely smooth</p>
+                        <FieldLabel required>{surveyLabel("easeRating")}</FieldLabel>
+                        {surveyHint("easeRating") ? (
+                          <p className="mt-1 text-[11px] text-white/48">{surveyHint("easeRating")}</p>
+                        ) : null}
                         <div className="mt-3 flex items-center gap-3">
                           <input
                             type="range"
@@ -428,7 +418,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel required>7. How did you feel about the processing speed?</FieldLabel>
+                        <FieldLabel required>{surveyLabel("speedPerception")}</FieldLabel>
                         <RadioOptions
                           name="speed"
                           options={BETA_FEEDBACK_SPEED_OPTIONS}
@@ -438,7 +428,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel required>8. Did the result feel release-ready?</FieldLabel>
+                        <FieldLabel required>{surveyLabel("releaseReady")}</FieldLabel>
                         <RadioOptions
                           name="releaseReady"
                           options={BETA_FEEDBACK_RELEASE_READY_OPTIONS}
@@ -448,7 +438,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel required>9. Would you release a song mastered with this version of Mastrify?</FieldLabel>
+                        <FieldLabel required>{surveyLabel("wouldRelease")}</FieldLabel>
                         <RadioOptions
                           name="wouldRelease"
                           options={BETA_FEEDBACK_WOULD_RELEASE_OPTIONS}
@@ -458,8 +448,10 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel required>10. How likely are you to use this service again?</FieldLabel>
-                        <p className="mt-1 text-[11px] text-white/48">0–10</p>
+                        <FieldLabel required>{surveyLabel("useAgainScore")}</FieldLabel>
+                        {surveyHint("useAgainScore") ? (
+                          <p className="mt-1 text-[11px] text-white/48">{surveyHint("useAgainScore")}</p>
+                        ) : null}
                         <div className="mt-3 flex items-center gap-3">
                           <input
                             type="range"
@@ -475,8 +467,10 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel required>11. How likely are you to recommend Mastrify to a friend or collaborator?</FieldLabel>
-                        <p className="mt-1 text-[11px] text-white/48">0–10</p>
+                        <FieldLabel required>{surveyLabel("recommendScore")}</FieldLabel>
+                        {surveyHint("recommendScore") ? (
+                          <p className="mt-1 text-[11px] text-white/48">{surveyHint("recommendScore")}</p>
+                        ) : null}
                         <div className="mt-3 flex items-center gap-3">
                           <input
                             type="range"
@@ -492,7 +486,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel>12. What did you feel was missing?</FieldLabel>
+                        <FieldLabel>{surveyLabel("missing")}</FieldLabel>
                         <textarea
                           value={form.missing}
                           onChange={(e) => patch({ missing: e.target.value })}
@@ -503,7 +497,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel>13. If you could change ONE thing immediately, what would it be?</FieldLabel>
+                        <FieldLabel>{surveyLabel("oneChange")}</FieldLabel>
                         <textarea
                           value={form.oneChange}
                           onChange={(e) => patch({ oneChange: e.target.value })}
@@ -514,7 +508,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel>14. What would make this service worth paying for?</FieldLabel>
+                        <FieldLabel>{surveyLabel("worthPaying")}</FieldLabel>
                         <textarea
                           value={form.worthPaying}
                           onChange={(e) => patch({ worthPaying: e.target.value })}
@@ -525,7 +519,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                       </section>
 
                       <section>
-                        <FieldLabel>15. Any additional thoughts or feedback?</FieldLabel>
+                        <FieldLabel>{surveyLabel("additional")}</FieldLabel>
                         <textarea
                           value={form.additional}
                           onChange={(e) => patch({ additional: e.target.value })}
@@ -537,7 +531,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
 
                       <section className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
                         <p className="text-[12px] font-medium text-white/72">Optional contact</p>
-                        <label className="mt-3 block text-[11px] text-white/50">Email</label>
+                        <label className="mt-3 block text-[11px] text-white/50">{contactLabel("contactEmail")}</label>
                         <input
                           type="email"
                           value={form.contactEmail}
@@ -545,7 +539,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                           className="mt-1 w-full rounded-lg border border-white/[0.08] bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-violet-300/30"
                           placeholder="you@example.com"
                         />
-                        <label className="mt-3 block text-[11px] text-white/50">Discord</label>
+                        <label className="mt-3 block text-[11px] text-white/50">{contactLabel("contactDiscord")}</label>
                         <input
                           type="text"
                           value={form.contactDiscord}
@@ -553,9 +547,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
                           className="mt-1 w-full rounded-lg border border-white/[0.08] bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-violet-300/30"
                           placeholder="username"
                         />
-                        <p className="mt-4 text-[12px] text-white/62">
-                          Would you like to be contacted for future beta tests?
-                        </p>
+                        <p className="mt-4 text-[12px] text-white/62">{contactLabel("futureBetaContact")}</p>
                         <div className="mt-2 flex gap-2">
                           {(["Yes", "No"] as const).map((opt) => (
                             <button

@@ -1,5 +1,10 @@
 import type { BetaFeedbackRecord } from "./betaFeedbackAnalytics"
 import { buildBetaFeedbackDashboard } from "./betaFeedbackAnalytics"
+import {
+  getBetaSurveyFieldsByAnalyticsRole,
+  getBetaSurveyField,
+} from "./betaFeedbackSurveySchema"
+import { getNumericSurveyScore, getSurveyValue } from "./betaFeedbackSurveyDisplay"
 import type { AdminFeedbackRow } from "./adminTypes"
 
 export type AdminFeedbackAnalytics = {
@@ -9,6 +14,14 @@ export type AdminFeedbackAnalytics = {
     avgUseAgainScore: number | null
     recommendHighPercent: number | null
     promoterPercent: number | null
+  }
+  chartLabels: {
+    genre: string
+    useAgainScores: string
+    recommendScores: string
+    topPositives: string
+    commonIssues: string
+    textSnippets: string
   }
   charts: {
     genreDistribution: { label: string; count: number }[]
@@ -51,6 +64,23 @@ function weekKey(iso: string): string {
   return monday.toISOString().slice(0, 10)
 }
 
+function scoreDistribution(
+  rows: AdminFeedbackRow[],
+  key: string,
+  min: number,
+  max: number,
+): { label: string; count: number }[] {
+  const buckets = new Map<string, number>()
+  for (let i = min; i <= max; i++) buckets.set(String(i), 0)
+  for (const row of rows) {
+    const s = getNumericSurveyScore(row.survey, key)
+    if (s == null) continue
+    const k = String(Math.min(max, Math.max(min, Math.round(s))))
+    buckets.set(k, (buckets.get(k) ?? 0) + 1)
+  }
+  return [...buckets.entries()].map(([label, count]) => ({ label, count }))
+}
+
 function toBetaRecords(rows: AdminFeedbackRow[]): BetaFeedbackRecord[] {
   return rows.map((r) => ({
     id: r.id,
@@ -66,38 +96,45 @@ function toBetaRecords(rows: AdminFeedbackRow[]): BetaFeedbackRecord[] {
 
 export function buildAdminFeedbackAnalytics(rows: AdminFeedbackRow[]): AdminFeedbackAnalytics {
   const base = buildBetaFeedbackDashboard(toBetaRecords(rows))
-  const recommendScores = rows.map((r) => r.recommend_score).filter(Number.isFinite)
-  const useAgainScores = rows.map((r) => r.use_again_score).filter(Number.isFinite)
 
-  const ratingBuckets = new Map<string, number>()
-  for (let i = 0; i <= 10; i++) ratingBuckets.set(String(i), 0)
-  for (const s of useAgainScores) {
-    const k = String(Math.min(10, Math.max(0, Math.round(s))))
-    ratingBuckets.set(k, (ratingBuckets.get(k) ?? 0) + 1)
-  }
+  const recommendField = getBetaSurveyFieldsByAnalyticsRole("recommend_score")[0]
+  const useAgainField = getBetaSurveyFieldsByAnalyticsRole("use_again_score")[0]
+  const genreField = getBetaSurveyFieldsByAnalyticsRole("genre_distribution")[0]
+  const stoodField = getBetaSurveyFieldsByAnalyticsRole("stood_out_tags")[0]
+  const issuesField = getBetaSurveyFieldsByAnalyticsRole("sounded_off_tags")[0]
+  const textFields = getBetaSurveyFieldsByAnalyticsRole("text_snippets")
 
-  const recommendBuckets = new Map<string, number>()
-  for (let i = 0; i <= 10; i++) recommendBuckets.set(String(i), 0)
-  for (const s of recommendScores) {
-    const k = String(Math.min(10, Math.max(0, Math.round(s))))
-    recommendBuckets.set(k, (recommendBuckets.get(k) ?? 0) + 1)
-  }
+  const recommendKey = recommendField?.key ?? "recommendScore"
+  const useAgainKey = useAgainField?.key ?? "useAgainScore"
+
+  const recommendScores = rows
+    .map((r) => getNumericSurveyScore(r.survey, recommendKey))
+    .filter((n): n is number => n != null)
+  const useAgainScores = rows
+    .map((r) => getNumericSurveyScore(r.survey, useAgainKey))
+    .filter((n): n is number => n != null)
 
   const positives: string[] = []
   const snippets: string[] = []
+  const stoodKey = stoodField?.key ?? "stoodOut"
+  const issuesKey = issuesField?.key ?? "soundedOff"
+
   for (const row of rows) {
-    for (const item of row.survey.stoodOut ?? []) positives.push(item)
-    for (const t of [row.survey.missing, row.survey.oneChange, row.survey.worthPaying, row.survey.additional]) {
-      const trimmed = t?.trim()
-      if (trimmed && trimmed.length >= 8) snippets.push(trimmed.slice(0, 120))
+    const stood = getSurveyValue(row.survey, stoodKey)
+    if (Array.isArray(stood)) positives.push(...stood.map(String))
+    for (const field of textFields) {
+      const t = getSurveyValue(row.survey, field.key)
+      if (typeof t === "string" && t.trim().length >= 8) snippets.push(t.trim().slice(0, 120))
     }
   }
 
   const byDay = new Map<string, { scores: number[]; count: number }>()
   for (const row of rows) {
     const day = row.created_at.slice(0, 10)
+    const score = getNumericSurveyScore(row.survey, recommendKey)
+    if (score == null) continue
     const entry = byDay.get(day) ?? { scores: [], count: 0 }
-    entry.scores.push(row.recommend_score)
+    entry.scores.push(score)
     entry.count += 1
     byDay.set(day, entry)
   }
@@ -113,9 +150,11 @@ export function buildAdminFeedbackAnalytics(rows: AdminFeedbackRow[]): AdminFeed
 
   const byWeek = new Map<string, { scores: number[]; count: number }>()
   for (const row of rows) {
+    const score = getNumericSurveyScore(row.survey, recommendKey)
+    if (score == null) continue
     const week = weekKey(row.created_at)
     const entry = byWeek.get(week) ?? { scores: [], count: 0 }
-    entry.scores.push(row.recommend_score)
+    entry.scores.push(score)
     entry.count += 1
     byWeek.set(week, entry)
   }
@@ -129,25 +168,44 @@ export function buildAdminFeedbackAnalytics(rows: AdminFeedbackRow[]): AdminFeed
       avgRecommend: round1(mean(scores) ?? 0),
     }))
 
-  const highRecommend = rows.filter((r) => r.recommend_score >= 7).length
-  const promoters = rows.filter((r) => r.recommend_score >= 9).length
+  const highRecommend = recommendScores.filter((s) => s >= 7).length
+  const promoters = recommendScores.filter((s) => s >= 9).length
+
+  const useAgainDef = getBetaSurveyField(useAgainKey)
+  const recommendDef = getBetaSurveyField(recommendKey)
 
   return {
     summary: {
       totalSubmissions: rows.length,
-      avgRecommendScore: base.summary.avgRecommendScore,
-      avgUseAgainScore: base.summary.avgUseAgainScore,
+      avgRecommendScore: mean(recommendScores) != null ? round1(mean(recommendScores)!) : null,
+      avgUseAgainScore: mean(useAgainScores) != null ? round1(mean(useAgainScores)!) : null,
       recommendHighPercent:
-        rows.length > 0 ? round1((highRecommend / rows.length) * 100) : null,
-      promoterPercent: rows.length > 0 ? round1((promoters / rows.length) * 100) : null,
+        recommendScores.length > 0 ? round1((highRecommend / recommendScores.length) * 100) : null,
+      promoterPercent:
+        recommendScores.length > 0 ? round1((promoters / recommendScores.length) * 100) : null,
+    },
+    chartLabels: {
+      genre: genreField?.label ?? "Genre",
+      useAgainScores: useAgainDef?.label ?? "Use again",
+      recommendScores: recommendDef?.label ?? "Recommend",
+      topPositives: stoodField?.label ?? "What stood out",
+      commonIssues: issuesField?.label ?? "What sounded off",
+      textSnippets: "Written survey answers",
     },
     charts: {
       genreDistribution: base.charts.genreDistribution,
-      ratingDistribution: [...ratingBuckets.entries()].map(([label, count]) => ({ label, count })),
-      recommendRatingDistribution: [...recommendBuckets.entries()].map(([label, count]) => ({
-        label,
-        count,
-      })),
+      ratingDistribution: scoreDistribution(
+        rows,
+        useAgainKey,
+        useAgainDef?.rangeMin ?? 0,
+        useAgainDef?.rangeMax ?? 10,
+      ),
+      recommendRatingDistribution: scoreDistribution(
+        rows,
+        recommendKey,
+        recommendDef?.rangeMin ?? 0,
+        recommendDef?.rangeMax ?? 10,
+      ),
       dailyTrend,
       weeklyTrend,
       commonIssues: base.charts.commonIssues,

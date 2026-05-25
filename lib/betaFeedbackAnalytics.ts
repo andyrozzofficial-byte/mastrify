@@ -3,6 +3,7 @@ import {
   BETA_FEEDBACK_RELEASE_READY_OPTIONS,
   BETA_FEEDBACK_SPEED_OPTIONS,
 } from "./betaFeedbackTypes"
+import { getBetaSurveyFieldsByAnalyticsRole } from "./betaFeedbackSurveySchema"
 
 export type BetaFeedbackRecord = {
   id: string
@@ -149,9 +150,15 @@ export function buildBetaFeedbackDashboard(records: BetaFeedbackRecord[]): BetaF
       count: scores.length,
     }))
 
+  const soundedField = getBetaSurveyFieldsByAnalyticsRole("sounded_off_tags")[0]
+  const soundedKey = (soundedField?.key ?? "soundedOff") as keyof BetaFeedbackPayload
+  const textFields = getBetaSurveyFieldsByAnalyticsRole("text_snippets")
+
   const issues: string[] = []
   for (const r of records) {
-    for (const item of payloadOf(r).soundedOff ?? []) {
+    const off = payloadOf(r)[soundedKey]
+    if (!Array.isArray(off)) continue
+    for (const item of off) {
       if (item !== "No, it sounded good") issues.push(item)
     }
   }
@@ -159,8 +166,9 @@ export function buildBetaFeedbackDashboard(records: BetaFeedbackRecord[]): BetaF
   const featureTexts: string[] = []
   for (const r of records) {
     const p = payloadOf(r)
-    for (const t of [p.missing, p.oneChange, p.worthPaying]) {
-      if (t?.trim()) featureTexts.push(t.trim())
+    for (const field of textFields) {
+      const t = p[field.key as keyof BetaFeedbackPayload]
+      if (typeof t === "string" && t.trim()) featureTexts.push(t.trim())
     }
   }
 
