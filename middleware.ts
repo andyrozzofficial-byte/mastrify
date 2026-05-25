@@ -90,6 +90,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/privacy" ||
     pathname === "/terms" ||
     pathname === "/contact" ||
+    pathname === "/help" ||
     pathname === "/access" ||
     pathname === "/login" ||
     pathname.startsWith("/admin") ||
@@ -107,7 +108,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/og-image") ||
     pathname.startsWith("/api/access") ||
     pathname.startsWith("/api/admin") ||
-    pathname === "/api/beta-feedback"
+    pathname === "/api/beta-feedback" ||
+    pathname === "/api/support/tickets"
   ) {
     return NextResponse.next()
   }

@@ -1,11 +1,6 @@
-import type { Metadata } from "next"
-import ContactClient from "./ContactClient"
+import { redirect } from "next/navigation"
 
-export const metadata: Metadata = {
-  title: "Contact | Mastrify",
-  description: "Get in touch with the Mastrify team for support and questions.",
-}
-
+/** Legacy /contact URL → Help Center */
 export default function ContactPage() {
-  return <ContactClient />
+  redirect("/help")
 }

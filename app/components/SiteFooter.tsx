@@ -16,7 +16,7 @@ const product = [
 
 const support = [
   { href: "/how-it-works", label: "Why Mastrify" },
-  { href: "/contact", label: "Contact" },
+  { href: "/help", label: "Contact" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
 ] as const

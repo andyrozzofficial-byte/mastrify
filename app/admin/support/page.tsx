@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
+import { categoryLabel } from "../../../lib/supportTypes"
 import type { AdminSupportPriority, AdminSupportRow, AdminSupportStatus } from "../../../lib/adminTypes"
 import { ADMIN_SUPPORT_PRIORITIES, ADMIN_SUPPORT_STATUSES } from "../../../lib/adminTypes"
 import {
@@ -185,17 +186,18 @@ export default function AdminSupportPage() {
                   <div className="min-w-0">
                   <Link
                     href={`/admin/support/${r.id}`}
-                    className="text-[15px] font-medium text-white hover:text-violet-200"
+                    className="text-[15px] font-medium text-slate-900 hover:text-violet-700"
                   >
                     {r.subject ?? "(No subject)"}
                   </Link>
-                  <p className="text-xs text-white/50">
+                  <p className="text-xs text-slate-600">
                     <Link
                       href={`/admin/customers/${encodeURIComponent(r.email)}`}
-                      className="hover:text-violet-200/90"
+                      className="hover:text-violet-700"
                     >
                       {r.email}
                     </Link>
+                    {r.category ? ` · ${categoryLabel(r.category)}` : ""}
                     {r.name ? ` · ${r.name}` : ""}
                   </p>
                   <p className="mt-1 text-[10px] text-white/40">
@@ -209,7 +211,9 @@ export default function AdminSupportPage() {
                   <SupportStatusBadge status={r.status} />
                 </div>
               </div>
-              <p className="mt-3 line-clamp-2 text-[13px] leading-relaxed text-white/65">{r.message}</p>
+              <p className="mt-3 line-clamp-2 text-[13px] leading-relaxed text-slate-600">
+                {r.thread[0]?.body ?? r.message}
+              </p>
               </AdminCard>
             </li>
           ))}

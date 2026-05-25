@@ -25,6 +25,7 @@ import {
 import { BETA_FEEDBACK_TABLE } from "./betaFeedbackDb"
 import { isBetaFeedbackStage, type BetaFeedbackStage } from "./betaFeedbackPulseTypes"
 import { createSupabaseServerClient } from "./supabaseServer"
+import { mapSupportRow } from "./supportTickets"
 
 export const SUPPORT_INBOX_TABLE = "admin_support_inbox"
 export const MASTER_JOBS_TABLE = "admin_master_jobs"
@@ -516,20 +517,7 @@ export async function fetchAdminSupport(): Promise<AdminSupportRow[] | { error: 
 
   if (error) return { error: error.message }
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    created_at: row.created_at,
-    updated_at: row.updated_at ?? row.created_at,
-    resolved_at: row.resolved_at ?? null,
-    email: row.email,
-    name: row.name,
-    subject: row.subject,
-    message: row.message,
-    status: normalizeSupportStatus(row.status),
-    priority: normalizeSupportPriority(row.priority),
-    source: row.source ?? "manual",
-    admin_notes: row.admin_notes,
-  }))
+  return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
 }
 
 export async function fetchSupportTicket(id: string): Promise<AdminSupportRow | { error: string }> {
@@ -547,9 +535,15 @@ export async function createSupportItem(input: {
   message: string
   source?: string
   priority?: AdminSupportPriority
+  category?: string | null
+  session_context?: Record<string, unknown> | null
 }): Promise<{ id: string } | { error: string }> {
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
+
+  const createdAt = new Date().toISOString()
+  const message = input.message.trim()
+  const thread = [{ id: crypto.randomUUID(), author: "user" as const, body: message, created_at: createdAt }]
 
   const { data, error } = await supabase
     .from(SUPPORT_INBOX_TABLE)
@@ -558,10 +552,13 @@ export async function createSupportItem(input: {
         email: input.email.trim(),
         name: input.name?.trim() || null,
         subject: input.subject?.trim() || null,
-        message: input.message.trim(),
+        message,
         source: input.source?.trim() || "manual",
         status: "open",
         priority: input.priority ?? "medium",
+        category: input.category ?? null,
+        session_context: input.session_context ?? {},
+        thread,
       },
     ])
     .select("id")

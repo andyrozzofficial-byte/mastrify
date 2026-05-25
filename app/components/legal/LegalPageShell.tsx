@@ -94,7 +94,7 @@ export default function LegalPageShell({ label, title, lead, sections, children 
         <p className="mt-16 border-t border-white/[0.06] pt-8 text-center text-[10px] leading-relaxed tracking-[0.04em] text-white/38 md:mt-20">
           Last updated {year}. Questions?{" "}
           <a
-            href="/contact"
+            href="/help"
             className="text-white/48 underline-offset-2 transition hover:text-violet-200/75 hover:underline"
           >
             Contact us

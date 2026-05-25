@@ -11,6 +11,13 @@ export const ADMIN_SUPPORT_STATUSES = [
 ] as const
 export type AdminSupportStatus = (typeof ADMIN_SUPPORT_STATUSES)[number]
 
+export const SUPPORT_STATUS_LABELS: Record<AdminSupportStatus, string> = {
+  open: "Open",
+  waiting_for_customer: "Waiting for user",
+  resolved: "Resolved",
+  closed: "Closed",
+}
+
 export const ADMIN_SUPPORT_PRIORITIES = ["low", "medium", "high"] as const
 export type AdminSupportPriority = (typeof ADMIN_SUPPORT_PRIORITIES)[number]
 
@@ -119,6 +126,9 @@ export type AdminSupportRow = {
   priority: AdminSupportPriority
   source: string
   admin_notes: string | null
+  category: string | null
+  session_context: Record<string, unknown>
+  thread: { id: string; author: "user" | "admin"; body: string; created_at: string }[]
 }
 
 export type AdminCustomerRow = {

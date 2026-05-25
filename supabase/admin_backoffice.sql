@@ -3,6 +3,9 @@
 -- Support workflow: Open | Waiting for customer | Resolved | Closed
 alter table public.admin_support_inbox add column if not exists priority text;
 alter table public.admin_support_inbox add column if not exists resolved_at timestamptz;
+alter table public.admin_support_inbox add column if not exists category text;
+alter table public.admin_support_inbox add column if not exists session_context jsonb default '{}'::jsonb;
+alter table public.admin_support_inbox add column if not exists thread jsonb default '[]'::jsonb;
 
 update public.admin_support_inbox set status = 'open' where status is null or status = 'new';
 update public.admin_support_inbox set status = 'waiting_for_customer' where status = 'read';

@@ -13,6 +13,7 @@ import {
   ADMIN_JOB_STATUSES,
   ADMIN_SUPPORT_PRIORITIES,
   ADMIN_SUPPORT_STATUSES,
+  SUPPORT_STATUS_LABELS,
 } from "../../../lib/adminTypes"
 import { ADMIN_ICON_MAP, type AdminNavIconKey } from "./AdminIcons"
 
@@ -73,10 +74,6 @@ function badgeClass(styles: Record<string, string>, key: string) {
   return styles[key] ?? "bg-slate-100 text-slate-600 ring-slate-200"
 }
 
-function formatLabel(s: string) {
-  return s.replace(/_/g, " ")
-}
-
 export function FeedbackStatusBadge({ status }: { status: AdminFeedbackStatus }) {
   return (
     <span
@@ -90,9 +87,9 @@ export function FeedbackStatusBadge({ status }: { status: AdminFeedbackStatus })
 export function SupportStatusBadge({ status }: { status: AdminSupportStatus }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize tracking-wide ring-1 ${badgeClass(SUPPORT_STATUS_STYLES, status)}`}
+      className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide ring-1 ${badgeClass(SUPPORT_STATUS_STYLES, status)}`}
     >
-      {formatLabel(status)}
+      {SUPPORT_STATUS_LABELS[status]}
     </span>
   )
 }
@@ -105,6 +102,10 @@ export function PriorityBadge({ priority }: { priority: AdminSupportPriority }) 
       {priority}
     </span>
   )
+}
+
+function formatSelectLabel(s: string) {
+  return s.replace(/_/g, " ")
 }
 
 export function JobStatusBadge({ status }: { status: AdminJobStatus }) {
@@ -289,7 +290,7 @@ export function SupportStatusSelect({
     >
       {ADMIN_SUPPORT_STATUSES.map((s) => (
         <option key={s} value={s}>
-          {formatLabel(s)}
+          {SUPPORT_STATUS_LABELS[s]}
         </option>
       ))}
     </select>
