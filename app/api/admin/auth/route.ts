@@ -3,9 +3,10 @@ import { ADMIN_COOKIE_NAME, createAdminToken } from "../../../../lib/admin"
 import { ADMIN_ROLE_COOKIE, defaultAdminRole } from "../../../../lib/adminRoles"
 
 export async function POST(request: Request) {
-  console.log("[admin-auth]", !!process.env.MASTRIFY_ADMIN_PASSWORD)
-
   try {
+    console.log("[admin-auth-password-exists]", !!process.env.MASTRIFY_ADMIN_PASSWORD)
+    console.log("[admin-auth-secret-exists]", !!process.env.MASTRIFY_ADMIN_SECRET)
+
     const adminPassword = process.env.MASTRIFY_ADMIN_PASSWORD?.trim() ?? ""
     if (!adminPassword) {
       return NextResponse.json(
@@ -44,8 +45,15 @@ export async function POST(request: Request) {
     })
     return response
   } catch (error: unknown) {
-    console.error("[admin-auth]", error)
-    const message = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json({ success: false, error: message || "Unknown error" }, { status: 500 })
+    const err = error as { message?: string; stack?: string }
+    console.error("[admin-auth-full-error]", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: err?.message ?? "Unknown error",
+        stack: process.env.NODE_ENV === "development" ? err?.stack ?? null : null,
+      },
+      { status: 500 },
+    )
   }
 }
