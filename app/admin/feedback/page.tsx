@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { AdminFeedbackAnalytics } from "../../../lib/adminFeedbackAnalytics"
-import type { ActionCenterItem, RankedIssue } from "../../../lib/adminFeedbackActionCenter"
+import type { ActionCenterIssue, RankedIssue } from "../../../lib/adminFeedbackActionCenter"
 import { feedbackSentiment, FEEDBACK_SENTIMENT_STYLES } from "../../../lib/adminFeedbackSentiment"
 import type { AdminFeedbackRow, AdminFeedbackStatus } from "../../../lib/adminTypes"
 import { ADMIN_FEEDBACK_STATUSES } from "../../../lib/adminTypes"
@@ -28,7 +28,7 @@ type FeedbackApiResponse = {
   rows?: AdminFeedbackRow[]
   analytics?: AdminFeedbackAnalytics
   insights?: string[]
-  actionCenter?: ActionCenterItem[]
+  actionCenter?: ActionCenterIssue[]
   issueTiers?: { critical: RankedIssue[]; medium: RankedIssue[]; positive: RankedIssue[] }
   error?: string
 }
@@ -87,7 +87,7 @@ function FeedbackListCard({
 
   return (
     <article
-      className={`group relative rounded-2xl border bg-white transition duration-200 ${styles.border} ${styles.glow} ${expanded ? "" : "hover:border-violet-300"}`}
+      className={`group relative rounded-2xl border bg-[#ffffff] transition duration-200 ${styles.border} ${styles.glow} ${expanded ? "" : "hover:border-violet-300"}`}
     >
       <div
         role="button"
@@ -112,7 +112,7 @@ function FeedbackListCard({
                 {stageBadge}
               </span>
             </div>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-600">
               {formatAdminDate(row.created_at)}
               {row.feedback_stage === "completed" ? ` · ${row.role}` : ""}
             </p>
@@ -158,7 +158,7 @@ export default function AdminFeedbackPage() {
   const [rows, setRows] = useState<AdminFeedbackRow[]>([])
   const [analytics, setAnalytics] = useState<AdminFeedbackAnalytics | null>(null)
   const [insights, setInsights] = useState<string[]>([])
-  const [actionCenter, setActionCenter] = useState<ActionCenterItem[]>([])
+  const [actionCenter, setActionCenter] = useState<ActionCenterIssue[]>([])
   const [issueTiers, setIssueTiers] = useState<{
     critical: RankedIssue[]
     medium: RankedIssue[]
@@ -177,9 +177,7 @@ export default function AdminFeedbackPage() {
       return
     }
     setRows(json?.rows ?? [])
-    const nextAnalytics = json?.analytics ?? null
-    console.error("[analytics-data]", nextAnalytics)
-    setAnalytics(nextAnalytics)
+    setAnalytics(json?.analytics ?? null)
     setInsights(json?.insights ?? [])
     setActionCenter(json?.actionCenter ?? [])
     setIssueTiers(json?.issueTiers ?? null)

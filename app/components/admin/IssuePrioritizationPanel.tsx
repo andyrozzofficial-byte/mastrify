@@ -22,7 +22,7 @@ function TierColumn({
         {emoji} {title}
       </h3>
       {items.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">{empty}</p>
+        <p className="mt-3 text-sm text-slate-600">{empty}</p>
       ) : (
         <ul className="mt-4 space-y-3">
           {(items ?? []).slice(0, 8).map((item) => {

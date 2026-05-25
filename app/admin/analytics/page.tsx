@@ -22,9 +22,7 @@ export default function AdminAnalyticsPage() {
         setError(json?.error ?? "Could not load analytics")
         return
       }
-      const payload = json as AdminAnalyticsExtended
-      console.error("[analytics-data]", payload)
-      setData(payload)
+      setData(json as AdminAnalyticsExtended)
     })()
   }, [])
 

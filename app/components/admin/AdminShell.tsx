@@ -59,7 +59,7 @@ export default function AdminShell({ children }: Props) {
 
   if (auth === "loading" || auth === "login") {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[#F5F7FA] text-slate-500">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#f6f7fb] text-slate-600">
         {auth === "loading" ? "Loading workspace…" : "Redirecting to login…"}
       </div>
     )
@@ -67,8 +67,8 @@ export default function AdminShell({ children }: Props) {
 
   return (
     <AdminBadgeContext.Provider value={badges}>
-      <div className="min-h-[100dvh] bg-[#F5F7FA] text-slate-900">
-        <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md">
+      <div className="min-h-[100dvh] bg-[#f6f7fb] text-slate-900">
+        <header className="sticky top-0 z-40 border-b border-slate-300/80 bg-[#ffffff]/95 shadow-sm backdrop-blur-md">
           <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <button
@@ -103,7 +103,7 @@ export default function AdminShell({ children }: Props) {
 
         <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 lg:flex-row lg:px-8">
           <aside className={`lg:w-60 lg:shrink-0 ${mobileNav ? "block" : "hidden lg:block"}`}>
-            <nav className="space-y-1 rounded-2xl border border-slate-200/80 bg-white p-2 shadow-sm shadow-slate-200/50">
+            <nav className="space-y-1 rounded-2xl border border-slate-300/90 bg-[#ffffff] p-2 shadow-sm shadow-slate-300/40">
               {ADMIN_NAV.map((item) => (
                 <AdminNavLink
                   key={item.href}

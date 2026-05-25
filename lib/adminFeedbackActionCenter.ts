@@ -10,11 +10,21 @@ export type RankedIssue = {
   tier: IssueTier
 }
 
-export type ActionCenterItem = {
+export type ActionCenterPriorityLabel = "High" | "Medium" | "Low"
+
+export type ActionCenterIssue = {
+  id: string
   tier: IssueTier
   emoji: string
+  label: string
+  mentions: number
+  priorityScore: number
+  priorityLabel: ActionCenterPriorityLabel
   message: string
 }
+
+/** @deprecated Use ActionCenterIssue */
+export type ActionCenterItem = ActionCenterIssue
 
 const CRITICAL_SOUND_OFF = new Set([
   "Too compressed",
@@ -31,6 +41,13 @@ const MEDIUM_SOUND_OFF = new Set([
 
 const POSITIVE_STOOD_OUT = new Set([...BETA_FEEDBACK_STOOD_OUT_OPTIONS].filter((l) => l !== "Other"))
 
+function slugify(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+}
+
 function countMentions(rows: AdminFeedbackRow[], collect: (row: AdminFeedbackRow) => string[]): Map<string, number> {
   const map = new Map<string, number>()
   for (const row of rows) {
@@ -41,6 +58,37 @@ function countMentions(rows: AdminFeedbackRow[], collect: (row: AdminFeedbackRow
     }
   }
   return map
+}
+
+function rowsMentioningLabel(rows: AdminFeedbackRow[], label: string): AdminFeedbackRow[] {
+  return rows.filter((row) => {
+    const off = getSurveyValue(row.survey, "soundedOff")
+    if (!Array.isArray(off)) return false
+    return off.map(String).includes(label)
+  })
+}
+
+function meanRecommend(rows: AdminFeedbackRow[]): number | null {
+  const scores = rows
+    .map((r) => r.recommend_score)
+    .filter((n) => typeof n === "number" && n > 0)
+  if (scores.length === 0) return null
+  return scores.reduce((a, b) => a + b, 0) / scores.length
+}
+
+/** Priority = mentions × recommend impact (lower avg recommend → higher impact). */
+export function computeIssuePriority(
+  rows: AdminFeedbackRow[],
+  label: string,
+  mentions: number,
+): { priorityScore: number; priorityLabel: ActionCenterPriorityLabel } {
+  const matching = rowsMentioningLabel(rows, label)
+  const avgRecommend = meanRecommend(matching) ?? 7
+  const recommendImpact = Math.max(1, 11 - avgRecommend)
+  const priorityScore = Math.round(mentions * recommendImpact * 10) / 10
+  const priorityLabel: ActionCenterPriorityLabel =
+    priorityScore >= 18 ? "High" : priorityScore >= 9 ? "Medium" : "Low"
+  return { priorityScore, priorityLabel }
 }
 
 function tierForSoundedOff(label: string): IssueTier {
@@ -54,6 +102,12 @@ function tierForSoundedOff(label: string): IssueTier {
 
 function tierForStoodOut(label: string): IssueTier {
   return POSITIVE_STOOD_OUT.has(label) ? "positive" : "positive"
+}
+
+const TIER_EMOJI: Record<IssueTier, string> = {
+  critical: "🔴",
+  medium: "🟡",
+  positive: "🟢",
 }
 
 export function buildRankedFeedbackIssues(rows: AdminFeedbackRow[]): {
@@ -73,7 +127,6 @@ export function buildRankedFeedbackIssues(rows: AdminFeedbackRow[]): {
     return Array.isArray(stood) ? stood.map(String) : []
   })
 
-  // Preview-stage stood out (pulse)
   for (const row of rows) {
     if (row.feedback_stage !== "preview") continue
     const stood = getSurveyValue(row.survey, "previewStoodOut")
@@ -107,65 +160,30 @@ export function buildRankedFeedbackIssues(rows: AdminFeedbackRow[]): {
   return { critical, medium, positive }
 }
 
-export function buildAdminActionCenter(rows: AdminFeedbackRow[]): ActionCenterItem[] {
-  const { critical, medium, positive } = buildRankedFeedbackIssues(rows)
-  const items: ActionCenterItem[] = []
+function issueFromRanked(rows: AdminFeedbackRow[], item: RankedIssue): ActionCenterIssue {
+  const { priorityScore, priorityLabel } = computeIssuePriority(rows, item.label, item.count)
+  return {
+    id: slugify(item.label),
+    tier: item.tier,
+    emoji: TIER_EMOJI[item.tier],
+    label: item.label,
+    mentions: item.count,
+    priorityScore,
+    priorityLabel,
+    message: `${item.label} — ${item.count} mention${item.count === 1 ? "" : "s"} · ${priorityLabel} priority`,
+  }
+}
 
-  const topCritical = critical[0]
-  if (topCritical && topCritical.count >= 2) {
-    items.push({
-      tier: "critical",
-      emoji: "🔴",
-      message: `${topCritical.label} complaints increasing (${topCritical.count} mentions)`,
-    })
+export function buildAdminActionCenter(rows: AdminFeedbackRow[]): ActionCenterIssue[] {
+  const { critical, medium } = buildRankedFeedbackIssues(rows)
+  const completed = rows.filter((r) => r.feedback_stage === "completed" || !r.feedback_stage)
+
+  const issues: ActionCenterIssue[] = []
+  for (const item of [...critical, ...medium]) {
+    if (item.count < 1) continue
+    issues.push(issueFromRanked(completed, item))
   }
 
-  const stereo = medium.find((m) => /stereo|width/i.test(m.label))
-  const widthPulse = rows.filter((r) => {
-    const stood = getSurveyValue(r.survey, "previewStoodOut")
-    return Array.isArray(stood) && stood.some((s) => /stereo/i.test(String(s)))
-  }).length
-  if (stereo && stereo.count >= 2) {
-    items.push({
-      tier: "medium",
-      emoji: "🟡",
-      message: `Users mention ${stereo.label.toLowerCase()} (${stereo.count} in full survey)`,
-    })
-  } else if (widthPulse >= 2) {
-    items.push({
-      tier: "medium",
-      emoji: "🟡",
-      message: `Users request stereo width improvements (${widthPulse} in preview pulse)`,
-    })
-  } else {
-    const topMedium = medium[0]
-    if (topMedium && topMedium.count >= 2) {
-      items.push({
-        tier: "medium",
-        emoji: "🟡",
-        message: `${topMedium.label} mentioned by ${topMedium.count} users`,
-      })
-    }
-  }
-
-  const punch = positive.find((p) => p.label === "Loudness / punch")
-  const vibe = positive.find((p) => p.label === "Preserved the vibe of the mix")
-  if (punch && vibe) {
-    items.push({
-      tier: "positive",
-      emoji: "🟢",
-      message: `Users love punch and preserved vibe (${punch.count} + ${vibe.count} mentions)`,
-    })
-  } else {
-    const topPos = positive[0]
-    if (topPos && topPos.count >= 2) {
-      items.push({
-        tier: "positive",
-        emoji: "🟢",
-        message: `Users highlight “${topPos.label}” (${topPos.count} mentions)`,
-      })
-    }
-  }
-
-  return items.slice(0, 5)
+  issues.sort((a, b) => b.priorityScore - a.priorityScore || b.mentions - a.mentions)
+  return issues.slice(0, 8)
 }

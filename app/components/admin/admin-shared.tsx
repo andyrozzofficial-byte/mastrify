@@ -135,8 +135,8 @@ export function AdminCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm shadow-slate-200/60 transition duration-200 ${
-        hover ? "hover:border-violet-200/80 hover:shadow-md hover:shadow-violet-100/40" : ""
+      className={`rounded-2xl border border-slate-300/90 bg-[#ffffff] p-6 shadow-sm shadow-slate-300/35 transition duration-200 ${
+        hover ? "hover:border-violet-300/80 hover:shadow-md hover:shadow-violet-100/40" : ""
       } ${className}`}
     >
       {children}
@@ -167,11 +167,11 @@ export function KpiCard({
             : "from-white/20 to-transparent"
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm shadow-slate-200/60 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200/70 hover:shadow-md hover:shadow-violet-100/30">
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-300/90 bg-[#ffffff] p-6 shadow-sm shadow-slate-300/35 transition duration-200 hover:-translate-y-0.5 hover:border-violet-300/70 hover:shadow-md hover:shadow-violet-100/30">
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accentBar}`} />
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
-      <p className="mt-3 text-4xl font-bold tracking-tight tabular-nums text-slate-900">{value}</p>
-      {hint ? <p className="mt-2 text-[13px] leading-relaxed text-slate-500">{hint}</p> : null}
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{label}</p>
+      <p className="mt-3 text-4xl font-bold tracking-tight tabular-nums text-slate-950">{value}</p>
+      {hint ? <p className="mt-2 text-[13px] leading-relaxed text-slate-600">{hint}</p> : null}
     </div>
   )
 }
@@ -195,7 +195,7 @@ export function AdminPageHeader({
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/80">Mastrify Admin</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-[2rem]">{title}</h1>
-        {subtitle ? <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-slate-600">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-slate-700">{subtitle}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </div>
@@ -323,7 +323,7 @@ export function PrioritySelect({
 
 export function AdminEmpty({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-8 py-14 text-center text-sm text-slate-500">
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-8 py-14 text-center text-sm text-slate-600">
       {message}
     </div>
   )
@@ -341,7 +341,7 @@ export function AdminPanel({
   return (
     <AdminCard>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
+        <h2 className="text-[15px] font-semibold text-slate-950">{title}</h2>
         {href ? (
           <Link href={href} className="text-xs font-medium text-violet-600 transition hover:text-violet-800">
             View all →
@@ -366,11 +366,11 @@ export function FunnelChart({ steps }: { steps: { step: string; count: number }[
   const max = Math.max(1, ...(safeSteps.map((s) => s.count) ?? [0]))
   return (
     <AdminCard>
-      <h3 className="text-[15px] font-semibold text-slate-900">Conversion funnel</h3>
+      <h3 className="text-[15px] font-semibold text-slate-950">Conversion funnel</h3>
       <ul className="mt-5 space-y-4">
         {safeSteps.map((item) => (
           <li key={item.step}>
-            <div className="mb-2 flex justify-between text-[13px] text-slate-600">
+            <div className="mb-2 flex justify-between text-[13px] text-slate-700">
               <span>{item.step}</span>
               <span className="tabular-nums font-medium text-slate-900">{item.count}</span>
             </div>
@@ -390,7 +390,7 @@ export function FunnelChart({ steps }: { steps: { step: string; count: number }[
 export function BarChartCard({
   title,
   items,
-  empty = "No data yet",
+  empty = "No trend data yet",
 }: {
   title: string
   items: { label: string; count: number }[]
@@ -401,18 +401,18 @@ export function BarChartCard({
   if (slice.length === 0) {
     return (
       <AdminCard>
-        <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
-        <p className="mt-3 text-sm text-slate-500">{empty}</p>
+        <h3 className="text-[15px] font-semibold text-slate-950">{title}</h3>
+        <p className="mt-3 text-sm text-slate-600">{empty}</p>
       </AdminCard>
     )
   }
   return (
     <AdminCard>
-      <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
+      <h3 className="text-[15px] font-semibold text-slate-950">{title}</h3>
       <ul className="mt-5 space-y-3">
         {slice.map((item) => (
           <li key={item.label}>
-            <div className="mb-1.5 flex justify-between gap-2 text-[12px] text-slate-600">
+            <div className="mb-1.5 flex justify-between gap-2 text-[12px] text-slate-700">
               <span className="truncate">{item.label}</span>
               <span className="shrink-0 tabular-nums font-medium text-slate-800">{item.count}</span>
             </div>
@@ -429,46 +429,109 @@ export function BarChartCard({
   )
 }
 
+function strokeFromChartColor(color: string): { stroke: string; fill: string } {
+  if (color.includes("emerald")) {
+    return { stroke: "#10b981", fill: "rgba(16,185,129,0.12)" }
+  }
+  if (color.includes("sky")) {
+    return { stroke: "#0ea5e9", fill: "rgba(14,165,233,0.12)" }
+  }
+  return { stroke: "#7c3aed", fill: "rgba(124,58,237,0.12)" }
+}
+
 export function SparklineChart({
   title,
   points,
   dataKey,
   color = "bg-violet-500/80",
+  emptyLabel = "No trend data yet",
 }: {
   title: string
   points: Record<string, string | number>[]
   dataKey: string
   color?: string
+  emptyLabel?: string
 }) {
   const safePoints = points ?? []
   const values = safePoints.map((p) => Number(p[dataKey]) || 0)
-  const max = Math.max(1, ...values)
   const dateKey = safePoints[0]?.date != null ? "date" : "week"
+  const { stroke, fill } = strokeFromChartColor(color)
+  const chartId = `trend-${title.replace(/\W+/g, "-").toLowerCase()}`
 
   if (safePoints.length === 0) {
     return (
       <AdminCard>
-      <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
-      <p className="mt-3 text-sm text-slate-500">No trend data yet</p>
+        <h3 className="text-[15px] font-semibold text-slate-950">{title}</h3>
+        <p className="mt-3 text-sm text-slate-600">{emptyLabel}</p>
       </AdminCard>
     )
   }
 
+  const width = 280
+  const height = 96
+  const padX = 8
+  const padY = 10
+  const plotW = width - padX * 2
+  const plotH = height - padY * 2
+  const max = Math.max(1, ...values)
+  const plotValues = values.length === 1 ? [values[0], values[0]] : values
+  const step = plotW / Math.max(plotValues.length - 1, 1)
+
+  const coords = plotValues.map((v, i) => {
+    const x = padX + i * step
+    const y = padY + plotH - (v / max) * plotH
+    return { x, y, v }
+  })
+
+  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ")
+  const areaPath = `${linePath} L ${coords[coords.length - 1].x} ${padY + plotH} L ${coords[0].x} ${padY + plotH} Z`
+  const latest = values[values.length - 1] ?? 0
+  const peak = Math.max(...values)
+
   return (
     <AdminCard>
-      <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
-      <div className="mt-5 flex h-28 items-end gap-1.5">
-        {safePoints.map((p, i) => (
-          <div key={String(p[dateKey]) + i} className="flex flex-1 flex-col items-center gap-2">
-            <div
-              className={`w-full min-w-[6px] max-w-[20px] rounded-t-md ${color} transition-all duration-300`}
-              style={{ height: `${Math.max(8, (values[i] / max) * 100)}%` }}
-              title={`${values[i]}`}
-            />
-          </div>
-        ))}
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-[15px] font-semibold text-slate-950">{title}</h3>
+        <div className="text-right text-[11px] tabular-nums text-slate-600">
+          <span className="font-semibold text-slate-800">{latest}</span>
+          <span className="mx-1 text-slate-400">·</span>
+          peak {peak}
+        </div>
       </div>
-      <div className="mt-3 flex justify-between text-[10px] text-slate-400">
+      <div className="mt-4 overflow-hidden rounded-xl border border-slate-200/80 bg-slate-50/50">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="h-28 w-full"
+          role="img"
+          aria-label={`${title} line chart`}
+        >
+          <defs>
+            <linearGradient id={`${chartId}-fill`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={fill} />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </linearGradient>
+          </defs>
+          {[0.25, 0.5, 0.75].map((t) => (
+            <line
+              key={t}
+              x1={padX}
+              x2={width - padX}
+              y1={padY + plotH * t}
+              y2={padY + plotH * t}
+              stroke="#e2e8f0"
+              strokeWidth="1"
+            />
+          ))}
+          <path d={areaPath} fill={`url(#${chartId}-fill)`} />
+          <path d={linePath} fill="none" stroke={stroke} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          {coords.map((c, i) =>
+            i < values.length ? (
+              <circle key={i} cx={c.x} cy={c.y} r="3.5" fill="#ffffff" stroke={stroke} strokeWidth="2" />
+            ) : null,
+          )}
+        </svg>
+      </div>
+      <div className="mt-3 flex justify-between text-[11px] text-slate-600">
         <span>{String(safePoints[0]?.[dateKey])}</span>
         <span>{String(safePoints[safePoints.length - 1]?.[dateKey])}</span>
       </div>

@@ -15,7 +15,7 @@ import {
 } from "../components/admin/admin-shared"
 
 const activityLabels = {
-  master: "Master completed",
+  master: "Master",
   purchase: "Purchase",
   feedback: "Feedback",
   support: "Support",
@@ -38,11 +38,11 @@ export default function AdminOverviewPage() {
   }, [])
 
   if (error) {
-    return <p className="text-sm text-rose-300/90">{error}</p>
+    return <p className="text-sm text-rose-600">{error}</p>
   }
 
   if (!data) {
-    return <p className="text-sm text-white/50">Loading dashboard…</p>
+    return <p className="text-sm text-slate-600">Loading dashboard…</p>
   }
 
   return (
@@ -76,28 +76,47 @@ export default function AdminOverviewPage() {
       <div className="mt-8 grid gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <AdminPanel title="Latest activity">
-            <ul className="divide-y divide-white/[0.06]">
+            <ul className="divide-y divide-slate-200">
               {data.recentActivity.length === 0 ? (
-                <li className="py-6 text-sm text-white/45">No recent activity yet.</li>
+                <li className="py-6 text-sm text-slate-600">No recent activity yet.</li>
               ) : (
                 data.recentActivity.map((item) => (
                   <li key={item.id} className="flex gap-4 py-3.5 first:pt-0 last:pb-0">
-                    <span className="mt-0.5 w-24 shrink-0 text-[11px] font-medium uppercase tracking-wide text-white/38">
-                      {activityLabels[item.type]}
+                    <span className="mt-0.5 w-28 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                      {item.type === "master" ? item.title : activityLabels[item.type]}
                     </span>
                     <div className="min-w-0 flex-1">
-                      {item.href ? (
-                        <Link href={item.href} className="text-[14px] font-medium text-white/88 hover:text-violet-200">
+                      {item.details && item.details.length > 0 ? (
+                        <ul className="space-y-0.5">
+                          {item.details.map((line) => (
+                            <li key={line} className="text-[14px] text-slate-800">
+                              <span className="text-slate-400" aria-hidden>
+                                →{" "}
+                              </span>
+                              {item.href && line === item.details?.[0] ? (
+                                <Link href={item.href} className="font-medium text-violet-700 hover:text-violet-900">
+                                  {line}
+                                </Link>
+                              ) : (
+                                <span className={line === item.details?.[0] ? "font-medium text-slate-900" : ""}>
+                                  {line}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : item.href ? (
+                        <Link href={item.href} className="text-[14px] font-medium text-slate-900 hover:text-violet-700">
                           {item.title}
                         </Link>
                       ) : (
-                        <p className="text-[14px] font-medium text-white/88">{item.title}</p>
+                        <p className="text-[14px] font-medium text-slate-900">{item.title}</p>
                       )}
                       {item.subtitle ? (
-                        <p className="mt-0.5 truncate text-[12px] text-white/45">{item.subtitle}</p>
+                        <p className="mt-0.5 truncate text-[12px] text-slate-600">{item.subtitle}</p>
                       ) : null}
                     </div>
-                    <span className="shrink-0 text-[11px] text-white/38">{formatAdminDate(item.created_at)}</span>
+                    <span className="shrink-0 text-[11px] text-slate-500">{formatAdminDate(item.created_at)}</span>
                   </li>
                 ))
               )}
@@ -107,17 +126,17 @@ export default function AdminOverviewPage() {
 
         <AdminPanel title="Inbox snapshot">
           <dl className="space-y-4">
-            <div className="flex items-center justify-between rounded-xl bg-[#141416] px-4 py-3">
-              <dt className="text-sm text-white/55">Open support</dt>
-              <dd className="text-xl font-semibold tabular-nums text-white">{data.supportOpen}</dd>
+            <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+              <dt className="text-sm text-slate-700">Open support</dt>
+              <dd className="text-xl font-semibold tabular-nums text-slate-950">{data.supportOpen}</dd>
             </div>
-            <div className="flex items-center justify-between rounded-xl bg-[#141416] px-4 py-3">
-              <dt className="text-sm text-white/55">New feedback</dt>
-              <dd className="text-xl font-semibold tabular-nums text-white">{data.feedbackNew}</dd>
+            <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+              <dt className="text-sm text-slate-700">New feedback</dt>
+              <dd className="text-xl font-semibold tabular-nums text-slate-950">{data.feedbackNew}</dd>
             </div>
-            <div className="flex items-center justify-between rounded-xl bg-[#141416] px-4 py-3">
-              <dt className="text-sm text-white/55">Total feedback</dt>
-              <dd className="text-lg tabular-nums text-white/80">{data.feedbackTotal}</dd>
+            <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+              <dt className="text-sm text-slate-700">Total feedback</dt>
+              <dd className="text-lg tabular-nums text-slate-800">{data.feedbackTotal}</dd>
             </div>
           </dl>
         </AdminPanel>
@@ -127,22 +146,22 @@ export default function AdminOverviewPage() {
         <AdminPanel title="Recent masters" href="/admin/jobs">
           <ul className="space-y-3">
             {data.recentMasters.length === 0 ? (
-              <li className="text-sm text-white/45">No masters yet.</li>
+              <li className="text-sm text-slate-600">No masters yet.</li>
             ) : (
               data.recentMasters.map((r) => (
                 <li
                   key={r.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-[#141416]/80 px-4 py-3 transition hover:border-white/[0.08]"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 transition hover:border-slate-300"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-[14px] font-medium text-white/88">
+                    <p className="truncate text-[14px] font-medium text-slate-900">
                       {r.track_name ?? "Untitled track"}
                     </p>
-                    <p className="text-[12px] text-white/42">{r.mastering_style ?? "—"}</p>
+                    <p className="text-[12px] text-slate-600">{r.mastering_style ?? "—"}</p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <JobStatusBadge status={r.status} />
-                    <span className="text-[10px] text-white/38">{formatAdminDate(r.created_at)}</span>
+                    <span className="text-[10px] text-slate-500">{formatAdminDate(r.created_at)}</span>
                   </div>
                 </li>
               ))
@@ -153,25 +172,25 @@ export default function AdminOverviewPage() {
         <AdminPanel title="Recent purchases" href="/admin/customers">
           <ul className="space-y-3">
             {data.recentPurchases.length === 0 ? (
-              <li className="text-sm text-white/45">No export deliveries recorded yet.</li>
+              <li className="text-sm text-slate-600">No export deliveries recorded yet.</li>
             ) : (
               data.recentPurchases.map((r) => (
                 <li
                   key={r.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-[#141416]/80 px-4 py-3 transition hover:border-white/[0.08]"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 transition hover:border-slate-300"
                 >
                   <div className="min-w-0">
                     <Link
                       href={`/admin/customers/${encodeURIComponent(r.email)}`}
-                      className="truncate text-[14px] font-medium text-white/88 hover:text-violet-200"
+                      className="truncate text-[14px] font-medium text-slate-900 hover:text-violet-700"
                     >
                       {r.email}
                     </Link>
-                    <p className="truncate text-[12px] text-white/42">{r.track_title ?? "Master export"}</p>
+                    <p className="truncate text-[12px] text-slate-600">{r.track_title ?? "Master export"}</p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-sm font-semibold tabular-nums text-emerald-300/90">${r.amount}</p>
-                    <p className="text-[10px] text-white/38">{formatAdminDate(r.created_at)}</p>
+                    <p className="text-sm font-semibold tabular-nums text-emerald-700">${r.amount}</p>
+                    <p className="text-[10px] text-slate-500">{formatAdminDate(r.created_at)}</p>
                   </div>
                 </li>
               ))
@@ -186,16 +205,16 @@ export default function AdminOverviewPage() {
             {data.recentFeedback.map((r) => (
               <li
                 key={r.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-[#141416]/80 px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3"
               >
                 <div className="min-w-0">
                   <Link
                     href={`/admin/feedback/${r.id}`}
-                    className="truncate text-[14px] font-medium text-white/88 hover:text-violet-200"
+                    className="truncate text-[14px] font-medium text-slate-900 hover:text-violet-700"
                   >
                     {r.track_name ?? "Untitled"}
                   </Link>
-                  <p className="text-[10px] text-white/38">{formatAdminDate(r.created_at)}</p>
+                  <p className="text-[10px] text-slate-500">{formatAdminDate(r.created_at)}</p>
                 </div>
                 <FeedbackStatusBadge status={r.status} />
               </li>
@@ -208,16 +227,16 @@ export default function AdminOverviewPage() {
             {data.recentSupport.map((r) => (
               <li
                 key={r.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-[#141416]/80 px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3"
               >
                 <div className="min-w-0">
                   <Link
                     href={`/admin/support/${r.id}`}
-                    className="truncate text-[14px] font-medium text-white/88 hover:text-violet-200"
+                    className="truncate text-[14px] font-medium text-slate-900 hover:text-violet-700"
                   >
                     {r.subject ?? r.email}
                   </Link>
-                  <p className="text-[10px] text-white/38">{formatAdminDate(r.created_at)}</p>
+                  <p className="text-[10px] text-slate-500">{formatAdminDate(r.created_at)}</p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <PriorityBadge priority={r.priority} />

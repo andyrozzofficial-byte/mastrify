@@ -3,6 +3,45 @@
 import type { AdminFeedbackRow } from "../../../lib/adminTypes"
 import { getSurveyValue } from "../../../lib/betaFeedbackSurveyDisplay"
 
+function formatProcessingMs(ms: number | null | undefined): string | null {
+  if (ms == null || !Number.isFinite(ms) || ms <= 0) return null
+  return `${(ms / 1000).toFixed(1)}s`
+}
+
+function formatLufs(lufs: number | null | undefined): string | null {
+  if (lufs == null || !Number.isFinite(lufs)) return null
+  const n = lufs <= 0 ? lufs : -lufs
+  return `${n.toFixed(1)} LUFS`
+}
+
+function FeedbackMetaBadges({ row }: { row: AdminFeedbackRow }) {
+  const style = row.mastering_style?.trim() || String(getSurveyValue(row.survey, "masteringStyle") ?? "").trim()
+  const genre =
+    row.genre && row.genre !== "Unknown"
+      ? row.genre
+      : String(getSurveyValue(row.survey, "genre") ?? "").trim()
+  const proc = formatProcessingMs(row.processing_time_ms)
+  const lufs = formatLufs(row.master_lufs)
+
+  const chips: { icon: string; text: string }[] = []
+  if (proc) chips.push({ icon: "⏱", text: proc })
+  if (lufs) chips.push({ icon: "📈", text: lufs })
+  if (style) chips.push({ icon: "🎛", text: style })
+  if (genre && genre !== "—") chips.push({ icon: "🎵", text: genre })
+
+  if (chips.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {chips.map((c) => (
+        <Chip key={c.text} icon={c.icon}>
+          {c.text}
+        </Chip>
+      ))}
+    </div>
+  )
+}
+
 function Chip({
   icon,
   children,
@@ -19,7 +58,7 @@ function Chip({
         ? "border-amber-200 bg-amber-50 text-amber-900"
         : tone === "bad"
           ? "border-rose-200 bg-rose-50 text-rose-800"
-          : "border-slate-200 bg-slate-50 text-slate-700"
+          : "border-slate-300 bg-slate-50 text-slate-800"
   return (
     <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium ${cls}`}>
       <span aria-hidden>{icon}</span>
@@ -49,10 +88,13 @@ export function FeedbackQuickBadges({ row }: { row: AdminFeedbackRow }) {
   if (stage === "analysis") {
     const acc = String(getSurveyValue(row.survey, "analysisAccuracy") ?? "—")
     return (
-      <div className="flex flex-wrap gap-1.5">
-        <Chip icon="📊" tone={acc === "Yes" ? "good" : acc === "No" ? "bad" : "warn"}>
-          Analysis: {acc}
-        </Chip>
+      <div className="space-y-2">
+        <FeedbackMetaBadges row={row} />
+        <div className="flex flex-wrap gap-1.5">
+          <Chip icon="📊" tone={acc === "Yes" ? "good" : acc === "No" ? "bad" : "warn"}>
+            Analysis: {acc}
+          </Chip>
+        </div>
       </div>
     )
   }
@@ -60,17 +102,21 @@ export function FeedbackQuickBadges({ row }: { row: AdminFeedbackRow }) {
   if (stage === "preview") {
     const cmp = String(getSurveyValue(row.survey, "previewComparison") ?? "—")
     return (
-      <div className="flex flex-wrap gap-1.5">
-        <Chip icon="🔊" tone={cmp === "Better" ? "good" : cmp === "Worse" ? "bad" : "neutral"}>
-          {cmp}
-        </Chip>
-        <Chip icon="🎵">{genre !== "—" ? genre : "Preview"}</Chip>
+      <div className="space-y-2">
+        <FeedbackMetaBadges row={row} />
+        <div className="flex flex-wrap gap-1.5">
+          <Chip icon="🔊" tone={cmp === "Better" ? "good" : cmp === "Worse" ? "bad" : "neutral"}>
+            {cmp}
+          </Chip>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="space-y-2">
+      <FeedbackMetaBadges row={row} />
+      <div className="flex flex-wrap gap-1.5">
       {typeof recommend === "number" && recommend > 0 ? (
         <Chip
           icon="⭐"
@@ -101,7 +147,7 @@ export function FeedbackQuickBadges({ row }: { row: AdminFeedbackRow }) {
       <Chip icon="👍" tone={wouldRelease === "Yes" ? "good" : "neutral"}>
         Would release: {wouldRelease || "—"}
       </Chip>
-      <Chip icon="🎵">{genre}</Chip>
+      </div>
     </div>
   )
 }

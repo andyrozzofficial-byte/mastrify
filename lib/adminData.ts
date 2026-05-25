@@ -288,7 +288,9 @@ export async function fetchAdminOverview(): Promise<AdminOverview | { error: str
   const [feedbackRes, supportRes] = await Promise.all([
     supabase
       .from(BETA_FEEDBACK_TABLE)
-      .select("id, created_at, track_name, status, responses")
+      .select(
+        "id, created_at, track_name, status, responses, mastering_style, processing_time_ms, master_lufs",
+      )
       .order("created_at", { ascending: false })
       .limit(200),
     supabase
@@ -338,13 +340,23 @@ export async function fetchAdminOverview(): Promise<AdminOverview | { error: str
     priority: normalizeSupportPriority(r.priority),
   }))
 
-  const recentMasters = feedback.slice(0, 8).map((r) => ({
-    id: r.id,
-    created_at: r.created_at,
-    track_name: r.track_name,
-    mastering_style: r.mastering_style,
-    status: "complete" as const,
-  }))
+  const recentMasters = feedback.slice(0, 8).map((r) => {
+    const p = payloadOf(r as { responses: BetaFeedbackPayload })
+    return {
+      id: r.id,
+      created_at: r.created_at,
+      track_name: r.track_name?.trim() || p.trackName?.trim() || null,
+      mastering_style: r.mastering_style?.trim() || p.masteringStyle?.trim() || null,
+      processing_time_ms: r.processing_time_ms ?? p.processingTimeMs ?? null,
+      master_lufs:
+        r.master_lufs != null
+          ? Number(r.master_lufs)
+          : p.masterLufs != null && Number.isFinite(p.masterLufs)
+            ? Number(p.masterLufs)
+            : null,
+      status: "complete" as const,
+    }
+  })
 
   const recentPurchases = exports.slice(0, 8).map((row, i) => ({
     id: row.id ?? `export-${i}`,
@@ -355,14 +367,30 @@ export async function fetchAdminOverview(): Promise<AdminOverview | { error: str
   }))
 
   const activity: AdminActivityItem[] = [
-    ...recentMasters.map((m) => ({
-      id: `master-${m.id}`,
-      type: "master" as const,
-      title: m.track_name ?? "Untitled master",
-      subtitle: m.mastering_style,
-      created_at: m.created_at,
-      href: "/admin/jobs",
-    })),
+    ...recentMasters.map((m) => {
+      const details: string[] = []
+      if (m.track_name) details.push(m.track_name)
+      if (m.processing_time_ms != null && Number.isFinite(m.processing_time_ms)) {
+        details.push(`${(m.processing_time_ms / 1000).toFixed(1)}s`)
+      }
+      if (m.master_lufs != null && Number.isFinite(m.master_lufs)) {
+        const lufs =
+          m.master_lufs <= 0
+            ? `${m.master_lufs.toFixed(1)} LUFS`
+            : `-${m.master_lufs.toFixed(1)} LUFS`
+        details.push(lufs)
+      }
+      if (m.mastering_style) details.push(m.mastering_style)
+      return {
+        id: `master-${m.id}`,
+        type: "master" as const,
+        title: "MASTER COMPLETE",
+        subtitle: null,
+        details: details.length > 0 ? details : ["Untitled master"],
+        created_at: m.created_at,
+        href: "/admin/jobs",
+      }
+    }),
     ...recentPurchases.map((p) => ({
       id: `purchase-${p.id}`,
       type: "purchase" as const,

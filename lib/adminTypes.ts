@@ -53,6 +53,8 @@ export type AdminActivityItem = {
   type: "master" | "purchase" | "feedback" | "support"
   title: string
   subtitle: string | null
+  /** Secondary lines shown under the title (e.g. track name, processing time, LUFS). */
+  details?: string[]
   created_at: string
   href: string | null
 }
