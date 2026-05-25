@@ -8,7 +8,7 @@ import { useMasterSession } from "../master/MasterSessionProvider"
 import {
   ContentPageLayout,
   HelpCenterGrid,
-  PageContainer,
+  HelpPageContainer,
   PageHero,
 } from "../components/content/ContentPageLayout"
 import { HELP_FAQ_ITEMS, POPULAR_HELP_FAQ, searchHelpFaq, type HelpFaqItem } from "../../lib/helpFaq"
@@ -24,7 +24,7 @@ function FaqCard({ item, highlight, compact }: { item: HelpFaqItem; highlight?: 
     <article
       id={item.id}
       className={`rounded-[1.15rem] border transition duration-300 ${
-        compact ? "px-4 py-3.5" : "px-5 py-4"
+        compact ? "px-4 py-3.5" : highlight ? "min-h-[180px] p-7" : "px-5 py-4"
       } ${
         highlight
           ? "border-violet-400/35 bg-violet-500/[0.08] shadow-[0_0_0_1px_rgba(167,139,250,0.12)]"
@@ -58,6 +58,24 @@ function FaqNavButton({
     >
       {item.question}
     </button>
+  )
+}
+
+function StillNeedHelpCard({ onOpenTicket }: { onOpenTicket: () => void }) {
+  return (
+    <section className="mt-12 w-full rounded-[1.35rem] border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]">
+      <h2 className="text-2xl font-semibold text-white/92">Still need help?</h2>
+      <p className="mt-2 text-[16px] leading-[1.8] text-white/[0.85]">
+        Create a support ticket and we&apos;ll follow up by email.
+      </p>
+      <button
+        type="button"
+        onClick={onOpenTicket}
+        className="mt-5 inline-flex min-h-[46px] items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-7 text-[13px] font-semibold text-white shadow-[0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
+      >
+        Create support ticket
+      </button>
+    </section>
   )
 }
 
@@ -144,9 +162,14 @@ export default function HelpCenterClient() {
     if (ticketSuccess) setTicketSuccess(false)
   }
 
+  function openTicketModal() {
+    setTicketSuccess(false)
+    setTicketModalOpen(true)
+  }
+
   return (
     <ContentPageLayout>
-      <PageContainer>
+      <HelpPageContainer>
         <PageHero
           label="Help center"
           title="How can we help?"
@@ -192,7 +215,7 @@ export default function HelpCenterClient() {
           <HelpCenterGrid
             className="mt-6"
             sidebar={
-              <div className="lg:sticky lg:top-24">
+              <>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
                   Popular questions
                 </p>
@@ -222,7 +245,7 @@ export default function HelpCenterClient() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </>
             }
           >
             {activeFaq ? <FaqCard item={activeFaq} highlight /> : null}
@@ -231,39 +254,18 @@ export default function HelpCenterClient() {
                 <FaqCard key={item.id} item={item} compact />
               ))}
             </div>
+            <StillNeedHelpCard onOpenTicket={openTicketModal} />
           </HelpCenterGrid>
         )}
 
-        <section className="mt-8 w-full rounded-[1.35rem] border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:p-6">
-          <h2 className="text-2xl font-semibold text-white/92">Still need help?</h2>
-          <p className="mt-1.5 text-[16px] leading-[1.8] text-white/[0.85]">
-            Create a support ticket and we&apos;ll follow up by email. Session details attach automatically when
-            you&apos;re mastering.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setTicketSuccess(false)
-              setTicketModalOpen(true)
-            }}
-            className="mt-5 inline-flex min-h-[46px] w-full items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-7 text-[13px] font-semibold text-white shadow-[0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] sm:w-auto"
-          >
-            Create support ticket
-          </button>
-          <p className="mt-4 text-center text-[12px] text-white/40">
-            Prefer email only?{" "}
-            <a href="mailto:hello@mastrify.com" className="text-violet-200/75 hover:text-violet-100">
-              hello@mastrify.com
-            </a>
-          </p>
-        </section>
+        {showSearchResults ? <StillNeedHelpCard onOpenTicket={openTicketModal} /> : null}
 
         <p className="mt-6 w-full text-center text-[12px] text-white/38">
           <Link href="/master" className="text-violet-200/70 hover:text-violet-100">
             ← Back to mastering
           </Link>
         </p>
-      </PageContainer>
+      </HelpPageContainer>
 
       <SupportTicketModal
         open={ticketModalOpen}
