@@ -13,20 +13,47 @@ import type { SupportSessionContext, SupportTicketCategory } from "../../lib/sup
 import SupportTicketModal from "./SupportTicketModal"
 
 const EASE = [0.22, 1, 0.36, 1] as const
+const HELP_MAX_W = "max-w-[1152px]"
 
-function FaqCard({ item, highlight }: { item: HelpFaqItem; highlight?: boolean }) {
+function FaqCard({ item, highlight, compact }: { item: HelpFaqItem; highlight?: boolean; compact?: boolean }) {
   return (
     <article
       id={item.id}
-      className={`rounded-[1.15rem] border px-5 py-4 transition duration-300 ${
+      className={`rounded-[1.15rem] border transition duration-300 ${
+        compact ? "px-4 py-3.5" : "px-5 py-4"
+      } ${
         highlight
           ? "border-violet-400/35 bg-violet-500/[0.08] shadow-[0_0_0_1px_rgba(167,139,250,0.12)]"
-          : "border-white/[0.09] bg-white/[0.03] hover:border-white/[0.14] hover:bg-white/[0.045]"
+          : "border-white/[0.09] bg-white/[0.03]"
       }`}
     >
       <h3 className="text-[15px] font-semibold tracking-[-0.02em] text-white/92">{item.question}</h3>
-      <p className="mt-2.5 text-[14px] leading-[1.65] text-muted">{item.answer}</p>
+      <p className={`${compact ? "mt-2" : "mt-2.5"} text-[14px] leading-[1.65] text-muted`}>{item.answer}</p>
     </article>
+  )
+}
+
+function FaqNavButton({
+  item,
+  active,
+  onSelect,
+}: {
+  item: HelpFaqItem
+  active: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`w-full rounded-xl border px-3.5 py-3 text-left text-[13px] font-medium leading-snug transition ${
+        active
+          ? "border-violet-400/40 bg-violet-500/[0.12] text-violet-100 shadow-[0_0_0_1px_rgba(167,139,250,0.15)]"
+          : "border-white/[0.08] bg-white/[0.03] text-white/82 hover:border-violet-400/25 hover:bg-violet-500/[0.06] hover:text-violet-100"
+      }`}
+    >
+      {item.question}
+    </button>
   )
 }
 
@@ -36,8 +63,10 @@ export default function HelpCenterClient() {
   const searchParams = useSearchParams()
   const master = useMasterSession()
 
+  const defaultFaqId = POPULAR_HELP_FAQ[0]?.id ?? HELP_FAQ_ITEMS[0]?.id ?? ""
+
   const [query, setQuery] = useState("")
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [activeFaqId, setActiveFaqId] = useState(defaultFaqId)
   const [ticketModalOpen, setTicketModalOpen] = useState(searchParams.get("ticket") === "1")
 
   const [email, setEmail] = useState("")
@@ -66,18 +95,20 @@ export default function HelpCenterClient() {
   const searchResults = useMemo(() => searchHelpFaq(query), [query])
   const showSearchResults = query.trim().length > 0
 
-  const openFaq = useCallback((item: HelpFaqItem) => {
-    setActiveId(item.id)
+  const activeFaq = useMemo(
+    () => HELP_FAQ_ITEMS.find((i) => i.id === activeFaqId) ?? HELP_FAQ_ITEMS[0],
+    [activeFaqId],
+  )
+
+  const selectFaq = useCallback((item: HelpFaqItem) => {
+    setActiveFaqId(item.id)
     setQuery("")
-    const el = document.getElementById(item.id)
-    el?.scrollIntoView({ behavior: "smooth", block: "center" })
   }, [])
 
   useEffect(() => {
-    if (!activeId) return
-    const t = window.setTimeout(() => setActiveId(null), 4000)
-    return () => window.clearTimeout(t)
-  }, [activeId])
+    if (!showSearchResults || searchResults.length === 0) return
+    setActiveFaqId(searchResults[0].id)
+  }, [showSearchResults, searchResults])
 
   async function onSubmitTicket(e: FormEvent) {
     e.preventDefault()
@@ -106,14 +137,12 @@ export default function HelpCenterClient() {
 
   function closeTicketModal() {
     setTicketModalOpen(false)
-    if (ticketSuccess) {
-      setTicketSuccess(false)
-    }
+    if (ticketSuccess) setTicketSuccess(false)
   }
 
   return (
     <motion.div
-      className="relative min-h-screen overflow-hidden text-white"
+      className="relative min-h-screen overflow-x-hidden text-white"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: EASE }}
@@ -124,26 +153,28 @@ export default function HelpCenterClient() {
         aria-hidden
       />
 
-      <main className="page-container relative z-10 mx-auto flex w-full max-w-[720px] flex-col pb-20 pt-8 sm:pb-24 sm:pt-10 md:pb-28 md:pt-14">
+      <main
+        className={`page-container relative z-10 mx-auto w-full ${HELP_MAX_W} px-6 pb-16 pt-7 sm:px-8 sm:pb-20 sm:pt-9 md:pt-11`}
+      >
         <motion.header
           initial={reduce ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE }}
-          className="text-center"
+          className="mx-auto max-w-xl text-center"
         >
           <span className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70">
             Help center
           </span>
-          <h1 className="mt-6 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white/95 sm:text-[2.35rem]">
+          <h1 className="mt-4 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white/95 sm:text-[2.2rem]">
             How can we help?
           </h1>
-          <p className="mx-auto mt-5 max-w-md text-[15px] leading-[1.7] text-muted">
+          <p className="mx-auto mt-3 text-[15px] leading-[1.65] text-muted">
             Search common questions first — most answers are instant. Tickets are only when you still need a human.
           </p>
         </motion.header>
 
         <motion.div
-          className="relative mt-10"
+          className="relative mx-auto mt-6 max-w-2xl"
           initial={reduce ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.05, ease: EASE }}
@@ -157,61 +188,79 @@ export default function HelpCenterClient() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search help..."
-            className="w-full rounded-[1.15rem] border border-white/[0.11] bg-black/40 px-5 py-4 text-[15px] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] outline-none transition placeholder:text-white/35 focus:border-violet-400/45 focus:ring-2 focus:ring-violet-500/20"
+            className="w-full rounded-[1.15rem] border border-white/[0.11] bg-black/40 px-5 py-3.5 text-[15px] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] outline-none transition placeholder:text-white/35 focus:border-violet-400/45 focus:ring-2 focus:ring-violet-500/20"
             autoComplete="off"
           />
         </motion.div>
 
         {showSearchResults ? (
-          <section className="mt-6 space-y-3">
+          <section className="mt-5 space-y-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
               {searchResults.length > 0 ? "Matching answers" : "No matches"}
             </p>
             {searchResults.length === 0 ? (
-              <p className="text-sm text-muted">
-                Try different keywords, or browse popular questions below.
-              </p>
+              <p className="text-sm text-muted">Try different keywords, or browse topics below.</p>
             ) : (
-              searchResults.map((item) => (
-                <FaqCard key={item.id} item={item} highlight={activeId === item.id} />
-              ))
+              <div className="space-y-2.5">
+                {searchResults.map((item) => (
+                  <FaqCard key={item.id} item={item} highlight={activeFaqId === item.id} />
+                ))}
+              </div>
             )}
           </section>
-        ) : null}
-
-        {!showSearchResults ? (
-          <>
-            <section className="mt-10">
+        ) : (
+          <div className="mt-6 lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-8">
+            <aside className="lg:sticky lg:top-24">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
                 Popular questions
               </p>
-              <ul className="mt-4 flex flex-col gap-2">
+              <ul className="mt-3 flex flex-col gap-2">
                 {POPULAR_HELP_FAQ.map((item) => (
                   <li key={item.id}>
-                    <button
-                      type="button"
-                      onClick={() => openFaq(item)}
-                      className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-left text-[14px] font-medium text-white/88 transition hover:border-violet-400/30 hover:bg-violet-500/[0.06] hover:text-violet-100"
-                    >
-                      {item.question}
-                    </button>
+                    <FaqNavButton
+                      item={item}
+                      active={activeFaqId === item.id}
+                      onSelect={() => selectFaq(item)}
+                    />
                   </li>
                 ))}
               </ul>
-            </section>
 
-            <section className="mt-10 space-y-3">
-              {HELP_FAQ_ITEMS.map((item) => (
-                <FaqCard key={item.id} item={item} highlight={activeId === item.id} />
-              ))}
-            </section>
-          </>
-        ) : null}
+              <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
+                All topics
+              </p>
+              <ul className="mt-3 hidden max-h-[min(50vh,420px)] flex-col gap-1.5 overflow-y-auto pr-1 lg:flex">
+                {HELP_FAQ_ITEMS.map((item) => (
+                  <li key={item.id}>
+                    <FaqNavButton
+                      item={item}
+                      active={activeFaqId === item.id}
+                      onSelect={() => selectFaq(item)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </aside>
 
-        <section className="mt-14 rounded-[1.35rem] border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] md:p-8">
+            <div className="mt-6 min-w-0 lg:mt-0">
+              {activeFaq ? (
+                <FaqCard item={activeFaq} highlight />
+              ) : null}
+
+              <div className="mt-5 space-y-2.5 lg:hidden">
+                {HELP_FAQ_ITEMS.filter((i) => i.id !== activeFaqId).map((item) => (
+                  <FaqCard key={item.id} item={item} compact />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <section className="mx-auto mt-8 max-w-2xl rounded-[1.35rem] border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:p-6">
           <h2 className="text-lg font-semibold text-white/92">Still need help?</h2>
-          <p className="mt-2 text-[14px] leading-relaxed text-muted">
-            Create a support ticket and we&apos;ll follow up by email. Session details attach automatically when you&apos;re mastering.
+          <p className="mt-1.5 text-[14px] leading-relaxed text-muted">
+            Create a support ticket and we&apos;ll follow up by email. Session details attach automatically when
+            you&apos;re mastering.
           </p>
 
           <button
@@ -220,12 +269,12 @@ export default function HelpCenterClient() {
               setTicketSuccess(false)
               setTicketModalOpen(true)
             }}
-            className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-7 text-[13px] font-semibold text-white shadow-[0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] sm:w-auto"
+            className="mt-5 inline-flex min-h-[46px] w-full items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-7 text-[13px] font-semibold text-white shadow-[0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] sm:w-auto"
           >
             Create support ticket
           </button>
 
-          <p className="mt-6 text-center text-[12px] text-white/40">
+          <p className="mt-4 text-center text-[12px] text-white/40">
             Prefer email only?{" "}
             <a href="mailto:hello@mastrify.com" className="text-violet-200/75 hover:text-violet-100">
               hello@mastrify.com
@@ -233,7 +282,7 @@ export default function HelpCenterClient() {
           </p>
         </section>
 
-        <p className="mx-auto mt-10 text-center text-[12px] text-white/38">
+        <p className="mx-auto mt-6 text-center text-[12px] text-white/38">
           <Link href="/master" className="text-violet-200/70 hover:text-violet-100">
             ← Back to mastering
           </Link>

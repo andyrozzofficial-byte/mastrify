@@ -117,27 +117,28 @@ export default function SupportTicketModal({
   return (
     <AnimatePresence>
       {open ? (
-        <>
+        <div className="fixed inset-0 z-[80] flex justify-center">
           <motion.button
             type="button"
             aria-label="Close support form"
-            className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/75 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: reduce ? 0 : 0.25 }}
+            transition={{ duration: reduce ? 0 : 0.28 }}
             onClick={onClose}
           />
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="support-ticket-title"
-            className="fixed inset-x-0 bottom-0 z-[81] mx-auto flex max-h-[min(92vh,820px)] w-full max-w-lg flex-col overflow-hidden rounded-t-[1.35rem] border border-white/[0.12] bg-gradient-to-b from-[#121218] to-black shadow-[0_-24px_80px_rgba(0,0,0,0.65),0_0_0_1px_rgba(167,139,250,0.08)] sm:inset-y-0 sm:right-0 sm:left-auto sm:max-h-none sm:max-w-md sm:rounded-none sm:rounded-l-[1.35rem]"
-            initial={reduce ? false : { opacity: 0, y: 40, x: 0 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            exit={reduce ? undefined : { opacity: 0, y: 32, x: 24 }}
-            transition={{ duration: 0.35, ease: EASE }}
-          >
+          <div className="pointer-events-none relative flex h-full w-full max-w-[1152px] px-6 sm:px-8">
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="support-ticket-title"
+              className="pointer-events-auto relative ml-auto flex h-full w-full max-w-[min(100%,460px)] flex-col overflow-hidden border border-white/[0.12] bg-gradient-to-b from-[#121218] to-black shadow-[-20px_0_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.1)] max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:ml-0 max-sm:max-h-[min(92vh,820px)] max-sm:rounded-t-[1.35rem] sm:my-4 sm:max-h-[calc(100vh-2rem)] sm:rounded-l-[1.35rem]"
+              initial={reduce ? false : { opacity: 0, x: 48 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={reduce ? undefined : { opacity: 0, x: 40 }}
+              transition={{ duration: 0.38, ease: EASE }}
+            >
             <div
               className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/35 to-transparent"
               aria-hidden
@@ -257,8 +258,9 @@ export default function SupportTicketModal({
                 </form>
               )}
             </div>
-          </motion.div>
-        </>
+            </motion.div>
+          </div>
+        </div>
       ) : null}
     </AnimatePresence>
   )
