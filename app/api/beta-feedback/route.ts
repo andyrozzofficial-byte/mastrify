@@ -56,6 +56,8 @@ function apiError(
 }
 
 export async function POST(request: Request) {
+  console.log("[beta-feedback] POST reached")
+
   if (!isBetaFeedbackEnabled()) {
     return NextResponse.json({ error: "Beta feedback is disabled" }, { status: 404 })
   }

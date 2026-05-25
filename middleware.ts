@@ -88,7 +88,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/audio") ||
     pathname.startsWith("/og-image") ||
     pathname.startsWith("/api/access") ||
-    pathname.startsWith("/api/admin")
+    pathname.startsWith("/api/admin") ||
+    pathname === "/api/beta-feedback"
   ) {
     return NextResponse.next()
   }
