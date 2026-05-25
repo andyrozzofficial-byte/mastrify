@@ -229,6 +229,12 @@ export const BETA_FEEDBACK_ALL_SCHEMA_FIELDS: readonly BetaSurveyFieldDef[] = [
   ...BETA_FEEDBACK_SESSION_FIELDS,
 ]
 
+/** Keys collected in BetaFeedbackFlow UI (survey + optional contact). */
+export const BETA_FEEDBACK_FLOW_FIELD_KEYS: readonly string[] = [
+  ...BETA_FEEDBACK_SURVEY_FIELDS.map((f) => f.key),
+  ...BETA_FEEDBACK_CONTACT_FIELDS.map((f) => f.key),
+]
+
 const KNOWN_KEYS = new Set(BETA_FEEDBACK_ALL_SCHEMA_FIELDS.map((f) => f.key))
 
 export function isKnownBetaSurveyKey(key: string): boolean {

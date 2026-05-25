@@ -1,9 +1,12 @@
 "use client"
 
+import { useEffect, useMemo } from "react"
 import type { AdminFeedbackRow, AdminFeedbackStatus } from "../../../lib/adminTypes"
 import { buildBetaSurveyDisplaySections } from "../../../lib/betaFeedbackSurveyDisplay"
 import { feedbackSentiment, FEEDBACK_SENTIMENT_STYLES } from "../../../lib/adminFeedbackSentiment"
+import { validateBetaFeedbackAdminDetailCoverage } from "../../../lib/betaFeedbackSurveyValidation"
 import { BetaSurveyFieldDisplay } from "./BetaSurveyFieldDisplay"
+import { FeedbackRawSubmissionPanel } from "./FeedbackRawSubmissionPanel"
 import {
   FeedbackStatusBadge,
   FeedbackStatusSelect,
@@ -25,7 +28,16 @@ export function FeedbackSurveyDetail({
   onNotesBlur,
   showAdminControls = true,
 }: Props) {
-  const sections = buildBetaSurveyDisplaySections(row)
+  const sections = useMemo(() => buildBetaSurveyDisplaySections(row), [row])
+  const coverage = useMemo(
+    () => validateBetaFeedbackAdminDetailCoverage(sections, { submissionId: row.id, log: false }),
+    [sections, row.id],
+  )
+
+  useEffect(() => {
+    validateBetaFeedbackAdminDetailCoverage(sections, { submissionId: row.id, log: true })
+  }, [sections, row.id])
+
   const sentiment = feedbackSentiment(row)
   const styles = FEEDBACK_SENTIMENT_STYLES[sentiment]
   const trackEntry = sections.session.find((e) => e.key === "trackName")
@@ -51,6 +63,27 @@ export function FeedbackSurveyDetail({
           </div>
         </div>
       </div>
+
+      {!coverage.ok ? (
+        <div
+          className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-[13px] text-amber-100/90"
+          role="alert"
+        >
+          <p className="font-semibold">Survey coverage warning</p>
+          <p className="mt-1 text-amber-100/75">
+            {coverage.missingFromDetail.length} BetaFeedbackFlow field
+            {coverage.missingFromDetail.length === 1 ? "" : "s"} not rendered in this detail view. Check the
+            browser console ({`[beta-feedback-admin]`}).
+          </p>
+          <ul className="mt-2 list-inside list-disc font-mono text-[11px] text-amber-200/80">
+            {coverage.missingFromDetail.map((m) => (
+              <li key={m.key}>
+                {m.key} — {m.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <section>
         <h3 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.14em] text-white/50">
@@ -79,11 +112,9 @@ export function FeedbackSurveyDetail({
           Session context
         </h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {sections.session
-            .filter((e) => !e.isEmpty)
-            .map((entry) => (
-              <BetaSurveyFieldDisplay key={entry.key} entry={entry} />
-            ))}
+          {sections.session.map((entry) => (
+            <BetaSurveyFieldDisplay key={entry.key} entry={entry} />
+          ))}
         </div>
       </section>
 
@@ -102,6 +133,8 @@ export function FeedbackSurveyDetail({
           </div>
         </section>
       ) : null}
+
+      <FeedbackRawSubmissionPanel row={row} />
 
       {showAdminControls && onStatusChange && onNotesBlur ? (
         <section className="rounded-2xl border border-white/[0.09] bg-[#222228] p-5">
