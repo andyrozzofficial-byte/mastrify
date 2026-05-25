@@ -5,7 +5,9 @@ import { useParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import type { AdminCustomerProfile } from "../../../../lib/adminTypes"
 import {
+  AdminCard,
   AdminPageHeader,
+  AvatarCircle,
   FeedbackStatusBadge,
   formatAdminDate,
   SupportStatusBadge,
@@ -68,34 +70,41 @@ export default function AdminCustomerProfilePage() {
         }
       />
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
-          <p className="text-[10px] uppercase tracking-wide text-white/45">Tracks mastered</p>
-          <p className="mt-1 text-xl font-semibold text-white">{profile.totalTracksMastered}</p>
-        </div>
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
-          <p className="text-[10px] uppercase tracking-wide text-white/45">Exports</p>
-          <p className="mt-1 text-xl font-semibold text-white">{profile.exportCount}</p>
-        </div>
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
-          <p className="text-[10px] uppercase tracking-wide text-white/45">Purchased</p>
-          <p className="mt-1 text-xl font-semibold text-white">{profile.purchased ? "Yes" : "No"}</p>
-        </div>
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
-          <p className="text-[10px] uppercase tracking-wide text-white/45">Last activity</p>
-          <p className="mt-1 text-sm text-white">
-            {profile.lastActivity ? formatAdminDate(profile.lastActivity) : "—"}
-          </p>
+      <div className="mb-8 flex items-start gap-4">
+        <AvatarCircle email={profile.email} size="lg" />
+        <div>
+          <p className="text-sm text-white/50">{profile.name ?? "Customer"}</p>
         </div>
       </div>
 
-      <section className="mb-6 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <AdminCard className="!p-4">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-white/42">Tracks mastered</p>
+          <p className="mt-2 text-2xl font-semibold text-white">{profile.totalTracksMastered}</p>
+        </AdminCard>
+        <AdminCard className="!p-4">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-white/42">Exports</p>
+          <p className="mt-2 text-2xl font-semibold text-white">{profile.exportCount}</p>
+        </AdminCard>
+        <AdminCard className="!p-4">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-white/42">Purchased</p>
+          <p className="mt-2 text-2xl font-semibold text-white">{profile.purchased ? "Yes" : "No"}</p>
+        </AdminCard>
+        <AdminCard className="!p-4">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-white/42">Last activity</p>
+          <p className="mt-2 text-sm text-white/80">
+            {profile.lastActivity ? formatAdminDate(profile.lastActivity) : "—"}
+          </p>
+        </AdminCard>
+      </div>
+
+      <AdminCard className="mb-6">
         <h2 className="text-sm font-semibold text-white">Internal notes</h2>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={4}
-          className="mt-3 w-full rounded-lg border border-white/[0.08] bg-black/30 px-3 py-2 text-sm text-white"
+          className="mt-3 w-full rounded-xl border border-white/[0.08] bg-[#141416] px-3 py-2.5 text-sm text-white"
         />
         <label className="mt-3 flex items-center gap-2 text-sm text-white/60">
           <input
@@ -113,10 +122,10 @@ export default function AdminCustomerProfilePage() {
         >
           {saving ? "Saving…" : "Save profile"}
         </button>
-      </section>
+      </AdminCard>
 
-      <section className="mb-6 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-        <h2 className="text-sm font-semibold text-white">Session activity</h2>
+      <AdminCard className="mb-6">
+        <h2 className="text-[15px] font-semibold text-white">Session activity</h2>
         {profile.sessions.length === 0 ? (
           <p className="mt-2 text-xs text-white/45">No session IDs recorded</p>
         ) : (
@@ -126,11 +135,11 @@ export default function AdminCustomerProfilePage() {
             ))}
           </ul>
         )}
-      </section>
+      </AdminCard>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-          <h2 className="text-sm font-semibold text-white">Feedback history</h2>
+        <AdminCard>
+          <h2 className="text-[15px] font-semibold text-white">Feedback history</h2>
           <ul className="mt-3 space-y-2">
             {profile.feedback.length === 0 ? (
               <li className="text-xs text-white/45">None</li>
@@ -146,10 +155,10 @@ export default function AdminCustomerProfilePage() {
               ))
             )}
           </ul>
-        </section>
+        </AdminCard>
 
-        <section className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-          <h2 className="text-sm font-semibold text-white">Support history</h2>
+        <AdminCard>
+          <h2 className="text-[15px] font-semibold text-white">Support history</h2>
           <ul className="mt-3 space-y-2">
             {profile.support.length === 0 ? (
               <li className="text-xs text-white/45">None</li>
@@ -167,7 +176,7 @@ export default function AdminCustomerProfilePage() {
               ))
             )}
           </ul>
-        </section>
+        </AdminCard>
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
 import { buildBetaFeedbackDashboard, type BetaFeedbackRecord } from "./betaFeedbackAnalytics"
 import type {
+  AdminActivityItem,
   AdminAnalyticsExtended,
   AdminCustomerProfile,
   AdminCustomerRow,
@@ -63,9 +64,17 @@ function normalizeJobStatus(raw: unknown): AdminJobStatus {
 
 async function fetchExportsSince(iso: string | null) {
   const supabase = createSupabaseServerClient()
-  if (!supabase) return { data: [] as { email: string; created_at: string; amount_cents?: number }[], error: null }
+  if (!supabase) {
+    return {
+      data: [] as { id: string; email: string; created_at: string; amount_cents?: number; track_title?: string | null }[],
+      error: null,
+    }
+  }
 
-  let q = supabase.from(MASTERED_EXPORTS_TABLE).select("email, created_at, amount_cents").order("created_at", { ascending: false })
+  let q = supabase
+    .from(MASTERED_EXPORTS_TABLE)
+    .select("id, email, created_at, amount_cents, track_title")
+    .order("created_at", { ascending: false })
   if (iso) q = q.gte("created_at", iso)
 
   const { data, error } = await q.limit(5000)
@@ -228,27 +237,97 @@ export async function fetchAdminOverview(): Promise<AdminOverview | { error: str
       ? Math.round((recommendScores.reduce((a, b) => a + b, 0) / recommendScores.length) * 10) / 10
       : null
 
+  const feedbackNew = feedback.filter((r) => normalizeFeedbackStatus(r.status) === "new").length
+  const supportOpen = support.filter((r) => normalizeSupportStatus(r.status) === "open").length
+  const supportWaiting = support.filter(
+    (r) => normalizeSupportStatus(r.status) === "waiting_for_customer",
+  ).length
+
+  const exportsAll = await fetchExportsSince(null)
+  const exports = exportsAll.data
+
+  const recentFeedback = feedback.slice(0, 6).map((r) => ({
+    id: r.id,
+    created_at: r.created_at,
+    track_name: r.track_name,
+    status: normalizeFeedbackStatus(r.status),
+  }))
+
+  const recentSupport = support.slice(0, 6).map((r) => ({
+    id: r.id,
+    created_at: r.created_at,
+    email: r.email,
+    subject: r.subject,
+    status: normalizeSupportStatus(r.status),
+    priority: normalizeSupportPriority(r.priority),
+  }))
+
+  const recentMasters = feedback.slice(0, 8).map((r) => ({
+    id: r.id,
+    created_at: r.created_at,
+    track_name: r.track_name,
+    mastering_style: r.mastering_style,
+    status: "complete" as const,
+  }))
+
+  const recentPurchases = exports.slice(0, 8).map((row, i) => ({
+    id: row.id ?? `export-${i}`,
+    created_at: row.created_at,
+    email: row.email,
+    track_title: row.track_title ?? null,
+    amount: row.amount_cents != null ? row.amount_cents / 100 : EXPORT_PRICE_USD,
+  }))
+
+  const activity: AdminActivityItem[] = [
+    ...recentMasters.map((m) => ({
+      id: `master-${m.id}`,
+      type: "master" as const,
+      title: m.track_name ?? "Untitled master",
+      subtitle: m.mastering_style,
+      created_at: m.created_at,
+      href: "/admin/jobs",
+    })),
+    ...recentPurchases.map((p) => ({
+      id: `purchase-${p.id}`,
+      type: "purchase" as const,
+      title: p.track_title ?? "Export delivered",
+      subtitle: p.email,
+      created_at: p.created_at,
+      href: `/admin/customers/${encodeURIComponent(p.email)}`,
+    })),
+    ...recentFeedback.map((f) => ({
+      id: `feedback-${f.id}`,
+      type: "feedback" as const,
+      title: f.track_name ?? "Feedback",
+      subtitle: f.status,
+      created_at: f.created_at,
+      href: "/admin/feedback",
+    })),
+    ...recentSupport.map((s) => ({
+      id: `support-${s.id}`,
+      type: "support" as const,
+      title: s.subject ?? s.email,
+      subtitle: s.email,
+      created_at: s.created_at,
+      href: `/admin/support/${s.id}`,
+    })),
+  ]
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .slice(0, 12)
+
   return {
     ...kpis,
     feedbackTotal: feedback.length,
-    feedbackNew: feedback.filter((r) => normalizeFeedbackStatus(r.status) === "new").length,
+    feedbackNew,
     supportTotal: support.length,
-    supportOpen: support.filter((r) => normalizeSupportStatus(r.status) === "open").length,
+    supportOpen,
     avgRecommendScore,
-    recentFeedback: feedback.slice(0, 6).map((r) => ({
-      id: r.id,
-      created_at: r.created_at,
-      track_name: r.track_name,
-      status: normalizeFeedbackStatus(r.status),
-    })),
-    recentSupport: support.slice(0, 6).map((r) => ({
-      id: r.id,
-      created_at: r.created_at,
-      email: r.email,
-      subject: r.subject,
-      status: normalizeSupportStatus(r.status),
-      priority: normalizeSupportPriority(r.priority),
-    })),
+    badges: { feedback: feedbackNew, support: supportOpen + supportWaiting },
+    recentFeedback,
+    recentSupport,
+    recentMasters,
+    recentPurchases,
+    recentActivity: activity,
   }
 }
 

@@ -67,8 +67,8 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-[#050508] px-4">
-      <div className="w-full max-w-md rounded-2xl border border-white/[0.1] bg-[#090912] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-[#141416] px-4">
+      <div className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#18181c] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-200/55">Mastrify</p>
         <h1 className="mt-2 text-xl font-semibold text-white">Admin login</h1>
         <p className="mt-2 text-sm text-white/55">Authorized team only.</p>

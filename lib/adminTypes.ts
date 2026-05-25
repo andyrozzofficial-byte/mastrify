@@ -41,14 +41,38 @@ export type AdminKpis = {
   failedJobs: number
 }
 
+export type AdminNavBadges = {
+  feedback: number
+  support: number
+}
+
+export type AdminActivityItem = {
+  id: string
+  type: "master" | "purchase" | "feedback" | "support"
+  title: string
+  subtitle: string | null
+  created_at: string
+  href: string | null
+}
+
 export type AdminOverview = AdminKpis & {
   feedbackTotal: number
   feedbackNew: number
   supportTotal: number
   supportOpen: number
   avgRecommendScore: number | null
+  badges: AdminNavBadges
   recentFeedback: { id: string; created_at: string; track_name: string | null; status: AdminFeedbackStatus }[]
   recentSupport: { id: string; created_at: string; email: string; subject: string | null; status: AdminSupportStatus; priority: AdminSupportPriority }[]
+  recentMasters: {
+    id: string
+    created_at: string
+    track_name: string | null
+    mastering_style: string | null
+    status: AdminJobStatus
+  }[]
+  recentPurchases: { id: string; created_at: string; email: string; track_title: string | null; amount: number }[]
+  recentActivity: AdminActivityItem[]
 }
 
 export type AdminFeedbackRow = {

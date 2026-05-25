@@ -2,17 +2,27 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useState } from "react"
+import type { AdminNavBadges, AdminOverview } from "../../../lib/adminTypes"
 import type { AdminRole } from "../../../lib/adminRoles"
 import { ADMIN_NAV, AdminNavLink } from "./admin-shared"
 
 type Props = { children: React.ReactNode }
+
+const defaultBadges: AdminNavBadges = { feedback: 0, support: 0 }
+
+const AdminBadgeContext = createContext<AdminNavBadges>(defaultBadges)
+
+export function useAdminBadges() {
+  return useContext(AdminBadgeContext)
+}
 
 export default function AdminShell({ children }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const [auth, setAuth] = useState<"loading" | "login" | "ready">("loading")
   const [role, setRole] = useState<AdminRole | null>(null)
+  const [badges, setBadges] = useState<AdminNavBadges>(defaultBadges)
   const [mobileNav, setMobileNav] = useState(false)
 
   const checkAuth = useCallback(async () => {
@@ -26,6 +36,8 @@ export default function AdminShell({ children }: Props) {
         setAuth("login")
         return
       }
+      const json = (await res.json()) as AdminOverview
+      if (json.badges) setBadges(json.badges)
       const me = await fetch("/api/admin/me", { cache: "no-store" })
       const meJson = await me.json().catch(() => null)
       if (me.ok && meJson?.role) setRole(meJson.role as AdminRole)
@@ -47,59 +59,73 @@ export default function AdminShell({ children }: Props) {
 
   if (auth === "loading" || auth === "login") {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[#050508] text-white/50">
-        {auth === "loading" ? "Loading admin…" : "Redirecting to login…"}
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#141416] text-white/50">
+        {auth === "loading" ? "Loading workspace…" : "Redirecting to login…"}
       </div>
     )
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#050508] text-white">
-      <div className="border-b border-white/[0.06] bg-[#090912]/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="rounded-lg border border-white/[0.08] px-2.5 py-2 text-xs text-white/70 lg:hidden"
-              onClick={() => setMobileNav((v) => !v)}
-            >
-              Menu
-            </button>
-            <Link href="/admin" className="text-sm font-semibold tracking-tight text-white">
-              Mastrify <span className="text-violet-300/80">Admin</span>
-            </Link>
+    <AdminBadgeContext.Provider value={badges}>
+      <div className="min-h-[100dvh] bg-[#141416] text-white">
+        <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#141416]/95 backdrop-blur-md">
+          <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="rounded-xl border border-white/[0.08] bg-[#18181c] px-3 py-2 text-xs text-white/70 transition hover:bg-[#1f1f23] lg:hidden"
+                onClick={() => setMobileNav((v) => !v)}
+              >
+                Menu
+              </button>
+              <Link href="/admin" className="flex items-center gap-2">
+                <span className="text-base font-semibold tracking-tight text-white">Mastrify</span>
+                <span className="rounded-md bg-[#252528] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white/45">
+                  Admin
+                </span>
+              </Link>
+            </div>
+            <div className="flex items-center gap-4">
+              {role ? (
+                <span className="hidden rounded-lg bg-[#18181c] px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-white/45 ring-1 ring-white/[0.06] sm:inline">
+                  {role}
+                </span>
+              ) : null}
+              <Link
+                href="/master"
+                className="text-xs font-medium text-white/42 transition hover:text-white/75"
+              >
+                Open app →
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            {role ? (
-              <span className="hidden text-[10px] uppercase tracking-wide text-violet-300/70 sm:inline">
-                {role}
-              </span>
-            ) : null}
-            <Link href="/master" className="text-xs text-white/45 hover:text-white/70">
-              Open app →
-            </Link>
-          </div>
+        </header>
+
+        <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 lg:flex-row lg:px-8">
+          <aside className={`lg:w-60 lg:shrink-0 ${mobileNav ? "block" : "hidden lg:block"}`}>
+            <nav className="space-y-1 rounded-2xl border border-white/[0.07] bg-[#18181c] p-2 shadow-[0_8px_32px_rgba(0,0,0,0.22)]">
+              {ADMIN_NAV.map((item) => (
+                <AdminNavLink
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  icon={item.icon}
+                  exact={"exact" in item ? item.exact : false}
+                  pathname={pathname}
+                  badge={
+                    item.badgeKey === "feedback"
+                      ? badges.feedback
+                      : item.badgeKey === "support"
+                        ? badges.support
+                        : undefined
+                  }
+                />
+              ))}
+            </nav>
+          </aside>
+          <main className="min-w-0 flex-1 pb-12">{children}</main>
         </div>
       </div>
-
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row lg:px-6">
-        <aside
-          className={`lg:w-52 lg:shrink-0 ${mobileNav ? "block" : "hidden lg:block"}`}
-        >
-          <nav className="space-y-1 rounded-xl border border-white/[0.08] bg-white/[0.02] p-2">
-            {ADMIN_NAV.map((item) => (
-              <AdminNavLink
-                key={item.href}
-                href={item.href}
-                label={item.label}
-                exact={"exact" in item ? item.exact : false}
-                pathname={pathname}
-              />
-            ))}
-          </nav>
-        </aside>
-        <main className="min-w-0 flex-1">{children}</main>
-      </div>
-    </div>
+    </AdminBadgeContext.Provider>
   )
 }

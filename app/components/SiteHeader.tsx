@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
+import AdminShortcut from "./AdminShortcut"
 import "./site-header.css"
 
 const links = [
@@ -45,6 +46,7 @@ export default function SiteHeader() {
               Mastrify
             </Link>
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <AdminShortcut />
               <Link
                 href="/login"
                 className="text-[11px] font-medium text-white/45 transition hover:text-white/75 sm:text-xs"
@@ -119,6 +121,7 @@ export default function SiteHeader() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-4">
+            <AdminShortcut />
             <Link
               href="/login"
               className="text-[12px] font-medium text-white/45 transition hover:text-white/75"

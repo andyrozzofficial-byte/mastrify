@@ -7,6 +7,8 @@ import {
   AdminEmpty,
   AdminPageHeader,
   AdminSearchInput,
+  AdminTable,
+  AvatarCircle,
   formatAdminDate,
 } from "../../components/admin/admin-shared"
 
@@ -62,11 +64,10 @@ export default function AdminCustomersPage() {
       {filtered.length === 0 ? (
         <AdminEmpty message="No customer records with email yet." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
-          <table className="w-full min-w-[720px] text-left text-xs">
-            <thead className="bg-white/[0.03] text-white/50">
+        <AdminTable>
+            <thead className="border-b border-white/[0.06] bg-[#141416] text-[11px] font-medium uppercase tracking-wide text-white/42">
               <tr>
-                <th className="px-3 py-2.5">Email</th>
+                <th className="px-4 py-3">Customer</th>
                 <th className="px-3 py-2.5">Purchased</th>
                 <th className="px-3 py-2.5">Feedback</th>
                 <th className="px-3 py-2.5">Exports</th>
@@ -76,16 +77,23 @@ export default function AdminCustomersPage() {
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <tr key={r.email} className="border-t border-white/[0.05] hover:bg-white/[0.02]">
-                  <td className="px-3 py-2.5">
+                <tr key={r.email} className="border-t border-white/[0.05] transition hover:bg-[#1f1f23]/80">
+                  <td className="px-4 py-3.5">
                     <Link
                       href={`/admin/customers/${encodeURIComponent(r.email)}`}
-                      className="text-violet-200/90 hover:text-violet-100"
+                      className="flex items-center gap-3 hover:text-violet-200"
                     >
-                      {r.email}
+                      <AvatarCircle email={r.email} size="sm" />
+                      <span className="text-[13px] font-medium text-white/88">{r.email}</span>
                     </Link>
                   </td>
-                  <td className="px-3 py-2.5">{r.purchased ? "Yes" : "No"}</td>
+                  <td className="px-4 py-3.5 text-[13px]">
+                    {r.purchased ? (
+                      <span className="text-emerald-300/90">Purchased</span>
+                    ) : (
+                      <span className="text-white/42">—</span>
+                    )}
+                  </td>
                   <td className="px-3 py-2.5 tabular-nums">{r.feedbackCount}</td>
                   <td className="px-3 py-2.5 tabular-nums">{r.exportCount}</td>
                   <td className="px-3 py-2.5 tabular-nums">{r.supportCount}</td>
@@ -95,8 +103,7 @@ export default function AdminCustomersPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+        </AdminTable>
       )}
     </div>
   )

@@ -5,11 +5,21 @@ import { useEffect, useState } from "react"
 import type { AdminOverview } from "../../lib/adminTypes"
 import {
   AdminPageHeader,
+  AdminPanel,
   FeedbackStatusBadge,
   formatAdminDate,
-  SummaryCard,
+  JobStatusBadge,
+  KpiCard,
+  PriorityBadge,
   SupportStatusBadge,
 } from "../components/admin/admin-shared"
+
+const activityLabels = {
+  master: "Master completed",
+  purchase: "Purchase",
+  feedback: "Feedback",
+  support: "Support",
+} as const
 
 export default function AdminOverviewPage() {
   const [data, setData] = useState<AdminOverview | null>(null)
@@ -39,96 +49,179 @@ export default function AdminOverviewPage() {
     <div>
       <AdminPageHeader
         title="Dashboard"
-        subtitle="Operations overview — KPIs, feedback, and support at a glance."
+        subtitle="Your internal control center — masters, revenue, support, and product signals in one place."
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard label="Uploads today" value={String(data.uploadsToday)} />
-        <SummaryCard label="Masters completed today" value={String(data.mastersCompletedToday)} />
-        <SummaryCard label="Paid downloads today" value={String(data.paidDownloadsToday)} />
-        <SummaryCard
-          label="Revenue today"
-          value={`$${data.revenueToday.toFixed(0)}`}
-          hint="From mastered_exports"
-        />
-        <SummaryCard
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard label="Uploads today" value={String(data.uploadsToday)} accent="sky" />
+        <KpiCard label="Masters completed" value={String(data.mastersCompletedToday)} accent="violet" />
+        <KpiCard label="Paid downloads" value={String(data.paidDownloadsToday)} accent="emerald" />
+        <KpiCard label="Revenue today" value={`$${data.revenueToday.toFixed(0)}`} accent="emerald" />
+        <KpiCard
           label="Conversion rate"
           value={data.conversionRate != null ? `${data.conversionRate}%` : "—"}
           hint="Upload → purchase"
+          accent="violet"
         />
-        <SummaryCard label="Active users (7d)" value={String(data.activeUsers)} hint="Distinct sessions" />
-        <SummaryCard label="Failed jobs" value={String(data.failedJobs)} />
-        <SummaryCard
+        <KpiCard label="Active users (7d)" value={String(data.activeUsers)} accent="neutral" />
+        <KpiCard label="Failed jobs" value={String(data.failedJobs)} accent="amber" />
+        <KpiCard
           label="Avg recommendation"
           value={data.avgRecommendScore != null ? String(data.avgRecommendScore) : "—"}
           hint={`${data.feedbackNew} new feedback`}
+          accent="violet"
         />
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <SummaryCard label="Feedback total" value={String(data.feedbackTotal)} />
-        <SummaryCard label="Support open" value={String(data.supportOpen)} hint={`${data.supportTotal} total`} />
+      <div className="mt-8 grid gap-6 xl:grid-cols-3">
+        <div className="xl:col-span-2">
+          <AdminPanel title="Latest activity">
+            <ul className="divide-y divide-white/[0.06]">
+              {data.recentActivity.length === 0 ? (
+                <li className="py-6 text-sm text-white/45">No recent activity yet.</li>
+              ) : (
+                data.recentActivity.map((item) => (
+                  <li key={item.id} className="flex gap-4 py-3.5 first:pt-0 last:pb-0">
+                    <span className="mt-0.5 w-24 shrink-0 text-[11px] font-medium uppercase tracking-wide text-white/38">
+                      {activityLabels[item.type]}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      {item.href ? (
+                        <Link href={item.href} className="text-[14px] font-medium text-white/88 hover:text-violet-200">
+                          {item.title}
+                        </Link>
+                      ) : (
+                        <p className="text-[14px] font-medium text-white/88">{item.title}</p>
+                      )}
+                      {item.subtitle ? (
+                        <p className="mt-0.5 truncate text-[12px] text-white/45">{item.subtitle}</p>
+                      ) : null}
+                    </div>
+                    <span className="shrink-0 text-[11px] text-white/38">{formatAdminDate(item.created_at)}</span>
+                  </li>
+                ))
+              )}
+            </ul>
+          </AdminPanel>
+        </div>
+
+        <AdminPanel title="Inbox snapshot">
+          <dl className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl bg-[#141416] px-4 py-3">
+              <dt className="text-sm text-white/55">Open support</dt>
+              <dd className="text-xl font-semibold tabular-nums text-white">{data.supportOpen}</dd>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-[#141416] px-4 py-3">
+              <dt className="text-sm text-white/55">New feedback</dt>
+              <dd className="text-xl font-semibold tabular-nums text-white">{data.feedbackNew}</dd>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-[#141416] px-4 py-3">
+              <dt className="text-sm text-white/55">Total feedback</dt>
+              <dd className="text-lg tabular-nums text-white/80">{data.feedbackTotal}</dd>
+            </div>
+          </dl>
+        </AdminPanel>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Recent feedback</h2>
-            <Link href="/admin/feedback" className="text-xs text-violet-300/80 hover:text-violet-200">
-              View all
-            </Link>
-          </div>
-          <ul className="space-y-2">
-            {data.recentFeedback.length === 0 ? (
-              <li className="text-xs text-white/45">No submissions yet</li>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <AdminPanel title="Recent masters" href="/admin/jobs">
+          <ul className="space-y-3">
+            {data.recentMasters.length === 0 ? (
+              <li className="text-sm text-white/45">No masters yet.</li>
             ) : (
-              data.recentFeedback.map((r) => (
+              data.recentMasters.map((r) => (
                 <li
                   key={r.id}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-white/[0.05] px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-[#141416]/80 px-4 py-3 transition hover:border-white/[0.08]"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-white/85">{r.track_name ?? "Untitled track"}</p>
-                    <p className="text-[10px] text-white/45">{formatAdminDate(r.created_at)}</p>
+                    <p className="truncate text-[14px] font-medium text-white/88">
+                      {r.track_name ?? "Untitled track"}
+                    </p>
+                    <p className="text-[12px] text-white/42">{r.mastering_style ?? "—"}</p>
                   </div>
-                  <FeedbackStatusBadge status={r.status} />
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <JobStatusBadge status={r.status} />
+                    <span className="text-[10px] text-white/38">{formatAdminDate(r.created_at)}</span>
+                  </div>
                 </li>
               ))
             )}
           </ul>
-        </section>
+        </AdminPanel>
 
-        <section className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Recent support</h2>
-            <Link href="/admin/support" className="text-xs text-violet-300/80 hover:text-violet-200">
-              View inbox
-            </Link>
-          </div>
-          <ul className="space-y-2">
-            {data.recentSupport.length === 0 ? (
-              <li className="text-xs text-white/45">Inbox empty</li>
+        <AdminPanel title="Recent purchases" href="/admin/customers">
+          <ul className="space-y-3">
+            {data.recentPurchases.length === 0 ? (
+              <li className="text-sm text-white/45">No export deliveries recorded yet.</li>
             ) : (
-              data.recentSupport.map((r) => (
+              data.recentPurchases.map((r) => (
                 <li
                   key={r.id}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-white/[0.05] px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-[#141416]/80 px-4 py-3 transition hover:border-white/[0.08]"
                 >
                   <div className="min-w-0">
                     <Link
-                      href={`/admin/support/${r.id}`}
-                      className="truncate text-sm text-white/85 hover:text-violet-200"
+                      href={`/admin/customers/${encodeURIComponent(r.email)}`}
+                      className="truncate text-[14px] font-medium text-white/88 hover:text-violet-200"
                     >
-                      {r.subject ?? r.email}
+                      {r.email}
                     </Link>
-                    <p className="text-[10px] text-white/45">{formatAdminDate(r.created_at)}</p>
+                    <p className="truncate text-[12px] text-white/42">{r.track_title ?? "Master export"}</p>
                   </div>
-                  <SupportStatusBadge status={r.status} />
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-semibold tabular-nums text-emerald-300/90">${r.amount}</p>
+                    <p className="text-[10px] text-white/38">{formatAdminDate(r.created_at)}</p>
+                  </div>
                 </li>
               ))
             )}
           </ul>
-        </section>
+        </AdminPanel>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <AdminPanel title="Recent feedback" href="/admin/feedback">
+          <ul className="space-y-3">
+            {data.recentFeedback.map((r) => (
+              <li
+                key={r.id}
+                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-[#141416]/80 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-[14px] text-white/88">{r.track_name ?? "Untitled"}</p>
+                  <p className="text-[10px] text-white/38">{formatAdminDate(r.created_at)}</p>
+                </div>
+                <FeedbackStatusBadge status={r.status} />
+              </li>
+            ))}
+          </ul>
+        </AdminPanel>
+
+        <AdminPanel title="Recent support" href="/admin/support">
+          <ul className="space-y-3">
+            {data.recentSupport.map((r) => (
+              <li
+                key={r.id}
+                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-[#141416]/80 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <Link
+                    href={`/admin/support/${r.id}`}
+                    className="truncate text-[14px] font-medium text-white/88 hover:text-violet-200"
+                  >
+                    {r.subject ?? r.email}
+                  </Link>
+                  <p className="text-[10px] text-white/38">{formatAdminDate(r.created_at)}</p>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <PriorityBadge priority={r.priority} />
+                  <SupportStatusBadge status={r.status} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </AdminPanel>
       </div>
     </div>
   )

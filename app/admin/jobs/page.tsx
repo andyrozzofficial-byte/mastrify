@@ -7,6 +7,8 @@ import {
   AdminEmpty,
   AdminPageHeader,
   AdminSearchInput,
+  AdminSelect,
+  AdminTable,
   formatAdminDate,
   JobStatusBadge,
 } from "../../components/admin/admin-shared"
@@ -57,18 +59,14 @@ export default function AdminJobsPage() {
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <AdminSearchInput value={search} onChange={setSearch} placeholder="Track, session, email…" />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as AdminJobStatus | "")}
-          className="rounded-xl border border-white/[0.08] bg-[#090912] px-3 py-2 text-sm text-white"
-        >
+        <AdminSelect value={statusFilter} onChange={(v) => setStatusFilter(v as AdminJobStatus | "")}>
           <option value="">All statuses</option>
           {ADMIN_JOB_STATUSES.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
           ))}
-        </select>
+        </AdminSelect>
       </div>
 
       {error ? <p className="mb-4 text-sm text-rose-300/90">{error}</p> : null}
@@ -76,9 +74,8 @@ export default function AdminJobsPage() {
       {filtered.length === 0 ? (
         <AdminEmpty message="No master jobs found." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
-          <table className="w-full min-w-[900px] text-left text-xs">
-            <thead className="bg-white/[0.03] text-white/50">
+        <AdminTable>
+            <thead className="border-b border-white/[0.06] bg-[#141416] text-[11px] font-medium uppercase tracking-wide text-white/42">
               <tr>
                 <th className="px-3 py-2.5">Track</th>
                 <th className="px-3 py-2.5">Session / user</th>
@@ -92,8 +89,8 @@ export default function AdminJobsPage() {
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <tr key={r.id} className="border-t border-white/[0.05] align-top hover:bg-white/[0.02]">
-                  <td className="px-3 py-2.5 text-white/85">{r.track_name ?? "—"}</td>
+                <tr key={r.id} className="border-t border-white/[0.05] align-top transition hover:bg-[#1f1f23]/80">
+                  <td className="px-4 py-3.5 text-[13px] text-white/88">{r.track_name ?? "—"}</td>
                   <td className="px-3 py-2.5 text-white/60">
                     <p className="font-mono text-[10px]">{r.session_id ?? "—"}</p>
                     <p className="mt-0.5">{r.user_email ?? "—"}</p>
@@ -117,8 +114,7 @@ export default function AdminJobsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+        </AdminTable>
       )}
     </div>
   )
