@@ -1,4 +1,5 @@
 import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
+import type { ActionCenterIssue } from "./adminFeedbackActionCenter"
 
 export const ADMIN_FEEDBACK_STATUSES = ["new", "read", "resolved"] as const
 export type AdminFeedbackStatus = (typeof ADMIN_FEEDBACK_STATUSES)[number]
@@ -84,6 +85,7 @@ export type AdminOverview = AdminKpis & {
   }[]
   recentPurchases: { id: string; created_at: string; email: string; track_title: string | null; amount: number }[]
   recentActivity: AdminActivityItem[]
+  actionCenter: ActionCenterIssue[]
 }
 
 export type AdminFeedbackRow = {

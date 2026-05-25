@@ -28,7 +28,13 @@ const DISPOSITION_LABEL: Record<ActionCenterDisposition, string> = {
   tracked: "Tracking",
 }
 
-export function AdminActionCenter({ items }: { items: ActionCenterIssue[] }) {
+export function AdminActionCenter({
+  items,
+  subtitle = "Prioritized signals from beta feedback and support tickets — what to fix first.",
+}: {
+  items: ActionCenterIssue[]
+  subtitle?: string
+}) {
   const [dispositions, setDispositions] = useState<Record<string, ActionCenterDisposition>>({})
 
   const refresh = useCallback(() => {
@@ -54,9 +60,7 @@ export function AdminActionCenter({ items }: { items: ActionCenterIssue[] }) {
   return (
     <AdminCard className="mb-8 border-violet-300/70 bg-gradient-to-br from-[#ffffff] to-violet-50/50">
       <h2 className="text-lg font-semibold text-slate-950">Action center</h2>
-      <p className="mt-1 text-sm text-slate-600">
-        Prioritized patterns from beta feedback — priority = mentions × recommend impact.
-      </p>
+      <p className="mt-1 text-sm text-slate-600">{subtitle}</p>
       {visible.length === 0 ? (
         <p className="mt-4 text-sm text-slate-600">All issues are ignored or resolved. Clear ignores in browser storage to reset.</p>
       ) : (

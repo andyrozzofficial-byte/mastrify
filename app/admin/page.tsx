@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import type { AdminOverview } from "../../lib/adminTypes"
+import { AdminActionCenter } from "../components/admin/AdminActionCenter"
 import {
   AdminPageHeader,
   AdminPanel,
@@ -72,6 +73,12 @@ export default function AdminOverviewPage() {
           accent="violet"
         />
       </div>
+
+      {data.actionCenter.length > 0 ? (
+        <div className="mt-8">
+          <AdminActionCenter items={data.actionCenter} />
+        </div>
+      ) : null}
 
       <div className="mt-8 grid gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">

@@ -9,12 +9,8 @@ import CinematicBackground from "../components/CinematicBackground"
 import { HELP_FAQ_ITEMS, POPULAR_HELP_FAQ, searchHelpFaq, type HelpFaqItem } from "../../lib/helpFaq"
 import { masteringStyleLabel } from "../../lib/masterStyleLabels"
 import { readSupportSessionContext } from "../../lib/readSupportSessionContext"
-import {
-  SUPPORT_CATEGORY_LABELS,
-  SUPPORT_TICKET_CATEGORIES,
-  type SupportSessionContext,
-  type SupportTicketCategory,
-} from "../../lib/supportTypes"
+import type { SupportSessionContext, SupportTicketCategory } from "../../lib/supportTypes"
+import SupportTicketModal from "./SupportTicketModal"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -34,32 +30,6 @@ function FaqCard({ item, highlight }: { item: HelpFaqItem; highlight?: boolean }
   )
 }
 
-function SessionContextPreview({ ctx }: { ctx: SupportSessionContext }) {
-  const rows = [
-    ctx.sessionId ? `Session: ${ctx.sessionId}` : null,
-    ctx.trackName ? `Track: ${ctx.trackName}` : null,
-    ctx.masteringStyle ? `Style: ${ctx.masteringStyle}` : null,
-    ctx.lufs != null ? `LUFS: ${ctx.lufs}` : null,
-    ctx.processingTimeMs != null ? `Processing: ${(ctx.processingTimeMs / 1000).toFixed(1)}s` : null,
-    ctx.fileId ? `File: ${ctx.fileId}` : null,
-  ].filter(Boolean) as string[]
-
-  if (rows.length === 0) return null
-
-  return (
-    <div className="mt-4 rounded-xl border border-violet-400/20 bg-violet-500/[0.06] px-4 py-3 text-[12px] leading-relaxed text-violet-100/85">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-200/70">
-        Session will be attached
-      </p>
-      <ul className="mt-2 space-y-1">
-        {rows.map((line) => (
-          <li key={line}>{line}</li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
 export default function HelpCenterClient() {
   const reduce = useReducedMotion()
   const pathname = usePathname()
@@ -68,7 +38,7 @@ export default function HelpCenterClient() {
 
   const [query, setQuery] = useState("")
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [showTicket, setShowTicket] = useState(searchParams.get("ticket") === "1")
+  const [ticketModalOpen, setTicketModalOpen] = useState(searchParams.get("ticket") === "1")
 
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
@@ -132,6 +102,13 @@ export default function HelpCenterClient() {
     }
     setTicketSuccess(true)
     setTicketMessage("")
+  }
+
+  function closeTicketModal() {
+    setTicketModalOpen(false)
+    if (ticketSuccess) {
+      setTicketSuccess(false)
+    }
   }
 
   return (
@@ -237,109 +214,16 @@ export default function HelpCenterClient() {
             Create a support ticket and we&apos;ll follow up by email. Session details attach automatically when you&apos;re mastering.
           </p>
 
-          {!showTicket ? (
-            <button
-              type="button"
-              onClick={() => setShowTicket(true)}
-              className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-7 text-[13px] font-semibold text-white shadow-[0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] sm:w-auto"
-            >
-              Create support ticket
-            </button>
-          ) : ticketSuccess ? (
-            <div className="mt-6 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.08] px-4 py-4 text-[14px] text-emerald-100/90">
-              <p className="font-medium">Ticket received</p>
-              <p className="mt-1 text-emerald-200/75">
-                We&apos;ll reply to <span className="text-white/90">{email}</span> when there&apos;s an update.
-              </p>
-              <button
-                type="button"
-                className="mt-4 text-[13px] font-medium text-violet-200/90 underline-offset-2 hover:underline"
-                onClick={() => {
-                  setTicketSuccess(false)
-                  setShowTicket(false)
-                }}
-              >
-                Back to help articles
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={onSubmitTicket} className="mt-6 space-y-4">
-              <div>
-                <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-label-strong">
-                  Category
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as SupportTicketCategory)}
-                  className="mt-2 w-full rounded-xl border border-white/[0.1] bg-black/35 px-3 py-2.5 text-sm text-white/90 outline-none focus:border-violet-400/40"
-                  required
-                >
-                  {SUPPORT_TICKET_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {SUPPORT_CATEGORY_LABELS[c]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-label-strong">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-white/[0.1] bg-black/35 px-3 py-2.5 text-sm text-white/90 outline-none focus:border-violet-400/40"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-label-strong">
-                    Name (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-white/[0.1] bg-black/35 px-3 py-2.5 text-sm text-white/90 outline-none focus:border-violet-400/40"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-label-strong">
-                  What happened?
-                </label>
-                <textarea
-                  required
-                  minLength={10}
-                  rows={4}
-                  value={ticketMessage}
-                  onChange={(e) => setTicketMessage(e.target.value)}
-                  placeholder="Describe the issue — what you expected vs what you heard or saw."
-                  className="mt-2 w-full rounded-xl border border-white/[0.1] bg-black/35 px-3 py-2.5 text-sm text-white/90 outline-none focus:border-violet-400/40"
-                />
-              </div>
-              <SessionContextPreview ctx={sessionContext} />
-              {ticketError ? <p className="text-sm text-rose-300/90">{ticketError}</p> : null}
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="min-h-[46px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 text-sm font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:brightness-110 disabled:opacity-60"
-                >
-                  {submitting ? "Sending…" : "Submit ticket"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowTicket(false)}
-                  className="min-h-[46px] rounded-xl border border-white/[0.1] px-5 text-sm text-muted-strong transition hover:text-white/85"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              setTicketSuccess(false)
+              setTicketModalOpen(true)
+            }}
+            className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-7 text-[13px] font-semibold text-white shadow-[0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04] sm:w-auto"
+          >
+            Create support ticket
+          </button>
 
           <p className="mt-6 text-center text-[12px] text-white/40">
             Prefer email only?{" "}
@@ -355,6 +239,24 @@ export default function HelpCenterClient() {
           </Link>
         </p>
       </main>
+
+      <SupportTicketModal
+        open={ticketModalOpen}
+        onClose={closeTicketModal}
+        category={category}
+        onCategoryChange={setCategory}
+        email={email}
+        onEmailChange={setEmail}
+        name={name}
+        onNameChange={setName}
+        ticketMessage={ticketMessage}
+        onTicketMessageChange={setTicketMessage}
+        sessionContext={sessionContext}
+        submitting={submitting}
+        ticketError={ticketError}
+        ticketSuccess={ticketSuccess}
+        onSubmit={onSubmitTicket}
+      />
     </motion.div>
   )
 }

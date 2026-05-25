@@ -25,6 +25,8 @@ import {
 import { BETA_FEEDBACK_TABLE } from "./betaFeedbackDb"
 import { isBetaFeedbackStage, type BetaFeedbackStage } from "./betaFeedbackPulseTypes"
 import { createSupabaseServerClient } from "./supabaseServer"
+import { buildAdminActionCenter } from "./adminFeedbackActionCenter"
+import { buildSupportActionSignals, mergeActionCenterItems } from "./adminSupportSignals"
 import { mapSupportRow } from "./supportTickets"
 
 export const SUPPORT_INBOX_TABLE = "admin_support_inbox"
@@ -280,47 +282,37 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
 }
 
 export async function fetchAdminOverview(): Promise<AdminOverview | { error: string }> {
-  const supabase = createSupabaseServerClient()
-  if (!supabase) return { error: "Database unavailable" }
-
   const kpis = await computeAdminKpis()
   if ("error" in kpis) return kpis
 
-  const [feedbackRes, supportRes] = await Promise.all([
-    supabase
-      .from(BETA_FEEDBACK_TABLE)
-      .select(
-        "id, created_at, track_name, status, responses, mastering_style, processing_time_ms, master_lufs",
-      )
-      .order("created_at", { ascending: false })
-      .limit(200),
-    supabase
-      .from(SUPPORT_INBOX_TABLE)
-      .select("id, created_at, email, subject, status, priority")
-      .order("created_at", { ascending: false })
-      .limit(200),
+  const [feedbackResult, supportResult] = await Promise.all([
+    fetchAdminFeedback(),
+    fetchAdminSupport(),
   ])
 
-  if (feedbackRes.error) return { error: feedbackRes.error.message }
-  if (supportRes.error) return { error: supportRes.error.message }
+  if (isFetchError(feedbackResult)) return feedbackResult
+  if (isFetchError(supportResult)) return supportResult
 
-  const feedback = feedbackRes.data ?? []
-  const support = supportRes.data ?? []
+  const feedback = feedbackResult
+  const support = supportResult
 
   const recommendScores = feedback
-    .map((r) => payloadOf(r as { responses: BetaFeedbackPayload }).recommendScore)
-    .filter((n): n is number => typeof n === "number" && Number.isFinite(n))
+    .map((r) => r.recommend_score)
+    .filter((n) => typeof n === "number" && Number.isFinite(n) && n > 0)
 
   const avgRecommendScore =
     recommendScores.length > 0
       ? Math.round((recommendScores.reduce((a, b) => a + b, 0) / recommendScores.length) * 10) / 10
       : null
 
-  const feedbackNew = feedback.filter((r) => normalizeFeedbackStatus(r.status) === "new").length
-  const supportOpen = support.filter((r) => normalizeSupportStatus(r.status) === "open").length
-  const supportWaiting = support.filter(
-    (r) => normalizeSupportStatus(r.status) === "waiting_for_customer",
-  ).length
+  const feedbackNew = feedback.filter((r) => r.status === "new").length
+  const supportOpen = support.filter((r) => r.status === "open").length
+  const supportWaiting = support.filter((r) => r.status === "waiting_for_customer").length
+
+  const actionCenter = mergeActionCenterItems(
+    buildSupportActionSignals(support),
+    buildAdminActionCenter(feedback),
+  )
 
   const exportsAll = await fetchExportsSince(null)
   const exports = exportsAll.data
@@ -329,7 +321,7 @@ export async function fetchAdminOverview(): Promise<AdminOverview | { error: str
     id: r.id,
     created_at: r.created_at,
     track_name: r.track_name,
-    status: normalizeFeedbackStatus(r.status),
+    status: r.status,
   }))
 
   const recentSupport = support.slice(0, 6).map((r) => ({
@@ -337,27 +329,19 @@ export async function fetchAdminOverview(): Promise<AdminOverview | { error: str
     created_at: r.created_at,
     email: r.email,
     subject: r.subject,
-    status: normalizeSupportStatus(r.status),
-    priority: normalizeSupportPriority(r.priority),
+    status: r.status,
+    priority: r.priority,
   }))
 
-  const recentMasters = feedback.slice(0, 8).map((r) => {
-    const p = payloadOf(r as { responses: BetaFeedbackPayload })
-    return {
-      id: r.id,
-      created_at: r.created_at,
-      track_name: r.track_name?.trim() || p.trackName?.trim() || null,
-      mastering_style: r.mastering_style?.trim() || p.masteringStyle?.trim() || null,
-      processing_time_ms: r.processing_time_ms ?? p.processingTimeMs ?? null,
-      master_lufs:
-        r.master_lufs != null
-          ? Number(r.master_lufs)
-          : p.masterLufs != null && Number.isFinite(p.masterLufs)
-            ? Number(p.masterLufs)
-            : null,
-      status: "complete" as const,
-    }
-  })
+  const recentMasters = feedback.slice(0, 8).map((r) => ({
+    id: r.id,
+    created_at: r.created_at,
+    track_name: r.track_name,
+    mastering_style: r.mastering_style,
+    processing_time_ms: r.processing_time_ms,
+    master_lufs: r.master_lufs,
+    status: "complete" as const,
+  }))
 
   const recentPurchases = exports.slice(0, 8).map((row, i) => ({
     id: row.id ?? `export-${i}`,
@@ -433,6 +417,7 @@ export async function fetchAdminOverview(): Promise<AdminOverview | { error: str
     recentMasters,
     recentPurchases,
     recentActivity: activity,
+    actionCenter,
   }
 }
 
