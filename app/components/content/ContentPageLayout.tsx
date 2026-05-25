@@ -94,8 +94,8 @@ export function HelpCenterGrid({ sidebar, children, className = "" }: HelpCenter
     <div
       className={`grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-[300px_1fr] lg:gap-10 ${className}`}
     >
-      <aside className="w-full min-w-0 shrink-0 lg:sticky lg:top-24 lg:w-[300px]">{sidebar}</aside>
-      <div className="min-w-0 w-full">{children}</div>
+      <aside className="w-full min-w-0 shrink-0 pt-0 lg:sticky lg:top-24 lg:w-[300px]">{sidebar}</aside>
+      <div className="min-w-0 mt-0 w-full">{children}</div>
     </div>
   )
 }

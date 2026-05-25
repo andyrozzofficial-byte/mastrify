@@ -24,7 +24,7 @@ function FaqCard({ item, highlight, compact }: { item: HelpFaqItem; highlight?: 
     <article
       id={item.id}
       className={`rounded-[1.15rem] border transition duration-300 ${
-        compact ? "px-4 py-3.5" : highlight ? "min-h-[200px] p-9" : "px-5 py-4"
+        compact ? "px-4 py-3.5" : highlight ? "mt-0 min-h-[200px] p-9" : "px-5 py-4"
       } ${
         highlight
           ? "border-violet-400/35 bg-violet-500/[0.08] shadow-[0_0_0_1px_rgba(167,139,250,0.12)]"
@@ -63,7 +63,7 @@ function FaqNavButton({
 
 function StillNeedHelpCard({ onOpenTicket }: { onOpenTicket: () => void }) {
   return (
-    <section className="mt-20 flex w-full items-center justify-between gap-8 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] max-sm:flex-col max-sm:items-start">
+    <section className="mt-12 flex min-h-[120px] w-full items-center justify-between gap-8 rounded-3xl border border-white/[0.1] bg-gradient-to-b from-white/[0.05] to-black/[0.75] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] max-sm:flex-col max-sm:items-start">
       <div className="min-w-0">
         <h2 className="text-2xl font-semibold text-white/92">Still need help?</h2>
         <p className="mt-2 text-[16px] leading-[1.8] text-white/[0.85]">
@@ -172,7 +172,7 @@ export default function HelpCenterClient() {
   return (
     <ContentPageLayout>
       <HelpPageContainer>
-        <div className="mx-auto mb-10 max-w-[700px] text-center">
+        <div className="mx-auto mb-8 max-w-[700px] text-center">
           <PageHero
             label="Help center"
             title="How can we help?"
@@ -182,7 +182,7 @@ export default function HelpCenterClient() {
         </div>
 
         <motion.div
-          className="relative mx-auto mb-12 mt-6 w-full max-w-[720px]"
+          className="relative mx-auto mb-8 mt-4 w-full max-w-[720px]"
           initial={reduce ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.05, ease: EASE }}
@@ -202,7 +202,7 @@ export default function HelpCenterClient() {
         </motion.div>
 
         {showSearchResults ? (
-          <section className="w-full space-y-2.5">
+          <section className="mt-0 w-full space-y-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
               {searchResults.length > 0 ? "Matching answers" : "No matches"}
             </p>
@@ -218,6 +218,7 @@ export default function HelpCenterClient() {
           </section>
         ) : (
           <HelpCenterGrid
+            className="mt-0"
             sidebar={
               <>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-label-strong">
