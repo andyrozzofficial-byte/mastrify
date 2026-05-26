@@ -26,8 +26,10 @@ import {
   BETA_FEEDBACK_WOULD_RELEASE_OPTIONS,
   type BetaFeedbackSessionAnalytics,
 } from "../../../lib/betaFeedbackTypes"
+import { useBetaMasteringGate } from "../beta/BetaMasteringGateProvider"
 import BetaFeedbackChipSelect from "./BetaFeedbackChipSelect"
 import BetaFeedbackOptionalNotes from "./BetaFeedbackOptionalNotes"
+import BetaFeedbackSuccessPanel from "./BetaFeedbackSuccessPanel"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -36,12 +38,17 @@ type Props = {
   masterObjectKey?: string | null
   sessionAnalytics: BetaFeedbackSessionAnalytics
   onDismiss?: () => void
+  onCreateAnotherMaster?: () => void
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-200/55">{children}</p>
+    <p className="text-[9px] font-semibold uppercase tracking-[0.24em] text-violet-200/50">{children}</p>
   )
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <p className="mt-2 text-[12px] font-medium text-white/72">{children}</p>
 }
 
 function RadioRow({
@@ -49,21 +56,25 @@ function RadioRow({
   options,
   value,
   onChange,
+  compact = false,
 }: {
   name: string
   options: readonly string[]
   value: string
   onChange: (v: string) => void
+  compact?: boolean
 }) {
   return (
-    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+    <div
+      className={`mt-1.5 grid grid-cols-1 gap-1.5 ${compact ? "sm:grid-cols-1" : "sm:grid-cols-2"}`}
+    >
       {options.map((opt) => (
         <label
           key={opt}
-          className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 text-[14px] transition ${
+          className={`flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-[12px] transition sm:text-[13px] ${
             value === opt
               ? "border-violet-400/35 bg-violet-500/10 text-white"
-              : "border-white/[0.08] bg-white/[0.02] text-white/72 hover:border-white/[0.12] hover:bg-white/[0.04]"
+              : "border-white/[0.08] bg-white/[0.02] text-white/70 hover:border-white/[0.1] hover:bg-white/[0.04]"
           }`}
         >
           <input
@@ -71,9 +82,9 @@ function RadioRow({
             name={name}
             checked={value === opt}
             onChange={() => onChange(opt)}
-            className="h-4 w-4 shrink-0 accent-violet-500"
+            className="h-3.5 w-3.5 shrink-0 accent-violet-500"
           />
-          <span>{opt}</span>
+          <span className="leading-snug">{opt}</span>
         </label>
       ))}
     </div>
@@ -90,16 +101,16 @@ function PillChoice({
   onChange: (v: string) => void
 }) {
   return (
-    <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+    <div className="mt-2 grid grid-cols-3 gap-1.5">
       {options.map((opt) => (
         <button
           key={opt}
           type="button"
           onClick={() => onChange(opt)}
-          className={`rounded-xl border px-4 py-2.5 text-[13px] font-semibold transition ${
+          className={`flex min-h-[2.25rem] items-center justify-center rounded-lg border px-2 py-1.5 text-[12px] font-semibold transition ${
             value === opt
-              ? "border-violet-400/40 bg-gradient-to-r from-violet-600/90 to-indigo-700/90 text-white shadow-[0_0_16px_rgba(99,102,241,0.15)]"
-              : "border-white/[0.08] bg-white/[0.03] text-white/70 hover:bg-white/[0.05]"
+              ? "border-violet-400/40 bg-gradient-to-r from-violet-600/90 to-indigo-700/90 text-white shadow-[0_0_12px_rgba(99,102,241,0.12)]"
+              : "border-white/[0.08] bg-white/[0.03] text-white/68 hover:bg-white/[0.05]"
           }`}
         >
           {opt}
@@ -114,11 +125,14 @@ export default function BetaMasterFeedback({
   masterObjectKey,
   sessionAnalytics,
   onDismiss,
+  onCreateAnotherMaster,
 }: Props) {
   const reduce = useReducedMotion()
+  const { betaUi, refreshAccess } = useBetaMasteringGate()
   const sessionId = sessionAnalytics.sessionId
 
   const [show, setShow] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [masterRating, setMasterRating] = useState(8)
   const [likedFeatures, setLikedFeatures] = useState<string[]>([])
   const [improvements, setImprovements] = useState<string[]>([])
@@ -180,6 +194,11 @@ export default function BetaMasterFeedback({
     },
     [sessionId, onDismiss],
   )
+
+  const handleCreateAnother = useCallback(() => {
+    onCreateAnotherMaster?.()
+    dismiss("submitted")
+  }, [dismiss, onCreateAnotherMaster])
 
   const handleSubmit = useCallback(async () => {
     if (likedFeatures.length === 0) {
@@ -254,7 +273,9 @@ export default function BetaMasterFeedback({
         )
       }
       writeBetaFeedbackStatus("submitted")
-      dismiss("submitted")
+      writePostMasterFeedbackStatus(sessionId, "submitted")
+      await refreshAccess?.({ silent: true })
+      setSubmitted(true)
     } catch {
       setError("Something went wrong. Please try again.")
     } finally {
@@ -263,7 +284,6 @@ export default function BetaMasterFeedback({
   }, [
     clarity,
     contactEmail,
-    dismiss,
     daw,
     genre,
     improvements,
@@ -273,8 +293,10 @@ export default function BetaMasterFeedback({
     masterObjectKey,
     masterRating,
     optionalComment,
+    refreshAccess,
     role,
     sessionAnalytics,
+    sessionId,
     stereoImage,
     wouldUseAgain,
   ])
@@ -289,133 +311,195 @@ export default function BetaMasterFeedback({
       className="product-form-column mx-auto mt-0 w-full max-w-[43.75rem]"
       aria-labelledby="beta-master-feedback-title"
     >
-      <div className="product-surface-card overflow-hidden border-violet-400/18 bg-white/[0.035] p-5 shadow-[0_0_32px_rgba(124,58,237,0.08)] sm:p-6">
-        <header className="text-center">
-          <h2 id="beta-master-feedback-title" className="text-lg font-semibold text-white sm:text-xl">
-            Help improve Mastrify
-          </h2>
-          <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-white/55">
-            Tap what worked and what to improve — download stays available while you answer.
-          </p>
-        </header>
-
-        <div className="mt-6 space-y-6">
-          <div>
-            <h3 className="text-center text-base font-semibold text-white sm:text-lg">
-              <span aria-hidden>⭐ </span>
-              Rate your master (1–10)
-            </h3>
-            <div className="mt-4 flex items-center gap-4 px-1">
-              <input
-                type="range"
-                min={1}
-                max={10}
-                step={1}
-                value={masterRating}
-                onChange={(e) => setMasterRating(Number(e.target.value))}
-                className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-white/[0.08] accent-violet-500"
-                aria-label="Master rating"
-              />
-              <span className="w-11 text-center font-mono text-xl font-semibold text-violet-200">{masterRating}</span>
+      <div className="product-surface-card beta-feedback-card relative flex max-h-[min(82vh,680px)] flex-col overflow-hidden border-violet-400/18 bg-white/[0.035] shadow-[0_0_32px_rgba(124,58,237,0.08)]">
+        {submitted ? (
+          betaUi ? (
+            <BetaFeedbackSuccessPanel betaUi={betaUi} onCreateAnother={handleCreateAnother} />
+          ) : (
+            <div className="flex flex-col items-center px-4 py-8 text-center">
+              <p className="text-lg font-semibold text-white">
+                <span className="text-emerald-300/95" aria-hidden>
+                  ✓{" "}
+                </span>
+                Thanks for helping improve Mastrify
+              </p>
+              <p className="mt-4 text-[13px] text-violet-200/85">+1 Insider point earned</p>
+              <button
+                type="button"
+                onClick={handleCreateAnother}
+                className="mt-8 inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-6 text-[15px] font-semibold text-white"
+              >
+                Create another master
+              </button>
             </div>
-          </div>
+          )
+        ) : (
+          <>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-2 pt-4 sm:px-5 sm:pt-4">
+              <header className="text-center">
+                <h2 id="beta-master-feedback-title" className="text-base font-semibold text-white sm:text-lg">
+                  Help improve Mastrify
+                </h2>
+                <p className="mx-auto mt-1.5 max-w-md text-[12px] leading-snug text-white/52 sm:text-[13px]">
+                  Tap what worked and what to improve — download stays available.
+                </p>
+              </header>
 
-          <BetaFeedbackChipSelect
-            label="What sounded good?"
-            options={BETA_LIKED_FEATURE_OPTIONS}
-            selected={likedFeatures}
-            onChange={setLikedFeatures}
-          />
+              <div className="mt-4 space-y-4">
+                <div>
+                  <h3 className="text-center text-[13px] font-semibold text-white/90 sm:text-left">
+                    <span aria-hidden>⭐ </span>
+                    Rate your master (1–10)
+                  </h3>
+                  <div className="mt-2 flex items-center gap-3 px-0.5">
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={masterRating}
+                      onChange={(e) => setMasterRating(Number(e.target.value))}
+                      className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/[0.08] accent-violet-500"
+                      aria-label="Master rating"
+                    />
+                    <span className="w-9 text-center font-mono text-lg font-semibold text-violet-200">{masterRating}</span>
+                  </div>
+                </div>
 
-          <BetaFeedbackChipSelect
-            label="What could improve?"
-            options={BETA_IMPROVEMENT_OPTIONS}
-            selected={improvements}
-            onChange={setImprovements}
-          />
+                <BetaFeedbackChipSelect
+                  label="What sounded good?"
+                  options={BETA_LIKED_FEATURE_OPTIONS}
+                  selected={likedFeatures}
+                  onChange={setLikedFeatures}
+                />
 
-          <fieldset>
-            <legend className="text-center text-[15px] font-medium text-white/88 sm:text-left">
-              Would you use Mastrify again?
-            </legend>
-            <PillChoice
-              options={BETA_FEEDBACK_WOULD_RELEASE_OPTIONS}
-              value={wouldUseAgain}
-              onChange={setWouldUseAgain}
-            />
-          </fieldset>
-        </div>
+                <BetaFeedbackChipSelect
+                  label="What could improve?"
+                  options={BETA_IMPROVEMENT_OPTIONS}
+                  selected={improvements}
+                  onChange={setImprovements}
+                />
 
-        <div className="mt-8 space-y-8 border-t border-white/[0.08] pt-8">
-          <div>
-            <SectionTitle>About you</SectionTitle>
-            <p className="mt-3 text-[15px] font-medium text-white/80">Which best describes you?</p>
-            <RadioRow name="beta-role" options={BETA_FEEDBACK_ROLE_OPTIONS} value={role} onChange={setRole} />
-          </div>
+                <fieldset>
+                  <legend className="text-[13px] font-medium text-white/85">Would you use Mastrify again?</legend>
+                  <PillChoice
+                    options={BETA_FEEDBACK_WOULD_RELEASE_OPTIONS}
+                    value={wouldUseAgain}
+                    onChange={setWouldUseAgain}
+                  />
+                </fieldset>
+              </div>
 
-          <div>
-            <SectionTitle>Session information</SectionTitle>
-            <p className="mt-3 text-[15px] font-medium text-white/80">What genre did you test with?</p>
-            <RadioRow
-              name="beta-genre"
-              options={BETA_RESULT_GENRE_OPTIONS.map((o) => o.label)}
-              value={BETA_RESULT_GENRE_OPTIONS.find((o) => o.value === genre)?.label ?? ""}
-              onChange={(label) => {
-                const match = BETA_RESULT_GENRE_OPTIONS.find((o) => o.label === label)
-                setGenre(match?.value ?? "Other")
-              }}
-            />
-            <p className="mt-6 text-[15px] font-medium text-white/80">Which DAW do you use?</p>
-            <RadioRow
-              name="beta-daw"
-              options={BETA_RESULT_DAW_OPTIONS.map((o) => o.label)}
-              value={BETA_RESULT_DAW_OPTIONS.find((o) => o.value === daw)?.label ?? ""}
-              onChange={(label) => {
-                const byLabel = BETA_RESULT_DAW_OPTIONS.find((o) => o.label === label)
-                setDaw(byLabel?.value ?? "Other")
-              }}
-            />
-          </div>
+              <div className="mt-5 border-t border-white/[0.06] pt-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+                  <div className="space-y-3.5">
+                    <div>
+                      <SectionTitle>About you</SectionTitle>
+                      <FieldLabel>Which best describes you?</FieldLabel>
+                      <RadioRow
+                        name="beta-role"
+                        options={BETA_FEEDBACK_ROLE_OPTIONS}
+                        value={role}
+                        onChange={setRole}
+                        compact
+                      />
+                    </div>
 
-          <div>
-            <SectionTitle>Mastering experience</SectionTitle>
-            <p className="mt-3 text-[15px] font-medium text-white/80">How would you rate loudness?</p>
-            <RadioRow name="beta-loudness" options={BETA_LOUDNESS_OPTIONS} value={loudness} onChange={setLoudness} />
-            <p className="mt-6 text-[15px] font-medium text-white/80">How would you rate low-end?</p>
-            <RadioRow name="beta-lowend" options={BETA_LOW_END_OPTIONS} value={lowEnd} onChange={setLowEnd} />
-            <p className="mt-6 text-[15px] font-medium text-white/80">How would you rate stereo image?</p>
-            <RadioRow name="beta-stereo" options={BETA_STEREO_OPTIONS} value={stereoImage} onChange={setStereoImage} />
-            <p className="mt-6 text-[15px] font-medium text-white/80">How would you rate clarity?</p>
-            <RadioRow name="beta-clarity" options={BETA_CLARITY_OPTIONS} value={clarity} onChange={setClarity} />
-          </div>
+                    <div>
+                      <SectionTitle>Session</SectionTitle>
+                      <FieldLabel>Genre</FieldLabel>
+                      <RadioRow
+                        name="beta-genre"
+                        options={BETA_RESULT_GENRE_OPTIONS.map((o) => o.label)}
+                        value={BETA_RESULT_GENRE_OPTIONS.find((o) => o.value === genre)?.label ?? ""}
+                        onChange={(label) => {
+                          const match = BETA_RESULT_GENRE_OPTIONS.find((o) => o.label === label)
+                          setGenre(match?.value ?? "Other")
+                        }}
+                        compact
+                      />
+                      <FieldLabel>DAW</FieldLabel>
+                      <RadioRow
+                        name="beta-daw"
+                        options={BETA_RESULT_DAW_OPTIONS.map((o) => o.label)}
+                        value={BETA_RESULT_DAW_OPTIONS.find((o) => o.value === daw)?.label ?? ""}
+                        onChange={(label) => {
+                          const byLabel = BETA_RESULT_DAW_OPTIONS.find((o) => o.label === label)
+                          setDaw(byLabel?.value ?? "Other")
+                        }}
+                        compact
+                      />
+                    </div>
+                  </div>
 
-          <BetaFeedbackOptionalNotes value={optionalComment} onChange={setOptionalComment} />
-        </div>
+                  <div>
+                    <SectionTitle>Master feedback</SectionTitle>
+                    <FieldLabel>Loudness</FieldLabel>
+                    <RadioRow
+                      name="beta-loudness"
+                      options={BETA_LOUDNESS_OPTIONS}
+                      value={loudness}
+                      onChange={setLoudness}
+                      compact
+                    />
+                    <FieldLabel>Low-end</FieldLabel>
+                    <RadioRow
+                      name="beta-lowend"
+                      options={BETA_LOW_END_OPTIONS}
+                      value={lowEnd}
+                      onChange={setLowEnd}
+                      compact
+                    />
+                    <FieldLabel>Stereo image</FieldLabel>
+                    <RadioRow
+                      name="beta-stereo"
+                      options={BETA_STEREO_OPTIONS}
+                      value={stereoImage}
+                      onChange={setStereoImage}
+                      compact
+                    />
+                    <FieldLabel>Clarity</FieldLabel>
+                    <RadioRow
+                      name="beta-clarity"
+                      options={BETA_CLARITY_OPTIONS}
+                      value={clarity}
+                      onChange={setClarity}
+                      compact
+                    />
+                  </div>
+                </div>
 
-        {error ? (
-          <p className="mt-6 text-center text-sm text-rose-300/90" role="alert">
-            {error}
-          </p>
-        ) : null}
+                <BetaFeedbackOptionalNotes value={optionalComment} onChange={setOptionalComment} />
+              </div>
+            </div>
 
-        <div className="mt-8 flex flex-col gap-3 border-t border-white/[0.08] pt-6 sm:flex-row">
-          <button
-            type="button"
-            disabled={submitting}
-            onClick={() => void handleSubmit()}
-            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-6 text-[15px] font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.16)] transition hover:brightness-[1.06] disabled:opacity-50"
-          >
-            {submitting ? "Sending…" : "Submit feedback"}
-          </button>
-          <button
-            type="button"
-            disabled={submitting}
-            onClick={() => dismiss("skipped")}
-            className="inline-flex min-h-[52px] items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-6 text-[15px] font-semibold text-white/65 transition hover:bg-white/[0.06] disabled:opacity-50 sm:min-w-[7rem]"
-          >
-            Skip
-          </button>
-        </div>
+            <div className="sticky bottom-0 z-10 shrink-0 border-t border-white/[0.08] bg-gradient-to-t from-[#0a0a12] via-[#0a0a12]/98 to-[#0a0a12]/90 px-4 py-3 backdrop-blur-md sm:px-5">
+              {error ? (
+                <p className="mb-2 text-center text-xs text-rose-300/90" role="alert">
+                  {error}
+                </p>
+              ) : null}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => void handleSubmit()}
+                  className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-5 text-[14px] font-semibold text-white shadow-[0_0_16px_rgba(99,102,241,0.14)] transition hover:brightness-[1.06] disabled:opacity-50"
+                >
+                  {submitting ? "Sending…" : "Submit feedback"}
+                </button>
+                <button
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => dismiss("skipped")}
+                  className="inline-flex min-h-[46px] items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 text-[14px] font-semibold text-white/62 transition hover:bg-white/[0.06] disabled:opacity-50 sm:min-w-[6.5rem]"
+                >
+                  Skip
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </motion.section>
   )

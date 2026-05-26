@@ -1212,6 +1212,7 @@ export default function MasterResultClient() {
             masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}
             sessionAnalytics={feedbackSessionAnalytics}
             onDismiss={() => setFeedbackDismissed(true)}
+            onCreateAnotherMaster={() => resetSession()}
           />
         </div>
       ) : null}
