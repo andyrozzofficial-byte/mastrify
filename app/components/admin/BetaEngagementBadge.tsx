@@ -1,9 +1,9 @@
 import type { BetaEngagementLevel } from "../../../lib/adminTypes"
 
 const STYLES: Record<BetaEngagementLevel, string> = {
-  low: "bg-slate-100 text-slate-700 ring-slate-200",
-  medium: "bg-amber-100 text-amber-900 ring-amber-200",
-  high: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+  low: "bg-white/[0.06] text-white/55 ring-white/10",
+  medium: "bg-violet-500/15 text-violet-200 ring-violet-400/25",
+  high: "bg-violet-600/25 text-violet-100 ring-violet-400/35 shadow-[0_0_12px_rgba(139,92,246,0.12)]",
 }
 
 export function BetaEngagementBadge({

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { ADMIN_BUTTON_PRIMARY } from "./admin-shared"
 
 export function BetaUserQuickActions({
   email,
@@ -53,7 +54,7 @@ export function BetaUserQuickActions({
   }
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#141416] p-5">
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
       <h2 className="text-[15px] font-semibold text-white">Quick actions</h2>
       <div className="mt-4 flex flex-wrap gap-2">
         <button
@@ -68,7 +69,7 @@ export function BetaUserQuickActions({
           type="button"
           disabled={saving}
           onClick={() => void runAction("promote_rank")}
-          className="rounded-lg bg-violet-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+          className={`${ADMIN_BUTTON_PRIMARY} disabled:opacity-50`}
         >
           Promote rank
         </button>
@@ -95,7 +96,7 @@ export function BetaUserQuickActions({
         type="button"
         disabled={saving}
         onClick={() => void runAction("save_notes", { notes: notes.trim() || null })}
-        className="mt-2 rounded-lg bg-slate-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+        className={`mt-2 ${ADMIN_BUTTON_PRIMARY} disabled:opacity-50`}
       >
         Save note
       </button>

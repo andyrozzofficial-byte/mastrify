@@ -9,6 +9,7 @@ import {
   AdminSearchInput,
   AdminTable,
   AvatarCircle,
+  BetaRankBadge,
 } from "../../components/admin/admin-shared"
 import { BetaEngagementBadge } from "../../components/admin/BetaEngagementBadge"
 
@@ -58,7 +59,7 @@ export default function AdminBetaUsersPage() {
         <AdminEmpty message="No beta users with linked email activity yet." />
       ) : (
         <AdminTable>
-          <thead className="border-b border-white/[0.06] bg-[#141416] text-[11px] font-medium uppercase tracking-wide text-white/42">
+          <thead className="border-b border-white/[0.08] bg-white/[0.03] text-[11px] font-medium uppercase tracking-wide text-white/60">
             <tr>
               <th className="px-4 py-3">Beta user</th>
               <th className="px-3 py-2.5">Rank</th>
@@ -72,7 +73,7 @@ export default function AdminBetaUsersPage() {
           </thead>
           <tbody>
             {filtered.map((r) => (
-              <tr key={r.email} className="border-t border-white/[0.05] transition hover:bg-[#1f1f23]/80">
+              <tr key={r.email} className="border-t border-white/[0.06] transition hover:bg-white/[0.04]">
                 <td className="px-4 py-3">
                   <Link
                     href={`/admin/beta-users/${encodeURIComponent(r.email)}`}
@@ -90,7 +91,9 @@ export default function AdminBetaUsersPage() {
                     </div>
                   </Link>
                 </td>
-                <td className="px-3 py-2.5 text-sm text-white/70">{r.betaRank}</td>
+                <td className="px-3 py-2.5">
+                  <BetaRankBadge rank={r.betaRank} />
+                </td>
                 <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.masterCount}</td>
                 <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.feedbackCount}</td>
                 <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.supportCount}</td>

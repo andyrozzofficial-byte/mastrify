@@ -9,6 +9,7 @@ import {
   AdminCard,
   AdminPageHeader,
   AvatarCircle,
+  BetaRankBadge,
   FeedbackStatusBadge,
   formatAdminDate,
   SupportStatusBadge,
@@ -79,7 +80,7 @@ export default function AdminBetaUserProfilePage() {
         <div className="text-sm text-white/55">
           <p>{profile.email}</p>
           <p className="mt-1">
-            Beta rank: <span className="text-white/85">{profile.betaRank}</span>
+            Beta rank: <BetaRankBadge rank={profile.betaRank} />
             {profile.genre ? (
               <>
                 {" "}
@@ -135,7 +136,7 @@ export default function AdminBetaUserProfilePage() {
                       />
                     ) : null}
                     <span
-                      className={`relative z-[1] mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-[#141416] ${TIMELINE_DOT[event.type]}`}
+                      className={`relative z-[1] mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-[#0B0B0F] ${TIMELINE_DOT[event.type]}`}
                       aria-hidden
                     />
                     <div className="min-w-0 flex-1">

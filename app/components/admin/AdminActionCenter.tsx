@@ -11,15 +11,15 @@ import {
 import { AdminCard } from "./admin-shared"
 
 const TONE_STYLES = {
-  critical: "border-rose-300 bg-rose-50/90 text-rose-950",
-  medium: "border-amber-300 bg-amber-50/90 text-amber-950",
-  positive: "border-emerald-300 bg-emerald-50/90 text-emerald-950",
+  critical: "border-rose-400/30 bg-rose-500/10 text-rose-100",
+  medium: "border-violet-400/30 bg-violet-500/10 text-violet-100",
+  positive: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100",
 }
 
 const PRIORITY_STYLES: Record<ActionCenterIssue["priorityLabel"], string> = {
-  High: "bg-rose-100 text-rose-800 ring-rose-200",
-  Medium: "bg-amber-100 text-amber-900 ring-amber-200",
-  Low: "bg-slate-100 text-slate-700 ring-slate-200",
+  High: "bg-rose-500/15 text-rose-200 ring-rose-400/25",
+  Medium: "bg-violet-500/15 text-violet-200 ring-violet-400/25",
+  Low: "bg-white/[0.06] text-white/55 ring-white/10",
 }
 
 const DISPOSITION_LABEL: Record<ActionCenterDisposition, string> = {
@@ -58,11 +58,11 @@ export function AdminActionCenter({
   if (items.length === 0) return null
 
   return (
-    <AdminCard className="mb-8 border-violet-300/70 bg-gradient-to-br from-[#ffffff] to-violet-50/50">
-      <h2 className="text-lg font-semibold text-slate-950">Action center</h2>
-      <p className="mt-1 text-sm text-slate-600">{subtitle}</p>
+    <AdminCard className="mb-8 border-violet-400/25 bg-gradient-to-br from-white/[0.03] to-violet-500/10">
+      <h2 className="text-lg font-semibold text-white">Action center</h2>
+      <p className="mt-1 text-sm text-white/60">{subtitle}</p>
       {visible.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-600">All issues are ignored or resolved. Clear ignores in browser storage to reset.</p>
+        <p className="mt-4 text-sm text-white/60">All issues are ignored or resolved. Clear ignores in browser storage to reset.</p>
       ) : (
         <ul className="mt-4 space-y-3">
           {visible.map((item) => {
@@ -83,12 +83,12 @@ export function AdminActionCenter({
                         {item.priorityLabel} priority
                       </span>
                       {disposition ? (
-                        <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-medium text-slate-600 ring-1 ring-slate-200">
+                        <span className="rounded-full bg-white/[0.08] px-2 py-0.5 text-[10px] font-medium text-white/60 ring-1 ring-white/10">
                           {DISPOSITION_LABEL[disposition]}
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-1.5 text-[13px] text-slate-700">
+                    <p className="mt-1.5 text-[13px] text-white/60">
                       {item.mentions} mention{item.mentions === 1 ? "" : "s"} · score {item.priorityScore}
                     </p>
                   </div>
@@ -96,14 +96,14 @@ export function AdminActionCenter({
                     <button
                       type="button"
                       onClick={() => setDisposition(item.id, "fixed")}
-                      className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:border-emerald-400 hover:text-emerald-800"
+                      className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-[11px] font-semibold text-white/70 transition hover:border-emerald-400/40 hover:text-emerald-200"
                     >
                       Mark fixed
                     </button>
                     <button
                       type="button"
                       onClick={() => setDisposition(item.id, "ignored")}
-                      className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 shadow-sm transition hover:border-slate-400"
+                      className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-[11px] font-semibold text-white/60 transition hover:border-white/20"
                     >
                       Ignore
                     </button>
@@ -116,8 +116,8 @@ export function AdminActionCenter({
                       }}
                       className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold shadow-sm transition ${
                         disposition === "tracked"
-                          ? "border-violet-400 bg-violet-100 text-violet-800"
-                          : "border-slate-300 bg-white text-violet-700 hover:border-violet-300"
+                          ? "border-violet-400/40 bg-violet-500/20 text-violet-100"
+                          : "border-white/[0.08] bg-white/[0.03] text-violet-200 hover:border-violet-400/40"
                       }`}
                     >
                       Track issue

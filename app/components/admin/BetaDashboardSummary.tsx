@@ -23,10 +23,10 @@ export function BetaDashboardSummaryPanels() {
     <div className="mt-8">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-950">Beta program</h2>
-          <p className="text-sm text-slate-600">Engagement and signups from linked feedback profiles.</p>
+          <h2 className="text-lg font-semibold text-white">Beta program</h2>
+          <p className="text-sm text-white/60">Engagement and signups from linked feedback profiles.</p>
         </div>
-        <Link href="/admin/beta-users" className="text-sm font-medium text-violet-700 hover:text-violet-900">
+        <Link href="/admin/beta-users" className="text-sm font-medium text-violet-300 hover:text-violet-200">
           All beta users →
         </Link>
       </div>
@@ -35,13 +35,13 @@ export function BetaDashboardSummaryPanels() {
         <AdminPanel title="Most active">
           <ul className="space-y-2.5">
             {summary.mostActive.length === 0 ? (
-              <li className="text-sm text-slate-600">No activity yet.</li>
+              <li className="text-sm text-white/60">No activity yet.</li>
             ) : (
               summary.mostActive.map((u) => (
                 <li key={u.email} className="flex items-center justify-between gap-2">
                   <Link
                     href={`/admin/beta-users/${encodeURIComponent(u.email)}`}
-                    className="truncate text-sm font-medium text-slate-900 hover:text-violet-700"
+                    className="truncate text-sm font-medium text-white hover:text-violet-200"
                   >
                     {u.name ?? u.email}
                   </Link>
@@ -55,17 +55,17 @@ export function BetaDashboardSummaryPanels() {
         <AdminPanel title="Recent signups">
           <ul className="space-y-2.5">
             {summary.recentSignups.length === 0 ? (
-              <li className="text-sm text-slate-600">No signups recorded.</li>
+              <li className="text-sm text-white/60">No signups recorded.</li>
             ) : (
               summary.recentSignups.map((u) => (
                 <li key={u.email}>
                   <Link
                     href={`/admin/beta-users/${encodeURIComponent(u.email)}`}
-                    className="text-sm font-medium text-slate-900 hover:text-violet-700"
+                    className="text-sm font-medium text-white hover:text-violet-200"
                   >
                     {u.name ?? u.email}
                   </Link>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-white/50">
                     {u.betaRank} · {new Date(u.signupDate).toLocaleDateString()}
                   </p>
                 </li>
@@ -77,17 +77,17 @@ export function BetaDashboardSummaryPanels() {
         <AdminPanel title="Top feedback">
           <ul className="space-y-2.5">
             {summary.topFeedbackContributors.length === 0 ? (
-              <li className="text-sm text-slate-600">No feedback yet.</li>
+              <li className="text-sm text-white/60">No feedback yet.</li>
             ) : (
               summary.topFeedbackContributors.map((u) => (
                 <li key={u.email} className="flex items-center justify-between gap-2">
                   <Link
                     href={`/admin/beta-users/${encodeURIComponent(u.email)}`}
-                    className="truncate text-sm font-medium text-slate-900 hover:text-violet-700"
+                    className="truncate text-sm font-medium text-white hover:text-violet-200"
                   >
                     {u.name ?? u.email}
                   </Link>
-                  <span className="text-sm tabular-nums text-slate-600">{u.feedbackCount}</span>
+                  <span className="text-sm tabular-nums text-white/60">{u.feedbackCount}</span>
                 </li>
               ))
             )}
@@ -97,17 +97,17 @@ export function BetaDashboardSummaryPanels() {
         <AdminPanel title="Top bug reporters">
           <ul className="space-y-2.5">
             {summary.topBugReporters.length === 0 ? (
-              <li className="text-sm text-slate-600">No bug reports yet.</li>
+              <li className="text-sm text-white/60">No bug reports yet.</li>
             ) : (
               summary.topBugReporters.map((u) => (
                 <li key={u.email} className="flex items-center justify-between gap-2">
                   <Link
                     href={`/admin/beta-users/${encodeURIComponent(u.email)}`}
-                    className="truncate text-sm font-medium text-slate-900 hover:text-violet-700"
+                    className="truncate text-sm font-medium text-white hover:text-violet-200"
                   >
                     {u.name ?? u.email}
                   </Link>
-                  <span className="text-sm tabular-nums text-slate-600">{u.bugReportCount}</span>
+                  <span className="text-sm tabular-nums text-white/60">{u.bugReportCount}</span>
                 </li>
               ))
             )}
