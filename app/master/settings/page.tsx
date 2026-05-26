@@ -1,25 +1,19 @@
 "use client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import MasterSettingsStep from "../../components/master/MasterSettingsStep"
 import { useMasterSession } from "../MasterSessionProvider"
 
-/** Legacy route — workflow steps 1–2 live on `/master` so the upload File is not lost on navigation. */
+/** Settings UI — shares `/master` session state; no navigation so the in-memory File is preserved. */
 export default function MasterSettingsPage() {
-  const router = useRouter()
-  const { sessionHydrated, masterWorkflow, getActiveUploadFile, handleContinueToSettings } = useMasterSession()
+  const { file, sessionHydrated } = useMasterSession()
 
-  useEffect(() => {
-    if (!sessionHydrated) return
-    if (masterWorkflow.step < 2 && getActiveUploadFile()) {
-      handleContinueToSettings()
-    }
-    router.replace("/master")
-  }, [sessionHydrated, masterWorkflow.step, getActiveUploadFile, handleContinueToSettings, router])
+  if (!sessionHydrated) {
+    return (
+      <div className="relative flex min-h-[40vh] items-center justify-center text-white/50">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
+      </div>
+    )
+  }
 
-  return (
-    <div className="relative flex min-h-[40vh] items-center justify-center text-white/50">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
-    </div>
-  )
+  return <MasterSettingsStep file={file} />
 }

@@ -9,14 +9,7 @@ import { useMasterSession } from "./MasterSessionProvider"
 export default function MasterUploadPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const continuingRef = useRef(false)
-  const {
-    getActiveUploadFile,
-    setFile,
-    handleContinueToSettings,
-    masterWorkflow,
-    sessionHydrated,
-  } = useMasterSession()
-  const file = getActiveUploadFile()
+  const { file, setFile, handleContinueToSettings, currentStep, sessionHydrated } = useMasterSession()
   const [continuing, setContinuing] = useState(false)
 
   function onContinueToSettingsClick() {
@@ -43,8 +36,8 @@ export default function MasterUploadPage() {
     )
   }
 
-  if (masterWorkflow.step >= 2) {
-    return <MasterSettingsStep />
+  if (currentStep >= 2) {
+    return <MasterSettingsStep file={file} />
   }
 
   return (

@@ -4,40 +4,12 @@ export type MasterWorkflowStep = 1 | 2 | 3
 
 export const MASTER_WORKFLOW_LOCAL_KEY = "masterWorkflow"
 
-export type MasterWorkflowUploadedFileMeta = {
-  name: string
-  size: number
-  type: string
-  lastModified: number
-}
-
+/** Serializable workflow snapshot — never includes a File. */
 export type MasterWorkflowLocalSnapshot = {
   step: MasterWorkflowStep
-  uploadedFile?: MasterWorkflowUploadedFileMeta | null
+  fileName?: string
+  fileSize?: number
   sessionId?: string
-}
-
-export type MasterWorkflowState = {
-  step: MasterWorkflowStep
-  uploadedFile: MasterWorkflowUploadedFileMeta | null
-}
-
-export function fileToWorkflowMeta(file: File): MasterWorkflowUploadedFileMeta {
-  return {
-    name: file.name,
-    size: file.size,
-    type: file.type,
-    lastModified: file.lastModified,
-  }
-}
-
-export function workflowMetaMatchesFile(meta: MasterWorkflowUploadedFileMeta, file: File): boolean {
-  return (
-    meta.name === file.name &&
-    meta.size === file.size &&
-    meta.type === file.type &&
-    meta.lastModified === file.lastModified
-  )
 }
 
 export const MASTER_WORKFLOW_LOG = "[master-workflow]" as const
@@ -72,29 +44,51 @@ export function readMasterWorkflowLocal(): MasterWorkflowLocalSnapshot | null {
   try {
     const raw = localStorage.getItem(MASTER_WORKFLOW_LOCAL_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as MasterWorkflowLocalSnapshot
+    const parsed = JSON.parse(raw) as Record<string, unknown>
     if (!isMasterWorkflowStep(parsed.step)) return null
-    return parsed
+
+    const snapshot: MasterWorkflowLocalSnapshot = { step: parsed.step }
+
+    if (typeof parsed.fileName === "string" && parsed.fileName.trim()) {
+      snapshot.fileName = parsed.fileName.trim()
+    } else if (parsed.uploadedFile && typeof parsed.uploadedFile === "object") {
+      const legacy = parsed.uploadedFile as { name?: string }
+      if (typeof legacy.name === "string" && legacy.name.trim()) {
+        snapshot.fileName = legacy.name.trim()
+      }
+    }
+
+    if (typeof parsed.fileSize === "number" && Number.isFinite(parsed.fileSize)) {
+      snapshot.fileSize = parsed.fileSize
+    } else if (parsed.uploadedFile && typeof parsed.uploadedFile === "object") {
+      const legacy = parsed.uploadedFile as { size?: number }
+      if (typeof legacy.size === "number" && Number.isFinite(legacy.size)) {
+        snapshot.fileSize = legacy.size
+      }
+    }
+
+    if (typeof parsed.sessionId === "string" && parsed.sessionId.trim()) {
+      snapshot.sessionId = parsed.sessionId.trim()
+    }
+
+    return snapshot
   } catch {
     return null
   }
 }
 
-export function writeMasterWorkflowLocal(snapshot: MasterWorkflowLocalSnapshot | MasterWorkflowState) {
+export function writeMasterWorkflowLocal(snapshot: MasterWorkflowLocalSnapshot) {
   if (typeof window === "undefined") return
   try {
-    localStorage.setItem(MASTER_WORKFLOW_LOCAL_KEY, JSON.stringify(snapshot))
+    const payload: MasterWorkflowLocalSnapshot = { step: snapshot.step }
+    if (snapshot.fileName) payload.fileName = snapshot.fileName
+    if (typeof snapshot.fileSize === "number" && Number.isFinite(snapshot.fileSize)) {
+      payload.fileSize = snapshot.fileSize
+    }
+    if (snapshot.sessionId) payload.sessionId = snapshot.sessionId
+    localStorage.setItem(MASTER_WORKFLOW_LOCAL_KEY, JSON.stringify(payload))
   } catch {
     /* ignore quota */
-  }
-}
-
-export function readMasterWorkflowState(): MasterWorkflowState | null {
-  const raw = readMasterWorkflowLocal()
-  if (!raw) return null
-  return {
-    step: raw.step,
-    uploadedFile: raw.uploadedFile ?? null,
   }
 }
 

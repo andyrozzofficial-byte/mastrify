@@ -68,13 +68,15 @@ function sliderHelper(type: "stereo" | "low" | "clarity", value: number) {
   return "Higher values add polished detail, presence, and release-ready shine — not just boosted highs."
 }
 
-export default function MasterSettingsStep() {
+type MasterSettingsStepProps = {
+  file: File | null
+}
+
+export default function MasterSettingsStep({ file }: MasterSettingsStepProps) {
   const router = useRouter()
   const { runIfAllowed } = useBetaMasteringGate()
   const reconnectInputRef = useRef<HTMLInputElement>(null)
   const {
-    getActiveUploadFile,
-    masterWorkflow,
     analysisBefore,
     sessionHydrated,
     currentStep,
@@ -95,16 +97,7 @@ export default function MasterSettingsStep() {
     persistSessionSnapshot,
   } = useMasterSession()
 
-  const file = getActiveUploadFile()
-  const uploadedMeta = masterWorkflow.uploadedFile
-
-  const needsFileReconnect =
-    !file &&
-    (Boolean(analysisBefore) ||
-      currentStep > 1 ||
-      masterWorkflow.step > 1 ||
-      Boolean(storedFileName) ||
-      Boolean(uploadedMeta))
+  const needsFileReconnect = !file && (Boolean(analysisBefore) || Boolean(storedFileName))
 
   useEffect(() => {
     if (!sessionHydrated || !file) return
@@ -143,8 +136,8 @@ export default function MasterSettingsStep() {
           <p className="text-sm leading-relaxed text-white/55">
             {analysisBefore
               ? "Your mastering preferences and analysis were restored. Select the same audio file again to continue — this does not clear your saved analysis snapshot."
-              : storedFileName || uploadedMeta?.name
-                ? `Your session for “${storedFileName || uploadedMeta?.name}” was restored. Select the same audio file again to continue mastering.`
+              : storedFileName
+                ? `Your session for “${storedFileName}” was restored. Select the same audio file again to continue mastering.`
                 : "Your mastering session was restored. Select your audio file again to continue."}
           </p>
           <button
@@ -199,9 +192,7 @@ export default function MasterSettingsStep() {
               <p className="mx-auto mt-1.5 max-w-sm text-[12px] leading-snug text-white/68 md:text-[13px]">
                 Choose how Mastrify shapes tone, loudness, width, and clarity before rendering your master.
               </p>
-              {uploadedMeta?.name ? (
-                <p className="mx-auto mt-2 max-w-sm truncate text-[11px] text-white/42">{uploadedMeta.name}</p>
-              ) : null}
+              <p className="mx-auto mt-2 max-w-sm truncate text-[11px] text-white/42">{file.name}</p>
             </header>
 
             <div className="space-y-6 md:space-y-7">
