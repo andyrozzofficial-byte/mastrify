@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import axios from "axios"
 import { motion, useReducedMotion } from "framer-motion"
 import MarketingPageFrame from "../../components/cinematic/MarketingPageFrame"
@@ -44,6 +44,8 @@ const PROCESSING_EASE = [0.22, 1, 0.36, 1] as const
 
 export default function MasterProcessingPage() {
   const router = useRouter()
+  const pathname = usePathname()
+  const onMasterRoot = pathname === "/master" || pathname === "/master/"
   const reduce = useReducedMotion()
   const { isBeta, checking } = useBetaMasteringGate()
   const {
@@ -71,11 +73,21 @@ export default function MasterProcessingPage() {
     if (checking) return
     const activeFile = masterState.file ?? file
     if (!activeFile) {
-      router.replace("/master")
+      console.log("[master-workflow] processing: no file, abort")
+      if (onMasterRoot) {
+        setMasterState({ step: 1, file: null })
+      } else {
+        router.replace("/master")
+      }
       return
     }
     if (!isBeta) {
-      router.replace("/master")
+      console.log("[master-workflow] processing: not beta, abort")
+      if (onMasterRoot) {
+        setMasterState({ step: 2, file: activeFile })
+      } else {
+        router.replace("/master")
+      }
       return
     }
 
@@ -181,6 +193,7 @@ export default function MasterProcessingPage() {
   }, [
     checking,
     isBeta,
+    onMasterRoot,
     masterState.file,
     file,
     setMasterState,

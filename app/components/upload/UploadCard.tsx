@@ -9,7 +9,11 @@ import {
   AUDIO_UPLOAD_REJECT_MESSAGE,
   isAcceptedAudioUpload,
 } from "../../../lib/audioUploadAccept"
-import { IOS_SAFE_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
+import {
+  IOS_SAFE_FILE_INPUT_CLASS,
+  OFF_SCREEN_FILE_INPUT_CLASS,
+  bindIosFileInputHandlers,
+} from "../../../lib/iosFileInput"
 
 export type UploadCardMode = "analyze" | "master"
 
@@ -128,12 +132,12 @@ export default function UploadCard({
         type="file"
         ref={fileInputRef}
         tabIndex={-1}
-        className={IOS_SAFE_FILE_INPUT_CLASS}
+        className={loaded ? OFF_SCREEN_FILE_INPUT_CLASS : IOS_SAFE_FILE_INPUT_CLASS}
         accept={AUDIO_UPLOAD_ACCEPT}
         {...fileInputHandlers}
       />
 
-      <div className="marketing-upload-actions">
+      <div className="marketing-upload-actions relative z-30">
         {file ? (
           <button
             type="button"

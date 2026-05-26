@@ -176,6 +176,10 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const currentStep = masterState.step
   const workflowPhase = workflowPhaseFromStep(masterState.step)
 
+  useEffect(() => {
+    console.log("[master-workflow] CURRENT STEP:", currentStep, "file:", masterState.file?.name ?? null)
+  }, [currentStep, masterState.file])
+
   const beginMasterSession = useCallback((f: File) => {
     if (!isBetaFeedbackEnabled()) return
     setSessionId(createMasterSessionId())
@@ -189,6 +193,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
 
   const handleMasterUpload = useCallback(
     (uploaded: File) => {
+      console.log("[master-workflow] handleMasterUpload → step 1", uploaded.name)
       setMasterState({ step: 1, file: uploaded })
       attachFileAudio(setAudioUrl, uploaded)
       setStoredFileName(uploaded.name)
@@ -203,12 +208,13 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   )
 
   const handleContinueToSettings = useCallback(() => {
-    console.log("continue")
+    console.log("[master-workflow] continue clicked")
     setMasterState((prev) => {
       if (!prev.file) {
-        console.log("Missing file")
+        console.log("[master-workflow] Missing file — step stays", prev.step)
         return prev
       }
+      console.log("[master-workflow] step 1 → 2", prev.file.name)
       return { ...prev, step: 2 }
     })
   }, [])
@@ -221,6 +227,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const handleBackToUpload = useCallback(() => {
+    console.log("[master-workflow] handleBackToUpload → step 1")
     setMasterState((prev) => ({ ...prev, step: 1 }))
   }, [])
 
@@ -303,6 +310,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
         handleMasterUpload(f)
         return
       }
+      console.log("[master-workflow] setFile(null) → reset masterState")
       setMasterState(INITIAL_MASTER_STATE)
       setAudioUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev)
@@ -351,6 +359,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   )
 
   const resetSession = useCallback(() => {
+    console.log("[master-workflow] resetSession → step 1, file null")
     setAudioUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return ""
