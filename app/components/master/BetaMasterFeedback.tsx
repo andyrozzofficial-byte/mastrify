@@ -273,15 +273,20 @@ export default function BetaMasterFeedback({
       className="mx-auto mt-8 w-full max-w-2xl px-4 sm:mt-10 sm:px-0"
       aria-labelledby="beta-master-feedback-title"
     >
-      <div className="overflow-hidden rounded-[1.35rem] border border-violet-400/20 bg-white/[0.04] p-5 shadow-[0_0_48px_rgba(124,58,237,0.12),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:p-8 sm:pb-9">
-        <p
-          id="beta-master-feedback-title"
-          className="text-center text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/65"
-        >
-          Beta feedback
-        </p>
+      <div className="overflow-hidden rounded-[1.35rem] border border-violet-400/18 bg-white/[0.035] p-5 shadow-[0_0_32px_rgba(124,58,237,0.08),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-md sm:p-7 sm:pb-8">
+        <header className="text-center">
+          <h2 id="beta-master-feedback-title" className="text-lg font-semibold text-white sm:text-xl">
+            Help improve Mastrify
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-white/55 sm:text-[14px]">
+            Your feedback helps improve future masters, but downloading is available immediately.
+          </p>
+          <p className="mx-auto mt-1.5 max-w-sm text-[12px] leading-relaxed text-white/42">
+            Your feedback directly improves the engine.
+          </p>
+        </header>
 
-        <div className="mt-8">
+        <div className="mt-7">
           <h3 className="text-center text-lg font-semibold text-white sm:text-xl">
             <span aria-hidden>⭐ </span>
             Rate your master (1–10)

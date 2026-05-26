@@ -38,7 +38,10 @@ import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
+import BetaDownloadRewardToast from "../../components/master/BetaDownloadRewardToast"
 import BetaMasterFeedback from "../../components/master/BetaMasterFeedback"
+import BetaResultCompleteCelebration from "../../components/master/BetaResultCompleteCelebration"
+import BetaResultRewardWidget from "../../components/master/BetaResultRewardWidget"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
@@ -106,7 +109,7 @@ function objectKeyFromPlaybackUrl(url: string | null): string {
 }
 
 export default function MasterResultClient() {
-  const { isBetaUser, runIfAllowed } = useBetaMasteringGate()
+  const { isBetaUser, runIfAllowed, betaUi, refreshAccess } = useBetaMasteringGate()
   const {
     file,
     audioUrl,
@@ -142,7 +145,10 @@ export default function MasterResultClient() {
   const [deliverySending, setDeliverySending] = useState(false)
   const [deliveryError, setDeliveryError] = useState("")
   const [feedbackDismissed, setFeedbackDismissed] = useState(false)
+  const [downloadToastVisible, setDownloadToastVisible] = useState(false)
+  const [showRewardCelebration, setShowRewardCelebration] = useState(false)
   const betaFeedbackOn = isBetaFeedbackEnabled()
+  const showBetaRewards = betaFeedbackOn && isBetaUser && Boolean(betaUi)
 
   const originalAudioRef = useRef<HTMLAudioElement | null>(null)
   const masteredAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -191,6 +197,27 @@ export default function MasterResultClient() {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
     setIsMobileClient(/iPhone|iPad|iPod|Android|Mobile/i.test(ua))
   }, [])
+
+  useEffect(() => {
+    if (!mounted || !showBetaRewards) return
+    void refreshAccess({ silent: true })
+    const key = `mastrify:beta-result-celebration:${sessionId || "session"}`
+    try {
+      if (!sessionStorage.getItem(key)) setShowRewardCelebration(true)
+    } catch {
+      setShowRewardCelebration(true)
+    }
+  }, [mounted, showBetaRewards, refreshAccess, sessionId])
+
+  const handleRewardCelebrationComplete = useCallback(() => {
+    const key = `mastrify:beta-result-celebration:${sessionId || "session"}`
+    try {
+      sessionStorage.setItem(key, "1")
+    } catch {
+      /* ignore */
+    }
+    setShowRewardCelebration(false)
+  }, [sessionId])
 
   const originalPreviewUrl = useMemo(() => normalizePlaybackUrl(audioUrl), [audioUrl])
   const masteredWavUrl = useMemo(() => normalizePlaybackUrl(masteredUrl), [masteredUrl])
@@ -712,8 +739,15 @@ export default function MasterResultClient() {
     runIfAllowed(() => {
       setDeliveryOpen(true)
       setDeliveryError("")
+      if (showBetaRewards) {
+        setDownloadToastVisible(true)
+      }
     })
   }
+
+  const dismissDownloadToast = useCallback(() => {
+    setDownloadToastVisible(false)
+  }, [])
 
   const handleEmailDelivery = () => {
     runIfAllowed(() => {
@@ -877,7 +911,14 @@ export default function MasterResultClient() {
   }
 
   return (
-    <motion.div className="master-result-shell min-w-0 px-4 pb-3 pt-5 sm:px-6 md:pb-4 md:pt-6 md:px-8">
+    <>
+      <BetaDownloadRewardToast visible={downloadToastVisible} onDismiss={dismissDownloadToast} />
+
+      <motion.div
+        className={`master-result-shell relative min-w-0 px-4 pb-3 pt-5 sm:px-6 md:pb-4 md:px-8 md:pt-6 ${showBetaRewards ? "sm:pr-[14.5rem]" : ""}`}
+      >
+        {showBetaRewards && betaUi ? <BetaResultRewardWidget betaUi={betaUi} /> : null}
+
       <motion.header
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -944,6 +985,10 @@ export default function MasterResultClient() {
           </div>
         ) : null}
       </motion.header>
+
+      {showBetaRewards && betaUi && showRewardCelebration ? (
+        <BetaResultCompleteCelebration points={betaUi.points} onComplete={handleRewardCelebrationComplete} />
+      ) : null}
 
       <motion.div
         initial={{ opacity: 0, y: 18 }}
@@ -1122,6 +1167,43 @@ export default function MasterResultClient() {
         </div>
       </motion.div>
 
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.08, ease: "easeOut" }}
+        className="relative z-10 mx-auto mt-8 w-full max-w-[28rem] sm:mt-9"
+        aria-labelledby="master-result-download-heading"
+      >
+        <h2
+          id="master-result-download-heading"
+          className="text-center text-[1.15rem] font-semibold tracking-[-0.02em] text-white sm:text-[1.25rem]"
+        >
+          Your master is ready
+        </h2>
+        <div className="mt-4 flex flex-col gap-3 sm:mt-5">
+          {!deliverySent ? (
+            <button
+              type="button"
+              onClick={handleDownloadMaster}
+              className="relative z-30 inline-flex min-h-[56px] w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[16px] font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.16),0_12px_32px_rgba(0,0,0,0.42)] ring-1 ring-white/[0.1] transition-all duration-200 hover:brightness-[1.06] active:scale-[0.99]"
+            >
+              Download Master
+            </button>
+          ) : (
+            <div className="inline-flex min-h-[56px] w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[16px] font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.16)] ring-1 ring-white/[0.1]">
+              Check your inbox
+            </div>
+          )}
+          <Link
+            href="/master"
+            onClick={() => resetSession()}
+            className="relative z-30 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-7 text-[14px] font-semibold text-white/82 transition-all duration-200 hover:border-white/[0.11] hover:bg-white/[0.055] hover:text-white/92 active:scale-[0.99]"
+          >
+            New master
+          </Link>
+        </div>
+      </motion.section>
+
       {betaFeedbackOn && isBetaUser && isPlayableMediaUrl(masteredPlayback.url) ? (
         <BetaMasterFeedback
           visible={!feedbackDismissed}
@@ -1130,34 +1212,6 @@ export default function MasterResultClient() {
           onDismiss={() => setFeedbackDismissed(true)}
         />
       ) : null}
-
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.1 }}
-        className="mx-auto mt-5 flex w-full max-w-[28rem] flex-col gap-3 px-0 sm:mt-6 sm:flex-row sm:justify-center sm:gap-4"
-      >
-        {!deliverySent ? (
-          <button
-            type="button"
-            onClick={handleDownloadMaster}
-            className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99] sm:w-auto sm:px-9"
-          >
-            Download Master
-          </button>
-        ) : (
-          <div className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] sm:w-auto sm:px-9">
-            Check your inbox
-          </div>
-        )}
-        <Link
-          href="/master"
-          onClick={() => resetSession()}
-          className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-7 text-[14px] font-semibold text-white/82 transition-all duration-200 hover:border-white/[0.11] hover:bg-white/[0.055] hover:text-white/92 active:scale-[0.99] sm:w-auto sm:px-8"
-        >
-          New master
-        </Link>
-      </motion.div>
 
       {deliveryOpen && !deliverySent ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/72 px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md min-[430px]:px-5">
@@ -1258,6 +1312,7 @@ export default function MasterResultClient() {
           className="hidden"
         />
       ) : null}
-    </motion.div>
+      </motion.div>
+    </>
   )
 }
