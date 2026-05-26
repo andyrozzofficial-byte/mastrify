@@ -4,9 +4,13 @@
 const betaFeedbackPublicEnv =
   process.env.NEXT_PUBLIC_ENABLE_BETA_FEEDBACK ?? process.env.ENABLE_BETA_FEEDBACK ?? ""
 
+const resourceDebugPublicEnv =
+  process.env.NEXT_PUBLIC_MASTRIFY_RESOURCE_DEBUG ?? process.env.MASTRIFY_RESOURCE_DEBUG ?? ""
+
 const nextConfig = {
   env: {
     NEXT_PUBLIC_ENABLE_BETA_FEEDBACK: betaFeedbackPublicEnv,
+    NEXT_PUBLIC_MASTRIFY_RESOURCE_DEBUG: resourceDebugPublicEnv,
   },
   typescript: {
     ignoreBuildErrors: true,

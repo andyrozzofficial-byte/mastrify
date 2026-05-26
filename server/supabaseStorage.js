@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import fs from "fs"
 import path from "path"
+import { logStoragePersist, MASTRIFY_RESOURCE_DEBUG } from "./resourceUsageLog.js"
 
 const DEFAULT_SIGNED_URL_TTL_SEC = 60 * 60 * 24 * 7 // 7 days
 
@@ -82,6 +83,13 @@ export async function uploadMasterWav(localPath, objectKey) {
   const bucket = getMastersBucket()
   const key = masterObjectKey(objectKey)
   const body = fs.readFileSync(localPath)
+  if (MASTRIFY_RESOURCE_DEBUG) {
+    console.log("[resource] Supabase upload (in-memory read)", {
+      objectKey: key,
+      masterBytes: body.length,
+      bucket,
+    })
+  }
   const { error } = await getSupabaseServiceClient().storage.from(bucket).upload(key, body, {
     contentType: "audio/wav",
     upsert: true,
@@ -118,6 +126,8 @@ export async function persistMasterExport({
   localUploadPath,
   masterFileName,
   railwayPlaybackUrl,
+  uploadBytes,
+  masterBytes,
 }) {
   const objectKey = masterObjectKey(masterFileName)
   const afterPath = `/masters/${objectKey}`
@@ -148,6 +158,14 @@ export async function persistMasterExport({
       objectKey,
       ttlSec: signedUrlTtlSec(),
     })
+    logStoragePersist({
+      storage: "supabase",
+      objectKey,
+      uploadBytes: resolvedUploadBytes,
+      masterBytes: resolvedMasterBytes,
+      localMasterDeleted: true,
+      localUploadDeleted: true,
+    })
     return {
       after: afterPath,
       afterUrl: signedUrl,
@@ -161,6 +179,15 @@ export async function persistMasterExport({
     console.error("[storage] Supabase persist failed:", err?.message || err)
     if (isStorageFallbackEnabled()) {
       console.warn("[storage] MASTRIFY_STORAGE_FALLBACK=1 — serving master from Railway /tmp")
+      logStoragePersist({
+        storage: "railway-fallback",
+        objectKey,
+        uploadBytes: resolvedUploadBytes,
+        masterBytes: resolvedMasterBytes,
+        storageError: err?.message || String(err),
+        localMasterKept: Boolean(localMasterPath && fs.existsSync(localMasterPath)),
+        localUploadKept: Boolean(localUploadPath && fs.existsSync(localUploadPath)),
+      })
       return {
         after: afterPath,
         afterUrl: railwayPlaybackUrl,

@@ -12,6 +12,7 @@ import "../../components/cinematic/product-processing-view.css"
 import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
+import { logResourceClient } from "../../../lib/resourceUsageLogClient"
 import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
@@ -61,6 +62,7 @@ export default function MasterProcessingPage() {
     sessionId,
     ensureSessionId,
     masterObjectKey,
+    masteredUrl,
     setMasteredUrl,
     setMasteredPreviewMp3Url,
     setMasterObjectKey,
@@ -101,8 +103,30 @@ export default function MasterProcessingPage() {
     let cancelled = false
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
     const ac = new AbortController()
+    const effectRunId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+    logResourceClient("processing effect mounted", {
+      effectRunId,
+      fileName: activeFile.name,
+      fileSize: activeFile.size,
+      sessionId,
+      hasExistingMasteredUrl: Boolean(masteredUrl),
+      hasExistingObjectKey: Boolean(masterObjectKey),
+    })
 
     const run = async () => {
+      if (masteredUrl) {
+        logResourceClient("POST /master would duplicate (masteredUrl already set)", {
+          effectRunId,
+          masteredUrlHost: (() => {
+            try {
+              return new URL(masteredUrl).host
+            } catch {
+              return null
+            }
+          })(),
+        })
+      }
       const processingStartedAt = Date.now()
       for (let i = 0; i < PROCESSING_STEPS.length; i++) {
         if (cancelled) return
@@ -123,6 +147,12 @@ export default function MasterProcessingPage() {
         if (sliderDebug) formData.append("sliderDebug", "1")
 
         const masterUrl = `${API}/master`
+        logResourceClient("POST /master start", {
+          effectRunId,
+          fileName: activeFile.name,
+          fileSize: activeFile.size,
+          masterUrl,
+        })
         if (MASTRIFY_CLIENT_LUFS_TRACE) {
           console.log("[LUFS_TRACE] client → POST /master", {
             outgoingFormTargetLufs: targetLufs,
@@ -134,6 +164,13 @@ export default function MasterProcessingPage() {
         }
         const res = await axios.post(masterUrl, formData, { signal: ac.signal })
         if (cancelled) return
+
+        logResourceClient("POST /master completed", {
+          effectRunId,
+          afterUrl: res.data.afterUrl ?? res.data.fullUrl,
+          objectKey: res.data.objectKey,
+          storage: res.data.pipelineDebug?.storage,
+        })
 
         if (MASTRIFY_CLIENT_LUFS_TRACE) {
           const aa = res.data.analysisAfter as Record<string, unknown> | undefined
@@ -218,7 +255,11 @@ export default function MasterProcessingPage() {
         const aborted =
           (typeof axios.isCancel === "function" && axios.isCancel(e)) ||
           (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "ERR_CANCELED")
-        if (aborted) return
+        if (aborted) {
+          logResourceClient("POST /master aborted", { effectRunId })
+          return
+        }
+        logResourceClient("POST /master failed", { effectRunId, error: String(e) })
         alert("Mastering failed")
         if (!cancelled) setMasterState({ step: 2, file: activeFile })
       }
@@ -228,6 +269,7 @@ export default function MasterProcessingPage() {
     return () => {
       cancelled = true
       ac.abort()
+      logResourceClient("processing effect cleanup", { effectRunId })
     }
   }, [
     checking,
@@ -235,6 +277,8 @@ export default function MasterProcessingPage() {
     onMasterRoot,
     masterState.file,
     file,
+    masteredUrl,
+    masterObjectKey,
     setMasterState,
     setMasteredUrl,
     setMasteredPreviewMp3Url,

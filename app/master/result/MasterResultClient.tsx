@@ -46,6 +46,7 @@ import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
 import { reportBetaMasterCompleted, reportBetaMasterDownload } from "../../../lib/betaMasterTrackingClient"
 import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
+import { logResourceClient } from "../../../lib/resourceUsageLogClient"
 
 const STYLE_LABELS: Record<MasterStylePreset, string> = {
   STREAM: "Balanced",
@@ -158,10 +159,29 @@ export default function MasterResultClient() {
   const isStartingPlaybackRef = useRef(false)
   const isSwappingMobileSourceRef = useRef(false)
   const mobilePlaybackRequestRef = useRef(0)
+  const resourceMountLoggedRef = useRef(false)
 
   useEffect(() => {
     selectedSourceRef.current = selectedSource
   }, [selectedSource])
+
+  useEffect(() => {
+    if (resourceMountLoggedRef.current) return
+    resourceMountLoggedRef.current = true
+    logResourceClient("result page mounted", {
+      hasMasteredUrl: Boolean(masteredUrl),
+      hasPreviewMp3: Boolean(masteredPreviewMp3Url),
+      objectKey: masterObjectKey || objectKeyFromPlaybackUrl(masteredUrl),
+      masteredHost: (() => {
+        try {
+          return masteredUrl ? new URL(masteredUrl).host : null
+        } catch {
+          return null
+        }
+      })(),
+      willPostMaster: false,
+    })
+  }, [masteredUrl, masteredPreviewMp3Url, masterObjectKey])
 
   useEffect(() => {
     if (!MASTRIFY_CLIENT_PIPELINE_DEBUG) return
@@ -805,6 +825,16 @@ export default function MasterResultClient() {
 
     setDeliverySending(true)
     setDeliveryError("")
+    logResourceClient("Download triggered (email deliver)", {
+      objectKey: deliveryObjectKey,
+      playbackHost: (() => {
+        try {
+          return new URL(masteredWavUrl).host
+        } catch {
+          return null
+        }
+      })(),
+    })
     try {
       const res = await fetch(`${PUBLIC_BACKEND_API_BASE}/master/deliver`, {
         method: "POST",

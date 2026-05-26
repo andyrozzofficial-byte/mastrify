@@ -9,6 +9,19 @@ import { masterTrack, measureIntegratedLufsEbur128 } from "./master.js"
 import { serializeMasterAnalysisForJson } from "./masterAnalysisPayload.js"
 import { serializeMasteringInsightsForJson } from "./masterInsightsPayload.js"
 import { MASTRIFY_LUFS_TRACE as LUFS_TRACE, MASTRIFY_PIPELINE_DEBUG as PIPELINE_DEBUG } from "./mastrifyDebug.js"
+import {
+  MASTRIFY_RESOURCE_DEBUG,
+  beginMasterJob,
+  endMasterJob,
+  failMasterJob,
+  initResourceUsageLog,
+  logAnalyzeRequest,
+  logDownloadTriggered,
+  logEgressServe,
+  logFileSizes,
+  logHttpRequest,
+  logResource,
+} from "./resourceUsageLog.js"
 import { persistMasterExport } from "./supabaseStorage.js"
 import { deliverMasterExportEmail } from "./masteredExportDelivery.js"
 import ffmpegPath from "ffmpeg-static"
@@ -31,6 +44,13 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
+
+if (MASTRIFY_RESOURCE_DEBUG) {
+  app.use((req, res, next) => {
+    logHttpRequest(req)
+    next()
+  })
+}
 
 // Entry: Railway with Root Directory "server" runs `npm start` → `node server.js` (this file).
 // Not used for deploy: AI-Mastering_copy submodule server/ (legacy copy; use this server/ only).
@@ -167,6 +187,18 @@ function sendMasterFile(req, res, headOnly) {
     res.status(206)
     res.setHeader("Content-Range", `bytes ${start}-${end}/${size}`)
     res.setHeader("Content-Length", String(chunkSize))
+    if (MASTRIFY_RESOURCE_DEBUG) {
+      logEgressServe({
+        method: req.method,
+        file: basename,
+        fileSize: size,
+        bytes: chunkSize,
+        partial: true,
+        range: `${start}-${end}`,
+        headOnly,
+        forceDownload,
+      })
+    }
     if (headOnly) return res.end()
     const stream = fs.createReadStream(filePath, { start, end })
     stream.on("error", () => {
@@ -178,6 +210,17 @@ function sendMasterFile(req, res, headOnly) {
 
   res.status(200)
   res.setHeader("Content-Length", String(size))
+  if (MASTRIFY_RESOURCE_DEBUG) {
+    logEgressServe({
+      method: req.method,
+      file: basename,
+      fileSize: size,
+      bytes: headOnly ? 0 : size,
+      partial: false,
+      headOnly,
+      forceDownload,
+    })
+  }
   if (headOnly) return res.end()
   const stream = fs.createReadStream(filePath)
   stream.on("error", () => {
@@ -764,6 +807,13 @@ app.post("/analyze", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" })
     }
 
+    const analyzeUploadBytes =
+      req.file.size ?? (fs.existsSync(req.file.path) ? fs.statSync(req.file.path).size : null)
+    logAnalyzeRequest({
+      originalName: req.file.originalname,
+      uploadBytes: analyzeUploadBytes,
+    })
+
     // 🔥 TEMP ANALYSIS (så allt funkar direkt)
     const analysis = {
       lufs: -12,
@@ -971,6 +1021,7 @@ app.post("/master",
   upload.single("file"),
   async (req, res) => {
   res.setTimeout(0) // 🔥 LÄGG DEN HÄR
+  let resourceJobId = null
 
   try {
 
@@ -979,6 +1030,13 @@ app.post("/master",
       if (!file) {
         return res.status(400).json({ error: "No file uploaded" })
       }
+
+      const uploadBytes = file.size ?? (fs.existsSync(file.path) ? fs.statSync(file.path).size : null)
+      resourceJobId = beginMasterJob({
+        uploadBytes,
+        originalName: file.originalname,
+        stylePreset: req.body?.stylePreset || req.body?.style,
+      })
 
       const fileName = file.filename + ".wav"
       const newPath = file.path + ".wav"
@@ -1016,6 +1074,7 @@ app.post("/master",
         })
       }
 
+      const masterStartedAt = Date.now()
       const masterResult = await masterTrack({
         file: newPath,
         output: masterPath,
@@ -1027,6 +1086,14 @@ app.post("/master",
         sliderDebug,
         chainDebugMode,
         chainDebugSweep,
+      })
+      const masterProcessingMs = Date.now() - masterStartedAt
+      const masterBytes = fs.existsSync(masterPath) ? fs.statSync(masterPath).size : null
+      const uploadOnDiskBytes = fs.existsSync(newPath) ? fs.statSync(newPath).size : uploadBytes
+      logFileSizes("File sizes after masterTrack", {
+        uploadBytes: uploadOnDiskBytes,
+        masterBytes,
+        masterProcessingMs,
       })
 
       if (LUFS_TRACE) {
@@ -1145,7 +1212,11 @@ app.post("/master",
         localUploadPath: newPath,
         masterFileName,
         railwayPlaybackUrl,
+        uploadBytes: uploadOnDiskBytes,
+        masterBytes,
       })
+      const localMasterDeleted = !fs.existsSync(masterPath)
+      const localUploadDeleted = !fs.existsSync(newPath)
       const delivery = await deliverMasterExportEmail({
         email: deliveryEmail,
         objectKey: playback.objectKey,
@@ -1202,6 +1273,18 @@ app.post("/master",
           deliveryRequested: delivery.requested,
         }
       }
+      endMasterJob(resourceJobId, {
+        masterBytes,
+        uploadBytes: uploadOnDiskBytes,
+        masterProcessingMs,
+        storage: playback.storage,
+        objectKey: playback.objectKey,
+        localMasterDeleted,
+        localUploadDeleted,
+        deliveryRequested: delivery.requested,
+      })
+      resourceJobId = null
+
       if (LUFS_TRACE) {
         resPayload.lufsTrace = {
           ...(masterResult?.lufsTraceMeta && typeof masterResult.lufsTraceMeta === "object"
@@ -1221,6 +1304,8 @@ app.post("/master",
       res.json(resPayload)
 
     } catch (err) {
+      failMasterJob(resourceJobId, err)
+      resourceJobId = null
       console.error("Master failed:", err)
       res.status(500).json({ error: "Master failed" })
     }
@@ -1237,6 +1322,19 @@ app.post("/master/deliver", async (req, res) => {
     const playbackUrl = typeof body.playbackUrl === "string" ? body.playbackUrl.trim() : ""
     const expiresAt = typeof body.expiresAt === "string" && body.expiresAt.trim() ? body.expiresAt.trim() : null
     const trackTitle = typeof body.trackTitle === "string" ? body.trackTitle.trim() : ""
+
+    logDownloadTriggered({
+      emailDomain: email.includes("@") ? email.split("@")[1] : null,
+      objectKey,
+      playbackHost: (() => {
+        try {
+          return new URL(playbackUrl).host
+        } catch {
+          return null
+        }
+      })(),
+      trackTitle: trackTitle || null,
+    })
 
     if (!email || !objectKey || !playbackUrl) {
       return res.status(400).json({ success: false, error: "Missing delivery details" })
@@ -1291,6 +1389,11 @@ function ensureFfmpegBinariesExecutable() {
 ensureFfmpegBinariesExecutable()
 
 // 🔥 STARTA SERVER
+initResourceUsageLog()
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log("Server listening on port", PORT)
+  if (MASTRIFY_RESOURCE_DEBUG) {
+    logResource("Server listening", { port: PORT })
+  }
 })
