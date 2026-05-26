@@ -13,7 +13,12 @@ function isMinimalRoute(pathname: string | null): boolean {
   return MINIMAL_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
 }
 
-export default function SiteChrome({ children }: { children: ReactNode }) {
+type SiteChromeProps = {
+  children: ReactNode
+  showAdminNav?: boolean
+}
+
+export default function SiteChrome({ children, showAdminNav = false }: SiteChromeProps) {
   const pathname = usePathname()
   const minimal = isMinimalRoute(pathname)
 
@@ -23,7 +28,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader showAdminNav={showAdminNav} />
       <main className="site-overflow-guard flex flex-1 flex-col">{children}</main>
       <SiteFooter />
       <MastrifyAssistant />

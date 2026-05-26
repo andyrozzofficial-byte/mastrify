@@ -1,19 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+
+type Props = {
+  visible: boolean
+}
 
 /** Shown in public nav only when admin session cookie is valid. */
-export default function AdminShortcut() {
-  const [show, setShow] = useState(false)
-
-  useEffect(() => {
-    void fetch("/api/admin/me", { cache: "no-store" })
-      .then((res) => setShow(res.ok))
-      .catch(() => setShow(false))
-  }, [])
-
-  if (!show) return null
+export default function AdminShortcut({ visible }: Props) {
+  if (!visible) return null
 
   return (
     <Link

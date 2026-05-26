@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import AdminShortcut from "./AdminShortcut"
 import GatedMasterNavLink from "./beta/GatedMasterNavLink"
 import JoinBetaNavLink from "./beta/JoinBetaNavLink"
+import { useAdminNavSession } from "./useAdminNavSession"
 import "./site-header.css"
 
 type NavLink = {
@@ -25,9 +26,14 @@ const links: NavLink[] = [
 const navCtaClass =
   "site-header-cta inline-flex shrink-0 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.04] px-4 py-2 text-[13px] font-semibold leading-none text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:border-white/[0.14] hover:bg-white/[0.07] hover:text-white active:scale-[0.98]"
 
-export default function SiteHeader() {
+type SiteHeaderProps = {
+  showAdminNav?: boolean
+}
+
+export default function SiteHeader({ showAdminNav = false }: SiteHeaderProps) {
   const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
+  const { isAdmin } = useAdminNavSession(showAdminNav)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 6)
@@ -55,7 +61,7 @@ export default function SiteHeader() {
               Mastrify
             </Link>
             <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
-              <AdminShortcut />
+              <AdminShortcut visible={isAdmin} />
               <Link
                 href="/login"
                 className="text-[11px] font-medium text-white/45 transition hover:text-white/75 sm:text-xs"
@@ -138,7 +144,7 @@ export default function SiteHeader() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-4">
-            <AdminShortcut />
+            <AdminShortcut visible={isAdmin} />
             <Link
               href="/login"
               className="text-[12px] font-medium text-white/45 transition hover:text-white/75"

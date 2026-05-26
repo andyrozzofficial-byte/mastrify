@@ -4,6 +4,7 @@ import "./globals.css"
 import SiteChrome from "./components/SiteChrome"
 import { BetaMasteringGateProvider } from "./components/beta/BetaMasteringGateProvider"
 import { MasterSessionRootProvider } from "./MasterSessionRootProvider"
+import { isRequestAdmin } from "../lib/requireAdmin"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,11 +42,13 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const showAdminNav = await isRequestAdmin()
+
   return (
     <html lang="en" className="overflow-x-hidden">
       <body
@@ -53,7 +56,7 @@ export default function RootLayout({
       >
         <MasterSessionRootProvider>
           <BetaMasteringGateProvider>
-            <SiteChrome>{children}</SiteChrome>
+            <SiteChrome showAdminNav={showAdminNav}>{children}</SiteChrome>
           </BetaMasteringGateProvider>
         </MasterSessionRootProvider>
       </body>
