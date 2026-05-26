@@ -157,6 +157,7 @@ export async function createBetaReportedIssue(
   const row = {
     action_id: actionId,
     user_id: userId,
+    reporter_email: userId,
     title,
     description,
     expected_result: expectedResult,
@@ -187,8 +188,23 @@ export async function createBetaReportedIssue(
       }
       return { ok: true, id: actionId, created: false, alreadyCounted: true }
     }
-    if (/does not exist|42P01/i.test(error.message)) {
-      return { error: "beta_reported_issues table missing — apply Supabase migration" }
+    if (/does not exist|42P01|schema cache/i.test(error.message)) {
+      return {
+        error:
+          "beta_reported_issues table missing — run supabase/beta_reported_issues.sql in the Supabase SQL Editor, then wait ~10s for schema cache refresh",
+      }
+    }
+    if (/column .+ does not exist/i.test(error.message) && /reporter_email/i.test(error.message)) {
+      const { reporter_email: _ignored, ...withoutReporter } = row
+      const retryQuery = supabase.from(BETA_REPORTED_ISSUES_TABLE).insert(withoutReporter)
+      const retry = canRead ? await retryQuery.select("id").single() : await retryQuery
+      if (!retry.error) {
+        const retryId =
+          retry.data && typeof retry.data === "object" && "id" in retry.data
+            ? String((retry.data as { id: string }).id)
+            : actionId
+        return { ok: true, id: retryId, created: true, alreadyCounted: false }
+      }
     }
     return { error: error.message }
   }

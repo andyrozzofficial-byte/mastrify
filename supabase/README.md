@@ -44,6 +44,31 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 Beta feedback (optional): `ENABLE_BETA_FEEDBACK=true` on Vercel is mirrored to the client at build via `next.config.ts`.
 
+## Beta issue reports (`public.beta_reported_issues`)
+
+If **Report Issue** / `POST /api/beta/issues` fails with **“Could not find the table 'public.beta_reported_issues' in the schema cache”**:
+
+1. Open [Supabase SQL Editor](https://supabase.com/dashboard) for your project.
+2. Paste and run the full contents of [`beta_reported_issues.sql`](./beta_reported_issues.sql).
+3. Wait ~10 seconds (the script ends with `NOTIFY pgrst, 'reload schema';`).
+4. Redeploy the app (or restart `next dev`) if the API still returns schema cache errors.
+
+Verify locally:
+
+```bash
+npm run db:beta-issues:check
+```
+
+Apply via `psql` when you have a DB URL in `.env.local`:
+
+```bash
+npm run db:beta-issues
+```
+
+Or with Supabase CLI: `supabase db push` (includes `migrations/20260531120000_ensure_beta_reported_issues.sql`).
+
+`user_id` and optional `reporter_email` both store the normalized beta Insider email. `action_id` dedupes double-submits.
+
 ## Beta signup (`public.admin_customer_profiles`)
 
 If **Join Beta** / `POST /api/beta/profile` fails with **“Could not find the table 'public.admin_customer_profiles'”**:

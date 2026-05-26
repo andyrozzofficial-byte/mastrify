@@ -11,7 +11,9 @@
     "db:beta-feedback": "node scripts/apply-beta-feedback-schema.mjs",
     "db:beta-feedback:check": "node scripts/check-beta-feedback-table.mjs",
     "db:customer-profiles": "node scripts/apply-admin-customer-profiles.mjs",
-    "db:customer-profiles:check": "node scripts/check-admin-customer-profiles.mjs"
+    "db:customer-profiles:check": "node scripts/check-admin-customer-profiles.mjs",
+    "db:beta-issues": "node scripts/apply-beta-reported-issues-schema.mjs",
+    "db:beta-issues:check": "node scripts/check-beta-reported-issues-table.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.3",
