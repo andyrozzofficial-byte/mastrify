@@ -16,7 +16,9 @@ import type { BetaAccessJson } from "../../../lib/betaClientAccess"
 import { accessFromBetaJson } from "../../../lib/betaClientAccess"
 import type { BetaMasteringUiState } from "../../../lib/betaPoints"
 import { getStoredBetaEmail, setStoredBetaEmail } from "../../../lib/betaSessionStorage"
-import BetaProfileSlideOver from "./BetaProfileSlideOver"
+import dynamic from "next/dynamic"
+
+const BetaProfileSlideOver = dynamic(() => import("./BetaProfileSlideOver"), { ssr: false })
 
 function logClientBetaAccess(message: string, detail?: Record<string, unknown>) {
   if (detail) console.log(`[beta-access] ${message}`, detail)
@@ -283,7 +285,9 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
           </div>
         </div>
       ) : null}
-      <BetaProfileSlideOver open={profilePanelOpen} onClose={closeProfilePanel} />
+      {profilePanelOpen ? (
+        <BetaProfileSlideOver open={profilePanelOpen} onClose={closeProfilePanel} />
+      ) : null}
     </BetaMasteringGateContext.Provider>
   )
 }

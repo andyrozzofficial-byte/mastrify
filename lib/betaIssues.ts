@@ -1,7 +1,17 @@
 import { normalizeBetaEmail } from "./betaAccess"
 import type { BetaIssuePriority, BetaIssueStatus, BetaReportedIssueRow } from "./betaIssueTypes"
 import { isBetaIssuePriority, isBetaIssueStatus } from "./betaIssueTypes"
+import {
+  adminPageRange,
+  buildAdminPaginationMeta,
+  type AdminPaginationMeta,
+} from "./adminPagination"
 import { createSupabaseServerClient, getSupabaseKeySource } from "./supabaseServer"
+
+export type BetaIssuesPaginated = {
+  rows: BetaReportedIssueRow[]
+  pagination: AdminPaginationMeta
+}
 
 export const BETA_REPORTED_ISSUES_TABLE = "beta_reported_issues"
 const SCREENSHOT_BUCKET = "beta-issue-screenshots"
@@ -132,6 +142,33 @@ export async function fetchAllBetaIssues(): Promise<BetaReportedIssueRow[] | { e
   }
 
   return (data ?? []).map((row) => mapRow(row as Record<string, unknown>))
+}
+
+export async function fetchBetaIssuesPaginated(
+  page = 1,
+): Promise<BetaIssuesPaginated | { error: string }> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return { error: "Database unavailable" }
+
+  const { from, to } = adminPageRange(page)
+  const { data, error, count } = await supabase
+    .from(BETA_REPORTED_ISSUES_TABLE)
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to)
+
+  if (error) {
+    if (isTableMissingError(error.message)) {
+      return { error: BETA_REPORTED_ISSUES_SETUP_HINT }
+    }
+    return { error: error.message }
+  }
+
+  const rows = (data ?? []).map((row) => mapRow(row as Record<string, unknown>))
+  return {
+    rows,
+    pagination: buildAdminPaginationMeta(count ?? rows.length, page),
+  }
 }
 
 export async function uploadBetaIssueScreenshot(

@@ -6,23 +6,38 @@ import {
   buildRankedFeedbackIssues,
 } from "../../../../lib/adminFeedbackActionCenter"
 import { buildAdminFeedbackInsights } from "../../../../lib/adminFeedbackInsights"
-import { fetchAdminFeedback, updateFeedbackItem } from "../../../../lib/adminData"
+import {
+  fetchAdminFeedback,
+  fetchAdminFeedbackPaginated,
+  updateFeedbackItem,
+} from "../../../../lib/adminData"
+import { parseAdminPage } from "../../../../lib/adminPagination"
 import { isAdminFeedbackStatus } from "../../../../lib/adminTypes"
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAdminApi("/api/admin/feedback")
   if (auth.error) return auth.error
 
-  const data = await fetchAdminFeedback()
-  if ("error" in data) {
-    return NextResponse.json({ error: data.error }, { status: 500 })
+  const page = parseAdminPage(new URL(request.url).searchParams)
+  const [listed, analyticsRows] = await Promise.all([
+    fetchAdminFeedbackPaginated(page),
+    fetchAdminFeedback(),
+  ])
+
+  if ("error" in listed) {
+    return NextResponse.json({ error: listed.error }, { status: 500 })
   }
+  if ("error" in analyticsRows) {
+    return NextResponse.json({ error: analyticsRows.error }, { status: 500 })
+  }
+
   return NextResponse.json({
-    rows: data,
-    analytics: buildAdminFeedbackAnalytics(data),
-    insights: buildAdminFeedbackInsights(data),
-    actionCenter: buildAdminActionCenter(data),
-    issueTiers: buildRankedFeedbackIssues(data),
+    rows: listed.rows,
+    pagination: listed.pagination,
+    analytics: buildAdminFeedbackAnalytics(analyticsRows),
+    insights: buildAdminFeedbackInsights(analyticsRows),
+    actionCenter: buildAdminActionCenter(analyticsRows),
+    issueTiers: buildRankedFeedbackIssues(analyticsRows),
   })
 }
 

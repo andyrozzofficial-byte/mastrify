@@ -28,6 +28,14 @@ import { createSupabaseServerClient } from "./supabaseServer"
 import { buildAdminActionCenter } from "./adminFeedbackActionCenter"
 import { buildSupportActionSignals, mergeActionCenterItems } from "./adminSupportSignals"
 import { mapSupportRow } from "./supportTickets"
+import {
+  ADMIN_PAGE_SIZE,
+  adminPageRange,
+  buildAdminPaginationMeta,
+  type AdminPaginationMeta,
+} from "./adminPagination"
+
+export type AdminPaginated<T> = { rows: T[]; pagination: AdminPaginationMeta }
 
 export const SUPPORT_INBOX_TABLE = "admin_support_inbox"
 export const MASTER_JOBS_TABLE = "admin_master_jobs"
@@ -452,6 +460,39 @@ export async function fetchAdminFeedback(): Promise<AdminFeedbackRow[] | { error
   return (data ?? []).map((row) => mapAdminFeedbackRow(row as BetaFeedbackDbRow))
 }
 
+export async function fetchAdminFeedbackPaginated(
+  page = 1,
+): Promise<AdminPaginated<AdminFeedbackRow> | { error: string }> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return { error: "Database unavailable" }
+
+  const { from, to } = adminPageRange(page)
+  let select = FEEDBACK_SELECT
+  let result = await supabase
+    .from(BETA_FEEDBACK_TABLE)
+    .select(select, { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to)
+
+  if (result.error && isMissingFeedbackStageColumn(result.error.message)) {
+    select = FEEDBACK_SELECT_WITHOUT_STAGE
+    result = await supabase
+      .from(BETA_FEEDBACK_TABLE)
+      .select(select, { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to)
+  }
+
+  if (result.error) return { error: result.error.message }
+
+  const rows = (result.data ?? []).map((row) => mapAdminFeedbackRow(row as BetaFeedbackDbRow))
+  const total = result.count ?? rows.length
+  return {
+    rows,
+    pagination: buildAdminPaginationMeta(total, page),
+  }
+}
+
 export async function fetchAdminFeedbackById(
   id: string,
 ): Promise<AdminFeedbackRow | { error: string }> {
@@ -510,6 +551,28 @@ export async function fetchAdminSupport(): Promise<AdminSupportRow[] | { error: 
   if (error) return { error: error.message }
 
   return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
+}
+
+export async function fetchAdminSupportPaginated(
+  page = 1,
+): Promise<AdminPaginated<AdminSupportRow> | { error: string }> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return { error: "Database unavailable" }
+
+  const { from, to } = adminPageRange(page)
+  const { data, error, count } = await supabase
+    .from(SUPPORT_INBOX_TABLE)
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to)
+
+  if (error) return { error: error.message }
+
+  const rows = (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
+  return {
+    rows,
+    pagination: buildAdminPaginationMeta(count ?? rows.length, page),
+  }
 }
 
 export async function fetchSupportTicket(id: string): Promise<AdminSupportRow | { error: string }> {
@@ -820,6 +883,55 @@ export async function fetchAdminJobs(): Promise<AdminJobRow[] | { error: string 
     error_log: row.error_log,
     source: row.source ?? "system",
   }))
+}
+
+export async function fetchAdminJobsPaginated(
+  page = 1,
+): Promise<AdminPaginated<AdminJobRow> | { error: string }> {
+  await syncJobsFromFeedback()
+
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return { error: "Database unavailable" }
+
+  const { from, to } = adminPageRange(page)
+  const { data, error, count } = await supabase
+    .from(MASTER_JOBS_TABLE)
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to)
+
+  if (error?.code === "42P01") {
+    const all = await fetchAdminJobs()
+    if (isFetchError(all)) return all
+    const start = (Math.max(1, page) - 1) * ADMIN_PAGE_SIZE
+    const rows = all.slice(start, start + ADMIN_PAGE_SIZE)
+    return {
+      rows,
+      pagination: buildAdminPaginationMeta(all.length, page),
+    }
+  }
+
+  if (error) return { error: error.message }
+
+  const rows = (data ?? []).map((row) => ({
+    id: row.id,
+    created_at: row.created_at,
+    updated_at: row.updated_at ?? row.created_at,
+    session_id: row.session_id,
+    track_name: row.track_name,
+    user_email: row.user_email,
+    status: normalizeJobStatus(row.status),
+    processing_time_ms: row.processing_time_ms,
+    master_lufs: row.master_lufs != null ? Number(row.master_lufs) : null,
+    mastering_style: row.mastering_style,
+    error_log: row.error_log,
+    source: row.source ?? "system",
+  }))
+
+  return {
+    rows,
+    pagination: buildAdminPaginationMeta(count ?? rows.length, page),
+  }
 }
 
 function dateKey(iso: string): string {

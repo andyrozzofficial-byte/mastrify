@@ -734,13 +734,100 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
   }
 }
 
-export async function fetchBetaDashboardSummary(): Promise<BetaDashboardSummary | { error: string }> {
-  const users = await fetchBetaUsers()
-  if (isFetchError(users)) return users
+type SummaryUserRow = {
+  email: string
+  name: string | null
+  signupDate: string | null
+  betaRank: string
+  feedbackCount: number
+  supportCount: number
+  issueReportCount: number
+  engagementScore: number
+  engagementLevel: ReturnType<typeof engagementLevel>
+}
 
-  const [feedback, support] = await Promise.all([fetchAdminFeedback(), fetchAdminSupport()])
+async function fetchIssueCountsByEmail(): Promise<Map<string, number>> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return new Map()
+
+  const { data, error } = await supabase
+    .from("beta_reported_issues")
+    .select("reporter_email, user_id")
+    .limit(500)
+
+  if (error) return new Map()
+
+  const map = new Map<string, number>()
+  for (const row of data ?? []) {
+    const email = String(row.reporter_email ?? row.user_id ?? "")
+      .trim()
+      .toLowerCase()
+    if (!email.includes("@")) continue
+    map.set(email, (map.get(email) ?? 0) + 1)
+  }
+  return map
+}
+
+/** Lightweight dashboard widgets — avoids fetchBetaUsers() and per-email N+1 queries. */
+export async function fetchBetaDashboardSummary(): Promise<BetaDashboardSummary | { error: string }> {
+  const profiles = await fetchBetaProfileRows()
+  const [feedback, support, issueCounts] = await Promise.all([
+    fetchAdminFeedback(),
+    fetchAdminSupport(),
+    fetchIssueCountsByEmail(),
+  ])
+
   if (isFetchError(feedback)) return feedback
   if (isFetchError(support)) return support
+
+  const feedbackByEmail = new Map<string, { count: number; sessions: Set<string>; dates: string[] }>()
+  for (const row of feedback) {
+    const email = row.contact_email?.trim().toLowerCase()
+    if (!email) continue
+    const bucket = feedbackByEmail.get(email) ?? { count: 0, sessions: new Set<string>(), dates: [] }
+    bucket.count += 1
+    if (row.session_id) bucket.sessions.add(row.session_id)
+    bucket.dates.push(row.created_at)
+    feedbackByEmail.set(email, bucket)
+  }
+
+  const supportByEmail = new Map<string, number>()
+  for (const row of support) {
+    const email = row.email.trim().toLowerCase()
+    supportByEmail.set(email, (supportByEmail.get(email) ?? 0) + 1)
+  }
+
+  const emails = collectEmails(profiles, feedback, support)
+  const profileByEmail = new Map(profiles.map((p) => [p.email, p]))
+
+  const users: SummaryUserRow[] = emails.map((email) => {
+    const profile = profileByEmail.get(email)
+    const fb = feedbackByEmail.get(email)
+    const feedbackCount = fb?.count ?? 0
+    const supportCount = supportByEmail.get(email) ?? 0
+    const issueReportCount = issueCounts.get(email) ?? 0
+    const activeDays = new Set<string>()
+    for (const iso of fb?.dates ?? []) activeDays.add(dateKey(iso))
+    if (profile?.beta_signed_up_at) activeDays.add(dateKey(profile.beta_signed_up_at))
+    const masterCount = fb?.sessions.size ?? 0
+    const { engagementScore, engagementLevel: level } = engagementForUser(
+      masterCount,
+      feedbackCount,
+      supportCount,
+      activeDays.size,
+    )
+    return {
+      email,
+      name: displayName(email, profile?.name ?? null),
+      signupDate: profile?.beta_signed_up_at ?? null,
+      betaRank: betaRankLabel(effectiveBetaRank(profile?.beta_rank, 0)),
+      feedbackCount,
+      supportCount,
+      issueReportCount,
+      engagementScore,
+      engagementLevel: level,
+    }
+  })
 
   const mostActive = [...users]
     .sort((a, b) => b.engagementScore - a.engagementScore)
