@@ -1,7 +1,7 @@
 import { normalizeBetaEmail } from "./betaAccess"
 import type { BetaIssuePriority, BetaIssueStatus, BetaReportedIssueRow } from "./betaIssueTypes"
 import { isBetaIssuePriority, isBetaIssueStatus } from "./betaIssueTypes"
-import { createSupabaseServerClient } from "./supabaseServer"
+import { createSupabaseServerClient, getSupabaseKeySource } from "./supabaseServer"
 
 export const BETA_REPORTED_ISSUES_TABLE = "beta_reported_issues"
 const SCREENSHOT_BUCKET = "beta-issue-screenshots"
@@ -139,44 +139,53 @@ export async function createBetaReportedIssue(
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const { data: existing } = await supabase
-    .from(BETA_REPORTED_ISSUES_TABLE)
-    .select("id")
-    .eq("action_id", actionId)
-    .maybeSingle()
+  const canRead = getSupabaseKeySource() === "service_role"
 
-  if (existing?.id) {
-    return { ok: true, id: String(existing.id), created: false, alreadyCounted: true }
+  if (canRead) {
+    const { data: existing } = await supabase
+      .from(BETA_REPORTED_ISSUES_TABLE)
+      .select("id")
+      .eq("action_id", actionId)
+      .maybeSingle()
+
+    if (existing?.id) {
+      return { ok: true, id: String(existing.id), created: false, alreadyCounted: true }
+    }
   }
 
   const now = new Date().toISOString()
-  const { data, error } = await supabase
-    .from(BETA_REPORTED_ISSUES_TABLE)
-    .insert({
-      action_id: actionId,
-      user_id: userId,
-      title,
-      description,
-      expected_result: expectedResult,
-      screenshot_url: input.screenshotUrl?.trim() || null,
-      priority: input.priority,
-      status: "open",
-      created_at: now,
-      updated_at: now,
-    })
-    .select("id")
-    .single()
+  const row = {
+    action_id: actionId,
+    user_id: userId,
+    title,
+    description,
+    expected_result: expectedResult,
+    screenshot_url: input.screenshotUrl?.trim() || null,
+    priority: input.priority,
+    status: "open" as const,
+    created_at: now,
+    updated_at: now,
+  }
+
+  const insertQuery = supabase.from(BETA_REPORTED_ISSUES_TABLE).insert(row)
+  const { data, error } = canRead
+    ? await insertQuery.select("id").single()
+    : await insertQuery
 
   if (error) {
+    console.error("[issue-db]", error)
     if (/duplicate|unique/i.test(error.message) && /action_id/i.test(error.message)) {
-      const { data: dup } = await supabase
-        .from(BETA_REPORTED_ISSUES_TABLE)
-        .select("id")
-        .eq("action_id", actionId)
-        .maybeSingle()
-      if (dup?.id) {
-        return { ok: true, id: String(dup.id), created: false, alreadyCounted: true }
+      if (canRead) {
+        const { data: dup } = await supabase
+          .from(BETA_REPORTED_ISSUES_TABLE)
+          .select("id")
+          .eq("action_id", actionId)
+          .maybeSingle()
+        if (dup?.id) {
+          return { ok: true, id: String(dup.id), created: false, alreadyCounted: true }
+        }
       }
+      return { ok: true, id: actionId, created: false, alreadyCounted: true }
     }
     if (/does not exist|42P01/i.test(error.message)) {
       return { error: "beta_reported_issues table missing — apply Supabase migration" }
@@ -184,7 +193,9 @@ export async function createBetaReportedIssue(
     return { error: error.message }
   }
 
-  return { ok: true, id: String(data.id), created: true, alreadyCounted: false }
+  const id =
+    data && typeof data === "object" && "id" in data ? String((data as { id: string }).id) : actionId
+  return { ok: true, id, created: true, alreadyCounted: false }
 }
 
 export async function updateBetaIssueStatus(

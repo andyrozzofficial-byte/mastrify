@@ -91,6 +91,17 @@ export default function BetaReportIssueModal({ open, onClose }: Props) {
     if (email) form.set("email", email)
     if (screenshot) form.set("screenshot", screenshot)
 
+    const payload = {
+      actionId: actionIdRef.current,
+      title: trimmedTitle,
+      description: trimmedDesc,
+      expectedResult: expectedResult.trim(),
+      priority,
+      email: email ?? undefined,
+      hasScreenshot: Boolean(screenshot),
+    }
+    console.log("[issue-client] payload", payload)
+
     try {
       const res = await fetch("/api/beta/issues", {
         method: "POST",
@@ -106,7 +117,13 @@ export default function BetaReportIssueModal({ open, onClose }: Props) {
       } | null
 
       if (!res.ok) {
-        setError(json?.error ?? "Could not submit issue.")
+        const message =
+          json?.error ||
+          (res.status === 401
+            ? "Beta email required — sign in to Insider or re-enter your email on /access."
+            : null) ||
+          `Request failed (${res.status})`
+        setError(message || "Unexpected error")
         return
       }
 

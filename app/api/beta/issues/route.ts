@@ -19,6 +19,7 @@ export async function POST(request: Request) {
   const cookieEmail = await resolveBetaEmailFromCookies(store)
 
   const contentType = request.headers.get("content-type") ?? ""
+  let incomingLog: Record<string, unknown> = { contentType }
   let actionId = ""
   let title = ""
   let description = ""
@@ -59,6 +60,17 @@ export async function POST(request: Request) {
     bodyEmail = typeof body.email === "string" ? body.email.trim() : ""
   }
 
+  incomingLog = {
+    actionId,
+    title,
+    descriptionLength: description.length,
+    expectedResultLength: expectedResult.length,
+    priority,
+    email: bodyEmail || cookieEmail || undefined,
+    hasScreenshot: Boolean(screenshotFile),
+  }
+  console.log("[issue-api] incoming", incomingLog)
+
   const email =
     cookieEmail ?? (bodyEmail.includes("@") ? normalizeBetaEmail(bodyEmail) : null)
 
@@ -92,6 +104,8 @@ export async function POST(request: Request) {
     screenshotUrl,
     priority,
   })
+
+  console.log("[issue-api] result", result)
 
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 })
