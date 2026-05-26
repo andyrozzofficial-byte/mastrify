@@ -26,9 +26,9 @@ const legal = [
 
 function FooterLinkList({ links }: { links: readonly { href: string; label: string }[] }) {
   return (
-    <ul className="footer-column-links mt-3 flex flex-col space-y-0.5 sm:mt-3 sm:space-y-1 md:mt-5 md:space-y-2">
+    <ul className="footer-column-links mt-4 flex w-full flex-col gap-1 sm:mt-4 md:mt-6 md:gap-1.5">
       {links.map(({ href, label }) => (
-        <li key={href + label}>
+        <li key={href + label} className="w-full">
           <Link href={href} className="footer-tap-link">
             {label}
           </Link>
@@ -58,7 +58,7 @@ function FooterColumn({
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
         >
-          <span className="footer-column-title text-[11px] font-semibold uppercase tracking-[0.24em] text-label-strong">
+          <span className="footer-column-title text-[9px] font-medium uppercase tracking-[0.28em] text-label sm:text-[10px]">
             {title}
           </span>
           <span
@@ -70,8 +70,8 @@ function FooterColumn({
         </button>
         {open ? <FooterLinkList links={links} /> : null}
       </div>
-      <motion.div initial={false} className="hidden min-w-0 md:block">
-        <p className="footer-column-title text-[11px] font-semibold uppercase tracking-[0.24em] text-label-strong">
+      <motion.div initial={false} className="footer-column hidden min-w-0 w-full md:flex md:flex-col md:items-start">
+        <p className="footer-column-title text-[9px] font-medium uppercase tracking-[0.28em] text-label sm:text-[10px]">
           {title}
         </p>
         <FooterLinkList links={links} />
@@ -177,7 +177,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="footer-nav-columns w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-3 md:items-start md:gap-x-16 md:gap-y-0 md:max-w-[32rem] lg:col-span-3 lg:max-w-[34rem] xl:col-span-3 xl:max-w-[38rem]"
+            className="footer-nav-columns w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-3 md:items-start md:justify-items-start md:gap-x-10 md:gap-y-0 md:max-w-[26rem] lg:col-span-3 lg:max-w-[27rem] lg:gap-x-12 xl:col-span-3 xl:max-w-[28rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
