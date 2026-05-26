@@ -39,6 +39,7 @@ import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
 import BetaMasterFeedback from "../../components/master/BetaMasterFeedback"
+import BetaReportIssueSection from "../../components/beta/BetaReportIssueSection"
 import BetaMasterStatusCard from "../../components/master/BetaMasterStatusCard"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
@@ -1239,6 +1240,8 @@ export default function MasterResultClient() {
           />
         </div>
       ) : null}
+
+      {betaFeedbackOn && isBetaUser ? <BetaReportIssueSection className="master-result-report-issue" /> : null}
 
       {deliveryOpen && !deliverySent ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/72 px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md min-[430px]:px-5">

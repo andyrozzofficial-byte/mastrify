@@ -48,7 +48,7 @@ export function normalizeRankKey(rank: string | null | undefined): BetaUserRank 
 export function computeBetaBadges(input: {
   masterCount: number
   feedbackCount: number
-  bugReportCount: number
+  issueReportCount: number
   engagementLevel: BetaEngagementLevel
   betaRank: string | null | undefined
 }): BetaUserBadge[] {
@@ -59,8 +59,8 @@ export function computeBetaBadges(input: {
   if (input.feedbackCount >= 3) {
     badges.push({ id: "feedback_hero", emoji: "💬", label: "Feedback Hero" })
   }
-  if (input.bugReportCount >= 1) {
-    badges.push({ id: "bug_hunter", emoji: "🐛", label: "Bug Hunter" })
+  if (input.issueReportCount >= 1) {
+    badges.push({ id: "issue_reporter", emoji: "🐞", label: "Issue Reporter" })
   }
   if (input.engagementLevel === "high") {
     badges.push({ id: "power_user", emoji: "🚀", label: "Power User" })
@@ -97,6 +97,12 @@ type MasterCompletion = {
   completed_at: string
 }
 
+type ReportedIssue = {
+  id: string
+  title: string
+  created_at: string
+}
+
 export function buildBetaTimeline(input: {
   signupAt: string | null
   uploads: PipelineUpload[]
@@ -105,6 +111,7 @@ export function buildBetaTimeline(input: {
   userSupport: AdminSupportRow[]
   exports: ExportRow[]
   completions?: MasterCompletion[]
+  issues?: ReportedIssue[]
 }): BetaTimelineEvent[] {
   const events: BetaTimelineEvent[] = []
 
@@ -186,6 +193,17 @@ export function buildBetaTimeline(input: {
       label: "Master downloaded",
       detail: ex.track_title ?? null,
       created_at: ex.created_at,
+      href: null,
+    })
+  }
+
+  for (const issue of input.issues ?? []) {
+    events.push({
+      id: `issue-${issue.id}`,
+      type: "issue",
+      label: "Issue reported",
+      detail: issue.title,
+      created_at: issue.created_at,
       href: null,
     })
   }

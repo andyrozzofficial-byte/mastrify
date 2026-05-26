@@ -31,7 +31,7 @@ export type BetaProfilePanelData = {
   activity: {
     mastersCompleted: number
     feedbackSubmitted: number
-    bugReports: number
+    issuesReported: number
     downloads: number
     activeDays: number
   }
@@ -68,12 +68,8 @@ function panelActivityLabel(event: BetaTimelineEvent): string {
   if (event.type === "download") return "Master downloaded"
   if (event.type === "signup") return "Joined beta"
   if (event.type === "upload") return "Track uploaded"
-  if (event.type === "support") {
-    if (/bug|error|crash|broken|glitch/i.test(`${event.label} ${event.detail ?? ""}`)) {
-      return "Bug reported"
-    }
-    return "Support ticket"
-  }
+  if (event.type === "issue") return "Issue reported"
+  if (event.type === "support") return "Support ticket"
   return event.label
 }
 
@@ -120,7 +116,7 @@ export function buildBetaProfilePanelData(profile: BetaUserProfile): BetaProfile
     activity: {
       mastersCompleted: profile.masterCount,
       feedbackSubmitted: profile.feedbackCount,
-      bugReports: profile.bugReportCount,
+      issuesReported: profile.issueReportCount,
       downloads: profile.downloadCount,
       activeDays: profile.activeDays,
     },

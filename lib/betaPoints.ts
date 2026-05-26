@@ -37,7 +37,7 @@ export const BETA_REWARD_MILESTONES = [
 export const BETA_EARN_WAYS = [
   { points: "+1", label: "Complete master" },
   { points: "+1", label: "Submit feedback" },
-  { points: "+2", label: "Report bug" },
+  { points: "+2", label: "Report issue" },
   { points: "+3", label: "Invite creator" },
   { points: "+5", label: "Valuable feedback (admin)" },
 ] as const
@@ -47,7 +47,7 @@ const RANK_ORDER: BetaUserRank[] = ["explorer", "insider", "pioneer", "legend", 
 export type BetaActivityCounts = {
   completedMasters: number
   feedbackCount: number
-  feedbackOnlyBugCount: number
+  issueReportCount: number
   usefulFeedbackCount: number
   creatorInviteCount: number
 }
@@ -55,7 +55,7 @@ export type BetaActivityCounts = {
 export type BetaPointsBreakdown = {
   masters: number
   feedback: number
-  bugs: number
+  issues: number
   invites: number
   usefulFeedback: number
   total: number
@@ -99,13 +99,6 @@ export function rankFromPoints(points: number): BetaUserRank {
   return "explorer"
 }
 
-export function countFeedbackOnlyBugs(userFeedback: AdminFeedbackRow[]): number {
-  return userFeedback.filter((f) => {
-    const extra = f.survey.additional?.trim()
-    return Boolean(extra && /bug|error|crash|broken|glitch/i.test(extra))
-  }).length
-}
-
 export function countUsefulFeedback(userFeedback: AdminFeedbackRow[]): number {
   return userFeedback.filter((f) => /\buseful\b/i.test(f.admin_notes ?? "")).length
 }
@@ -117,13 +110,14 @@ export function aggregateBetaActivityForEmail(
   _jobs: AdminJobRow[],
   creatorInviteCount: number,
   completedMasterCount?: number,
+  issueReportCount?: number,
 ): BetaActivityCounts {
   const completedMasters = completedMasterCount ?? 0
 
   return {
     completedMasters,
     feedbackCount: userFeedback.length,
-    feedbackOnlyBugCount: countFeedbackOnlyBugs(userFeedback),
+    issueReportCount: issueReportCount ?? 0,
     usefulFeedbackCount: countUsefulFeedback(userFeedback),
     creatorInviteCount,
   }
@@ -132,16 +126,16 @@ export function aggregateBetaActivityForEmail(
 export function calcBetaPointsBreakdown(counts: BetaActivityCounts): BetaPointsBreakdown {
   const masters = counts.completedMasters * 1
   const feedback = counts.feedbackCount * 1
-  const bugs = counts.feedbackOnlyBugCount * 2
+  const issues = counts.issueReportCount * 2
   const invites = counts.creatorInviteCount * 3
   const usefulFeedback = counts.usefulFeedbackCount * 5
   return {
     masters,
     feedback,
-    bugs,
+    issues,
     invites,
     usefulFeedback,
-    total: masters + feedback + bugs + invites + usefulFeedback,
+    total: masters + feedback + issues + invites + usefulFeedback,
   }
 }
 

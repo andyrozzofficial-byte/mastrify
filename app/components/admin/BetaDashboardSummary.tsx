@@ -94,12 +94,12 @@ export function BetaDashboardSummaryPanels() {
           </ul>
         </AdminPanel>
 
-        <AdminPanel title="Top bug reporters">
+        <AdminPanel title="Top issue reporters">
           <ul className="space-y-2.5">
-            {summary.topBugReporters.length === 0 ? (
-              <li className="text-sm text-white/60">No bug reports yet.</li>
+            {summary.topIssueReporters.length === 0 ? (
+              <li className="text-sm text-white/60">No issues reported yet.</li>
             ) : (
-              summary.topBugReporters.map((u) => (
+              summary.topIssueReporters.map((u) => (
                 <li key={u.email} className="flex items-center justify-between gap-2">
                   <Link
                     href={`/admin/beta-users/${encodeURIComponent(u.email)}`}
@@ -107,7 +107,7 @@ export function BetaDashboardSummaryPanels() {
                   >
                     {u.name ?? u.email}
                   </Link>
-                  <span className="text-sm tabular-nums text-white/60">{u.bugReportCount}</span>
+                  <span className="text-sm tabular-nums text-white/60">{u.issueReportCount}</span>
                 </li>
               ))
             )}

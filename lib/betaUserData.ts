@@ -11,7 +11,6 @@ import {
   buildBetaTimeline,
   calcEngagementScore,
   computeBetaBadges,
-  countBugReports,
   engagementLevel,
   nextBetaRank,
 } from "./betaEngagement"
@@ -49,6 +48,7 @@ import {
   fetchBetaMasterCompletionsForEmail,
   type BetaMasterCompletionRow,
 } from "./betaMasterTracking"
+import { countBetaIssuesForEmail, fetchBetaIssuesForEmail } from "./betaIssues"
 import { buildBetaProfilePanelData, type BetaProfilePanelData } from "./betaProfilePanel"
 import { createSupabaseServerClient } from "./supabaseServer"
 import { formatSupabaseTableError } from "./supabaseSchemaErrors"
@@ -154,7 +154,10 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
 
   const userFeedback = feedback.filter((f) => f.contact_email?.toLowerCase() === normalized)
   const userSupport = support.filter((s) => s.email.toLowerCase() === normalized)
-  const completions = await fetchBetaMasterCompletionsForEmail(normalized)
+  const [completions, issueReportCount] = await Promise.all([
+    fetchBetaMasterCompletionsForEmail(normalized),
+    countBetaIssuesForEmail(normalized),
+  ])
   const inviteMap = await buildCreatorInviteCountByReferrer()
   const counts = aggregateBetaActivityForEmail(
     normalized,
@@ -163,6 +166,7 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
     jobs,
     inviteMap.get(normalized) ?? 0,
     countCompletedMasters(completions),
+    issueReportCount,
   )
   const points = calcBetaPoints(counts)
   const rank = effectiveBetaRank(profile?.beta_rank, points)
@@ -368,6 +372,7 @@ function buildListRow(
   jobs: AdminJobRow[],
   creatorInviteCount: number,
   completions: BetaMasterCompletionRow[],
+  issueReportCount: number,
 ): BetaUserListRow {
   const lastTimes = [
     ...userFeedback.map((f) => f.created_at),
@@ -397,7 +402,6 @@ function buildListRow(
     activeDaySet.size,
   )
 
-  const bugReportCount = countBugReports(userFeedback, userSupport)
   const counts = aggregateBetaActivityForEmail(
     email,
     userFeedback,
@@ -405,6 +409,7 @@ function buildListRow(
     jobs,
     creatorInviteCount,
     masterCount,
+    issueReportCount,
   )
   const betaPoints = calcBetaPoints(counts)
   const rankKey = effectiveBetaRank(profile?.beta_rank, betaPoints)
@@ -422,7 +427,7 @@ function buildListRow(
     masterCount,
     feedbackCount: userFeedback.length,
     supportCount: userSupport.length,
-    bugReportCount,
+    issueReportCount,
     avgRecommend: calcRecommendationScore(userFeedback),
     topStyle: topLabel(styles),
     topIssue: topLabel(soundedOff, new Set(["No, it sounded good"])),
@@ -483,9 +488,15 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
 
   const inviteMap = await buildCreatorInviteCountByReferrer()
   const completionsByEmail = new Map<string, BetaMasterCompletionRow[]>()
+  const issueCountByEmail = new Map<string, number>()
   await Promise.all(
     emails.map(async (email) => {
-      completionsByEmail.set(email, await fetchBetaMasterCompletionsForEmail(email))
+      const [completions, issueCount] = await Promise.all([
+        fetchBetaMasterCompletionsForEmail(email),
+        countBetaIssuesForEmail(email),
+      ])
+      completionsByEmail.set(email, completions)
+      issueCountByEmail.set(email, issueCount)
     }),
   )
 
@@ -498,6 +509,7 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
       jobs,
       inviteMap.get(email) ?? 0,
       completionsByEmail.get(email) ?? [],
+      issueCountByEmail.get(email) ?? 0,
     ),
   )
 
@@ -555,7 +567,10 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
       ? Math.round(procValues.reduce((a, b) => a + b, 0) / procValues.length)
       : null
 
-  const completions = await fetchBetaMasterCompletionsForEmail(normalized)
+  const [completions, reportedIssues] = await Promise.all([
+    fetchBetaMasterCompletionsForEmail(normalized),
+    fetchBetaIssuesForEmail(normalized),
+  ])
 
   const activityDates = new Set<string>()
   for (const iso of [
@@ -563,6 +578,7 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     ...userSupport.map((s) => s.created_at),
     ...userJobs.map((j) => j.created_at),
     ...completions.map((c) => c.completed_at),
+    ...reportedIssues.map((i) => i.created_at),
   ]) {
     activityDates.add(dateKey(iso))
   }
@@ -575,14 +591,7 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
   const featureRequests = userFeedback
     .flatMap((f) => [f.survey.oneChange, f.survey.worthPaying].map((s) => s?.trim()))
     .filter((s): s is string => Boolean(s))
-  const bugsReported = [
-    ...userSupport
-      .filter((s) => /bug|error|crash|broken|glitch/i.test(`${s.subject} ${s.category ?? ""}`))
-      .map((s) => s.subject.trim()),
-    ...userFeedback
-      .map((f) => f.survey.additional?.trim())
-      .filter((s): s is string => Boolean(s && /bug|error|crash|broken|glitch/i.test(s))),
-  ]
+  const issuesReported = reportedIssues.map((i) => i.title)
 
   const recommendTrend = userFeedback
     .slice()
@@ -605,14 +614,14 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     jobs,
     inviteMap.get(normalized) ?? 0,
     completions,
+    reportedIssues.length,
   )
   const userExports = await fetchExportsForEmail(normalized)
   const pipelineUploads = await fetchPipelineUploadsForSessions(sessions)
-  const bugReportCount = countBugReports(userFeedback, userSupport)
   const badges = computeBetaBadges({
     masterCount: list.masterCount,
     feedbackCount: list.feedbackCount,
-    bugReportCount,
+    issueReportCount: list.issueReportCount,
     engagementLevel: list.engagementLevel,
     betaRank: profile?.beta_rank,
   })
@@ -624,6 +633,11 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     userSupport,
     exports: userExports,
     completions,
+    issues: reportedIssues.map((i) => ({
+      id: i.id,
+      title: i.title,
+      created_at: i.created_at,
+    })),
   })
 
   return {
@@ -647,8 +661,7 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     ),
     missingFeatures,
     featureRequests,
-    bugsReported,
-    bugReportCount,
+    issuesReported,
     recommendTrend,
     supportIssues,
   }
@@ -661,26 +674,6 @@ export async function fetchBetaDashboardSummary(): Promise<BetaDashboardSummary 
   const [feedback, support] = await Promise.all([fetchAdminFeedback(), fetchAdminSupport()])
   if (isFetchError(feedback)) return feedback
   if (isFetchError(support)) return support
-
-  const bugCountByEmail = new Map<string, number>()
-  const feedbackByEmail = new Map<string, number>()
-
-  for (const row of feedback) {
-    const e = row.contact_email?.trim().toLowerCase()
-    if (!e) continue
-    feedbackByEmail.set(e, (feedbackByEmail.get(e) ?? 0) + 1)
-    const list = bugCountByEmail.get(e) ?? 0
-    const extra = row.survey.additional?.trim()
-    if (extra && /bug|error|crash|broken|glitch/i.test(extra)) {
-      bugCountByEmail.set(e, list + 1)
-    }
-  }
-  for (const row of support) {
-    const e = row.email.trim().toLowerCase()
-    if (/bug|error|crash|broken|glitch/i.test(`${row.subject} ${row.category ?? ""}`)) {
-      bugCountByEmail.set(e, (bugCountByEmail.get(e) ?? 0) + 1)
-    }
-  }
 
   const mostActive = [...users]
     .sort((a, b) => b.engagementScore - a.engagementScore)
@@ -709,15 +702,17 @@ export async function fetchBetaDashboardSummary(): Promise<BetaDashboardSummary 
     .slice(0, 5)
     .map((u) => ({ email: u.email, name: u.name, feedbackCount: u.feedbackCount }))
 
-  const topBugReporters = [...bugCountByEmail.entries()]
-    .sort((a, b) => b[1] - a[1])
+  const topIssueReporters = [...users]
+    .filter((u) => u.issueReportCount > 0)
+    .sort((a, b) => b.issueReportCount - a.issueReportCount)
     .slice(0, 5)
-    .map(([email, bugReportCount]) => {
-      const u = users.find((r) => r.email === email)
-      return { email, name: u?.name ?? null, bugReportCount }
-    })
+    .map((u) => ({
+      email: u.email,
+      name: u.name,
+      issueReportCount: u.issueReportCount,
+    }))
 
-  return { mostActive, recentSignups, topFeedbackContributors, topBugReporters }
+  return { mostActive, recentSignups, topFeedbackContributors, topIssueReporters }
 }
 
 export async function updateBetaProfileAdmin(

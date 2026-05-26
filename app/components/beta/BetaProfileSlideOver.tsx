@@ -9,6 +9,7 @@ import {
   BETA_PROFILE_REFRESH_EVENT,
 } from "../../../lib/betaMasterTrackingClient"
 import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
+import BetaReportIssueSection from "./BetaReportIssueSection"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 const PANEL_MS = 0.28
@@ -264,7 +265,7 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
                             ["Masters", panel.activity.mastersCompleted],
                             ["Downloads", panel.activity.downloads],
                             ["Feedback", panel.activity.feedbackSubmitted],
-                            ["Bug reports", panel.activity.bugReports],
+                            ["Issues reported", panel.activity.issuesReported],
                             ["Active days", panel.activity.activeDays],
                           ] as const
                         ).map(([label, value]) => (
@@ -310,6 +311,13 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
                             </ul>
                           </div>
                         ) : null}
+                      </DashboardCard>
+                    </div>
+
+                    <div>
+                      <SectionHeading>Report issue</SectionHeading>
+                      <DashboardCard>
+                        <BetaReportIssueSection variant="inline" />
                       </DashboardCard>
                     </div>
 

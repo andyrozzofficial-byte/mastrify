@@ -125,7 +125,7 @@ export default function AdminBetaUserProfilePage() {
           <BetaRankProgressCard
             rankProgress={profile.rankProgress}
             rewardStatus={profile.rewardStatus}
-            bugReportCount={profile.bugReportCount}
+            issueReportCount={profile.issueReportCount}
             betaPoints={profile.betaPoints}
           />
           <AdminCard>

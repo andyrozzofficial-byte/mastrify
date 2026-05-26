@@ -6,12 +6,12 @@ import { AdminCard, BetaRankBadge } from "./admin-shared"
 export function BetaRankProgressCard({
   rankProgress,
   rewardStatus,
-  bugReportCount,
+  issueReportCount,
   betaPoints,
 }: {
   rankProgress: BetaRankProgress
   rewardStatus: string
-  bugReportCount: number
+  issueReportCount: number
   betaPoints: number
 }) {
   const { rankLabel, points, nextRankLabel, pointsToNext, nextThreshold, progressPct } = rankProgress
@@ -80,8 +80,8 @@ export function BetaRankProgressCard({
       </div>
 
       <div className="mt-4 flex items-center justify-between text-xs text-white/50">
-        <span>Bug reports</span>
-        <span className="tabular-nums font-medium text-white/80">{bugReportCount}</span>
+        <span>Issues reported</span>
+        <span className="tabular-nums font-medium text-white/80">{issueReportCount}</span>
       </div>
     </AdminCard>
   )

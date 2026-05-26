@@ -168,6 +168,7 @@ export type BetaTimelineEventType =
   | "feedback"
   | "support"
   | "download"
+  | "issue"
 
 export type BetaTimelineEvent = {
   id: string
@@ -196,7 +197,7 @@ export type BetaUserListRow = {
   masterCount: number
   feedbackCount: number
   supportCount: number
-  bugReportCount: number
+  issueReportCount: number
   avgRecommend: number | null
   topStyle: string | null
   topIssue: string | null
@@ -226,8 +227,7 @@ export type BetaUserProfile = BetaUserListRow & {
   issueTags: BetaUserTagCount[]
   missingFeatures: string[]
   featureRequests: string[]
-  bugsReported: string[]
-  bugReportCount: number
+  issuesReported: string[]
   recommendTrend: { date: string; score: number }[]
   supportIssues: BetaUserTagCount[]
 }
@@ -236,7 +236,7 @@ export type BetaDashboardSummary = {
   mostActive: { email: string; name: string | null; engagementScore: number; engagementLevel: BetaEngagementLevel }[]
   recentSignups: { email: string; name: string | null; signupDate: string; betaRank: string }[]
   topFeedbackContributors: { email: string; name: string | null; feedbackCount: number }[]
-  topBugReporters: { email: string; name: string | null; bugReportCount: number }[]
+  topIssueReporters: { email: string; name: string | null; issueReportCount: number }[]
 }
 
 export type AdminJobRow = {
