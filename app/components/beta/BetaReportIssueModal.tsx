@@ -124,7 +124,7 @@ export default function BetaReportIssueModal({ open, onClose }: Props) {
   if (!portalReady || !open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center">
+    <div className="fixed inset-0 z-[250] flex items-end justify-center sm:items-center">
       <button
         type="button"
         className="absolute inset-0 bg-black/72 backdrop-blur-sm"

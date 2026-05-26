@@ -34,7 +34,11 @@ export default function BetaReportIssueSection({ className = "", variant = "card
         aria-label="Report issue"
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="min-w-0 flex-1 text-left transition hover:opacity-90"
+          >
             <p className="text-[15px] font-semibold text-white/92">
               <span aria-hidden>🐞 </span>
               Report Issue
@@ -42,7 +46,7 @@ export default function BetaReportIssueSection({ className = "", variant = "card
             <p className="mt-1 text-[13px] leading-snug text-white/52">
               Found a problem? Tell us what happened and earn +2 Insider points.
             </p>
-          </div>
+          </button>
           <button
             type="button"
             onClick={() => setOpen(true)}
