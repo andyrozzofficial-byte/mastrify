@@ -6,8 +6,6 @@ import MarketingDesktopHero from "../components/cinematic/MarketingDesktopHero"
 import MarketingPageFrame from "../components/cinematic/MarketingPageFrame"
 import PremiumButton from "../components/PremiumButton"
 
-const dawLogos = ["Ableton Live", "FL Studio", "Logic Pro", "Pro Tools", "Studio One"]
-
 export default function Landing() {
   return (
     <MarketingPageFrame scrollSafe>
@@ -76,21 +74,6 @@ export default function Landing() {
             </PremiumButton>
           </div>
 
-          <div className="mx-auto mt-10 max-w-[920px] sm:mt-14 md:mt-[3.75rem] lg:mt-10">
-            <div className="trust-band">
-              <p className="trust-band-kicker">Seamless with your studio</p>
-              <h3 className="trust-band-heading">Trusted by producers and artists worldwide</h3>
-              <div className="trust-daw-row" aria-label="Supported digital audio workstations">
-                <ul className="trust-daw-list">
-                  {dawLogos.map((name) => (
-                    <li key={name} className="trust-daw-item">
-                      <span className="trust-daw-label">{name}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
     </MarketingPageFrame>

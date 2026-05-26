@@ -26,7 +26,7 @@ const legal = [
 
 function FooterLinkList({ links }: { links: readonly { href: string; label: string }[] }) {
   return (
-    <ul className="footer-column-links mt-2 flex flex-col space-y-0.5 sm:mt-3 sm:space-y-1 md:mt-4 md:space-y-2">
+    <ul className="footer-column-links mt-3 flex flex-col space-y-0.5 sm:mt-3 sm:space-y-1 md:mt-5 md:space-y-2">
       {links.map(({ href, label }) => (
         <li key={href + label}>
           <Link href={href} className="footer-tap-link">
@@ -177,7 +177,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="footer-nav-columns w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:max-w-[20rem] md:grid-cols-3 md:gap-x-4 md:gap-y-4 lg:col-span-3 lg:max-w-[18rem] lg:justify-self-center xl:col-span-3 xl:max-w-[19rem]"
+            className="footer-nav-columns w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-3 md:items-start md:gap-x-12 md:gap-y-0 md:max-w-[28rem] lg:col-span-3 lg:max-w-[30rem] xl:col-span-3 xl:max-w-[34rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
