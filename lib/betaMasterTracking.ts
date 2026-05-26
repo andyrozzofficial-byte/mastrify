@@ -1,5 +1,6 @@
-import { BETA_FEEDBACK_TABLE, MASTERED_EXPORTS_TABLE, PIPELINE_EVENTS_TABLE } from "./adminData"
+import { MASTERED_EXPORTS_TABLE, PIPELINE_EVENTS_TABLE } from "./adminData"
 import { normalizeBetaEmail } from "./betaAccess"
+import { BETA_FEEDBACK_TABLE } from "./betaFeedbackDb"
 import { createSupabaseServerClient } from "./supabaseServer"
 
 export const BETA_MASTER_COMPLETIONS_TABLE = "beta_master_completions"
