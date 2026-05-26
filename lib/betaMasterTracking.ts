@@ -237,15 +237,39 @@ export async function recordBetaMasterCompletion(
   const { error } = await supabase.from(BETA_MASTER_COMPLETIONS_TABLE).insert(row)
   if (error) {
     if (/duplicate|unique/i.test(error.message)) {
-      logBeta("master already counted", { sessionId })
-      return { ok: true, created: false, alreadyCounted: true }
-    }
-    if (/does not exist|42P01/i.test(error.message)) {
+      const { data: existing } = await supabase
+        .from(BETA_MASTER_COMPLETIONS_TABLE)
+        .select("email")
+        .eq("session_id", sessionId)
+        .maybeSingle()
+      if (existing?.email && normalizeBetaEmail(String(existing.email)) === email) {
+        logBeta("master already counted", { sessionId, email })
+        return { ok: true, created: false, alreadyCounted: true }
+      }
+      logBeta("completions session_id conflict — retrying with email-scoped id", {
+        sessionId,
+        email,
+        existingEmail: existing?.email ?? null,
+      })
+      const scopedSessionId = `${sessionId}::${email}`
+      const retry = await supabase.from(BETA_MASTER_COMPLETIONS_TABLE).insert({
+        ...row,
+        session_id: scopedSessionId,
+      })
+      if (!retry.error) {
+        tableWriteOk = true
+        logBeta("master completed (scoped session_id)", { sessionId: scopedSessionId, email })
+      } else if (/duplicate|unique/i.test(retry.error.message)) {
+        return { ok: true, created: false, alreadyCounted: true }
+      } else {
+        logBeta("completions scoped insert failed", { message: retry.error.message, email })
+      }
+    } else if (/does not exist|42P01/i.test(error.message)) {
       logBeta("completions table missing — apply beta_master_completions migration", {
         sessionId,
         email,
       })
-    } else {
+    } else if (!tableWriteOk) {
       logBeta("completions table insert failed", { message: error.message, sessionId, email })
     }
   } else {

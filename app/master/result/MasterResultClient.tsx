@@ -232,20 +232,22 @@ export default function MasterResultClient() {
   useEffect(() => {
     if (!mounted || !betaFeedbackOn || !isBetaUser) return
     if (!masteredUrl?.trim()) return
-    if (masterCompletionReportedRef.current) return
 
     const trackingSessionId = ensureSessionId()
     const objectKey =
       masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl) || null
-    const email = getStoredBetaEmail() || deliveryEmail.trim() || undefined
+    const reporterEmail = getBetaReporterEmail(getStoredBetaEmail(), deliveryEmail)
+    const completionKey = `${trackingSessionId}:${reporterEmail || "pending-email"}`
+    if (masterCompletionReportedRef.current === completionKey) return
+    if (!reporterEmail.includes("@")) return
 
-    masterCompletionReportedRef.current = true
     void (async () => {
       const ok = await reportBetaMasterCompleted(
         {
           sessionId: trackingSessionId,
           objectKey,
-          email,
+          email: reporterEmail,
+          deliveryEmail: deliveryEmail.trim() || undefined,
           trackName: file?.name ?? trackName ?? null,
           masteringStyle: masteringStyleLabel(stylePreset),
           processingTimeMs,

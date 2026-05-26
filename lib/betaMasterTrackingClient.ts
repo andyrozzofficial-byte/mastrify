@@ -74,6 +74,12 @@ export async function registerBetaMasterComplete(
     payload.deliveryEmail,
   )
 
+  console.log("[beta] POST /api/beta/master/complete", {
+    sessionId,
+    email: email.includes("@") ? email : "(missing — cookie required)",
+    objectKey: payload.objectKey ?? null,
+  })
+
   try {
     const res = await fetch("/api/beta/master/complete", {
       method: "POST",
@@ -110,7 +116,9 @@ export async function registerBetaMasterComplete(
     if (json?.alreadyCounted) logBeta("master already counted")
     else if (json?.created) logBeta("master completed")
 
-    markClientBetaMasterComplete(sessionId)
+    if (json?.created || json?.alreadyCounted) {
+      markClientBetaMasterComplete(sessionId)
+    }
     applyPanelUpdate(json?.panel)
 
     return {

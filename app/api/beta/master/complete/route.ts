@@ -3,6 +3,8 @@ import { NextResponse } from "next/server"
 import { normalizeBetaEmail } from "../../../../../lib/betaAccess"
 import { isBetaFeedbackEnabled } from "../../../../../lib/betaFeedbackFeature"
 import {
+  countBetaMastersForEmail,
+  fetchBetaMasterCompletionsForEmail,
   recordBetaMasterCompletion,
   resolveBetaMasterCompletionSessionId,
 } from "../../../../../lib/betaMasterTracking"
@@ -54,6 +56,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Beta email required" }, { status: 401 })
   }
 
+  const completionsBefore = await fetchBetaMasterCompletionsForEmail(email)
+  console.log("[beta-api] master complete: request", {
+    email,
+    sessionId,
+    objectKey: body.objectKey ?? null,
+    completionsBefore: completionsBefore.length,
+    supabase: getSupabaseEnvStatus(),
+  })
+
   const result = await recordBetaMasterCompletion({
     email,
     sessionId,
@@ -65,12 +76,28 @@ export async function POST(request: Request) {
   })
 
   if ("error" in result) {
+    console.error("[beta-api] master complete: record failed", {
+      email,
+      sessionId,
+      error: result.error,
+    })
     return NextResponse.json({ error: result.error }, { status: 500 })
   }
 
   if (result.created) {
     await syncBetaProfileFromActivity(email)
   }
+
+  const completionsAfter = await fetchBetaMasterCompletionsForEmail(email)
+  const masterCount = await countBetaMastersForEmail(email)
+  console.log("[beta-api] master complete: result", {
+    email,
+    sessionId,
+    created: result.created,
+    alreadyCounted: result.alreadyCounted,
+    completionsAfter: completionsAfter.length,
+    masterCount,
+  })
 
   const betaUi = await getBetaMasteringUiStateForEmail(email)
   const panelResult = await fetchBetaProfilePanelForEmail(email)
@@ -81,5 +108,7 @@ export async function POST(request: Request) {
     alreadyCounted: result.alreadyCounted,
     betaUi,
     panel: "error" in panelResult ? null : panelResult.panel,
+    masterCount,
+    completionsCount: completionsAfter.length,
   })
 }

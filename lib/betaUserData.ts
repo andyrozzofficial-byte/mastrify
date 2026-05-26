@@ -108,8 +108,29 @@ function tagCountsFromArrays(arrays: string[][]): BetaUserTagCount[] {
     .sort((a, b) => b.count - a.count)
 }
 
-function countCompletedMasters(completions: BetaMasterCompletionRow[]): number {
-  return completions.length
+/** Count masters from completions table (+ pipeline merge). Fallback: completed feedback-synced jobs. */
+function countCompletedMasters(
+  completions: BetaMasterCompletionRow[],
+  userJobs: AdminJobRow[] = [],
+  email = "",
+): number {
+  const sessions = new Set(
+    completions.map((c) => c.session_id).filter((sid): sid is string => Boolean(sid?.trim())),
+  )
+  let count = sessions.size
+  const normalized = email.trim().toLowerCase()
+  if (!normalized.includes("@")) return count
+
+  for (const job of userJobs) {
+    if (job.status !== "complete") continue
+    if (job.source === "feedback") continue
+    if (job.user_email?.trim().toLowerCase() !== normalized) continue
+    const sid = job.session_id?.trim()
+    if (!sid || sessions.has(sid)) continue
+    sessions.add(sid)
+    count++
+  }
+  return count
 }
 
 /** Count signups that stored `referred_by:<email>` in profile notes (no extra tables). */
@@ -165,7 +186,7 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
     userSupport,
     jobs,
     inviteMap.get(normalized) ?? 0,
-    countCompletedMasters(completions),
+    countCompletedMasters(completions, jobs, normalized),
     issueReportCount,
   )
   const points = calcBetaPoints(counts)
@@ -390,7 +411,7 @@ function buildListRow(
 
   const soundedOff = userFeedback.flatMap((f) => f.survey.soundedOff ?? [])
   const styles = userFeedback.map((f) => f.mastering_style)
-  const masterCount = countCompletedMasters(completions)
+  const masterCount = countCompletedMasters(completions, jobs, email)
   const activeDaySet = new Set<string>()
   for (const iso of lastTimes) activeDaySet.add(dateKey(iso))
   if (profile?.beta_signed_up_at) activeDaySet.add(dateKey(profile.beta_signed_up_at))
