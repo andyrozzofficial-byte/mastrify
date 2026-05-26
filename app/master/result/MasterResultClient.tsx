@@ -38,9 +38,7 @@ import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
-import BetaDownloadRewardToast from "../../components/master/BetaDownloadRewardToast"
 import BetaMasterFeedback from "../../components/master/BetaMasterFeedback"
-import BetaResultCompleteCelebration from "../../components/master/BetaResultCompleteCelebration"
 import BetaMasterStatusCard from "../../components/master/BetaMasterStatusCard"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
@@ -147,8 +145,6 @@ export default function MasterResultClient() {
   const [deliverySending, setDeliverySending] = useState(false)
   const [deliveryError, setDeliveryError] = useState("")
   const [feedbackDismissed, setFeedbackDismissed] = useState(false)
-  const [downloadToastVisible, setDownloadToastVisible] = useState(false)
-  const [showRewardCelebration, setShowRewardCelebration] = useState(false)
   const betaFeedbackOn = isBetaFeedbackEnabled()
   const showBetaRewards = betaFeedbackOn && isBetaUser && Boolean(betaUi)
 
@@ -203,13 +199,7 @@ export default function MasterResultClient() {
   useEffect(() => {
     if (!mounted || !showBetaRewards) return
     void refreshAccess({ silent: true })
-    const key = `mastrify:beta-result-celebration:${sessionId || "session"}`
-    try {
-      if (!sessionStorage.getItem(key)) setShowRewardCelebration(true)
-    } catch {
-      setShowRewardCelebration(true)
-    }
-  }, [mounted, showBetaRewards, refreshAccess, sessionId])
+  }, [mounted, showBetaRewards, refreshAccess])
 
   const masterCompletionReportedRef = useRef(false)
 
@@ -218,7 +208,7 @@ export default function MasterResultClient() {
     if (!masteredUrl?.trim()) return
     if (masterCompletionReportedRef.current) return
 
-    const email = deliveryEmail.trim() || getStoredBetaEmail()
+    const email = getStoredBetaEmail() || deliveryEmail.trim()
     if (!email?.includes("@")) return
 
     masterCompletionReportedRef.current = true
@@ -262,16 +252,6 @@ export default function MasterResultClient() {
     refreshAccess,
     applyBetaSession,
   ])
-
-  const handleRewardCelebrationComplete = useCallback(() => {
-    const key = `mastrify:beta-result-celebration:${sessionId || "session"}`
-    try {
-      sessionStorage.setItem(key, "1")
-    } catch {
-      /* ignore */
-    }
-    setShowRewardCelebration(false)
-  }, [sessionId])
 
   const originalPreviewUrl = useMemo(() => normalizePlaybackUrl(audioUrl), [audioUrl])
   const masteredWavUrl = useMemo(() => normalizePlaybackUrl(masteredUrl), [masteredUrl])
@@ -795,26 +775,8 @@ export default function MasterResultClient() {
     runIfAllowed(() => {
       setDeliveryOpen(true)
       setDeliveryError("")
-      if (showBetaRewards && !downloadReportedRef.current) {
-        downloadReportedRef.current = true
-        setDownloadToastVisible(true)
-        void reportBetaMasterDownload(
-          {
-            objectKey: masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl),
-            sessionId,
-            email: deliveryEmail.trim() || getStoredBetaEmail(),
-            trackTitle: file?.name || trackName || "",
-            expiresAt: masterExpiresAt || null,
-          },
-          { refreshAccess },
-        )
-      }
     })
   }
-
-  const dismissDownloadToast = useCallback(() => {
-    setDownloadToastVisible(false)
-  }, [])
 
   const handleEmailDelivery = () => {
     runIfAllowed(() => {
@@ -979,14 +941,8 @@ export default function MasterResultClient() {
 
   return (
     <>
-      <BetaDownloadRewardToast visible={downloadToastVisible} onDismiss={dismissDownloadToast} />
-
       <motion.div className="page-container product-flow-page-bottom product-result-page master-result-shell relative min-w-0">
         <div className="master-result-rail">
-          {showBetaRewards && betaUi ? (
-            <BetaMasterStatusCard className="master-result-insider" variant="result" />
-          ) : null}
-
           <motion.header
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1053,10 +1009,6 @@ export default function MasterResultClient() {
               </motion.div>
             ) : null}
           </motion.header>
-
-      {showBetaRewards && betaUi && showRewardCelebration ? (
-        <BetaResultCompleteCelebration points={betaUi.points} onComplete={handleRewardCelebrationComplete} />
-      ) : null}
 
       <motion.div
         initial={{ opacity: 0, y: 18 }}
@@ -1271,6 +1223,10 @@ export default function MasterResultClient() {
           </Link>
         </div>
       </motion.section>
+
+      {showBetaRewards && betaUi ? (
+        <BetaMasterStatusCard className="master-result-insider" variant="result" />
+      ) : null}
 
       {betaFeedbackOn && isBetaUser && isPlayableMediaUrl(masteredPlayback.url) ? (
         <div className="master-result-feedback">

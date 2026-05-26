@@ -103,6 +103,29 @@ export async function POST(request: Request) {
   const row = sanitizeBetaFeedbackInsert(buildBetaFeedbackRow(body))
   const keySource = getSupabaseKeySource()
 
+  const sessionId = row.session_id?.trim()
+  if (sessionId) {
+    const { data: existingFeedback } = await supabase
+      .from(BETA_FEEDBACK_TABLE)
+      .select("id")
+      .eq("session_id", sessionId)
+      .maybeSingle()
+
+    if (existingFeedback?.id) {
+      logBeta("feedback already counted for session", { sessionId })
+      const store = await cookies()
+      const cookieEmail = (await resolveBetaEmailFromCookies(store)) || null
+      const profileEmail = body.contactEmail?.trim() || cookieEmail
+      if (profileEmail) await syncBetaProfileFromActivity(profileEmail)
+      return NextResponse.json({
+        ok: true,
+        success: true,
+        id: existingFeedback.id,
+        alreadyCounted: true,
+      })
+    }
+  }
+
   logBeta("Supabase insert payload", {
     table: `public.${BETA_FEEDBACK_TABLE}`,
     url: getSupabaseUrl(),

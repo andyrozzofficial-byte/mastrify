@@ -2,7 +2,6 @@
 
 import { motion, useReducedMotion } from "framer-motion"
 import { useBetaMasteringGate } from "../beta/BetaMasteringGateProvider"
-import BetaResultRewardStrip from "./BetaResultRewardStrip"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -40,6 +39,7 @@ export default function BetaMasterStatusCard({
   if (checking || !isBeta) return null
 
   const rankLabel = betaUi?.rankLabel ?? "Explorer"
+  const points = betaUi?.points ?? 0
   const progressTitle = betaUi?.progressTitle ?? "INSIDER PROGRESS"
   const progressLabel = betaUi?.progressLabel ?? "—"
   const progressPct = betaUi?.progressPct ?? 0
@@ -59,7 +59,11 @@ export default function BetaMasterStatusCard({
         aria-hidden
       />
 
-      <div className="product-surface-card relative overflow-hidden px-4 py-3.5 sm:px-5 sm:py-4">
+      <div
+        className={`product-surface-card relative overflow-hidden px-4 sm:px-5 ${
+          isResult ? "py-4 sm:py-5" : "py-3.5 sm:py-4"
+        }`}
+      >
         <div
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(124,58,237,0.06),transparent_70%)]"
           aria-hidden
@@ -95,7 +99,16 @@ export default function BetaMasterStatusCard({
               <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/45 sm:text-[10px]">
                 {progressTitle}
               </p>
-              <p className="shrink-0 text-[12px] font-semibold tabular-nums text-violet-100/95 sm:text-[13px]">
+              <div className="text-right">
+                <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-white/38">Points</p>
+                <p className="text-[12px] font-semibold tabular-nums text-violet-100/95 sm:text-[13px]">
+                  {points}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-[10px] text-white/48">Progress</p>
+              <p className="shrink-0 text-[11px] font-medium tabular-nums text-white/72 sm:text-[12px]">
                 {progressLabel}
               </p>
             </div>
@@ -114,9 +127,7 @@ export default function BetaMasterStatusCard({
             </div>
           </div>
 
-          {isResult ? <BetaResultRewardStrip /> : null}
-
-          {!isResult && earnWays.length > 0 ? (
+          {earnWays.length > 0 ? (
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/38 sm:text-[10px]">
                 Ways to earn

@@ -63,7 +63,7 @@ function extractAdminDiscountCodes(notes: string | null): string[] {
 }
 
 function panelActivityLabel(event: BetaTimelineEvent): string {
-  if (event.type === "master") return "Completed master"
+  if (event.type === "master") return "Master completed"
   if (event.type === "feedback") return "Feedback submitted"
   if (event.type === "download") return "Master downloaded"
   if (event.type === "signup") return "Joined beta"

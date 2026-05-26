@@ -112,7 +112,7 @@ export function buildBetaTimeline(input: {
     events.push({
       id: `signup-${input.signupAt}`,
       type: "signup",
-      label: "Signed up for beta",
+      label: "Joined beta",
       detail: null,
       created_at: input.signupAt,
       href: null,
@@ -136,7 +136,7 @@ export function buildBetaTimeline(input: {
     events.push({
       id: `master-complete-${c.session_id}`,
       type: "master",
-      label: "Completed master",
+      label: "Master completed",
       detail: c.track_name ?? c.mastering_style,
       created_at: c.completed_at,
       href: null,
@@ -149,7 +149,7 @@ export function buildBetaTimeline(input: {
     events.push({
       id: `master-${j.id}`,
       type: "master",
-      label: "Completed master",
+      label: "Master completed",
       detail: j.track_name ?? j.mastering_style,
       created_at: j.created_at,
       href: `/admin/jobs`,
@@ -160,7 +160,7 @@ export function buildBetaTimeline(input: {
     events.push({
       id: `feedback-${f.id}`,
       type: "feedback",
-      label: "Submitted feedback",
+      label: "Feedback submitted",
       detail: f.track_name ?? `Recommend ${f.recommend_score}/10`,
       created_at: f.created_at,
       href: `/admin/feedback/${f.id}`,
@@ -168,10 +168,11 @@ export function buildBetaTimeline(input: {
   }
 
   for (const s of input.userSupport) {
+    const isBug = /bug|error|crash|broken|glitch/i.test(`${s.subject} ${s.category ?? ""}`)
     events.push({
       id: `support-${s.id}`,
       type: "support",
-      label: "Created support ticket",
+      label: isBug ? "Bug reported" : "Support ticket",
       detail: s.subject,
       created_at: s.created_at,
       href: `/admin/support/${s.id}`,
@@ -182,7 +183,7 @@ export function buildBetaTimeline(input: {
     events.push({
       id: `download-${ex.id}`,
       type: "download",
-      label: "Downloaded master",
+      label: "Master downloaded",
       detail: ex.track_title ?? null,
       created_at: ex.created_at,
       href: null,

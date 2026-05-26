@@ -4,6 +4,12 @@ import { getStoredBetaEmail } from "./betaSessionStorage"
 import type { BetaMasteringUiState } from "./betaPoints"
 import type { BetaProfilePanelData } from "./betaProfilePanel"
 import { resolveBetaDownloadObjectKey } from "./betaMasterTracking"
+import {
+  hasClientReportedBetaDownload,
+  hasClientReportedBetaMasterComplete,
+  markClientBetaDownload,
+  markClientBetaMasterComplete,
+} from "./betaTrackingStorage"
 
 export type RegisterBetaMasterCompletePayload = {
   sessionId: string
@@ -60,6 +66,10 @@ export async function registerBetaMasterComplete(
     return { ok: false }
   }
 
+  if (hasClientReportedBetaMasterComplete(sessionId)) {
+    return { ok: true, alreadyCounted: true }
+  }
+
   try {
     const res = await fetch("/api/beta/master/complete", {
       method: "POST",
@@ -90,6 +100,8 @@ export async function registerBetaMasterComplete(
     if (json?.alreadyCounted) logBeta("master already counted")
     else if (json?.ok) logBeta("master completed")
 
+    if (json?.ok) markClientBetaMasterComplete(sessionId)
+
     applyPanelUpdate(json?.panel)
 
     return {
@@ -106,12 +118,21 @@ export async function registerBetaMasterComplete(
 
 export async function registerBetaMasterDownload(
   payload: RegisterBetaMasterDownloadPayload,
-): Promise<{ ok: boolean; panel?: BetaProfilePanelData | null }> {
+): Promise<{
+  ok: boolean
+  alreadyCounted?: boolean
+  panel?: BetaProfilePanelData | null
+}> {
   const email = payload.email?.trim() || getStoredBetaEmail()
+  const sessionId = payload.sessionId?.trim() || ""
   const objectKey = resolveBetaDownloadObjectKey(payload.objectKey, payload.sessionId)
   if (!email?.includes("@")) {
     console.warn("[beta] download skipped: no beta email")
     return { ok: false }
+  }
+
+  if (sessionId && hasClientReportedBetaDownload(sessionId)) {
+    return { ok: true, alreadyCounted: true }
   }
 
   try {
@@ -129,6 +150,7 @@ export async function registerBetaMasterDownload(
     })
     const json = (await res.json().catch(() => null)) as {
       ok?: boolean
+      alreadyCounted?: boolean
       error?: string
       panel?: BetaProfilePanelData | null
     } | null
@@ -136,9 +158,17 @@ export async function registerBetaMasterDownload(
       console.warn("[beta] download register failed", json?.error ?? res.status)
       return { ok: false }
     }
-    logBeta("download registered")
+    if (json?.alreadyCounted) logBeta("download already counted")
+    else logBeta("download registered")
+
+    if (json?.ok && sessionId) markClientBetaDownload(sessionId)
+
     applyPanelUpdate(json?.panel)
-    return { ok: Boolean(json?.ok), panel: json?.panel ?? null }
+    return {
+      ok: Boolean(json?.ok),
+      alreadyCounted: json?.alreadyCounted,
+      panel: json?.panel ?? null,
+    }
   } catch (err) {
     console.warn("[beta] download register request failed", err)
     return { ok: false }

@@ -260,15 +260,69 @@ export type RecordBetaMasterDownloadInput = {
   expiresAt?: string | null
 }
 
-export type RecordBetaMasterDownloadResult = { ok: true } | { error: string }
+export type RecordBetaMasterDownloadResult =
+  | { ok: true; created: true; alreadyCounted: false }
+  | { ok: true; created: false; alreadyCounted: true }
+  | { error: string }
+
+async function isBetaDownloadRecorded(
+  email: string,
+  objectKey: string,
+  sessionId: string,
+): Promise<boolean> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return false
+
+  const normalized = normalizeBetaEmail(email)
+
+  const { data: exportRow } = await supabase
+    .from(MASTERED_EXPORTS_TABLE)
+    .select("id")
+    .eq("email", normalized)
+    .eq("object_key", objectKey)
+    .maybeSingle()
+
+  if (exportRow?.id) return true
+
+  const sid = sessionId.trim()
+  if (!sid) return false
+
+  const sessionKey = `beta-session:${sid}`
+  if (objectKey !== sessionKey) {
+    const { data: sessionExport } = await supabase
+      .from(MASTERED_EXPORTS_TABLE)
+      .select("id")
+      .eq("email", normalized)
+      .eq("object_key", sessionKey)
+      .maybeSingle()
+    if (sessionExport?.id) return true
+  }
+
+  const { data: pipe } = await supabase
+    .from(PIPELINE_EVENTS_TABLE)
+    .select("id")
+    .eq("event_type", PIPELINE_EVENT_DOWNLOAD)
+    .eq("user_email", normalized)
+    .eq("session_id", sid)
+    .maybeSingle()
+
+  return Boolean(pipe?.id)
+}
 
 export async function recordBetaMasterDownload(
   input: RecordBetaMasterDownloadInput,
 ): Promise<RecordBetaMasterDownloadResult> {
   const email = normalizeBetaEmail(input.email)
   const objectKey = input.objectKey.trim()
+  const sessionId = input.sessionId?.trim() || ""
   if (!email.includes("@")) return { error: "email required" }
   if (!objectKey) return { error: "object_key required" }
+
+  const alreadyCounted = await isBetaDownloadRecorded(email, objectKey, sessionId)
+  if (alreadyCounted) {
+    logBeta("download already counted", { email, objectKey, sessionId })
+    return { ok: true, created: false, alreadyCounted: true }
+  }
 
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
@@ -291,7 +345,6 @@ export async function recordBetaMasterDownload(
     }
   }
 
-  const sessionId = input.sessionId?.trim() || ""
   const pipelineOk =
     sessionId.length > 0
       ? await writePipelineDownload({ email, sessionId, trackTitle: input.trackTitle })
@@ -305,7 +358,12 @@ export async function recordBetaMasterDownload(
   }
 
   logBeta("download registered", { email, objectKey, exportOk, pipelineOk })
-  return { ok: true }
+  return { ok: true, created: true, alreadyCounted: false }
+}
+
+function sessionIdFromExportObjectKey(objectKey: string): string | null {
+  const match = objectKey.match(/^beta-session:(.+)$/i)
+  return match?.[1]?.trim() || null
 }
 
 export async function countBetaDownloadsForEmail(email: string): Promise<number> {
@@ -313,18 +371,35 @@ export async function countBetaDownloadsForEmail(email: string): Promise<number>
   if (!supabase) return 0
 
   const normalized = normalizeBetaEmail(email)
+  const unique = new Set<string>()
+
   const [exportsRes, pipelineRes] = await Promise.all([
-    supabase.from(MASTERED_EXPORTS_TABLE).select("id", { count: "exact", head: true }).eq("email", normalized),
+    supabase
+      .from(MASTERED_EXPORTS_TABLE)
+      .select("object_key")
+      .eq("email", normalized)
+      .limit(500),
     supabase
       .from(PIPELINE_EVENTS_TABLE)
-      .select("id", { count: "exact", head: true })
+      .select("session_id")
       .eq("event_type", PIPELINE_EVENT_DOWNLOAD)
-      .eq("user_email", normalized),
+      .eq("user_email", normalized)
+      .limit(500),
   ])
 
-  const exportCount = exportsRes.count ?? 0
-  const pipelineCount = pipelineRes.count ?? 0
-  return Math.max(exportCount, pipelineCount)
+  for (const row of exportsRes.data ?? []) {
+    const key = String(row.object_key ?? "").trim()
+    if (!key) continue
+    const sid = sessionIdFromExportObjectKey(key)
+    unique.add(sid ? `session:${sid}` : `export:${key}`)
+  }
+
+  for (const row of pipelineRes.data ?? []) {
+    const sid = row.session_id ? String(row.session_id).trim() : ""
+    if (sid) unique.add(`session:${sid}`)
+  }
+
+  return unique.size
 }
 
 export function resolveBetaDownloadObjectKey(

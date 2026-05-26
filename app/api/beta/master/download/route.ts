@@ -7,7 +7,10 @@ import {
   resolveBetaDownloadObjectKey,
 } from "../../../../../lib/betaMasterTracking"
 import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
-import { fetchBetaProfilePanelForEmail } from "../../../../../lib/betaUserData"
+import {
+  fetchBetaProfilePanelForEmail,
+  syncBetaProfileFromActivity,
+} from "../../../../../lib/betaUserData"
 
 export async function POST(request: Request) {
   if (!isBetaFeedbackEnabled()) {
@@ -53,10 +56,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 500 })
   }
 
+  if (result.created) {
+    await syncBetaProfileFromActivity(email)
+  }
+
   const panelResult = await fetchBetaProfilePanelForEmail(email)
 
   return NextResponse.json({
     ok: true,
+    created: result.created,
+    alreadyCounted: result.alreadyCounted,
     panel: "error" in panelResult ? null : panelResult.panel,
   })
 }

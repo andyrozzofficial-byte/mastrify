@@ -28,7 +28,7 @@ export default function BetaFeedbackSuccessPanel({ onCreateAnother }: Props) {
 
       <p className="mt-3 text-[13px] font-semibold text-violet-200/90">+1 Insider point earned</p>
       <p className="mt-1 max-w-sm text-[12px] leading-snug text-white/50">
-        Your progress updates in the Insider card at the top of the page.
+        Your progress updates in the Insider card above.
       </p>
 
       <Link

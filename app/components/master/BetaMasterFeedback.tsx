@@ -317,12 +317,7 @@ export default function BetaMasterFeedback({
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
               <header className="text-center sm:text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/70">
-                  Step 3 of 3
-                </p>
-                <p className="mt-2 text-[11px] font-medium text-white/45">
-                  Analyze <span className="text-white/25">→</span> Master{" "}
-                  <span className="text-white/25">→</span>{" "}
-                  <span className="text-violet-200/90">Feedback</span>
+                  Step 3 of 3 — Analyze → Master → Feedback
                 </p>
                 <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:items-start sm:gap-3">
                   <span className="text-2xl leading-none" aria-hidden>
