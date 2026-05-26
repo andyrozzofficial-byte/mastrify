@@ -108,8 +108,19 @@ function tagCountsFromArrays(arrays: string[][]): BetaUserTagCount[] {
     .sort((a, b) => b.count - a.count)
 }
 
-/** Count masters from completions table (+ pipeline merge). Fallback: completed feedback-synced jobs. */
-function countCompletedMasters(
+/** Distinct sessions from beta_master_completions + pipeline (used for Insider points). */
+function countTrackedMasterCompletions(completions: BetaMasterCompletionRow[]): number {
+  const sessions = new Set(
+    completions.map((c) => c.session_id).filter((sid): sid is string => Boolean(sid?.trim())),
+  )
+  return sessions.size
+}
+
+/**
+ * Admin display count — matches legacy Beta Users (completed admin_master_jobs per email).
+ * Includes feedback-synced jobs when the dedicated completions table has no rows yet.
+ */
+function countAdminDisplayMasters(
   completions: BetaMasterCompletionRow[],
   userJobs: AdminJobRow[] = [],
   email = "",
@@ -123,11 +134,14 @@ function countCompletedMasters(
 
   for (const job of userJobs) {
     if (job.status !== "complete") continue
-    if (job.source === "feedback") continue
     if (job.user_email?.trim().toLowerCase() !== normalized) continue
     const sid = job.session_id?.trim()
-    if (!sid || sessions.has(sid)) continue
-    sessions.add(sid)
+    if (sid) {
+      if (sessions.has(sid)) continue
+      sessions.add(sid)
+      count++
+      continue
+    }
     count++
   }
   return count
@@ -186,7 +200,7 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
     userSupport,
     jobs,
     inviteMap.get(normalized) ?? 0,
-    countCompletedMasters(completions, jobs, normalized),
+    countTrackedMasterCompletions(completions),
     issueReportCount,
   )
   const points = calcBetaPoints(counts)
@@ -411,7 +425,8 @@ function buildListRow(
 
   const soundedOff = userFeedback.flatMap((f) => f.survey.soundedOff ?? [])
   const styles = userFeedback.map((f) => f.mastering_style)
-  const masterCount = countCompletedMasters(completions, jobs, email)
+  const trackedMasterCount = countTrackedMasterCompletions(completions)
+  const masterCount = countAdminDisplayMasters(completions, jobs, email)
   const activeDaySet = new Set<string>()
   for (const iso of lastTimes) activeDaySet.add(dateKey(iso))
   if (profile?.beta_signed_up_at) activeDaySet.add(dateKey(profile.beta_signed_up_at))
@@ -429,7 +444,7 @@ function buildListRow(
     userSupport,
     jobs,
     creatorInviteCount,
-    masterCount,
+    trackedMasterCount,
     issueReportCount,
   )
   const betaPoints = calcBetaPoints(counts)

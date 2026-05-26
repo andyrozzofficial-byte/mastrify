@@ -10,5 +10,14 @@ export async function GET() {
   if ("error" in data) {
     return NextResponse.json({ error: data.error }, { status: 500 })
   }
+  const sample = data[0]
+  if (sample) {
+    console.log("[admin-api] beta-users sample", {
+      email: sample.email,
+      betaPoints: sample.betaPoints,
+      masterCount: sample.masterCount,
+      feedbackCount: sample.feedbackCount,
+    })
+  }
   return NextResponse.json({ rows: data })
 }

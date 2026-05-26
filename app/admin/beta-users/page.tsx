@@ -26,7 +26,18 @@ export default function AdminBetaUsersPage() {
         setError(json?.error ?? "Could not load beta users")
         return
       }
-      setRows(json?.rows ?? [])
+      const loaded = (json?.rows ?? []) as BetaUserListRow[]
+      if (process.env.NODE_ENV === "development" && loaded.length > 0) {
+        const sample = loaded[0]
+        console.log("[admin] beta-users row sample", {
+          email: sample.email,
+          betaPoints: sample.betaPoints,
+          masterCount: sample.masterCount,
+          feedbackCount: sample.feedbackCount,
+          supportCount: sample.supportCount,
+        })
+      }
+      setRows(loaded)
     })()
   }, [])
 
