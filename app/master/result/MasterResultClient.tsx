@@ -38,9 +38,7 @@ import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
-import BetaFeedbackFlow from "../../components/master/BetaFeedbackFlow"
-import BetaFeedbackPulse from "../../components/master/BetaFeedbackPulse"
-import BetaPostMasterFeedback from "../../components/master/BetaPostMasterFeedback"
+import BetaMasterFeedback from "../../components/master/BetaMasterFeedback"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
@@ -143,10 +141,7 @@ export default function MasterResultClient() {
   const [deliveryOpen, setDeliveryOpen] = useState(false)
   const [deliverySending, setDeliverySending] = useState(false)
   const [deliveryError, setDeliveryError] = useState("")
-  const [masterEngaged, setMasterEngaged] = useState(false)
-  const [postMasterDismissed, setPostMasterDismissed] = useState(false)
-  const [showPreviewPulse, setShowPreviewPulse] = useState(false)
-  const masteredListenAccumRef = useRef(0)
+  const [feedbackDismissed, setFeedbackDismissed] = useState(false)
   const betaFeedbackOn = isBetaFeedbackEnabled()
 
   const originalAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -713,23 +708,8 @@ export default function MasterResultClient() {
     }
   }
 
-  const markMasterEngaged = useCallback(() => {
-    setMasterEngaged(true)
-    setShowPreviewPulse(true)
-  }, [])
-
-  useEffect(() => {
-    if (!betaFeedbackOn || !isPlaying || selectedSource !== "mastered") return
-    const id = window.setInterval(() => {
-      masteredListenAccumRef.current += 0.25
-      if (masteredListenAccumRef.current >= 10) markMasterEngaged()
-    }, 250)
-    return () => window.clearInterval(id)
-  }, [betaFeedbackOn, isPlaying, selectedSource, markMasterEngaged])
-
   const handleDownloadMaster = () => {
     runIfAllowed(() => {
-      markMasterEngaged()
       setDeliveryOpen(true)
       setDeliveryError("")
     })
@@ -769,7 +749,6 @@ export default function MasterResultClient() {
       }
       setDeliverySent(true)
       setDeliveryOpen(false)
-      markMasterEngaged()
     } catch (err) {
       setDeliveryError(err instanceof Error ? err.message : "Could not send email. Please try again.")
     } finally {
@@ -966,15 +945,6 @@ export default function MasterResultClient() {
         ) : null}
       </motion.header>
 
-      {betaFeedbackOn && isBetaUser && isPlayableMediaUrl(masteredPlayback.url) ? (
-        <BetaPostMasterFeedback
-          visible={!postMasterDismissed}
-          masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}
-          sessionAnalytics={feedbackSessionAnalytics}
-          onDismiss={() => setPostMasterDismissed(true)}
-        />
-      ) : null}
-
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1152,6 +1122,15 @@ export default function MasterResultClient() {
         </div>
       </motion.div>
 
+      {betaFeedbackOn && isBetaUser && isPlayableMediaUrl(masteredPlayback.url) ? (
+        <BetaMasterFeedback
+          visible={!feedbackDismissed}
+          masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}
+          sessionAnalytics={feedbackSessionAnalytics}
+          onDismiss={() => setFeedbackDismissed(true)}
+        />
+      ) : null}
+
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1232,25 +1211,6 @@ export default function MasterResultClient() {
             </div>
           </motion.div>
         </div>
-      ) : null}
-
-      {betaFeedbackOn && showPreviewPulse ? (
-        <div className="mx-auto w-full max-w-lg px-4 pb-4">
-          <BetaFeedbackPulse
-            stage="preview"
-            sessionId={feedbackSessionAnalytics.sessionId}
-            trackName={feedbackSessionAnalytics.trackName}
-            masteringStyle={feedbackSessionAnalytics.masteringStyle}
-          />
-        </div>
-      ) : null}
-
-      {betaFeedbackOn && isBetaUser ? (
-        <BetaFeedbackFlow
-          engaged={masterEngaged || isPlayableMediaUrl(masteredPlayback.url)}
-          masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}
-          sessionAnalytics={feedbackSessionAnalytics}
-        />
       ) : null}
 
       <motion.div
