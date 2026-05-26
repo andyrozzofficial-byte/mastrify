@@ -1,22 +1,23 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRef, useState } from "react"
 import CinematicPageShell from "../components/cinematic/CinematicPageShell"
+import MasterSettingsStep from "../components/master/MasterSettingsStep"
 import MasterUploadHero from "../components/master/MasterUploadHero"
 import { useMasterSession } from "./MasterSessionProvider"
 
 export default function MasterUploadPage() {
-  const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const continuingRef = useRef(false)
-  const { file, setFile, handleContinueToSettings, sessionHydrated, currentStep } = useMasterSession()
+  const {
+    getActiveUploadFile,
+    setFile,
+    handleContinueToSettings,
+    masterWorkflow,
+    sessionHydrated,
+  } = useMasterSession()
+  const file = getActiveUploadFile()
   const [continuing, setContinuing] = useState(false)
-
-  useEffect(() => {
-    if (!sessionHydrated || !file || currentStep < 2) return
-    router.replace("/master/settings")
-  }, [sessionHydrated, file, currentStep, router])
 
   function onContinueToSettingsClick() {
     if (continuingRef.current) return
@@ -24,13 +25,26 @@ export default function MasterUploadPage() {
     continuingRef.current = true
     setContinuing(true)
     try {
-      const ready = handleContinueToSettings()
-      if (!ready) return
-      router.push("/master/settings")
+      handleContinueToSettings()
     } finally {
       continuingRef.current = false
       setContinuing(false)
     }
+  }
+
+  if (!sessionHydrated) {
+    return (
+      <CinematicPageShell showBottomFade>
+        <div className="flex flex-col items-center justify-center gap-4 py-16">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
+          <p className="text-sm text-white/50">Restoring session…</p>
+        </div>
+      </CinematicPageShell>
+    )
+  }
+
+  if (masterWorkflow.step >= 2) {
+    return <MasterSettingsStep />
   }
 
   return (

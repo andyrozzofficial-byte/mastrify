@@ -166,7 +166,7 @@ export default function MasterProcessingPage() {
           (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "ERR_CANCELED")
         if (aborted) return
         alert("Mastering failed")
-        if (!cancelled) router.replace("/master/settings")
+        if (!cancelled) router.replace("/master")
       }
     }
 

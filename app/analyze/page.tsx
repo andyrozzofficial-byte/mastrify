@@ -160,7 +160,7 @@ function generateIssues(result: any) {
 
 export default function AnalyzePage() {
   const router = useRouter()
-  const { seedAnalyzeIntoMasterFlow } = useMasterSession()
+  const { seedAnalyzeIntoMasterFlow, handleContinueToSettings } = useMasterSession()
   const { runIfAllowed } = useBetaMasteringGate()
 
   const [showWaitlist, setShowWaitlist] = useState(false)
@@ -548,7 +548,8 @@ export default function AnalyzePage() {
               runIfAllowed(() => {
                 if (file && result) {
                   seedAnalyzeIntoMasterFlow(file, result as Record<string, unknown>)
-                  router.push("/master/settings")
+                  handleContinueToSettings()
+                  router.push("/master")
                 } else {
                   router.push("/master")
                 }

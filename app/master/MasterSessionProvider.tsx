@@ -16,7 +16,12 @@ import { isBetaFeedbackEnabled } from "../../lib/betaFeedbackFeature"
 import { formatTrackNameForAnalytics } from "../../lib/formatTrackNameForAnalytics"
 import { createMasterSessionId } from "../../lib/masterSessionId"
 import {
+  cacheMasterUploadFile,
+  getCachedMasterUploadFile,
+} from "../../lib/masterWorkflowFileStore"
+import {
   clearMasterWorkflowLocal,
+  fileToWorkflowMeta,
   isMasterWorkflowPhase,
   logMasterWorkflow,
   readMasterWorkflowLocal,
@@ -24,6 +29,7 @@ import {
   workflowPhaseFromStep,
   writeMasterWorkflowLocal,
   type MasterWorkflowPhase,
+  type MasterWorkflowState,
   type MasterWorkflowStep,
 } from "../../lib/masterWorkflow"
 import { readAudioDurationSec } from "../../lib/readAudioDurationSec"
@@ -107,6 +113,9 @@ type MasterSession = {
   /** 1 = Upload, 2 = Settings, 3 = Master */
   currentStep: MasterWorkflowStep
   setCurrentStep: (step: MasterWorkflowStep) => void
+  masterWorkflow: MasterWorkflowState
+  setMasterWorkflow: (workflow: MasterWorkflowState) => void
+  getActiveUploadFile: () => File | null
   /** Validate file, persist session, advance to settings step. */
   handleContinueToSettings: () => boolean
   /** @deprecated Use handleContinueToSettings */
@@ -144,7 +153,11 @@ function isPreset(x: unknown): x is MasterStylePreset {
 }
 
 export function MasterSessionProvider({ children }: { children: ReactNode }) {
-  const [file, setFileState] = useState<File | null>(null)
+  const [file, setFileState] = useState<File | null>(() => getCachedMasterUploadFile())
+  const [masterWorkflow, setMasterWorkflowState] = useState<MasterWorkflowState>({
+    step: 1,
+    uploadedFile: null,
+  })
   const [audioUrl, setAudioUrl] = useState("")
   const [masteredUrl, setMasteredUrl] = useState("")
   const [masteredPreviewMp3Url, setMasteredPreviewMp3Url] = useState("")
@@ -173,19 +186,65 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setCurrentStep(stepFromWorkflowPhase(phase))
   }, [])
 
-  const applyCurrentStep = useCallback((step: MasterWorkflowStep) => {
-    setCurrentStep(step)
-    setWorkflowPhaseState(workflowPhaseFromStep(step))
-  }, [])
+  const applyCurrentStep = useCallback(
+    (step: MasterWorkflowStep) => {
+      setCurrentStep(step)
+      setWorkflowPhaseState(workflowPhaseFromStep(step))
+      setMasterWorkflowState((prev) => {
+        const next = { ...prev, step }
+        writeMasterWorkflowLocal({
+          step,
+          uploadedFile: next.uploadedFile,
+          sessionId: sessionId || undefined,
+        })
+        return next
+      })
+    },
+    [sessionId],
+  )
+
+  const setMasterWorkflow = useCallback(
+    (workflow: MasterWorkflowState) => {
+      setMasterWorkflowState(workflow)
+      setCurrentStep(workflow.step)
+      setWorkflowPhaseState(workflowPhaseFromStep(workflow.step))
+      writeMasterWorkflowLocal({
+        step: workflow.step,
+        uploadedFile: workflow.uploadedFile,
+        sessionId: sessionId || undefined,
+      })
+    },
+    [sessionId],
+  )
+
+  const getActiveUploadFile = useCallback((): File | null => {
+    return file ?? getCachedMasterUploadFile()
+  }, [file])
+
+  const ensureUploadFileAttached = useCallback((): File | null => {
+    const active = file ?? getCachedMasterUploadFile()
+    if (!active) return null
+    if (!file) {
+      cacheMasterUploadFile(active)
+      setFileState(active)
+      setAudioUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return URL.createObjectURL(active)
+      })
+    }
+    return active
+  }, [file])
 
   const syncWorkflowLocal = useCallback(
     (step: MasterWorkflowStep, activeFile: File | null) => {
-      writeMasterWorkflowLocal({
-        step,
-        uploadedFile: activeFile
-          ? { name: activeFile.name, size: activeFile.size, lastModified: activeFile.lastModified }
-          : undefined,
-        sessionId: sessionId || undefined,
+      setMasterWorkflowState((prev) => {
+        const uploadedFile = activeFile ? fileToWorkflowMeta(activeFile) : prev.uploadedFile
+        writeMasterWorkflowLocal({
+          step,
+          uploadedFile,
+          sessionId: sessionId || undefined,
+        })
+        return { step, uploadedFile }
       })
     },
     [sessionId],
@@ -270,6 +329,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
 
   const setFile = useCallback(
     (f: File | null) => {
+      cacheMasterUploadFile(f)
       setFileState(f)
       setAudioUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev)
@@ -279,16 +339,22 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       setMasteredPreviewMp3Url("")
       setMasterObjectKey("")
       setMasterExpiresAt("")
-      setAnalysisBefore(null)
-      setAnalysisAfter(null)
       if (f) {
+        const uploadedFile = fileToWorkflowMeta(f)
         setStoredFileName(f.name)
         setWorkflowPhaseState("upload")
         setCurrentStep(1)
+        setMasterWorkflowState({ step: 1, uploadedFile })
         beginMasterSession(f)
-        syncWorkflowLocal(1, f)
+        writeMasterWorkflowLocal({
+          step: 1,
+          uploadedFile,
+          sessionId: sessionId || undefined,
+        })
         logMasterWorkflow("Upload complete", { fileName: f.name })
       } else {
+        setAnalysisBefore(null)
+        setAnalysisAfter(null)
         setSessionId("")
         setTrackDurationSec(null)
         setMasterLufs(null)
@@ -296,50 +362,65 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
         setStoredFileName("")
         setWorkflowPhaseState("upload")
         setCurrentStep(1)
+        setMasterWorkflowState({ step: 1, uploadedFile: null })
         clearMasterWorkflowLocal()
+      }
+      if (!f) {
+        setAnalysisBefore(null)
+        setAnalysisAfter(null)
       }
       clearMasterStorageKeys()
     },
-    [beginMasterSession, syncWorkflowLocal]
+    [beginMasterSession, sessionId]
   )
 
   const handleContinueToSettings = useCallback((): boolean => {
     console.log("onClick Continue settings")
-    console.log("uploadedFile exists:", Boolean(file))
+    const activeFile = ensureUploadFileAttached()
+    console.log("uploadedFile exists:", Boolean(activeFile))
     console.log("session exists:", Boolean(sessionId))
 
-    if (!file) {
+    if (!activeFile) {
       console.log("No uploaded file")
       logMasterWorkflow("Continue blocked — no file uploaded")
       return false
     }
 
-    setStoredFileName(file.name)
-    setWorkflowPhaseState("settings")
-    setCurrentStep(2)
+    const updated: MasterWorkflowState = {
+      step: 2,
+      uploadedFile: fileToWorkflowMeta(activeFile),
+    }
 
-    syncWorkflowLocal(2, file)
+    setStoredFileName(activeFile.name)
+    setMasterWorkflow(updated)
     persistSessionSnapshot({
       workflowPhase: "settings",
-      fileName: file.name,
+      fileName: activeFile.name,
       sessionId: sessionId || undefined,
     })
 
     console.log("navigate to settings")
-    logMasterWorkflow("Settings opened", { fileName: file.name, sessionId: sessionId || "(pending)" })
+    logMasterWorkflow("Settings opened", { fileName: activeFile.name, sessionId: sessionId || "(pending)" })
     return true
-  }, [file, sessionId, persistSessionSnapshot, syncWorkflowLocal])
+  }, [ensureUploadFileAttached, sessionId, persistSessionSnapshot, setMasterWorkflow])
 
   const reconnectSourceFile = useCallback((f: File) => {
+    cacheMasterUploadFile(f)
     setFileState(f)
     setAudioUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return URL.createObjectURL(f)
     })
+    setMasterWorkflowState((prev) => ({
+      step: prev.step >= 2 ? prev.step : 2,
+      uploadedFile: fileToWorkflowMeta(f),
+    }))
+    setStoredFileName(f.name)
   }, [])
 
   const seedAnalyzeIntoMasterFlow = useCallback(
     (f: File, analysis: Record<string, unknown> | null) => {
+      cacheMasterUploadFile(f)
       setFileState(f)
       setAudioUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev)
@@ -351,9 +432,12 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       setMasteredPreviewMp3Url("")
       setMasterObjectKey("")
       setMasterExpiresAt("")
+      const uploadedFile = fileToWorkflowMeta(f)
+      setMasterWorkflowState({ step: 1, uploadedFile })
+      writeMasterWorkflowLocal({ step: 1, uploadedFile, sessionId: sessionId || undefined })
       beginMasterSession(f)
     },
-    [beginMasterSession]
+    [beginMasterSession, sessionId]
   )
 
   const resetSession = useCallback(() => {
@@ -381,6 +465,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setWorkflowPhaseState("upload")
     setCurrentStep(1)
     setStoredFileName("")
+    setMasterWorkflowState({ step: 1, uploadedFile: null })
+    cacheMasterUploadFile(null)
     clearMasterWorkflowLocal()
     clearMasterStorageKeys()
   }, [])
@@ -395,6 +481,10 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       if (localWorkflow) {
         setCurrentStep(localWorkflow.step)
         setWorkflowPhaseState(workflowPhaseFromStep(localWorkflow.step))
+        setMasterWorkflowState({
+          step: localWorkflow.step,
+          uploadedFile: localWorkflow.uploadedFile ?? null,
+        })
         if (localWorkflow.uploadedFile?.name) {
           setStoredFileName(localWorkflow.uploadedFile.name)
         }
@@ -527,7 +617,6 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       } catch {
         /* ignore */
       }
-      clearMasterWorkflowLocal()
       return
     }
     if (file?.name) setStoredFileName(file.name)
@@ -610,6 +699,9 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       storedFileName,
       currentStep,
       setCurrentStep: applyCurrentStep,
+      masterWorkflow,
+      setMasterWorkflow,
+      getActiveUploadFile,
       handleContinueToSettings,
       continueToSettings: handleContinueToSettings,
       persistSessionSnapshot,
@@ -645,6 +737,9 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       storedFileName,
       currentStep,
       applyCurrentStep,
+      masterWorkflow,
+      setMasterWorkflow,
+      getActiveUploadFile,
       handleContinueToSettings,
       persistSessionSnapshot,
       syncWorkflowLocal,

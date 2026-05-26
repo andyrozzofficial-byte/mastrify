@@ -4,14 +4,40 @@ export type MasterWorkflowStep = 1 | 2 | 3
 
 export const MASTER_WORKFLOW_LOCAL_KEY = "masterWorkflow"
 
+export type MasterWorkflowUploadedFileMeta = {
+  name: string
+  size: number
+  type: string
+  lastModified: number
+}
+
 export type MasterWorkflowLocalSnapshot = {
   step: MasterWorkflowStep
-  uploadedFile?: {
-    name: string
-    size: number
-    lastModified: number
-  }
+  uploadedFile?: MasterWorkflowUploadedFileMeta | null
   sessionId?: string
+}
+
+export type MasterWorkflowState = {
+  step: MasterWorkflowStep
+  uploadedFile: MasterWorkflowUploadedFileMeta | null
+}
+
+export function fileToWorkflowMeta(file: File): MasterWorkflowUploadedFileMeta {
+  return {
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    lastModified: file.lastModified,
+  }
+}
+
+export function workflowMetaMatchesFile(meta: MasterWorkflowUploadedFileMeta, file: File): boolean {
+  return (
+    meta.name === file.name &&
+    meta.size === file.size &&
+    meta.type === file.type &&
+    meta.lastModified === file.lastModified
+  )
 }
 
 export const MASTER_WORKFLOW_LOG = "[master-workflow]" as const
@@ -54,12 +80,21 @@ export function readMasterWorkflowLocal(): MasterWorkflowLocalSnapshot | null {
   }
 }
 
-export function writeMasterWorkflowLocal(snapshot: MasterWorkflowLocalSnapshot) {
+export function writeMasterWorkflowLocal(snapshot: MasterWorkflowLocalSnapshot | MasterWorkflowState) {
   if (typeof window === "undefined") return
   try {
     localStorage.setItem(MASTER_WORKFLOW_LOCAL_KEY, JSON.stringify(snapshot))
   } catch {
     /* ignore quota */
+  }
+}
+
+export function readMasterWorkflowState(): MasterWorkflowState | null {
+  const raw = readMasterWorkflowLocal()
+  if (!raw) return null
+  return {
+    step: raw.step,
+    uploadedFile: raw.uploadedFile ?? null,
   }
 }
 
