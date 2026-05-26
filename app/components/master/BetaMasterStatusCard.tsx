@@ -114,7 +114,7 @@ export default function BetaMasterStatusCard({
             </div>
           </div>
 
-          {isResult && betaUi ? <BetaResultRewardStrip betaUi={betaUi} /> : null}
+          {isResult ? <BetaResultRewardStrip /> : null}
 
           {!isResult && earnWays.length > 0 ? (
             <div>

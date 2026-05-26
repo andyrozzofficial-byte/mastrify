@@ -17,9 +17,9 @@ import {
 import { BETA_DAW_OPTIONS } from "./betaAccess"
 
 export const BETA_RESULT_GENRE_OPTIONS = [
-  { label: "EDM / House", value: "EDM / House" },
+  { label: "EDM", value: "EDM" },
   { label: "Pop", value: "Pop" },
-  { label: "Hip-hop / Rap", value: "Hip-hop / Rap" },
+  { label: "Hip-hop", value: "Hip-hop" },
   { label: "Rock", value: "Rock" },
   { label: "Techno", value: "Techno" },
   { label: "Other", value: "Other" },
@@ -27,7 +27,7 @@ export const BETA_RESULT_GENRE_OPTIONS = [
 
 /** UI labels → stored DAW values (admin_customer_profiles / beta access). */
 export const BETA_RESULT_DAW_OPTIONS = [
-  { label: "Logic Pro", value: "Logic Pro" },
+  { label: "Logic", value: "Logic Pro" },
   { label: "FL Studio", value: "FL Studio" },
   { label: "Ableton", value: "Ableton Live" },
   { label: "Cubase", value: "Cubase" },

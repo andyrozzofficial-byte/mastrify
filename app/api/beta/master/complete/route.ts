@@ -1,9 +1,11 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
+import { normalizeBetaEmail } from "../../../../../lib/betaAccess"
 import { isBetaFeedbackEnabled } from "../../../../../lib/betaFeedbackFeature"
 import { recordBetaMasterCompletion } from "../../../../../lib/betaMasterTracking"
 import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
-import { syncBetaProfileFromActivity } from "../../../../../lib/betaUserData"
+import { getBetaMasteringUiStateForEmail, syncBetaProfileFromActivity } from "../../../../../lib/betaUserData"
+import { getSupabaseEnvStatus } from "../../../../../lib/supabaseServer"
 
 export async function POST(request: Request) {
   if (!isBetaFeedbackEnabled()) {
@@ -11,12 +13,10 @@ export async function POST(request: Request) {
   }
 
   const store = await cookies()
-  const email = await resolveBetaEmailFromCookies(store)
-  if (!email) {
-    return NextResponse.json({ error: "Not signed in" }, { status: 401 })
-  }
+  const cookieEmail = await resolveBetaEmailFromCookies(store)
 
   let body: {
+    email?: string
     sessionId?: string
     trackName?: string | null
     masteringStyle?: string | null
@@ -32,6 +32,16 @@ export async function POST(request: Request) {
   const sessionId = typeof body.sessionId === "string" ? body.sessionId.trim() : ""
   if (!sessionId) {
     return NextResponse.json({ error: "sessionId required" }, { status: 400 })
+  }
+
+  const bodyEmail = typeof body.email === "string" ? normalizeBetaEmail(body.email) : ""
+  const email =
+    cookieEmail ??
+    (bodyEmail.includes("@") ? bodyEmail : null)
+
+  if (!email) {
+    console.error("[beta-api] master complete: no email (cookie or body)", getSupabaseEnvStatus())
+    return NextResponse.json({ error: "Beta email required" }, { status: 401 })
   }
 
   const result = await recordBetaMasterCompletion({
@@ -51,9 +61,12 @@ export async function POST(request: Request) {
     await syncBetaProfileFromActivity(email)
   }
 
+  const betaUi = await getBetaMasteringUiStateForEmail(email)
+
   return NextResponse.json({
     ok: true,
     created: result.created,
     alreadyCounted: result.alreadyCounted,
+    betaUi,
   })
 }

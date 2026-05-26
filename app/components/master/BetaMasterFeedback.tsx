@@ -57,18 +57,14 @@ function RadioRow({
   options,
   value,
   onChange,
-  compact = false,
 }: {
   name: string
   options: readonly string[]
   value: string
   onChange: (v: string) => void
-  compact?: boolean
 }) {
   return (
-    <div
-      className={`mt-1.5 grid grid-cols-1 gap-1.5 ${compact ? "sm:grid-cols-1" : "sm:grid-cols-2"}`}
-    >
+    <div className="mt-1.5 grid grid-cols-2 gap-2">
       {options.map((opt) => (
         <label
           key={opt}
@@ -129,7 +125,7 @@ export default function BetaMasterFeedback({
   onCreateAnotherMaster,
 }: Props) {
   const reduce = useReducedMotion()
-  const { betaUi, refreshAccess } = useBetaMasteringGate()
+  const { refreshAccess } = useBetaMasteringGate()
   const sessionId = sessionAnalytics.sessionId
 
   const [show, setShow] = useState(false)
@@ -310,50 +306,28 @@ export default function BetaMasterFeedback({
       initial={reduce ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: EASE }}
-      className="product-form-column mx-auto mt-0 w-full max-w-[43.75rem]"
+      className="mx-auto mt-0 w-full max-w-5xl px-0"
       aria-labelledby="beta-master-feedback-title"
     >
-      <div className="product-surface-card beta-feedback-card relative flex max-h-[min(82vh,680px)] flex-col overflow-hidden border-violet-400/18 bg-white/[0.035] shadow-[0_0_32px_rgba(124,58,237,0.08)]">
+      <div className="product-surface-card beta-feedback-card relative flex max-h-[min(70vh,540px)] flex-col overflow-hidden border-violet-400/18 bg-white/[0.035] shadow-[0_0_32px_rgba(124,58,237,0.08)]">
         {submitted ? (
-          betaUi ? (
-            <BetaFeedbackSuccessPanel betaUi={betaUi} onCreateAnother={handleCreateAnother} />
-          ) : (
-            <div className="flex flex-col items-center px-4 py-8 text-center">
-              <p className="text-lg font-semibold text-white">
-                <span className="text-emerald-300/95" aria-hidden>
-                  ✓{" "}
-                </span>
-                Thanks for helping improve Mastrify
-              </p>
-              <p className="mt-4 text-[13px] text-violet-200/85">+1 Insider point earned</p>
-              <button
-                type="button"
-                onClick={handleCreateAnother}
-                className="mt-8 inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-6 text-[15px] font-semibold text-white"
-              >
-                Create another master
-              </button>
-            </div>
-          )
+          <BetaFeedbackSuccessPanel onCreateAnother={handleCreateAnother} />
         ) : (
           <>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-2 pt-4 sm:px-5 sm:pt-4">
-              <header className="text-center">
-                <h2 id="beta-master-feedback-title" className="text-base font-semibold text-white sm:text-lg">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-2 pt-3.5 sm:px-5 sm:pt-4">
+              <header className="text-center sm:text-left">
+                <h2 id="beta-master-feedback-title" className="text-base font-semibold text-white">
                   Help improve Mastrify
                 </h2>
-                <p className="mx-auto mt-1.5 max-w-md text-[12px] leading-snug text-white/52 sm:text-[13px]">
-                  Tap what worked and what to improve — download stays available.
+                <p className="mt-1 text-[12px] leading-snug text-white/50">
+                  Quick feedback — your download stays available.
                 </p>
               </header>
 
-              <div className="mt-4 space-y-4">
+              <div className="mt-3 space-y-3.5">
                 <div>
-                  <h3 className="text-center text-[13px] font-semibold text-white/90 sm:text-left">
-                    <span aria-hidden>⭐ </span>
-                    Rate your master (1–10)
-                  </h3>
-                  <div className="mt-2 flex items-center gap-3 px-0.5">
+                  <FieldLabel>Rate your master</FieldLabel>
+                  <div className="mt-1.5 flex items-center gap-3">
                     <input
                       type="range"
                       min={1}
@@ -364,7 +338,9 @@ export default function BetaMasterFeedback({
                       className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/[0.08] accent-violet-500"
                       aria-label="Master rating"
                     />
-                    <span className="w-9 text-center font-mono text-lg font-semibold text-violet-200">{masterRating}</span>
+                    <span className="w-8 text-center font-mono text-base font-semibold text-violet-200">
+                      {masterRating}
+                    </span>
                   </div>
                 </div>
 
@@ -383,33 +359,27 @@ export default function BetaMasterFeedback({
                 />
 
                 <fieldset>
-                  <legend className="text-[13px] font-medium text-white/85">Would you use Mastrify again?</legend>
+                  <legend className="text-[12px] font-medium text-white/85">Would you use Mastrify again?</legend>
                   <PillChoice
                     options={BETA_FEEDBACK_WOULD_RELEASE_OPTIONS}
                     value={wouldUseAgain}
                     onChange={setWouldUseAgain}
                   />
                 </fieldset>
-              </div>
 
-              <div className="mt-5 border-t border-white/[0.06] pt-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
-                  <div className="space-y-3.5">
+                <div className="grid grid-cols-1 items-start gap-6 border-t border-white/[0.06] pt-4 sm:grid-cols-2">
+                  <div className="space-y-3">
                     <div>
                       <SectionTitle>About you</SectionTitle>
-                      <FieldLabel>Which best describes you?</FieldLabel>
                       <RadioRow
                         name="beta-role"
                         options={BETA_FEEDBACK_ROLE_OPTIONS}
                         value={role}
                         onChange={setRole}
-                        compact
                       />
                     </div>
-
                     <div>
-                      <SectionTitle>Session</SectionTitle>
-                      <FieldLabel>Genre</FieldLabel>
+                      <SectionTitle>Genre</SectionTitle>
                       <RadioRow
                         name="beta-genre"
                         options={BETA_RESULT_GENRE_OPTIONS.map((o) => o.label)}
@@ -418,9 +388,10 @@ export default function BetaMasterFeedback({
                           const match = BETA_RESULT_GENRE_OPTIONS.find((o) => o.label === label)
                           setGenre(match?.value ?? "Other")
                         }}
-                        compact
                       />
-                      <FieldLabel>DAW</FieldLabel>
+                    </div>
+                    <div>
+                      <SectionTitle>DAW</SectionTitle>
                       <RadioRow
                         name="beta-daw"
                         options={BETA_RESULT_DAW_OPTIONS.map((o) => o.label)}
@@ -429,45 +400,28 @@ export default function BetaMasterFeedback({
                           const byLabel = BETA_RESULT_DAW_OPTIONS.find((o) => o.label === label)
                           setDaw(byLabel?.value ?? "Other")
                         }}
-                        compact
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <SectionTitle>Master feedback</SectionTitle>
-                    <FieldLabel>Loudness</FieldLabel>
-                    <RadioRow
-                      name="beta-loudness"
-                      options={BETA_LOUDNESS_OPTIONS}
-                      value={loudness}
-                      onChange={setLoudness}
-                      compact
-                    />
-                    <FieldLabel>Low-end</FieldLabel>
-                    <RadioRow
-                      name="beta-lowend"
-                      options={BETA_LOW_END_OPTIONS}
-                      value={lowEnd}
-                      onChange={setLowEnd}
-                      compact
-                    />
-                    <FieldLabel>Stereo image</FieldLabel>
-                    <RadioRow
-                      name="beta-stereo"
-                      options={BETA_STEREO_OPTIONS}
-                      value={stereoImage}
-                      onChange={setStereoImage}
-                      compact
-                    />
-                    <FieldLabel>Clarity</FieldLabel>
-                    <RadioRow
-                      name="beta-clarity"
-                      options={BETA_CLARITY_OPTIONS}
-                      value={clarity}
-                      onChange={setClarity}
-                      compact
-                    />
+                  <div className="space-y-2.5">
+                    <SectionTitle>Mastering experience</SectionTitle>
+                    <div>
+                      <FieldLabel>Loudness</FieldLabel>
+                      <PillChoice options={BETA_LOUDNESS_OPTIONS} value={loudness} onChange={setLoudness} />
+                    </div>
+                    <div>
+                      <FieldLabel>Low-end</FieldLabel>
+                      <PillChoice options={BETA_LOW_END_OPTIONS} value={lowEnd} onChange={setLowEnd} />
+                    </div>
+                    <div>
+                      <FieldLabel>Stereo image</FieldLabel>
+                      <PillChoice options={BETA_STEREO_OPTIONS} value={stereoImage} onChange={setStereoImage} />
+                    </div>
+                    <div>
+                      <FieldLabel>Clarity</FieldLabel>
+                      <PillChoice options={BETA_CLARITY_OPTIONS} value={clarity} onChange={setClarity} />
+                    </div>
                   </div>
                 </div>
 

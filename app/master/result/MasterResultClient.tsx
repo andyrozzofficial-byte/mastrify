@@ -46,9 +46,10 @@ import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
 import {
   dispatchBetaProfileRefresh,
-  registerBetaMasterComplete,
   registerBetaMasterDownload,
+  reportBetaMasterCompleted,
 } from "../../../lib/betaMasterTrackingClient"
+import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
 
 const STYLE_LABELS: Record<MasterStylePreset, string> = {
@@ -114,7 +115,7 @@ function objectKeyFromPlaybackUrl(url: string | null): string {
 }
 
 export default function MasterResultClient() {
-  const { isBetaUser, runIfAllowed, betaUi, refreshAccess } = useBetaMasteringGate()
+  const { isBetaUser, runIfAllowed, betaUi, refreshAccess, applyBetaSession } = useBetaMasteringGate()
   const {
     file,
     audioUrl,
@@ -214,29 +215,48 @@ export default function MasterResultClient() {
     }
   }, [mounted, showBetaRewards, refreshAccess, sessionId])
 
-  useEffect(() => {
-    if (!mounted || !showBetaRewards || !sessionId.trim()) return
-    const masteredReady = Boolean(masteredUrl?.trim())
-    if (!masteredReady) return
+  const masterCompletionReportedRef = useRef(false)
 
-    void (async () => {
-      const result = await registerBetaMasterComplete({
-        sessionId,
+  useEffect(() => {
+    if (!mounted || !betaFeedbackOn || !isBetaUser) return
+    if (!masteredUrl?.trim()) return
+    if (masterCompletionReportedRef.current) return
+
+    const email = deliveryEmail.trim() || getStoredBetaEmail()
+    if (!email?.includes("@")) return
+
+    masterCompletionReportedRef.current = true
+    void reportBetaMasterCompleted(
+      {
+        sessionId: sessionId || "",
+        email,
         trackName: file?.name ?? trackName ?? null,
         masteringStyle: masteringStyleLabel(stylePreset),
         processingTimeMs,
         masterLufs: masterLufs ?? extractMasterLufs(analysisAfter),
-      })
-      if (result.ok) {
-        await refreshAccess({ silent: true })
-        dispatchBetaProfileRefresh()
-      }
-    })()
+      },
+      {
+        refreshAccess,
+        applyBetaUi: (ui) => {
+          if (ui) {
+            applyBetaSession({
+              isBetaUser: true,
+              isBeta: true,
+              complete: true,
+              betaUi: ui,
+              email,
+            })
+          }
+        },
+      },
+    )
   }, [
     mounted,
-    showBetaRewards,
+    betaFeedbackOn,
+    isBetaUser,
     sessionId,
     masteredUrl,
+    deliveryEmail,
     file?.name,
     trackName,
     stylePreset,
@@ -244,6 +264,7 @@ export default function MasterResultClient() {
     masterLufs,
     analysisAfter,
     refreshAccess,
+    applyBetaSession,
   ])
 
   const handleRewardCelebrationComplete = useCallback(() => {
@@ -265,6 +286,7 @@ export default function MasterResultClient() {
     if (!deliveryObjectKey) return false
     const ok = await registerBetaMasterDownload({
       objectKey: deliveryObjectKey,
+      email: deliveryEmail.trim() || getStoredBetaEmail(),
       trackTitle: file?.name || trackName || "",
       expiresAt: masterExpiresAt || null,
     })
@@ -273,7 +295,7 @@ export default function MasterResultClient() {
       dispatchBetaProfileRefresh()
     }
     return ok
-  }, [masterObjectKey, masteredWavUrl, file?.name, trackName, masterExpiresAt, refreshAccess])
+  }, [masterObjectKey, masteredWavUrl, file?.name, trackName, masterExpiresAt, deliveryEmail, refreshAccess])
 
   const masteredPlayback = useMemo(
     () => resolveMasteredPlaybackUrl(masteredMp3Url, masteredWavUrl),

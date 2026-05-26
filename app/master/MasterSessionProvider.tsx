@@ -181,7 +181,6 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   }, [currentStep, masterState.file])
 
   const beginMasterSession = useCallback((f: File) => {
-    if (!isBetaFeedbackEnabled()) return
     setSessionId(createMasterSessionId())
     setTrackDurationSec(null)
     setMasterLufs(null)

@@ -13,13 +13,10 @@ import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
 import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
-import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
-import {
-  dispatchBetaProfileRefresh,
-  registerBetaMasterComplete,
-} from "../../../lib/betaMasterTrackingClient"
+import { reportBetaMasterCompleted } from "../../../lib/betaMasterTrackingClient"
+import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
 import { useMasterSession } from "../MasterSessionProvider"
 
 const API = PUBLIC_BACKEND_API_BASE
@@ -54,7 +51,7 @@ export default function MasterProcessingPage() {
   const pathname = usePathname()
   const onMasterRoot = pathname === "/master" || pathname === "/master/"
   const reduce = useReducedMotion()
-  const { isBeta, checking, refreshAccess } = useBetaMasteringGate()
+  const { isBeta, checking, refreshAccess, applyBetaSession } = useBetaMasteringGate()
   const {
     masterState,
     setMasterState,
@@ -155,17 +152,33 @@ export default function MasterProcessingPage() {
         setAnalysisAfter(analysisAfterPayload)
         recordProcessingComplete(elapsedMs, analysisAfterPayload)
 
-        if (isBetaFeedbackEnabled() && sessionId.trim()) {
-          const completeResult = await registerBetaMasterComplete({
-            sessionId,
-            trackName: activeFile.name,
-            masteringStyle: masteringStyleLabel(stylePreset),
-            processingTimeMs: elapsedMs,
-            masterLufs: extractMasterLufs(analysisAfterPayload),
-          })
-          if (completeResult.ok) {
-            await refreshAccess({ silent: true })
-            dispatchBetaProfileRefresh()
+        if (isBeta) {
+          const email = getStoredBetaEmail()
+          if (email) {
+            await reportBetaMasterCompleted(
+              {
+                sessionId,
+                email,
+                trackName: activeFile.name,
+                masteringStyle: masteringStyleLabel(stylePreset),
+                processingTimeMs: elapsedMs,
+                masterLufs: extractMasterLufs(analysisAfterPayload),
+              },
+              {
+                refreshAccess,
+                applyBetaUi: (ui) => {
+                  if (ui) {
+                    applyBetaSession({
+                      isBetaUser: true,
+                      isBeta: true,
+                      complete: true,
+                      betaUi: ui,
+                      email,
+                    })
+                  }
+                },
+              },
+            )
           }
         }
 
@@ -229,6 +242,7 @@ export default function MasterProcessingPage() {
     recordProcessingComplete,
     sessionId,
     refreshAccess,
+    applyBetaSession,
     stylePreset,
     targetLufs,
     stereoEnhance,

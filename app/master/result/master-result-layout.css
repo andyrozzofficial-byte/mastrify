@@ -3,9 +3,9 @@
 .master-result-shell {
   box-sizing: border-box;
   width: 100%;
-  max-width: 60rem;
+  max-width: 64rem;
   margin-inline: auto;
-  padding-top: 0.75rem;
+  padding-top: 1.25rem;
 }
 
 @media (min-width: 768px) {
@@ -22,12 +22,12 @@
 }
 
 .master-result-insider {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 @media (min-width: 768px) {
   .master-result-insider {
-    margin-bottom: 1.25rem;
+    margin-bottom: 2rem;
   }
 }
 
@@ -69,7 +69,7 @@
 
 @media (min-width: 768px) {
   .master-result-panel {
-    margin-top: 1.25rem;
+    margin-top: 2.5rem;
   }
 }
 
@@ -82,18 +82,26 @@
   width: 100%;
   max-width: 28rem;
   margin-inline: auto;
-  margin-top: 1.5rem;
+  margin-top: 2.5rem;
 }
 
 @media (min-width: 768px) {
   .master-result-download {
-    margin-top: 1.75rem;
+    margin-top: 3rem;
   }
 }
 
 .master-result-feedback {
   width: 100%;
-  margin-top: 1.5rem;
+  margin-top: 2.5rem;
+  padding-bottom: 8rem;
+}
+
+@media (min-width: 768px) {
+  .master-result-feedback {
+    margin-top: 3rem;
+    padding-bottom: 8rem;
+  }
 }
 
 @media (min-width: 768px) {
