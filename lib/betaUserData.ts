@@ -43,6 +43,7 @@ import {
   MASTERED_EXPORTS_TABLE,
   PIPELINE_EVENTS_TABLE,
 } from "./adminData"
+import { findBetaProfileByEmail, upsertCustomerProfileRow } from "./betaProfileDb"
 import {
   fetchBetaMasterCompletionsForEmail,
   type BetaMasterCompletionRow,
@@ -164,13 +165,13 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
   const points = calcBetaPoints(counts)
   const rank = effectiveBetaRank(profile?.beta_rank, points)
 
-  await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(
+  await upsertCustomerProfileRow(
     {
       email: normalized,
       beta_rank: rank,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: "email" },
+    supabase,
   )
 }
 
@@ -224,31 +225,19 @@ function mapBetaProfileRow(row: {
 }
 
 export async function fetchBetaProfileByEmail(email: string): Promise<BetaProfileRow | null> {
-  const supabase = createSupabaseServerClient()
-  if (!supabase) return null
-
   const normalized = normalizeBetaEmail(email)
-  const { data, error } = await supabase
-    .from(CUSTOMER_PROFILES_TABLE)
-    .select("email, name, genre, daw, beta_rank, beta_signed_up_at, notes, beta_approved")
-    .eq("email", normalized)
-    .maybeSingle()
-
-  if (error) {
-    if (/beta_approved|does not exist/i.test(error.message)) {
-      const fallback = await supabase
-        .from(CUSTOMER_PROFILES_TABLE)
-        .select("email, name, genre, daw, beta_rank, beta_signed_up_at, notes")
-        .eq("email", normalized)
-        .maybeSingle()
-      if (!fallback.data) return null
-      return mapBetaProfileRow({ ...fallback.data, beta_approved: false })
-    }
-    return null
-  }
-
-  if (!data) return null
-  return mapBetaProfileRow(data)
+  const row = await findBetaProfileByEmail(normalized)
+  if (!row?.email) return null
+  return mapBetaProfileRow({
+    email: row.email,
+    name: row.name,
+    genre: row.genre,
+    daw: row.daw,
+    beta_rank: row.beta_rank,
+    beta_signed_up_at: row.beta_signed_up_at ?? row.created_at,
+    notes: row.notes,
+    beta_approved: row.beta_approved,
+  })
 }
 
 async function fetchBetaProfileRows(): Promise<BetaProfileRow[]> {
@@ -776,44 +765,76 @@ export async function updateBetaProfileAdmin(
   return { ok: true, betaRank: displayRank }
 }
 
+export type RegisterBetaOnboardingResult =
+  | { ok: true; existing: boolean }
+  | { error: string }
+
 /** Fast Join Beta signup — email (+ optional name) only; genre/DAW collected after mastering. */
 export async function registerBetaOnboarding(input: {
   email: string
   name?: string | null
-}): Promise<{ ok: true } | { error: string }> {
+}): Promise<RegisterBetaOnboardingResult> {
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
   const email = normalizeBetaEmail(input.email)
   if (!email.includes("@")) return { error: "Valid email required" }
 
-  const { data: existing } = await supabase
-    .from(CUSTOMER_PROFILES_TABLE)
-    .select("beta_signed_up_at, genre, daw, beta_rank")
-    .eq("email", email)
-    .maybeSingle()
+  const existing = await findBetaProfileByEmail(email, supabase)
+  if (existing?.email) {
+    console.log("[beta] existing profile found")
+    const touch: Record<string, unknown> = {
+      email,
+      updated_at: new Date().toISOString(),
+    }
+    if (input.name !== undefined) touch.name = input.name?.trim() || null
+    if (existing.genre) touch.genre = existing.genre
+    if (existing.daw) touch.daw = existing.daw
+    if (existing.beta_rank && isBetaUserRank(existing.beta_rank)) {
+      touch.beta_rank = migrateLegacyRank(existing.beta_rank)
+    } else if (!existing.beta_signed_up_at) {
+      touch.beta_rank = "explorer"
+    }
+    if (!existing.beta_signed_up_at) {
+      touch.beta_signed_up_at = new Date().toISOString()
+    }
+
+    const touchResult = await upsertCustomerProfileRow(touch, supabase)
+    if ("error" in touchResult) {
+      console.error("[beta] create profile failed:", touchResult.error)
+      return { error: touchResult.error }
+    }
+
+    try {
+      await syncBetaProfileFromActivity(email)
+    } catch (syncErr) {
+      console.error("[beta] sync profile activity failed:", syncErr)
+    }
+
+    return { ok: true, existing: true }
+  }
 
   const body: Record<string, unknown> = {
     email,
-    beta_rank:
-      existing?.beta_rank && isBetaUserRank(existing.beta_rank)
-        ? migrateLegacyRank(existing.beta_rank)
-        : "explorer",
+    name: input.name?.trim() || null,
+    beta_rank: "explorer",
+    beta_signed_up_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }
-  if (input.name !== undefined) body.name = input.name?.trim() || null
-  if (!existing?.beta_signed_up_at) body.beta_signed_up_at = new Date().toISOString()
-  if (existing?.genre) body.genre = existing.genre
-  if (existing?.daw) body.daw = existing.daw
 
-  const { error } = await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(body, { onConflict: "email" })
-  if (error) {
-    return {
-      error: formatSupabaseTableError(CUSTOMER_PROFILES_TABLE, error.message, error.code),
-    }
+  const upsertResult = await upsertCustomerProfileRow(body, supabase)
+  if ("error" in upsertResult) {
+    console.error("[beta] create profile failed:", upsertResult.error)
+    return { error: upsertResult.error }
   }
-  await syncBetaProfileFromActivity(email)
-  return { ok: true }
+
+  try {
+    await syncBetaProfileFromActivity(email)
+  } catch (syncErr) {
+    console.error("[beta] sync profile activity failed:", syncErr)
+  }
+
+  return { ok: true, existing: false }
 }
 
 export async function upsertBetaProfile(input: {
@@ -852,11 +873,9 @@ export async function upsertBetaProfile(input: {
   if (input.name !== undefined) body.name = input.name?.trim() || null
   if (!existing?.beta_signed_up_at) body.beta_signed_up_at = new Date().toISOString()
 
-  const { error } = await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(body, { onConflict: "email" })
-  if (error) {
-    return {
-      error: formatSupabaseTableError(CUSTOMER_PROFILES_TABLE, error.message, error.code),
-    }
+  const upsertResult = await upsertCustomerProfileRow(body, supabase)
+  if ("error" in upsertResult) {
+    return { error: upsertResult.error }
   }
   return { ok: true }
 }

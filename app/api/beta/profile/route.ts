@@ -61,6 +61,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  console.log("[beta] create profile start")
+
   let body: { email?: string; name?: string }
   try {
     body = await request.json()
@@ -69,31 +71,47 @@ export async function POST(request: Request) {
   }
 
   const email = typeof body.email === "string" ? body.email : ""
+  const name = typeof body.name === "string" ? body.name : null
+  console.log("[beta] payload:", { email, name: name?.trim() || "" })
 
   if (!email.trim()) {
     return NextResponse.json({ error: "Email required" }, { status: 400 })
   }
 
-  const result = await registerBetaOnboarding({
-    email,
-    name: typeof body.name === "string" ? body.name : null,
-  })
+  try {
+    const result = await registerBetaOnboarding({ email, name })
 
-  if ("error" in result) {
-    return NextResponse.json({ error: result.error }, { status: 500 })
+    if ("error" in result) {
+      console.error("[beta] create profile failed:", result.error)
+      return NextResponse.json(
+        { error: "We couldn't create your profile right now. Please try again." },
+        { status: 500 },
+      )
+    }
+
+    console.log("[beta] create profile success", { existing: result.existing })
+
+    const normalized = normalizeBetaEmail(email)
+    const status = await getBetaProfileStatus(normalized)
+    const betaUi = await getBetaMasteringUiStateForEmail(normalized)
+    const response = NextResponse.json({
+      ok: true,
+      email: normalized,
+      complete: true,
+      profileExists: result.existing,
+      isBeta: true,
+      isBetaUser: true,
+      hasMasteringAccess: true,
+      profile: status.profile ? betaProfileToJson(status.profile) : null,
+      betaUi,
+    })
+    await setBetaEmailCookieOnResponse(response, normalized)
+    return response
+  } catch (err) {
+    console.error("[beta] create profile failed:", err)
+    return NextResponse.json(
+      { error: "We couldn't create your profile right now. Please try again." },
+      { status: 500 },
+    )
   }
-
-  const normalized = normalizeBetaEmail(email)
-  const betaUi = await getBetaMasteringUiStateForEmail(normalized)
-  const response = NextResponse.json({
-    ok: true,
-    email: normalized,
-    complete: true,
-    isBeta: true,
-    isBetaUser: true,
-    hasMasteringAccess: true,
-    betaUi,
-  })
-  await setBetaEmailCookieOnResponse(response, normalized)
-  return response
 }

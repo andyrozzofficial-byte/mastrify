@@ -122,7 +122,7 @@ export default function AccessClient() {
       })
       const json = (await res.json().catch(() => null)) as ProfileResponse | null
       if (!res.ok) {
-        setError(json?.error ?? "Could not save your profile.")
+        setError(json?.error ?? "We couldn't create your profile right now. Please try again.")
         return
       }
 
@@ -130,7 +130,7 @@ export default function AccessClient() {
       router.replace(next)
       router.refresh()
     } catch {
-      setError("Something went wrong. Please try again.")
+      setError("We couldn't create your profile right now. Please try again.")
     } finally {
       setLoading(false)
     }
