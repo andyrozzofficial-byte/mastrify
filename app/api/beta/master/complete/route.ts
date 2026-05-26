@@ -2,7 +2,11 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { normalizeBetaEmail } from "../../../../../lib/betaAccess"
 import { isBetaFeedbackEnabled } from "../../../../../lib/betaFeedbackFeature"
-import { recordBetaMasterCompletion } from "../../../../../lib/betaMasterTracking"
+import {
+  recordBetaMasterCompletion,
+  resolveBetaMasterCompletionSessionId,
+} from "../../../../../lib/betaMasterTracking"
+import { createMasterSessionId } from "../../../../../lib/masterSessionId"
 import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
 import {
   fetchBetaProfilePanelForEmail,
@@ -22,6 +26,7 @@ export async function POST(request: Request) {
   let body: {
     email?: string
     sessionId?: string
+    objectKey?: string | null
     trackName?: string | null
     masteringStyle?: string | null
     processingTimeMs?: number | null
@@ -33,10 +38,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
   }
 
-  const sessionId = typeof body.sessionId === "string" ? body.sessionId.trim() : ""
-  if (!sessionId) {
-    return NextResponse.json({ error: "sessionId required" }, { status: 400 })
-  }
+  const sessionId =
+    resolveBetaMasterCompletionSessionId(body.sessionId, body.objectKey) || createMasterSessionId()
 
   const bodyEmail = typeof body.email === "string" ? normalizeBetaEmail(body.email) : ""
   const email =
@@ -51,6 +54,7 @@ export async function POST(request: Request) {
   const result = await recordBetaMasterCompletion({
     email,
     sessionId,
+    objectKey: body.objectKey,
     trackName: body.trackName,
     masteringStyle: body.masteringStyle,
     processingTimeMs: body.processingTimeMs,

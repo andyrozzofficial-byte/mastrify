@@ -121,6 +121,7 @@ export default function MasterResultClient() {
     deliveryEmail,
     setDeliveryEmail,
     sessionId,
+    ensureSessionId,
     trackDurationSec,
     trackName,
     masterLufs,
@@ -204,45 +205,57 @@ export default function MasterResultClient() {
 
   const masterCompletionReportedRef = useRef(false)
 
+  const originalPreviewUrl = useMemo(() => normalizePlaybackUrl(audioUrl), [audioUrl])
+  const masteredWavUrl = useMemo(() => normalizePlaybackUrl(masteredUrl), [masteredUrl])
+
   useEffect(() => {
     if (!mounted || !betaFeedbackOn || !isBetaUser) return
     if (!masteredUrl?.trim()) return
     if (masterCompletionReportedRef.current) return
 
-    const email = getStoredBetaEmail() || deliveryEmail.trim()
-    if (!email?.includes("@")) return
+    const trackingSessionId = ensureSessionId()
+    const objectKey =
+      masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl) || null
+    const email = getStoredBetaEmail() || deliveryEmail.trim() || undefined
 
     masterCompletionReportedRef.current = true
-    void reportBetaMasterCompleted(
-      {
-        sessionId: sessionId || "",
-        email,
-        trackName: file?.name ?? trackName ?? null,
-        masteringStyle: masteringStyleLabel(stylePreset),
-        processingTimeMs,
-        masterLufs: masterLufs ?? extractMasterLufs(analysisAfter),
-      },
-      {
-        refreshAccess,
-        applyBetaUi: (ui) => {
-          if (ui) {
-            applyBetaSession({
-              isBetaUser: true,
-              isBeta: true,
-              complete: true,
-              betaUi: ui,
-              email,
-            })
-          }
+    void (async () => {
+      const ok = await reportBetaMasterCompleted(
+        {
+          sessionId: trackingSessionId,
+          objectKey,
+          email,
+          trackName: file?.name ?? trackName ?? null,
+          masteringStyle: masteringStyleLabel(stylePreset),
+          processingTimeMs,
+          masterLufs: masterLufs ?? extractMasterLufs(analysisAfter),
         },
-      },
-    )
+        {
+          refreshAccess,
+          applyBetaUi: (ui) => {
+            if (ui) {
+              applyBetaSession({
+                isBetaUser: true,
+                isBeta: true,
+                complete: true,
+                betaUi: ui,
+                email: email || getStoredBetaEmail() || undefined,
+              })
+            }
+          },
+        },
+      )
+      if (!ok) masterCompletionReportedRef.current = false
+    })()
   }, [
     mounted,
     betaFeedbackOn,
     isBetaUser,
     sessionId,
+    ensureSessionId,
+    masterObjectKey,
     masteredUrl,
+    masteredWavUrl,
     deliveryEmail,
     file?.name,
     trackName,
@@ -253,9 +266,6 @@ export default function MasterResultClient() {
     refreshAccess,
     applyBetaSession,
   ])
-
-  const originalPreviewUrl = useMemo(() => normalizePlaybackUrl(audioUrl), [audioUrl])
-  const masteredWavUrl = useMemo(() => normalizePlaybackUrl(masteredUrl), [masteredUrl])
   const masteredMp3Url = useMemo(() => normalizePlaybackUrl(masteredPreviewMp3Url), [masteredPreviewMp3Url])
 
   const downloadReportedRef = useRef(false)

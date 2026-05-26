@@ -91,6 +91,7 @@ type MasterSession = {
   masterExpiresAt: string
   setMasterExpiresAt: (expiresAt: string) => void
   sessionId: string
+  ensureSessionId: () => string
   trackDurationSec: number | null
   trackName: string | null
   masterLufs: number | null
@@ -189,6 +190,13 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       if (sec != null) setTrackDurationSec(sec)
     })
   }, [])
+
+  const ensureSessionId = useCallback(() => {
+    if (sessionId.trim()) return sessionId.trim()
+    const id = createMasterSessionId()
+    setSessionId(id)
+    return id
+  }, [sessionId])
 
   const handleMasterUpload = useCallback(
     (uploaded: File) => {
@@ -566,6 +574,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       masterExpiresAt,
       setMasterExpiresAt,
       sessionId,
+      ensureSessionId,
       trackDurationSec,
       trackName,
       masterLufs,
@@ -605,6 +614,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       masterObjectKey,
       masterExpiresAt,
       sessionId,
+      ensureSessionId,
       trackDurationSec,
       trackName,
       masterLufs,

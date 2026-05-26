@@ -3,16 +3,15 @@ import { createMasterSessionId } from "./masterSessionId"
 import { getStoredBetaEmail } from "./betaSessionStorage"
 import type { BetaMasteringUiState } from "./betaPoints"
 import type { BetaProfilePanelData } from "./betaProfilePanel"
-import { resolveBetaDownloadObjectKey } from "./betaMasterTracking"
 import {
-  hasClientReportedBetaDownload,
-  hasClientReportedBetaMasterComplete,
-  markClientBetaDownload,
-  markClientBetaMasterComplete,
-} from "./betaTrackingStorage"
+  resolveBetaDownloadObjectKey,
+  resolveBetaMasterCompletionSessionId,
+} from "./betaMasterTracking"
+import { markClientBetaMasterComplete, markClientBetaDownload } from "./betaTrackingStorage"
 
 export type RegisterBetaMasterCompletePayload = {
   sessionId: string
+  objectKey?: string | null
   email?: string | null
   trackName?: string | null
   masteringStyle?: string | null
@@ -50,25 +49,25 @@ function applyPanelUpdate(panel: BetaProfilePanelData | null | undefined) {
   if (panel) dispatchBetaProfilePanel(panel)
 }
 
-/** Idempotent: records one completed master per session_id. */
+function resolveCompletionSessionId(payload: RegisterBetaMasterCompletePayload): string {
+  const resolved = resolveBetaMasterCompletionSessionId(payload.sessionId, payload.objectKey)
+  if (resolved) return resolved
+  return createMasterSessionId()
+}
+
+/** Idempotent: records one completed master per session_id (server is source of truth). */
 export async function registerBetaMasterComplete(
   payload: RegisterBetaMasterCompletePayload,
 ): Promise<{
   ok: boolean
   alreadyCounted?: boolean
+  created?: boolean
   betaUi?: BetaMasteringUiState | null
   panel?: BetaProfilePanelData | null
+  sessionId?: string
 }> {
-  const sessionId = payload.sessionId.trim() || createMasterSessionId()
-  const email = payload.email?.trim() || getStoredBetaEmail()
-  if (!email?.includes("@")) {
-    console.warn("[beta] master complete skipped: no beta email")
-    return { ok: false }
-  }
-
-  if (hasClientReportedBetaMasterComplete(sessionId)) {
-    return { ok: true, alreadyCounted: true }
-  }
+  const sessionId = resolveCompletionSessionId(payload)
+  const email = payload.email?.trim() || getStoredBetaEmail() || ""
 
   try {
     const res = await fetch("/api/beta/master/complete", {
@@ -77,7 +76,8 @@ export async function registerBetaMasterComplete(
       credentials: "include",
       body: JSON.stringify({
         sessionId,
-        email,
+        objectKey: payload.objectKey ?? null,
+        email: email.includes("@") ? email : undefined,
         trackName: payload.trackName ?? null,
         masteringStyle: payload.masteringStyle ?? null,
         processingTimeMs: payload.processingTimeMs ?? null,
@@ -86,6 +86,7 @@ export async function registerBetaMasterComplete(
     })
     const json = (await res.json().catch(() => null)) as {
       ok?: boolean
+      created?: boolean
       alreadyCounted?: boolean
       error?: string
       betaUi?: BetaMasteringUiState | null
@@ -93,26 +94,27 @@ export async function registerBetaMasterComplete(
     } | null
 
     if (!res.ok) {
-      console.warn("[beta] master complete failed", json?.error ?? res.status, { email, sessionId })
-      return { ok: false }
+      console.warn("[beta] master complete failed", json?.error ?? res.status, { sessionId })
+      return { ok: false, sessionId }
     }
 
     if (json?.alreadyCounted) logBeta("master already counted")
-    else if (json?.ok) logBeta("master completed")
+    else if (json?.created) logBeta("master completed")
 
-    if (json?.ok) markClientBetaMasterComplete(sessionId)
-
+    markClientBetaMasterComplete(sessionId)
     applyPanelUpdate(json?.panel)
 
     return {
       ok: Boolean(json?.ok),
       alreadyCounted: json?.alreadyCounted,
+      created: json?.created,
       betaUi: json?.betaUi ?? null,
       panel: json?.panel ?? null,
+      sessionId,
     }
   } catch (err) {
     console.warn("[beta] master complete request failed", err)
-    return { ok: false }
+    return { ok: false, sessionId }
   }
 }
 
@@ -129,10 +131,6 @@ export async function registerBetaMasterDownload(
   if (!email?.includes("@")) {
     console.warn("[beta] download skipped: no beta email")
     return { ok: false }
-  }
-
-  if (sessionId && hasClientReportedBetaDownload(sessionId)) {
-    return { ok: true, alreadyCounted: true }
   }
 
   try {

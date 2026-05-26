@@ -178,6 +178,7 @@ async function writePipelineDownload(input: {
 export type RecordBetaMasterCompletionInput = {
   email: string
   sessionId: string
+  objectKey?: string | null
   trackName?: string | null
   masteringStyle?: string | null
   processingTimeMs?: number | null
@@ -192,7 +193,7 @@ export type RecordBetaMasterCompletionResult =
 export async function recordBetaMasterCompletion(
   input: RecordBetaMasterCompletionInput,
 ): Promise<RecordBetaMasterCompletionResult> {
-  const sessionId = input.sessionId.trim()
+  const sessionId = resolveBetaMasterCompletionSessionId(input.sessionId, input.objectKey)
   const email = normalizeBetaEmail(input.email)
   if (!sessionId) return { error: "session_id required" }
   if (!email.includes("@")) return { error: "email required" }
@@ -411,4 +412,16 @@ export function resolveBetaDownloadObjectKey(
   const sid = sessionId?.trim()
   if (sid) return `beta-session:${sid}`
   return `beta-download:${Date.now()}`
+}
+
+/** Stable id for completion dedupe — prefers workflow session_id, falls back to master object key. */
+export function resolveBetaMasterCompletionSessionId(
+  sessionId: string | null | undefined,
+  objectKey?: string | null | undefined,
+): string {
+  const sid = sessionId?.trim()
+  if (sid) return sid
+  const key = objectKey?.trim()
+  if (key) return `master:${key}`
+  return ""
 }

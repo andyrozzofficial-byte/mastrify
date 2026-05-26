@@ -59,6 +59,8 @@ export default function MasterProcessingPage() {
     audioUrl,
     sessionHydrated,
     sessionId,
+    ensureSessionId,
+    masterObjectKey,
     setMasteredUrl,
     setMasteredPreviewMp3Url,
     setMasterObjectKey,
@@ -152,34 +154,40 @@ export default function MasterProcessingPage() {
         setAnalysisAfter(analysisAfterPayload)
         recordProcessingComplete(elapsedMs, analysisAfterPayload)
 
+        const responseObjectKey =
+          stringField(res.data.objectKey) ||
+          stringField(res.data.object_key) ||
+          stringField(res.data.pipelineDebug?.objectKey) ||
+          objectKeyFromAfterPath(res.data.after)
+
         if (isBeta) {
+          const trackingSessionId = ensureSessionId()
           const email = getStoredBetaEmail()
-          if (email) {
-            await reportBetaMasterCompleted(
-              {
-                sessionId,
-                email,
-                trackName: activeFile.name,
-                masteringStyle: masteringStyleLabel(stylePreset),
-                processingTimeMs: elapsedMs,
-                masterLufs: extractMasterLufs(analysisAfterPayload),
+          await reportBetaMasterCompleted(
+            {
+              sessionId: trackingSessionId,
+              objectKey: responseObjectKey || masterObjectKey || null,
+              email: email || undefined,
+              trackName: activeFile.name,
+              masteringStyle: masteringStyleLabel(stylePreset),
+              processingTimeMs: elapsedMs,
+              masterLufs: extractMasterLufs(analysisAfterPayload),
+            },
+            {
+              refreshAccess,
+              applyBetaUi: (ui) => {
+                if (ui) {
+                  applyBetaSession({
+                    isBetaUser: true,
+                    isBeta: true,
+                    complete: true,
+                    betaUi: ui,
+                    email: email || undefined,
+                  })
+                }
               },
-              {
-                refreshAccess,
-                applyBetaUi: (ui) => {
-                  if (ui) {
-                    applyBetaSession({
-                      isBetaUser: true,
-                      isBeta: true,
-                      complete: true,
-                      betaUi: ui,
-                      email,
-                    })
-                  }
-                },
-              },
-            )
-          }
+            },
+          )
         }
 
         const mastered =
@@ -188,11 +196,6 @@ export default function MasterProcessingPage() {
           res.data.previewAfterMp3Url ||
           (res.data.previewAfterMp3 ? `${API}${res.data.previewAfterMp3}` : "")
 
-        const responseObjectKey =
-          stringField(res.data.objectKey) ||
-          stringField(res.data.object_key) ||
-          stringField(res.data.pipelineDebug?.objectKey) ||
-          objectKeyFromAfterPath(res.data.after)
         const responseExpiresAt =
           stringField(res.data.expiresAt) ||
           stringField(res.data.expires_at) ||
