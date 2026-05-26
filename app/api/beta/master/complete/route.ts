@@ -4,7 +4,11 @@ import { normalizeBetaEmail } from "../../../../../lib/betaAccess"
 import { isBetaFeedbackEnabled } from "../../../../../lib/betaFeedbackFeature"
 import { recordBetaMasterCompletion } from "../../../../../lib/betaMasterTracking"
 import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
-import { getBetaMasteringUiStateForEmail, syncBetaProfileFromActivity } from "../../../../../lib/betaUserData"
+import {
+  fetchBetaProfilePanelForEmail,
+  getBetaMasteringUiStateForEmail,
+  syncBetaProfileFromActivity,
+} from "../../../../../lib/betaUserData"
 import { getSupabaseEnvStatus } from "../../../../../lib/supabaseServer"
 
 export async function POST(request: Request) {
@@ -62,11 +66,13 @@ export async function POST(request: Request) {
   }
 
   const betaUi = await getBetaMasteringUiStateForEmail(email)
+  const panelResult = await fetchBetaProfilePanelForEmail(email)
 
   return NextResponse.json({
     ok: true,
     created: result.created,
     alreadyCounted: result.alreadyCounted,
     betaUi,
+    panel: "error" in panelResult ? null : panelResult.panel,
   })
 }

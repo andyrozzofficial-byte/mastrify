@@ -68,9 +68,9 @@ function RadioRow({
       {options.map((opt) => (
         <label
           key={opt}
-          className={`flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-[12px] transition sm:text-[13px] ${
+          className={`flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-[12px] transition-all duration-200 hover:scale-[1.02] sm:text-[13px] ${
             value === opt
-              ? "border-violet-400/35 bg-violet-500/10 text-white"
+              ? "border-violet-400/35 bg-violet-500/10 text-white shadow-[0_0_12px_rgba(139,92,246,0.15)]"
               : "border-white/[0.08] bg-white/[0.02] text-white/70 hover:border-white/[0.1] hover:bg-white/[0.04]"
           }`}
         >
@@ -104,10 +104,10 @@ function PillChoice({
           key={opt}
           type="button"
           onClick={() => onChange(opt)}
-          className={`flex min-h-[2.25rem] items-center justify-center rounded-lg border px-2 py-1.5 text-[12px] font-semibold transition ${
+          className={`flex min-h-[2.25rem] items-center justify-center rounded-lg border px-2 py-1.5 text-[12px] font-semibold transition-all duration-200 hover:scale-[1.02] ${
             value === opt
-              ? "border-violet-400/40 bg-gradient-to-r from-violet-600/90 to-indigo-700/90 text-white shadow-[0_0_12px_rgba(99,102,241,0.12)]"
-              : "border-white/[0.08] bg-white/[0.03] text-white/68 hover:bg-white/[0.05]"
+              ? "border-violet-400/40 bg-gradient-to-r from-violet-600/90 to-indigo-700/90 text-white shadow-[0_0_16px_rgba(99,102,241,0.2)]"
+              : "border-white/[0.08] bg-white/[0.03] text-white/68 hover:border-white/[0.12] hover:bg-white/[0.05]"
           }`}
         >
           {opt}
@@ -306,25 +306,40 @@ export default function BetaMasterFeedback({
       initial={reduce ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: EASE }}
-      className="mx-auto mt-0 w-full max-w-5xl px-0"
+      className="mx-auto mt-16 w-full max-w-5xl px-0"
       aria-labelledby="beta-master-feedback-title"
     >
-      <div className="product-surface-card beta-feedback-card relative flex max-h-[min(70vh,540px)] flex-col overflow-hidden border-violet-400/18 bg-white/[0.035] shadow-[0_0_32px_rgba(124,58,237,0.08)]">
+      <div className="relative flex max-h-[min(70vh,560px)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-8 shadow-[0_0_48px_rgba(124,58,237,0.12),inset_0_1px_0_rgba(255,255,255,0.06)]">
         {submitted ? (
           <BetaFeedbackSuccessPanel onCreateAnother={handleCreateAnother} />
         ) : (
           <>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-2 pt-3.5 sm:px-5 sm:pt-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
               <header className="text-center sm:text-left">
-                <h2 id="beta-master-feedback-title" className="text-base font-semibold text-white">
-                  Help improve Mastrify
-                </h2>
-                <p className="mt-1 text-[12px] leading-snug text-white/50">
-                  Quick feedback — your download stays available.
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/70">
+                  Step 3 of 3
                 </p>
+                <p className="mt-2 text-[11px] font-medium text-white/45">
+                  Analyze <span className="text-white/25">→</span> Master{" "}
+                  <span className="text-white/25">→</span>{" "}
+                  <span className="text-violet-200/90">Feedback</span>
+                </p>
+                <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:items-start sm:gap-3">
+                  <span className="text-2xl leading-none" aria-hidden>
+                    💬
+                  </span>
+                  <div>
+                    <h2 id="beta-master-feedback-title" className="text-lg font-semibold tracking-tight text-white">
+                      Help improve Mastrify
+                    </h2>
+                    <p className="mt-1.5 max-w-lg text-[13px] leading-relaxed text-white/58">
+                      Your feedback helps train better mastering decisions.
+                    </p>
+                  </div>
+                </div>
               </header>
 
-              <div className="mt-3 space-y-3.5">
+              <div className="mt-6 space-y-4">
                 <div>
                   <FieldLabel>Rate your master</FieldLabel>
                   <div className="mt-1.5 flex items-center gap-3">
@@ -429,7 +444,7 @@ export default function BetaMasterFeedback({
               </div>
             </div>
 
-            <div className="sticky bottom-0 z-10 shrink-0 border-t border-white/[0.08] bg-gradient-to-t from-[#0a0a12] via-[#0a0a12]/98 to-[#0a0a12]/90 px-4 py-3 backdrop-blur-md sm:px-5">
+            <div className="sticky bottom-0 z-10 mt-4 shrink-0 border-t border-white/[0.08] bg-gradient-to-t from-[#0a0a12] via-[#0a0a12]/98 to-[#0a0a12]/90 pt-4 backdrop-blur-md">
               {error ? (
                 <p className="mb-2 text-center text-xs text-rose-300/90" role="alert">
                   {error}

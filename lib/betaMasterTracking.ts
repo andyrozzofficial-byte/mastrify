@@ -1,7 +1,10 @@
-import { MASTERED_EXPORTS_TABLE } from "./adminData"
+import { MASTERED_EXPORTS_TABLE, PIPELINE_EVENTS_TABLE } from "./adminData"
 import { normalizeBetaEmail } from "./betaAccess"
 import { createSupabaseServerClient } from "./supabaseServer"
+
 export const BETA_MASTER_COMPLETIONS_TABLE = "beta_master_completions"
+export const PIPELINE_EVENT_MASTER_COMPLETE = "master_complete"
+export const PIPELINE_EVENT_DOWNLOAD = "download"
 
 export type BetaMasterCompletionRow = {
   session_id: string
@@ -19,9 +22,7 @@ function logBeta(message: string, detail?: Record<string, unknown>) {
   else console.log(`[beta] ${message}`)
 }
 
-export async function fetchBetaMasterCompletionsForEmail(
-  email: string,
-): Promise<BetaMasterCompletionRow[]> {
+async function fetchCompletionsTableRows(email: string): Promise<BetaMasterCompletionRow[]> {
   const supabase = createSupabaseServerClient()
   if (!supabase) return []
 
@@ -53,6 +54,56 @@ export async function fetchBetaMasterCompletionsForEmail(
   }))
 }
 
+async function fetchPipelineMasterCompleteRows(email: string): Promise<BetaMasterCompletionRow[]> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return []
+
+  const normalized = normalizeBetaEmail(email)
+  const { data, error } = await supabase
+    .from(PIPELINE_EVENTS_TABLE)
+    .select("session_id, created_at, track_name, user_email")
+    .eq("event_type", PIPELINE_EVENT_MASTER_COMPLETE)
+    .eq("user_email", normalized)
+    .order("created_at", { ascending: false })
+    .limit(500)
+
+  if (error) return []
+
+  return (data ?? [])
+    .filter((row) => row.session_id)
+    .map((row) => ({
+      session_id: String(row.session_id),
+      email: normalized,
+      track_name: row.track_name ?? null,
+      mastering_style: null,
+      processing_time_ms: null,
+      master_lufs: null,
+      completed_at: String(row.created_at),
+      created_at: String(row.created_at),
+    }))
+}
+
+/** Merged completions from dedicated table + pipeline fallback (deduped by session_id). */
+export async function fetchBetaMasterCompletionsForEmail(
+  email: string,
+): Promise<BetaMasterCompletionRow[]> {
+  const [tableRows, pipelineRows] = await Promise.all([
+    fetchCompletionsTableRows(email),
+    fetchPipelineMasterCompleteRows(email),
+  ])
+  const bySession = new Map<string, BetaMasterCompletionRow>()
+  for (const row of [...tableRows, ...pipelineRows]) {
+    if (!row.session_id) continue
+    if (!bySession.has(row.session_id)) bySession.set(row.session_id, row)
+  }
+  return [...bySession.values()].sort((a, b) => b.completed_at.localeCompare(a.completed_at))
+}
+
+export async function countBetaMastersForEmail(email: string): Promise<number> {
+  const rows = await fetchBetaMasterCompletionsForEmail(email)
+  return rows.length
+}
+
 export async function isBetaMasterSessionCompleted(sessionId: string): Promise<boolean> {
   const sid = sessionId.trim()
   if (!sid) return false
@@ -66,12 +117,62 @@ export async function isBetaMasterSessionCompleted(sessionId: string): Promise<b
     .eq("session_id", sid)
     .maybeSingle()
 
+  if (!error && data?.session_id) return true
+
+  const { data: pipe } = await supabase
+    .from(PIPELINE_EVENTS_TABLE)
+    .select("session_id")
+    .eq("event_type", PIPELINE_EVENT_MASTER_COMPLETE)
+    .eq("session_id", sid)
+    .maybeSingle()
+
+  return Boolean(pipe?.session_id)
+}
+
+async function writePipelineMasterComplete(input: {
+  email: string
+  sessionId: string
+  trackName?: string | null
+}): Promise<boolean> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return false
+
+  const { error } = await supabase.from(PIPELINE_EVENTS_TABLE).insert({
+    session_id: input.sessionId,
+    event_type: PIPELINE_EVENT_MASTER_COMPLETE,
+    user_email: normalizeBetaEmail(input.email),
+    track_name: input.trackName?.trim() || null,
+    metadata: {},
+  })
+
   if (error) {
-    if (/does not exist|42P01/i.test(error.message)) return false
+    logBeta("pipeline master_complete write failed", { message: error.message })
     return false
   }
+  return true
+}
 
-  return Boolean(data?.session_id)
+async function writePipelineDownload(input: {
+  email: string
+  sessionId: string
+  trackTitle?: string | null
+}): Promise<boolean> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return false
+
+  const { error } = await supabase.from(PIPELINE_EVENTS_TABLE).insert({
+    session_id: input.sessionId,
+    event_type: PIPELINE_EVENT_DOWNLOAD,
+    user_email: normalizeBetaEmail(input.email),
+    track_name: input.trackTitle?.trim() || null,
+    metadata: {},
+  })
+
+  if (error) {
+    logBeta("pipeline download write failed", { message: error.message })
+    return false
+  }
+  return true
 }
 
 export type RecordBetaMasterCompletionInput = {
@@ -120,25 +221,41 @@ export async function recordBetaMasterCompletion(
     completed_at: completedAt,
   }
 
+  let tableWriteOk = false
   const { error } = await supabase.from(BETA_MASTER_COMPLETIONS_TABLE).insert(row)
   if (error) {
     if (/duplicate|unique/i.test(error.message)) {
       logBeta("master already counted", { sessionId })
       return { ok: true, created: false, alreadyCounted: true }
     }
-    if (/does not exist|42P01/i.test(error.message)) {
-      return { error: "beta_master_completions table missing — run Supabase migration" }
+    if (!/does not exist|42P01/i.test(error.message)) {
+      logBeta("completions table insert failed", { message: error.message })
     }
-    return { error: error.message }
+  } else {
+    tableWriteOk = true
   }
 
-  logBeta("master completed", { sessionId, email })
+  const pipelineOk = await writePipelineMasterComplete({
+    email,
+    sessionId,
+    trackName: input.trackName,
+  })
+
+  if (!tableWriteOk && !pipelineOk) {
+    return {
+      error:
+        "Could not record master completion. Apply supabase/migrations/20260528120000_beta_master_completions.sql or check pipeline events table.",
+    }
+  }
+
+  logBeta("master completed", { sessionId, email, tableWriteOk, pipelineOk })
   return { ok: true, created: true, alreadyCounted: false }
 }
 
 export type RecordBetaMasterDownloadInput = {
   email: string
   objectKey: string
+  sessionId?: string | null
   trackTitle?: string | null
   expiresAt?: string | null
 }
@@ -156,20 +273,67 @@ export async function recordBetaMasterDownload(
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const { error } = await supabase.from(MASTERED_EXPORTS_TABLE).insert({
+  let exportOk = false
+  let exportError: string | null = null
+  const exportRes = await supabase.from(MASTERED_EXPORTS_TABLE).insert({
     email,
     object_key: objectKey,
     track_title: input.trackTitle?.trim() || null,
     expires_at: input.expiresAt?.trim() || null,
   })
 
-  if (error) {
-    if (/does not exist|42P01/i.test(error.message)) {
-      return { error: "mastered_exports table missing" }
+  if (!exportRes.error) {
+    exportOk = true
+  } else {
+    exportError = exportRes.error.message
+    if (!/does not exist|42P01/i.test(exportRes.error.message)) {
+      logBeta("mastered_exports insert failed", { message: exportRes.error.message })
     }
-    return { error: error.message }
   }
 
-  logBeta("download registered", { email, objectKey })
+  const sessionId = input.sessionId?.trim() || ""
+  const pipelineOk =
+    sessionId.length > 0
+      ? await writePipelineDownload({ email, sessionId, trackTitle: input.trackTitle })
+      : false
+
+  if (!exportOk && !pipelineOk) {
+    if (exportError && /does not exist|42P01/i.test(exportError)) {
+      return { error: "mastered_exports table missing" }
+    }
+    return { error: exportError ?? "Could not record download" }
+  }
+
+  logBeta("download registered", { email, objectKey, exportOk, pipelineOk })
   return { ok: true }
+}
+
+export async function countBetaDownloadsForEmail(email: string): Promise<number> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return 0
+
+  const normalized = normalizeBetaEmail(email)
+  const [exportsRes, pipelineRes] = await Promise.all([
+    supabase.from(MASTERED_EXPORTS_TABLE).select("id", { count: "exact", head: true }).eq("email", normalized),
+    supabase
+      .from(PIPELINE_EVENTS_TABLE)
+      .select("id", { count: "exact", head: true })
+      .eq("event_type", PIPELINE_EVENT_DOWNLOAD)
+      .eq("user_email", normalized),
+  ])
+
+  const exportCount = exportsRes.count ?? 0
+  const pipelineCount = pipelineRes.count ?? 0
+  return Math.max(exportCount, pipelineCount)
+}
+
+export function resolveBetaDownloadObjectKey(
+  objectKey: string | null | undefined,
+  sessionId: string | null | undefined,
+): string {
+  const key = objectKey?.trim()
+  if (key) return key
+  const sid = sessionId?.trim()
+  if (sid) return `beta-session:${sid}`
+  return `beta-download:${Date.now()}`
 }

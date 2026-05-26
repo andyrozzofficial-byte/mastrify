@@ -1,8 +1,17 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { buildBetaProfilePanelData } from "../../../../../lib/betaProfilePanel"
+import { normalizeBetaEmail } from "../../../../../lib/betaAccess"
 import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
-import { fetchBetaUserProfile } from "../../../../../lib/betaUserData"
+import { fetchBetaProfilePanelForEmail } from "../../../../../lib/betaUserData"
+
+async function resolvePanelEmail(
+  cookieEmail: string | null,
+  bodyEmail?: string,
+): Promise<string | null> {
+  if (cookieEmail) return cookieEmail
+  const normalized = typeof bodyEmail === "string" ? normalizeBetaEmail(bodyEmail) : ""
+  return normalized.includes("@") ? normalized : null
+}
 
 export async function GET() {
   const store = await cookies()
@@ -11,10 +20,35 @@ export async function GET() {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 })
   }
 
-  const profile = await fetchBetaUserProfile(email)
-  if ("error" in profile) {
-    return NextResponse.json({ error: profile.error }, { status: 500 })
+  const result = await fetchBetaProfilePanelForEmail(email)
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, panel: buildBetaProfilePanelData(profile) })
+  return NextResponse.json({ ok: true, panel: result.panel })
+}
+
+export async function POST(request: Request) {
+  const store = await cookies()
+  const cookieEmail = await resolveBetaEmailFromCookies(store)
+
+  let bodyEmail: string | undefined
+  try {
+    const body = (await request.json()) as { email?: string }
+    bodyEmail = body.email
+  } catch {
+    /* GET-style panel load without body */
+  }
+
+  const email = await resolvePanelEmail(cookieEmail, bodyEmail)
+  if (!email) {
+    return NextResponse.json({ error: "Beta email required" }, { status: 401 })
+  }
+
+  const result = await fetchBetaProfilePanelForEmail(email)
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true, panel: result.panel })
 }

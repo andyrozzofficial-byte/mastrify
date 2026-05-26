@@ -2,6 +2,8 @@ import { isBetaFeedbackEnabled } from "./betaFeedbackFeature"
 import { createMasterSessionId } from "./masterSessionId"
 import { getStoredBetaEmail } from "./betaSessionStorage"
 import type { BetaMasteringUiState } from "./betaPoints"
+import type { BetaProfilePanelData } from "./betaProfilePanel"
+import { resolveBetaDownloadObjectKey } from "./betaMasterTracking"
 
 export type RegisterBetaMasterCompletePayload = {
   sessionId: string
@@ -13,7 +15,8 @@ export type RegisterBetaMasterCompletePayload = {
 }
 
 export type RegisterBetaMasterDownloadPayload = {
-  objectKey: string
+  objectKey?: string | null
+  sessionId?: string | null
   trackTitle?: string | null
   expiresAt?: string | null
   email?: string | null
@@ -23,10 +26,33 @@ function logBeta(message: string) {
   console.log(`[beta] ${message}`)
 }
 
+export const BETA_PROFILE_REFRESH_EVENT = "mastrify:beta-profile-refresh"
+export const BETA_PROFILE_PANEL_EVENT = "mastrify:beta-profile-panel"
+
+export function dispatchBetaProfileRefresh() {
+  if (typeof window === "undefined") return
+  logBeta("profile refreshed")
+  window.dispatchEvent(new CustomEvent(BETA_PROFILE_REFRESH_EVENT))
+}
+
+export function dispatchBetaProfilePanel(panel: BetaProfilePanelData) {
+  if (typeof window === "undefined") return
+  window.dispatchEvent(new CustomEvent(BETA_PROFILE_PANEL_EVENT, { detail: panel }))
+}
+
+function applyPanelUpdate(panel: BetaProfilePanelData | null | undefined) {
+  if (panel) dispatchBetaProfilePanel(panel)
+}
+
 /** Idempotent: records one completed master per session_id. */
 export async function registerBetaMasterComplete(
   payload: RegisterBetaMasterCompletePayload,
-): Promise<{ ok: boolean; alreadyCounted?: boolean; betaUi?: BetaMasteringUiState | null }> {
+): Promise<{
+  ok: boolean
+  alreadyCounted?: boolean
+  betaUi?: BetaMasteringUiState | null
+  panel?: BetaProfilePanelData | null
+}> {
   const sessionId = payload.sessionId.trim() || createMasterSessionId()
   const email = payload.email?.trim() || getStoredBetaEmail()
   if (!email?.includes("@")) {
@@ -53,6 +79,7 @@ export async function registerBetaMasterComplete(
       alreadyCounted?: boolean
       error?: string
       betaUi?: BetaMasteringUiState | null
+      panel?: BetaProfilePanelData | null
     } | null
 
     if (!res.ok) {
@@ -63,10 +90,13 @@ export async function registerBetaMasterComplete(
     if (json?.alreadyCounted) logBeta("master already counted")
     else if (json?.ok) logBeta("master completed")
 
+    applyPanelUpdate(json?.panel)
+
     return {
       ok: Boolean(json?.ok),
       alreadyCounted: json?.alreadyCounted,
       betaUi: json?.betaUi ?? null,
+      panel: json?.panel ?? null,
     }
   } catch (err) {
     console.warn("[beta] master complete request failed", err)
@@ -76,10 +106,13 @@ export async function registerBetaMasterComplete(
 
 export async function registerBetaMasterDownload(
   payload: RegisterBetaMasterDownloadPayload,
-): Promise<boolean> {
-  const objectKey = payload.objectKey.trim()
-  if (!objectKey) return false
+): Promise<{ ok: boolean; panel?: BetaProfilePanelData | null }> {
   const email = payload.email?.trim() || getStoredBetaEmail()
+  const objectKey = resolveBetaDownloadObjectKey(payload.objectKey, payload.sessionId)
+  if (!email?.includes("@")) {
+    console.warn("[beta] download skipped: no beta email")
+    return { ok: false }
+  }
 
   try {
     const res = await fetch("/api/beta/master/download", {
@@ -88,30 +121,28 @@ export async function registerBetaMasterDownload(
       credentials: "include",
       body: JSON.stringify({
         objectKey,
-        email: email || null,
+        sessionId: payload.sessionId ?? null,
+        email,
         trackTitle: payload.trackTitle ?? null,
         expiresAt: payload.expiresAt ?? null,
       }),
     })
-    const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null
+    const json = (await res.json().catch(() => null)) as {
+      ok?: boolean
+      error?: string
+      panel?: BetaProfilePanelData | null
+    } | null
     if (!res.ok) {
       console.warn("[beta] download register failed", json?.error ?? res.status)
-      return false
+      return { ok: false }
     }
     logBeta("download registered")
-    return Boolean(json?.ok)
+    applyPanelUpdate(json?.panel)
+    return { ok: Boolean(json?.ok), panel: json?.panel ?? null }
   } catch (err) {
     console.warn("[beta] download register request failed", err)
-    return false
+    return { ok: false }
   }
-}
-
-export const BETA_PROFILE_REFRESH_EVENT = "mastrify:beta-profile-refresh"
-
-export function dispatchBetaProfileRefresh() {
-  if (typeof window === "undefined") return
-  logBeta("profile refreshed")
-  window.dispatchEvent(new CustomEvent(BETA_PROFILE_REFRESH_EVENT))
 }
 
 /** Call once when a mastered file is ready — not on download or feedback. */
@@ -130,6 +161,23 @@ export async function reportBetaMasterCompleted(
   if (result.betaUi && options?.applyBetaUi) {
     options.applyBetaUi(result.betaUi)
   }
+
+  await options?.refreshAccess?.({ silent: true })
+  dispatchBetaProfileRefresh()
+  return true
+}
+
+/** Call when user taps Download Master — separate from master completion. */
+export async function reportBetaMasterDownload(
+  payload: RegisterBetaMasterDownloadPayload,
+  options?: {
+    refreshAccess?: (opts?: { silent?: boolean }) => Promise<boolean>
+  },
+): Promise<boolean> {
+  if (!isBetaFeedbackEnabled()) return false
+
+  const result = await registerBetaMasterDownload(payload)
+  if (!result.ok) return false
 
   await options?.refreshAccess?.({ silent: true })
   dispatchBetaProfileRefresh()

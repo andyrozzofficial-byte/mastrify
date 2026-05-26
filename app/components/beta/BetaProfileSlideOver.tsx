@@ -4,7 +4,11 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useCallback, useEffect, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import type { BetaProfilePanelData } from "../../../lib/betaProfilePanel"
-import { BETA_PROFILE_REFRESH_EVENT } from "../../../lib/betaMasterTrackingClient"
+import {
+  BETA_PROFILE_PANEL_EVENT,
+  BETA_PROFILE_REFRESH_EVENT,
+} from "../../../lib/betaMasterTrackingClient"
+import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 const PANEL_MS = 0.28
@@ -69,7 +73,14 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/beta/profile/panel", { cache: "no-store", credentials: "include" })
+      const storedEmail = getStoredBetaEmail()
+      const res = await fetch("/api/beta/profile/panel", {
+        method: "POST",
+        cache: "no-store",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: storedEmail ?? undefined }),
+      })
       const json = (await res.json().catch(() => null)) as { panel?: BetaProfilePanelData; error?: string } | null
       if (!res.ok) {
         setError(json?.error ?? "Could not load your beta profile.")
@@ -99,8 +110,16 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
       if (!open) return
       void loadPanel()
     }
+    const onPanel = (event: Event) => {
+      const detail = (event as CustomEvent<BetaProfilePanelData>).detail
+      if (detail) setPanel(detail)
+    }
     window.addEventListener(BETA_PROFILE_REFRESH_EVENT, onRefresh)
-    return () => window.removeEventListener(BETA_PROFILE_REFRESH_EVENT, onRefresh)
+    window.addEventListener(BETA_PROFILE_PANEL_EVENT, onPanel)
+    return () => {
+      window.removeEventListener(BETA_PROFILE_REFRESH_EVENT, onRefresh)
+      window.removeEventListener(BETA_PROFILE_PANEL_EVENT, onPanel)
+    }
   }, [open, loadPanel])
 
   useEffect(() => {
@@ -239,10 +258,11 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
 
                     <div>
                       <SectionHeading>Stats</SectionHeading>
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4">
                         {(
                           [
                             ["Masters", panel.activity.mastersCompleted],
+                            ["Downloads", panel.activity.downloads],
                             ["Feedback", panel.activity.feedbackSubmitted],
                             ["Bug reports", panel.activity.bugReports],
                             ["Active days", panel.activity.activeDays],

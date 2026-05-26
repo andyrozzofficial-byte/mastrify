@@ -44,11 +44,7 @@ import BetaResultCompleteCelebration from "../../components/master/BetaResultCom
 import BetaMasterStatusCard from "../../components/master/BetaMasterStatusCard"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
-import {
-  dispatchBetaProfileRefresh,
-  registerBetaMasterDownload,
-  reportBetaMasterCompleted,
-} from "../../../lib/betaMasterTrackingClient"
+import { reportBetaMasterCompleted, reportBetaMasterDownload } from "../../../lib/betaMasterTrackingClient"
 import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
 
@@ -281,21 +277,7 @@ export default function MasterResultClient() {
   const masteredWavUrl = useMemo(() => normalizePlaybackUrl(masteredUrl), [masteredUrl])
   const masteredMp3Url = useMemo(() => normalizePlaybackUrl(masteredPreviewMp3Url), [masteredPreviewMp3Url])
 
-  const registerDownloadIfReady = useCallback(async () => {
-    const deliveryObjectKey = masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)
-    if (!deliveryObjectKey) return false
-    const ok = await registerBetaMasterDownload({
-      objectKey: deliveryObjectKey,
-      email: deliveryEmail.trim() || getStoredBetaEmail(),
-      trackTitle: file?.name || trackName || "",
-      expiresAt: masterExpiresAt || null,
-    })
-    if (ok) {
-      await refreshAccess({ silent: true })
-      dispatchBetaProfileRefresh()
-    }
-    return ok
-  }, [masterObjectKey, masteredWavUrl, file?.name, trackName, masterExpiresAt, deliveryEmail, refreshAccess])
+  const downloadReportedRef = useRef(false)
 
   const masteredPlayback = useMemo(
     () => resolveMasteredPlaybackUrl(masteredMp3Url, masteredWavUrl),
@@ -813,9 +795,19 @@ export default function MasterResultClient() {
     runIfAllowed(() => {
       setDeliveryOpen(true)
       setDeliveryError("")
-      if (showBetaRewards) {
+      if (showBetaRewards && !downloadReportedRef.current) {
+        downloadReportedRef.current = true
         setDownloadToastVisible(true)
-        void registerDownloadIfReady()
+        void reportBetaMasterDownload(
+          {
+            objectKey: masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl),
+            sessionId,
+            email: deliveryEmail.trim() || getStoredBetaEmail(),
+            trackTitle: file?.name || trackName || "",
+            expiresAt: masterExpiresAt || null,
+          },
+          { refreshAccess },
+        )
       }
     })
   }
@@ -858,9 +850,6 @@ export default function MasterResultClient() {
       }
       setDeliverySent(true)
       setDeliveryOpen(false)
-      if (showBetaRewards) {
-        await registerDownloadIfReady()
-      }
     } catch (err) {
       setDeliveryError(err instanceof Error ? err.message : "Could not send email. Please try again.")
     } finally {

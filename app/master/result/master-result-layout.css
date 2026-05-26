@@ -93,15 +93,8 @@
 
 .master-result-feedback {
   width: 100%;
-  margin-top: 2.5rem;
+  margin-top: 0;
   padding-bottom: 8rem;
-}
-
-@media (min-width: 768px) {
-  .master-result-feedback {
-    margin-top: 3rem;
-    padding-bottom: 8rem;
-  }
 }
 
 @media (min-width: 768px) {

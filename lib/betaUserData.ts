@@ -45,9 +45,11 @@ import {
 } from "./adminData"
 import { findBetaProfileByEmail, upsertCustomerProfileRow } from "./betaProfileDb"
 import {
+  countBetaDownloadsForEmail,
   fetchBetaMasterCompletionsForEmail,
   type BetaMasterCompletionRow,
 } from "./betaMasterTracking"
+import { buildBetaProfilePanelData, type BetaProfilePanelData } from "./betaProfilePanel"
 import { createSupabaseServerClient } from "./supabaseServer"
 import { formatSupabaseTableError } from "./supabaseSchemaErrors"
 
@@ -537,7 +539,7 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
   ]
 
   const uploadCount = await fetchUploadCountsBySession(sessions)
-  const downloadCount = exportMap.get(normalized) ?? 0
+  const downloadCount = await countBetaDownloadsForEmail(normalized)
 
   const lufsValues = userFeedback.map((f) => f.master_lufs).filter((v): v is number => v != null)
   const avgLufs =
@@ -908,6 +910,14 @@ export async function touchBetaProfileFromFeedback(
 
   await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(body, { onConflict: "email" })
   await syncBetaProfileFromActivity(normalized)
+}
+
+export async function fetchBetaProfilePanelForEmail(
+  email: string,
+): Promise<{ ok: true; panel: BetaProfilePanelData } | { error: string }> {
+  const profile = await fetchBetaUserProfile(email)
+  if (isFetchError(profile)) return profile
+  return { ok: true, panel: buildBetaProfilePanelData(profile) }
 }
 
 export async function getBetaProfileStatus(
