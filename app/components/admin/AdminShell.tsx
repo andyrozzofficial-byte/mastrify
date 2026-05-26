@@ -59,7 +59,7 @@ export default function AdminShell({ children }: Props) {
 
   if (auth === "loading" || auth === "login") {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[#0B0B0F] text-white/60">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#0F0F16] text-white/60">
         {auth === "loading" ? "Loading workspace…" : "Redirecting to login…"}
       </div>
     )
@@ -67,13 +67,13 @@ export default function AdminShell({ children }: Props) {
 
   return (
     <AdminBadgeContext.Provider value={badges}>
-      <div className="min-h-[100dvh] bg-[#0B0B0F] text-white">
-        <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#0B0B0F]/95 backdrop-blur-md">
+      <div className="min-h-[100dvh] bg-[#0F0F16] text-white">
+        <header className="sticky top-0 z-40 border-b border-white/[0.12] bg-[#0F0F16]/95 backdrop-blur-md">
           <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-xs text-white/60 transition hover:bg-white/[0.06] lg:hidden"
+                className="rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-2 text-xs text-white/65 transition hover:bg-white/[0.07] lg:hidden"
                 onClick={() => setMobileNav((v) => !v)}
               >
                 Menu
@@ -103,7 +103,7 @@ export default function AdminShell({ children }: Props) {
 
         <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 lg:flex-row lg:px-8">
           <aside className={`lg:w-60 lg:shrink-0 ${mobileNav ? "block" : "hidden lg:block"}`}>
-            <nav className="space-y-1 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-2">
+            <nav className="space-y-1 rounded-2xl border border-white/[0.12] bg-white/[0.04] p-2 shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
               {ADMIN_NAV.map((item) => (
                 <AdminNavLink
                   key={item.href}

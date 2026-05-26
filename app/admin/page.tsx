@@ -136,15 +136,15 @@ export default function AdminOverviewPage() {
 
         <AdminPanel title="Inbox snapshot">
           <dl className="space-y-4">
-            <div className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+            <div className="flex items-center justify-between rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-3">
               <dt className="text-sm text-white/60">Open support</dt>
               <dd className="text-xl font-semibold tabular-nums text-white">{data.supportOpen}</dd>
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+            <div className="flex items-center justify-between rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-3">
               <dt className="text-sm text-white/60">New feedback</dt>
               <dd className="text-xl font-semibold tabular-nums text-white">{data.feedbackNew}</dd>
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+            <div className="flex items-center justify-between rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-3">
               <dt className="text-sm text-white/60">Total feedback</dt>
               <dd className="text-lg tabular-nums text-white">{data.feedbackTotal}</dd>
             </div>
@@ -161,7 +161,7 @@ export default function AdminOverviewPage() {
               data.recentMasters.map((r) => (
                 <li
                   key={r.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 transition hover:bg-white/[0.04]"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-3 transition hover:bg-white/[0.055]"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-[14px] font-medium text-white">
@@ -187,7 +187,7 @@ export default function AdminOverviewPage() {
               data.recentPurchases.map((r) => (
                 <li
                   key={r.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 transition hover:bg-white/[0.04]"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-3 transition hover:bg-white/[0.055]"
                 >
                   <div className="min-w-0">
                     <Link
@@ -215,7 +215,7 @@ export default function AdminOverviewPage() {
             {data.recentFeedback.map((r) => (
               <li
                 key={r.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-3"
               >
                 <div className="min-w-0">
                   <Link
@@ -237,7 +237,7 @@ export default function AdminOverviewPage() {
             {data.recentSupport.map((r) => (
               <li
                 key={r.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 py-3"
               >
                 <div className="min-w-0">
                   <Link

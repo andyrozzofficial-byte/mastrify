@@ -160,8 +160,8 @@ export function AdminCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 transition duration-200 ${
-        hover ? "hover:border-violet-400/30 hover:bg-white/[0.045]" : ""
+      className={`rounded-2xl border border-white/[0.12] bg-white/[0.05] p-6 shadow-[0_0_40px_rgba(0,0,0,0.22)] transition duration-200 ${
+        hover ? "hover:border-violet-400/35 hover:bg-white/[0.065]" : ""
       } ${className}`}
     >
       {children}
@@ -192,11 +192,11 @@ export function KpiCard({
             : "from-white/15 to-transparent"
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 transition duration-200 hover:-translate-y-0.5 hover:border-violet-400/30">
+    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.05] p-6 shadow-[0_0_40px_rgba(0,0,0,0.22)] transition duration-200 hover:-translate-y-0.5 hover:border-violet-400/35">
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accentBar}`} />
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/60">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/70">{label}</p>
       <p className="mt-3 text-4xl font-bold tracking-tight tabular-nums text-white">{value}</p>
-      {hint ? <p className="mt-2 text-[13px] leading-relaxed text-white/60">{hint}</p> : null}
+      {hint ? <p className="mt-2 text-[13px] leading-relaxed text-white/65">{hint}</p> : null}
     </div>
   )
 }
@@ -348,7 +348,7 @@ export function PrioritySelect({
 
 export function AdminEmpty({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-white/[0.1] bg-white/[0.02] px-8 py-14 text-center text-sm text-white/60">
+    <div className="rounded-2xl border border-dashed border-white/[0.12] bg-white/[0.03] px-8 py-14 text-center text-sm text-white/60">
       {message}
     </div>
   )
@@ -380,7 +380,7 @@ export function AdminPanel({
 
 export function AdminTable({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-white/[0.02]">
+    <div className="overflow-x-auto rounded-2xl border border-white/[0.12] bg-white/[0.03]">
       <table className="w-full min-w-[640px] text-left text-[13px]">{children}</table>
     </div>
   )
@@ -642,12 +642,12 @@ export function AdminNavLink({
       className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition duration-200 ${
         active
           ? "bg-violet-500/12 text-violet-100 shadow-[0_0_20px_rgba(139,92,246,0.15)] ring-1 ring-violet-400/25"
-          : "text-white/55 hover:bg-white/[0.04] hover:text-white/85"
+          : "text-white/65 hover:bg-white/[0.055] hover:text-white/90"
       }`}
     >
       <span
         className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${
-          active ? "bg-violet-500/20 text-violet-200" : "bg-white/[0.05] text-white/45 group-hover:text-white/70"
+          active ? "bg-violet-500/20 text-violet-200" : "bg-white/[0.06] text-white/50 group-hover:text-white/80"
         }`}
       >
         <Icon />
