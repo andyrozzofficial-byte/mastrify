@@ -87,9 +87,9 @@ function FooterLinksDesktop({ columns }: { columns: FooterLinkColumn[] }) {
   return (
     <nav
       aria-label="Footer navigation"
-      className="footer-links-grid hidden w-full min-w-0 md:grid md:items-center"
+      className="footer-links-grid hidden w-max min-w-0 md:grid md:items-center"
       style={{
-        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        gridTemplateColumns: "140px 140px 140px",
         columnGap: "48px",
         rowGap: "18px",
       }}
@@ -109,10 +109,11 @@ function FooterLinksDesktop({ columns }: { columns: FooterLinkColumn[] }) {
           return (
             <div
               key={`${column.title}-row-${rowIndex}`}
-              className="flex min-h-[2.5rem] min-w-0 items-center justify-start"
+              className="flex min-h-[2.5rem] w-[140px] items-center justify-start"
+              style={{ whiteSpace: "nowrap" }}
             >
               {link ? (
-                <Link href={link.href} className="footer-tap-link whitespace-nowrap">
+                <Link href={link.href} className="footer-tap-link whitespace-nowrap" style={{ whiteSpace: "nowrap" }}>
                   {link.label}
                 </Link>
               ) : null}
