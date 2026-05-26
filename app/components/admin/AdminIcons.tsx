@@ -40,6 +40,15 @@ export function IconCustomers({ className }: IconProps) {
   )
 }
 
+export function IconBetaUsers({ className }: IconProps) {
+  return (
+    <svg className={cn(className)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+      <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" />
+      <circle cx="12" cy="12" r="9" strokeDasharray="3 2" opacity="0.35" />
+    </svg>
+  )
+}
+
 export function IconAnalytics({ className }: IconProps) {
   return (
     <svg className={cn(className)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
@@ -72,6 +81,7 @@ export const ADMIN_ICON_MAP = {
   feedback: IconFeedback,
   support: IconSupport,
   customers: IconCustomers,
+  betaUsers: IconBetaUsers,
   analytics: IconAnalytics,
   jobs: IconJobs,
   settings: IconSettings,

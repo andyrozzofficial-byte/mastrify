@@ -2,12 +2,16 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { FormEvent, useState } from "react"
+import { FormEvent, useEffect, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import CinematicBackground from "../components/CinematicBackground"
 import { safeAccessRedirect } from "../../lib/access"
+import { BETA_DAW_OPTIONS } from "../../lib/betaAccess"
+import { BETA_FEEDBACK_GENRE_OPTIONS } from "../../lib/betaFeedbackTypes"
 
 const EASE = [0.22, 1, 0.36, 1] as const
+
+type Step = "loading" | "password" | "profile"
 
 export default function AccessClient() {
   const router = useRouter()
@@ -15,11 +19,40 @@ export default function AccessClient() {
   const reduce = useReducedMotion()
   const next = safeAccessRedirect(searchParams.get("next"))
 
+  const [step, setStep] = useState<Step>("loading")
   const [password, setPassword] = useState("")
+  const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
+  const [genre, setGenre] = useState("")
+  const [daw, setDaw] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function onSubmit(e: FormEvent) {
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch("/api/beta/profile", { cache: "no-store" })
+        if (res.status === 401) {
+          setStep("password")
+          return
+        }
+        const json = await res.json().catch(() => null)
+        if (json?.complete) {
+          router.replace(next)
+          return
+        }
+        if (json?.email) setEmail(json.email)
+        if (json?.profile?.genre) setGenre(json.profile.genre)
+        if (json?.profile?.daw) setDaw(json.profile.daw)
+        if (json?.profile?.name) setName(json.profile.name)
+        setStep(res.ok ? "profile" : "password")
+      } catch {
+        setStep("password")
+      }
+    })()
+  }, [next, router])
+
+  async function onPasswordSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -36,6 +69,38 @@ export default function AccessClient() {
         return
       }
 
+      const profileRes = await fetch("/api/beta/profile", { cache: "no-store" })
+      const json = await profileRes.json().catch(() => null)
+      if (profileRes.ok && json?.complete) {
+        router.replace(next)
+        router.refresh()
+        return
+      }
+      if (json?.email) setEmail(json.email)
+      setStep("profile")
+    } catch {
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function onProfileSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+
+    try {
+      const res = await fetch("/api/beta/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name: name.trim() || null, genre, daw }),
+      })
+      const json = await res.json().catch(() => null)
+      if (!res.ok) {
+        setError(json?.error ?? "Could not save your profile.")
+        return
+      }
       router.replace(next)
       router.refresh()
     } catch {
@@ -44,6 +109,15 @@ export default function AccessClient() {
       setLoading(false)
     }
   }
+
+  const title =
+    step === "profile" ? "One quick step" : step === "loading" ? "Checking access…" : "You're invited"
+  const subtitle =
+    step === "profile"
+      ? "Tell us who you are so feedback and support stay linked to your sessions."
+      : step === "loading"
+        ? "Please wait."
+        : "Enter the shared access password to open mastering. Public pages stay available without a login."
 
   return (
     <motion.div
@@ -100,54 +174,133 @@ export default function AccessClient() {
               className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/32 to-transparent"
               aria-hidden
             />
-            <div
-              className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-violet-600/[0.09] blur-3xl"
-              aria-hidden
-            />
 
             <p className="text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/72">
               Private beta
             </p>
             <h1 className="mt-5 text-center text-[1.5rem] font-semibold leading-[1.15] tracking-[-0.03em] text-white/95 sm:text-[1.65rem]">
-              You&apos;re invited
+              {title}
             </h1>
             <p className="mx-auto mt-4 max-w-[16.5rem] text-center text-[14px] leading-[1.65] text-muted sm:text-[15px] sm:leading-[1.7]">
-              Enter the shared access password to open mastering. Public pages stay available without a login.
+              {subtitle}
             </p>
 
-            <form onSubmit={onSubmit} className="mt-8 space-y-5">
-              <label className="block">
-                <span className="sr-only">Access password</span>
-                <input
-                  type="password"
-                  name="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Access password"
-                  required
-                  className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3.5 text-[15px] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition duration-300 placeholder:text-muted-soft focus:border-violet-400/35 focus:bg-white/[0.06] focus:shadow-[0_0_0_1px_rgba(167,139,250,0.15),0_0_28px_rgba(99,102,241,0.1)]"
-                />
-              </label>
+            {step === "password" ? (
+              <form onSubmit={onPasswordSubmit} className="mt-8 space-y-5">
+                <label className="block">
+                  <span className="sr-only">Access password</span>
+                  <input
+                    type="password"
+                    name="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Access password"
+                    required
+                    className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3.5 text-[15px] text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition duration-300 placeholder:text-muted-soft focus:border-violet-400/35 focus:bg-white/[0.06] focus:shadow-[0_0_0_1px_rgba(167,139,250,0.15),0_0_28px_rgba(99,102,241,0.1)]"
+                  />
+                </label>
+                {error ? (
+                  <p className="text-center text-[13px] leading-relaxed text-rose-300/88" role="alert">
+                    {error}
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={loading || !password.trim()}
+                  className="group relative mx-auto flex min-h-[50px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 text-[14px] font-semibold tracking-[-0.01em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_36px_rgba(0,0,0,0.38),0_0_24px_rgba(99,102,241,0.12)] ring-1 ring-white/[0.1] transition-all duration-300 hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <span className="relative z-[1]">{loading ? "Checking…" : "Continue"}</span>
+                </button>
+              </form>
+            ) : null}
 
-              {error ? (
-                <p className="text-center text-[13px] leading-relaxed text-rose-300/88" role="alert">
-                  {error}
-                </p>
-              ) : null}
+            {step === "profile" ? (
+              <form onSubmit={onProfileSubmit} className="mt-8 space-y-4">
+                <label className="block">
+                  <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
+                    Email
+                  </span>
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-[15px] text-white/92 outline-none focus:border-violet-400/35"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
+                    Name (optional)
+                  </span>
+                  <input
+                    type="text"
+                    name="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-[15px] text-white/92 outline-none focus:border-violet-400/35"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
+                    Genre
+                  </span>
+                  <select
+                    value={genre}
+                    onChange={(e) => setGenre(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-[15px] text-white/92 outline-none focus:border-violet-400/35"
+                  >
+                    <option value="" disabled>
+                      Select genre
+                    </option>
+                    {BETA_FEEDBACK_GENRE_OPTIONS.map((g) => (
+                      <option key={g} value={g} className="bg-[#111]">
+                        {g}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
+                    DAW
+                  </span>
+                  <select
+                    value={daw}
+                    onChange={(e) => setDaw(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-[15px] text-white/92 outline-none focus:border-violet-400/35"
+                  >
+                    <option value="" disabled>
+                      Select DAW
+                    </option>
+                    {BETA_DAW_OPTIONS.map((d) => (
+                      <option key={d} value={d} className="bg-[#111]">
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {error ? (
+                  <p className="text-center text-[13px] leading-relaxed text-rose-300/88" role="alert">
+                    {error}
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={loading || !email.trim() || !genre || !daw}
+                  className="flex min-h-[50px] w-full items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 to-indigo-800/95 text-[14px] font-semibold text-white disabled:opacity-50"
+                >
+                  {loading ? "Saving…" : "Enter beta"}
+                </button>
+              </form>
+            ) : null}
 
-              <button
-                type="submit"
-                disabled={loading || !password.trim()}
-                className="group relative mx-auto flex min-h-[50px] w-full max-w-[16rem] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 text-[14px] font-semibold tracking-[-0.01em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_36px_rgba(0,0,0,0.38),0_0_24px_rgba(99,102,241,0.12)] ring-1 ring-white/[0.1] transition-all duration-300 hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-50 sm:max-w-none sm:min-w-[13.5rem]"
-              >
-                <span
-                  className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
-                  aria-hidden
-                />
-                <span className="relative z-[1]">{loading ? "Checking…" : "Continue"}</span>
-              </button>
-            </form>
+            {step === "loading" ? (
+              <p className="mt-8 text-center text-sm text-white/45">Loading…</p>
+            ) : null}
           </motion.div>
         </motion.div>
 

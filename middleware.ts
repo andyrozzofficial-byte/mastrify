@@ -9,6 +9,7 @@ import {
   safeAccessRedirect,
   verifyAccessToken,
 } from "./lib/access"
+import { BETA_USER_EMAIL_COOKIE } from "./lib/betaAccess"
 
 function normalizePathname(pathname: string): string {
   return pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
@@ -21,7 +22,8 @@ function isAdminOrFeedbackApiBypass(pathname: string): boolean {
     path === "/login" ||
     path.startsWith("/admin") ||
     path.startsWith("/api/admin") ||
-    path === "/api/beta-feedback"
+    path === "/api/beta-feedback" ||
+    path === "/api/beta/profile"
   )
 }
 
@@ -56,7 +58,7 @@ export async function middleware(request: NextRequest) {
     )
 
     if (isAccessBypassPath(pathname)) {
-      if (pathname === "/access" && hasAccess) {
+      if (pathname === "/access" && hasAccess && request.cookies.get(BETA_USER_EMAIL_COOKIE)?.value) {
         const next = safeAccessRedirect(url.searchParams.get("next"))
         url.pathname = next
         url.search = ""
@@ -95,7 +97,8 @@ export async function middleware(request: NextRequest) {
     pathname === "/login" ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/api/admin") ||
-    pathname === "/api/beta-feedback"
+    pathname === "/api/beta-feedback" ||
+    pathname === "/api/beta/profile"
   ) {
     return NextResponse.next()
   }
@@ -109,6 +112,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/access") ||
     pathname.startsWith("/api/admin") ||
     pathname === "/api/beta-feedback" ||
+    pathname === "/api/beta/profile" ||
     pathname === "/api/support/tickets"
   ) {
     return NextResponse.next()

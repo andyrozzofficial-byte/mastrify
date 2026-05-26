@@ -587,6 +587,7 @@ export const ADMIN_NAV = [
   { href: "/admin/feedback", label: "Feedback", icon: "feedback" as AdminNavIconKey, badgeKey: "feedback" as const },
   { href: "/admin/support", label: "Support", icon: "support" as AdminNavIconKey, badgeKey: "support" as const },
   { href: "/admin/customers", label: "Customers", icon: "customers" as AdminNavIconKey, badgeKey: null },
+  { href: "/admin/beta-users", label: "Beta Users", icon: "betaUsers" as AdminNavIconKey, badgeKey: null },
   { href: "/admin/analytics", label: "Analytics", icon: "analytics" as AdminNavIconKey, badgeKey: null },
   { href: "/admin/jobs", label: "Master Jobs", icon: "jobs" as AdminNavIconKey, badgeKey: null },
   { href: "/admin/settings", label: "Settings", icon: "settings" as AdminNavIconKey, badgeKey: null },

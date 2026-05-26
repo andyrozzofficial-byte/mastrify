@@ -12,6 +12,7 @@ import {
   getSupabaseKeySource,
   getSupabaseUrl,
 } from "../../../lib/supabaseServer"
+import { touchBetaProfileFromFeedback } from "../../../lib/betaUserData"
 
 function logBeta(message: string, detail?: unknown) {
   if (detail !== undefined) console.log(`[beta-feedback] ${message}`, detail)
@@ -145,6 +146,8 @@ export async function POST(request: Request) {
         : null
 
     logBeta("insert ok", { id })
+
+    await touchBetaProfileFromFeedback(body.contactEmail, body.genre)
 
     return NextResponse.json({ ok: true, success: true, id })
   } catch (err) {

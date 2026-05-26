@@ -158,6 +158,43 @@ export type AdminCustomerProfile = {
   sessions: string[]
 }
 
+export type BetaUserListRow = {
+  email: string
+  name: string | null
+  genre: string | null
+  daw: string | null
+  betaRank: string
+  signupDate: string | null
+  masterCount: number
+  feedbackCount: number
+  supportCount: number
+  avgRecommend: number | null
+  topStyle: string | null
+  topIssue: string | null
+  lastActivity: string | null
+}
+
+export type BetaUserTagCount = { label: string; count: number }
+
+export type BetaUserProfile = BetaUserListRow & {
+  uploadCount: number
+  downloadCount: number
+  avgLufs: number | null
+  avgProcessingMs: number | null
+  activeDays: number
+  totalUsageEvents: number
+  feedback: AdminFeedbackRow[]
+  support: AdminSupportRow[]
+  sessions: string[]
+  positiveTags: BetaUserTagCount[]
+  issueTags: BetaUserTagCount[]
+  missingFeatures: string[]
+  featureRequests: string[]
+  bugsReported: string[]
+  recommendTrend: { date: string; score: number }[]
+  supportIssues: BetaUserTagCount[]
+}
+
 export type AdminJobRow = {
   id: string
   created_at: string
