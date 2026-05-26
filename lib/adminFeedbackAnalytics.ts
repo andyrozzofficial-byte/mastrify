@@ -75,6 +75,18 @@ function weekKey(iso: string): string {
   return monday.toISOString().slice(0, 10)
 }
 
+function scoreFromRow(row: AdminFeedbackRow, key: string): number | null {
+  const fromSurvey = getNumericSurveyScore(row.survey, key)
+  if (fromSurvey != null) return fromSurvey
+  if (key === "recommendScore" && Number.isFinite(row.recommend_score)) {
+    return Number(row.recommend_score)
+  }
+  if (key === "useAgainScore" && Number.isFinite(row.use_again_score)) {
+    return Number(row.use_again_score)
+  }
+  return null
+}
+
 function scoreDistribution(
   rows: AdminFeedbackRow[],
   key: string,
@@ -84,8 +96,8 @@ function scoreDistribution(
   const buckets = new Map<string, number>()
   for (let i = min; i <= max; i++) buckets.set(String(i), 0)
   for (const row of rows) {
-    const s = getNumericSurveyScore(row.survey, key)
-    if (s == null) continue
+    const s = scoreFromRow(row, key)
+    if (s == null || Number.isNaN(s)) continue
     const k = String(Math.min(max, Math.max(min, Math.round(s))))
     buckets.set(k, (buckets.get(k) ?? 0) + 1)
   }
@@ -185,6 +197,32 @@ export function buildAdminFeedbackAnalytics(rows: AdminFeedbackRow[]): AdminFeed
   const useAgainDef = getBetaSurveyField(useAgainKey)
   const recommendDef = getBetaSurveyField(recommendKey)
 
+  const ratingDistribution = scoreDistribution(
+    rows,
+    useAgainKey,
+    useAgainDef?.rangeMin ?? 0,
+    useAgainDef?.rangeMax ?? 10,
+  )
+  const recommendRatingDistribution = scoreDistribution(
+    rows,
+    recommendKey,
+    recommendDef?.rangeMin ?? 0,
+    recommendDef?.rangeMax ?? 10,
+  )
+
+  if (process.env.NODE_ENV === "development") {
+    const q10Values = rows
+      .map((r) => scoreFromRow(r, useAgainKey))
+      .filter((v): v is number => v != null && !Number.isNaN(v))
+    const q11Values = rows
+      .map((r) => scoreFromRow(r, recommendKey))
+      .filter((v): v is number => v != null && !Number.isNaN(v))
+    console.log("[admin-feedback] Question10 (use again) values:", q10Values)
+    console.log("[admin-feedback] Question11 (recommend) values:", q11Values)
+    console.log("[admin-feedback] useAgain distribution:", ratingDistribution)
+    console.log("[admin-feedback] recommend distribution:", recommendRatingDistribution)
+  }
+
   const stageCounts = { analysis: 0, preview: 0, completed: 0 }
   const analysisAccMap = new Map<string, number>()
   const previewCompMap = new Map<string, number>()
@@ -259,18 +297,8 @@ export function buildAdminFeedbackAnalytics(rows: AdminFeedbackRow[]): AdminFeed
     },
     charts: {
       genreDistribution: base.charts.genreDistribution,
-      ratingDistribution: scoreDistribution(
-        rows,
-        useAgainKey,
-        useAgainDef?.rangeMin ?? 0,
-        useAgainDef?.rangeMax ?? 10,
-      ),
-      recommendRatingDistribution: scoreDistribution(
-        rows,
-        recommendKey,
-        recommendDef?.rangeMin ?? 0,
-        recommendDef?.rangeMax ?? 10,
-      ),
+      ratingDistribution,
+      recommendRatingDistribution,
       dailyTrend,
       weeklyTrend,
       commonIssues: base.charts.commonIssues,

@@ -86,7 +86,9 @@ export function BetaSurveyFieldDisplay({ entry }: { entry: BetaSurveyDisplayEntr
             <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-white/82">{formatted}</p>
           )
         ) : (
-          <p className="text-[15px] leading-relaxed text-white/88">{formatted}</p>
+          <p className="line-clamp-2 break-words text-[14px] leading-snug text-white/82" title={formatted}>
+            {formatted}
+          </p>
         )}
       </div>
     </div>

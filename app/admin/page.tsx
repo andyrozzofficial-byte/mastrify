@@ -54,7 +54,7 @@ export default function AdminOverviewPage() {
         subtitle="Your internal control center — masters, revenue, support, and product signals in one place."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Uploads today" value={String(data.uploadsToday)} accent="sky" />
         <KpiCard label="Masters completed" value={String(data.mastersCompletedToday)} accent="violet" />
         <KpiCard label="Paid downloads" value={String(data.paidDownloadsToday)} accent="emerald" />
@@ -83,7 +83,7 @@ export default function AdminOverviewPage() {
 
       <BetaDashboardSummaryPanels />
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-4 xl:grid-cols-3 xl:gap-6">
         <div className="xl:col-span-2">
           <AdminPanel title="Latest activity">
             <ul className="divide-y divide-white/[0.08]">
@@ -152,7 +152,7 @@ export default function AdminOverviewPage() {
         </AdminPanel>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         <AdminPanel title="Recent masters" href="/admin/jobs">
           <ul className="space-y-3">
             {data.recentMasters.length === 0 ? (
@@ -209,7 +209,7 @@ export default function AdminOverviewPage() {
         </AdminPanel>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         <AdminPanel title="Recent feedback" href="/admin/feedback">
           <ul className="space-y-3">
             {data.recentFeedback.map((r) => (

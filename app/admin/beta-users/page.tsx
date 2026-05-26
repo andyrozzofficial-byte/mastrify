@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from "react"
 import type { BetaUserListRow } from "../../../lib/adminTypes"
 import {
   AdminEmpty,
+  AdminMobileCard,
+  AdminMobileCardList,
+  AdminMobileField,
   AdminPageHeader,
   AdminSearchInput,
   AdminTable,
@@ -69,58 +72,90 @@ export default function AdminBetaUsersPage() {
       {filtered.length === 0 ? (
         <AdminEmpty message="No beta users with linked email activity yet." />
       ) : (
-        <AdminTable>
-          <thead className="border-b border-white/[0.08] bg-white/[0.03] text-[11px] font-medium uppercase tracking-wide text-white/60">
-            <tr>
-              <th className="px-4 py-3">Beta user</th>
-              <th className="px-3 py-2.5">Rank</th>
-              <th className="px-3 py-2.5">Points</th>
-              <th className="px-3 py-2.5">Masters</th>
-              <th className="px-3 py-2.5">Feedback</th>
-              <th className="px-3 py-2.5">Support</th>
-              <th className="px-3 py-2.5">Engagement</th>
-              <th className="px-3 py-2.5">Recommend</th>
-              <th className="px-3 py-2.5">Last active</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((r) => (
-              <tr key={r.email} className="border-t border-white/[0.06] transition hover:bg-white/[0.04]">
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/admin/beta-users/${encodeURIComponent(r.email)}`}
-                    className="flex items-center gap-3"
-                  >
-                    <AvatarCircle email={r.email} size="sm" />
-                    <div>
-                      <p className="font-medium text-white">{r.name ?? r.email}</p>
-                      <p className="text-xs text-white/45">{r.email}</p>
-                      {r.genre || r.daw ? (
-                        <p className="mt-0.5 text-[11px] text-white/38">
-                          {[r.genre, r.daw].filter(Boolean).join(" · ")}
-                        </p>
-                      ) : null}
-                    </div>
-                  </Link>
-                </td>
-                <td className="px-3 py-2.5">
-                  <BetaRankBadge rank={r.betaRank} />
-                </td>
-                <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.betaPoints}</td>
-                <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.masterCount}</td>
-                <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.feedbackCount}</td>
-                <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.supportCount}</td>
-                <td className="px-3 py-2.5">
-                  <BetaEngagementBadge level={r.engagementLevel} score={r.engagementScore} />
-                </td>
-                <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">
-                  {r.avgRecommend != null ? r.avgRecommend.toFixed(1) : "—"}
-                </td>
-                <td className="px-3 py-2.5 text-sm text-white/60">{r.lastActivity ?? "—"}</td>
+        <>
+          <AdminTable>
+            <thead className="border-b border-white/[0.08] bg-white/[0.03] text-[11px] font-medium uppercase tracking-wide text-white/60">
+              <tr>
+                <th className="px-4 py-3">Beta user</th>
+                <th className="px-3 py-2.5">Rank</th>
+                <th className="px-3 py-2.5">Points</th>
+                <th className="px-3 py-2.5">Masters</th>
+                <th className="px-3 py-2.5">Feedback</th>
+                <th className="px-3 py-2.5">Support</th>
+                <th className="px-3 py-2.5">Engagement</th>
+                <th className="px-3 py-2.5">Recommend</th>
+                <th className="px-3 py-2.5">Last active</th>
               </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r) => (
+                <tr key={r.email} className="border-t border-white/[0.06] transition hover:bg-white/[0.04]">
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/admin/beta-users/${encodeURIComponent(r.email)}`}
+                      className="flex items-center gap-3"
+                    >
+                      <AvatarCircle email={r.email} size="sm" />
+                      <div>
+                        <p className="font-medium text-white">{r.name ?? r.email}</p>
+                        <p className="text-xs text-white/45">{r.email}</p>
+                        {r.genre || r.daw ? (
+                          <p className="mt-0.5 text-[11px] text-white/38">
+                            {[r.genre, r.daw].filter(Boolean).join(" · ")}
+                          </p>
+                        ) : null}
+                      </div>
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <BetaRankBadge rank={r.betaRank} />
+                  </td>
+                  <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.betaPoints}</td>
+                  <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.masterCount}</td>
+                  <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.feedbackCount}</td>
+                  <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.supportCount}</td>
+                  <td className="px-3 py-2.5">
+                    <BetaEngagementBadge level={r.engagementLevel} score={r.engagementScore} />
+                  </td>
+                  <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">
+                    {r.avgRecommend != null ? r.avgRecommend.toFixed(1) : "—"}
+                  </td>
+                  <td className="px-3 py-2.5 text-sm text-white/60">{r.lastActivity ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </AdminTable>
+          <AdminMobileCardList>
+            {filtered.map((r) => (
+              <AdminMobileCard key={r.email}>
+                <Link
+                  href={`/admin/beta-users/${encodeURIComponent(r.email)}`}
+                  className="flex min-h-[44px] items-center gap-3"
+                >
+                  <AvatarCircle email={r.email} size="sm" />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-white">{r.name ?? r.email}</p>
+                    <p className="truncate text-xs text-white/45">{r.email}</p>
+                  </div>
+                </Link>
+                <AdminMobileField label="Rank">
+                  <BetaRankBadge rank={r.betaRank} />
+                </AdminMobileField>
+                <AdminMobileField label="Points">{r.betaPoints}</AdminMobileField>
+                <AdminMobileField label="Masters">{r.masterCount}</AdminMobileField>
+                <AdminMobileField label="Feedback">{r.feedbackCount}</AdminMobileField>
+                <AdminMobileField label="Support">{r.supportCount}</AdminMobileField>
+                <AdminMobileField label="Engagement">
+                  <BetaEngagementBadge level={r.engagementLevel} score={r.engagementScore} />
+                </AdminMobileField>
+                <AdminMobileField label="Recommend">
+                  {r.avgRecommend != null ? r.avgRecommend.toFixed(1) : "—"}
+                </AdminMobileField>
+                <AdminMobileField label="Last active">{r.lastActivity ?? "—"}</AdminMobileField>
+              </AdminMobileCard>
             ))}
-          </tbody>
-        </AdminTable>
+          </AdminMobileCardList>
+        </>
       )}
     </div>
   )

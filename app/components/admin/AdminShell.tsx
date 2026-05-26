@@ -6,6 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import type { AdminNavBadges, AdminOverview } from "../../../lib/adminTypes"
 import type { AdminRole } from "../../../lib/adminRoles"
 import { ADMIN_NAV, AdminNavLink } from "./admin-shared"
+import "./admin-mobile.css"
 
 type Props = { children: React.ReactNode }
 
@@ -24,6 +25,8 @@ export default function AdminShell({ children }: Props) {
   const [role, setRole] = useState<AdminRole | null>(null)
   const [badges, setBadges] = useState<AdminNavBadges>(defaultBadges)
   const [mobileNav, setMobileNav] = useState(false)
+
+  const closeMobileNav = useCallback(() => setMobileNav(false), [])
 
   const checkAuth = useCallback(async () => {
     try {
@@ -57,6 +60,19 @@ export default function AdminShell({ children }: Props) {
     router.replace(`/login?next=${encodeURIComponent(next)}`)
   }, [auth, pathname, router])
 
+  useEffect(() => {
+    closeMobileNav()
+  }, [pathname, closeMobileNav])
+
+  useEffect(() => {
+    if (!mobileNav) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [mobileNav])
+
   if (auth === "loading" || auth === "login") {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[#0F0F16] text-white/60">
@@ -67,18 +83,20 @@ export default function AdminShell({ children }: Props) {
 
   return (
     <AdminBadgeContext.Provider value={badges}>
-      <div className="min-h-[100dvh] bg-[#0F0F16] text-white">
-        <header className="sticky top-0 z-40 border-b border-white/[0.12] bg-[#0F0F16]/95 backdrop-blur-md">
-          <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="admin-shell min-h-[100dvh] bg-[#0F0F16] text-white">
+        <header className="sticky top-0 z-50 border-b border-white/[0.12] bg-[#0F0F16]/95 backdrop-blur-md">
+          <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                className="rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-2 text-xs text-white/65 transition hover:bg-white/[0.07] lg:hidden"
+                aria-expanded={mobileNav}
+                aria-label={mobileNav ? "Close menu" : "Open menu"}
+                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 text-xs text-white/65 transition hover:bg-white/[0.07] lg:hidden"
                 onClick={() => setMobileNav((v) => !v)}
               >
-                Menu
+                {mobileNav ? "Close" : "Menu"}
               </button>
-              <Link href="/admin" className="flex items-center gap-2">
+              <Link href="/admin" className="flex items-center gap-2" onClick={closeMobileNav}>
                 <span className="text-base font-semibold tracking-tight text-white">Mastrify</span>
                 <span className="rounded-md bg-violet-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-violet-200 ring-1 ring-violet-400/25">
                   Admin
@@ -93,7 +111,7 @@ export default function AdminShell({ children }: Props) {
               ) : null}
               <Link
                 href="/master"
-                className="text-xs font-medium text-violet-300 transition hover:text-violet-200"
+                className="inline-flex min-h-[44px] items-center text-xs font-medium text-violet-300 transition hover:text-violet-200"
               >
                 Open app →
               </Link>
@@ -101,9 +119,22 @@ export default function AdminShell({ children }: Props) {
           </div>
         </header>
 
-        <div className="mx-auto flex max-w-[1400px] flex-col gap-8 px-4 py-8 lg:flex-row lg:px-8">
-          <aside className={`lg:w-60 lg:shrink-0 ${mobileNav ? "block" : "hidden lg:block"}`}>
-            <nav className="space-y-1 rounded-2xl border border-white/[0.12] bg-white/[0.04] p-2 shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
+        <div className="admin-shell-body relative mx-auto flex max-w-[1400px] lg:gap-8 lg:px-8 lg:py-8">
+          {mobileNav ? (
+            <button
+              type="button"
+              className="admin-drawer-backdrop fixed inset-0 z-40 bg-black/60 lg:hidden"
+              aria-label="Close navigation"
+              onClick={closeMobileNav}
+            />
+          ) : null}
+
+          <aside
+            className={`admin-sidebar fixed inset-y-0 left-0 z-50 flex w-[85vw] max-w-[320px] flex-col border-r border-white/[0.12] bg-[#12121a] p-3 transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-60 lg:max-w-none lg:shrink-0 lg:translate-x-0 lg:border-0 lg:bg-transparent lg:p-0 ${
+              mobileNav ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+            }`}
+          >
+            <nav className="flex-1 space-y-1 overflow-y-auto rounded-2xl border border-white/[0.12] bg-white/[0.04] p-2 shadow-[0_10px_40px_rgba(0,0,0,0.35)] lg:shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
               {ADMIN_NAV.map((item) => (
                 <AdminNavLink
                   key={item.href}
@@ -112,6 +143,7 @@ export default function AdminShell({ children }: Props) {
                   icon={item.icon}
                   exact={"exact" in item ? item.exact : false}
                   pathname={pathname}
+                  onNavigate={closeMobileNav}
                   badge={
                     item.badgeKey === "feedback"
                       ? badges.feedback
@@ -123,7 +155,10 @@ export default function AdminShell({ children }: Props) {
               ))}
             </nav>
           </aside>
-          <main className="min-w-0 flex-1 pb-12">{children}</main>
+
+          <main className="admin-main min-w-0 flex-1 overflow-x-hidden py-4 pb-[max(3rem,env(safe-area-inset-bottom))] lg:py-0 lg:pb-12">
+            {children}
+          </main>
         </div>
       </div>
     </AdminBadgeContext.Provider>

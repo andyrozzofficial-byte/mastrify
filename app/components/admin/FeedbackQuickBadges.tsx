@@ -60,9 +60,13 @@ function Chip({
           ? "border-rose-200 bg-rose-50 text-rose-800"
           : "border-slate-300 bg-slate-50 text-slate-800"
   return (
-    <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium ${cls}`}>
-      <span aria-hidden>{icon}</span>
-      {children}
+    <span
+      className={`inline-flex max-w-full min-h-[44px] items-center gap-1 rounded-lg border px-2.5 py-2 text-[11px] font-medium max-md:min-h-0 max-md:py-1 ${cls}`}
+    >
+      <span aria-hidden className="shrink-0">
+        {icon}
+      </span>
+      <span className="line-clamp-2 min-w-0 break-words">{children}</span>
     </span>
   )
 }

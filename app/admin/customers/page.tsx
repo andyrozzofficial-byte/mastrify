@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from "react"
 import type { AdminCustomerRow } from "../../../lib/adminTypes"
 import {
   AdminEmpty,
+  AdminMobileCard,
+  AdminMobileCardList,
+  AdminMobileField,
   AdminPageHeader,
   AdminSearchInput,
   AdminTable,
@@ -64,7 +67,8 @@ export default function AdminCustomersPage() {
       {filtered.length === 0 ? (
         <AdminEmpty message="No customer records with email yet." />
       ) : (
-        <AdminTable>
+        <>
+          <AdminTable>
             <thead className="border-b border-white/[0.06] bg-[#141416] text-[11px] font-medium uppercase tracking-wide text-white/42">
               <tr>
                 <th className="px-4 py-3">Customer</th>
@@ -103,7 +107,32 @@ export default function AdminCustomersPage() {
                 </tr>
               ))}
             </tbody>
-        </AdminTable>
+          </AdminTable>
+          <AdminMobileCardList>
+            {filtered.map((r) => (
+              <AdminMobileCard key={r.email}>
+                <Link
+                  href={`/admin/customers/${encodeURIComponent(r.email)}`}
+                  className="flex min-h-[44px] items-center gap-3"
+                >
+                  <AvatarCircle email={r.email} size="sm" />
+                  <span className="min-w-0 truncate text-[13px] font-medium text-white">{r.email}</span>
+                </Link>
+                <AdminMobileField label="Purchased">
+                  {r.purchased ? (
+                    <span className="text-emerald-300/90">Yes</span>
+                  ) : (
+                    <span className="text-white/42">—</span>
+                  )}
+                </AdminMobileField>
+                <AdminMobileField label="Feedback">{r.feedbackCount}</AdminMobileField>
+                <AdminMobileField label="Exports">{r.exportCount}</AdminMobileField>
+                <AdminMobileField label="Support">{r.supportCount}</AdminMobileField>
+                <AdminMobileField label="Last active">{formatAdminDate(r.lastActivity)}</AdminMobileField>
+              </AdminMobileCard>
+            ))}
+          </AdminMobileCardList>
+        </>
       )}
     </div>
   )

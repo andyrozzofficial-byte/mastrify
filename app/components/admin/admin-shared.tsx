@@ -147,7 +147,7 @@ export function BetaRankBadge({ rank }: { rank: string }) {
 }
 
 export const ADMIN_BUTTON_PRIMARY =
-  "rounded-lg bg-gradient-to-r from-violet-600 via-indigo-600 to-indigo-700 px-3 py-2 text-xs font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.2)] transition hover:brightness-110 disabled:opacity-50"
+  "inline-flex min-h-[44px] items-center justify-center rounded-lg bg-gradient-to-r from-violet-600 via-indigo-600 to-indigo-700 px-4 py-2.5 text-xs font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.2)] transition hover:brightness-110 disabled:opacity-50"
 
 export function AdminCard({
   children,
@@ -160,7 +160,7 @@ export function AdminCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-white/[0.12] bg-white/[0.05] p-6 shadow-[0_0_40px_rgba(0,0,0,0.22)] transition duration-200 ${
+      className={`rounded-2xl border border-white/[0.12] bg-white/[0.05] p-6 shadow-[0_0_40px_rgba(0,0,0,0.22)] transition duration-200 max-md:p-4 ${
         hover ? "hover:border-violet-400/35 hover:bg-white/[0.065]" : ""
       } ${className}`}
     >
@@ -192,7 +192,7 @@ export function KpiCard({
             : "from-white/15 to-transparent"
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.05] p-6 shadow-[0_0_40px_rgba(0,0,0,0.22)] transition duration-200 hover:-translate-y-0.5 hover:border-violet-400/35">
+    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.05] p-6 shadow-[0_0_40px_rgba(0,0,0,0.22)] transition duration-200 max-md:p-4 hover:-translate-y-0.5 hover:border-violet-400/35 max-md:hover:translate-y-0">
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accentBar}`} />
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/70">{label}</p>
       <p className="mt-3 text-4xl font-bold tracking-tight tabular-nums text-white">{value}</p>
@@ -380,9 +380,95 @@ export function AdminPanel({
 
 export function AdminTable({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-white/[0.12] bg-white/[0.03]">
+    <div className="admin-desktop-table overflow-x-auto rounded-2xl border border-white/[0.12] bg-white/[0.03]">
       <table className="w-full min-w-[640px] text-left text-[13px]">{children}</table>
     </div>
+  )
+}
+
+export function AdminMobileCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-white/[0.12] bg-white/[0.04] p-4 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+      {children}
+    </div>
+  )
+}
+
+export function AdminMobileField({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex min-h-[44px] items-center justify-between gap-3 border-t border-white/[0.06] py-2 first:min-h-0 first:border-0 first:pt-0">
+      <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-white/45">{label}</span>
+      <div className="min-w-0 text-right text-sm text-white/85">{children}</div>
+    </div>
+  )
+}
+
+export function AdminMobileCardList({ children }: { children: React.ReactNode }) {
+  return <div className="admin-mobile-card-list">{children}</div>
+}
+
+const RATING_CHART_BAR_MAX_PX = 120
+
+export function RatingDistributionChart({
+  title,
+  items,
+  emptyLabel = "No responses yet",
+}: {
+  title: string
+  items: { label: string; count: number }[]
+  emptyLabel?: string
+}) {
+  const safeItems = items ?? []
+  const maxCount = Math.max(1, ...safeItems.map((i) => i.count))
+  const hasData = safeItems.some((i) => i.count > 0)
+
+  return (
+    <AdminCard className="admin-chart-card min-w-0 max-w-full overflow-hidden">
+      <h3 className="text-[15px] font-semibold text-white">{title}</h3>
+      {!hasData ? (
+        <p className="mt-3 text-sm text-white/55">{emptyLabel}</p>
+      ) : (
+        <div className="mt-4 w-full max-w-full overflow-hidden">
+          <div
+            className="flex w-full items-end justify-between gap-0.5 sm:gap-1"
+            style={{ height: RATING_CHART_BAR_MAX_PX }}
+          >
+            {safeItems.map((item) => {
+              const barPx =
+                item.count > 0
+                  ? Math.max(4, Math.round((item.count / maxCount) * RATING_CHART_BAR_MAX_PX))
+                  : 0
+              return (
+                <div
+                  key={item.label}
+                  className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1"
+                >
+                  {item.count > 0 ? (
+                    <span className="text-[9px] font-medium tabular-nums text-white/55">{item.count}</span>
+                  ) : (
+                    <span className="h-[12px]" aria-hidden />
+                  )}
+                  <div
+                    className="w-full max-w-[20px] rounded-t-md bg-gradient-to-t from-violet-700 to-violet-400 shadow-[0_0_12px_rgba(139,92,246,0.3)]"
+                    style={{ height: barPx > 0 ? `${barPx}px` : "2px", opacity: barPx > 0 ? 1 : 0.15 }}
+                    title={`${item.label}: ${item.count}`}
+                  />
+                  <span className="w-full truncate text-center text-[9px] tabular-nums text-white/45">
+                    {item.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </AdminCard>
   )
 }
 
@@ -514,7 +600,7 @@ export function SparklineChart({
   const peak = Math.max(...values)
 
   return (
-    <AdminCard>
+    <AdminCard className="admin-chart-card min-w-0 max-w-full overflow-hidden">
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-[15px] font-semibold text-white">{title}</h3>
         <div className="text-right text-[11px] tabular-nums text-white/60">
@@ -523,10 +609,11 @@ export function SparklineChart({
           peak {peak}
         </div>
       </div>
-      <div className="mt-4 overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
+      <div className="mt-4 w-full max-w-full overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="h-28 w-full"
+          className="h-28 w-full max-w-full"
+          preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label={`${title} line chart`}
         >
@@ -625,6 +712,7 @@ export function AdminNavLink({
   exact,
   pathname,
   badge,
+  onNavigate,
 }: {
   href: string
   label: string
@@ -632,6 +720,7 @@ export function AdminNavLink({
   exact?: boolean
   pathname: string
   badge?: number
+  onNavigate?: () => void
 }) {
   const active = exact ? pathname === href : pathname.startsWith(href)
   const Icon = ADMIN_ICON_MAP[icon]
@@ -639,7 +728,8 @@ export function AdminNavLink({
   return (
     <Link
       href={href}
-      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition duration-200 ${
+      onClick={() => onNavigate?.()}
+      className={`group flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition duration-200 ${
         active
           ? "bg-violet-500/12 text-violet-100 shadow-[0_0_20px_rgba(139,92,246,0.15)] ring-1 ring-violet-400/25"
           : "text-white/65 hover:bg-white/[0.055] hover:text-white/90"

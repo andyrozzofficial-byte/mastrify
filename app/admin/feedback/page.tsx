@@ -21,6 +21,7 @@ import {
   FeedbackStatusBadge,
   formatAdminDate,
   KpiCard,
+  RatingDistributionChart,
   SparklineChart,
 } from "../../components/admin/admin-shared"
 
@@ -31,39 +32,6 @@ type FeedbackApiResponse = {
   actionCenter?: ActionCenterIssue[]
   issueTiers?: { critical: RankedIssue[]; medium: RankedIssue[]; positive: RankedIssue[] }
   error?: string
-}
-
-function RatingDistributionChart({
-  title,
-  items,
-}: {
-  title: string
-  items: { label: string; count: number }[]
-}) {
-  const safeItems = items ?? []
-  const max = Math.max(1, ...safeItems.map((i) => i.count))
-  const hasData = safeItems.some((i) => i.count > 0)
-  return (
-    <AdminCard>
-      <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
-      {!hasData ? (
-        <p className="mt-3 text-sm text-slate-500">No ratings yet</p>
-      ) : (
-        <div className="mt-5 flex h-32 items-end gap-1">
-          {safeItems.map((item) => (
-            <div key={item.label} className="flex flex-1 flex-col items-center gap-1.5">
-              <div
-                className="w-full max-w-[18px] rounded-t bg-violet-500 transition-all"
-                style={{ height: `${Math.max(6, (item.count / max) * 100)}%` }}
-                title={`${item.label}: ${item.count}`}
-              />
-              <span className="text-[9px] tabular-nums text-slate-400">{item.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </AdminCard>
-  )
 }
 
 function FeedbackListCard({
@@ -138,7 +106,10 @@ function FeedbackListCard({
       <div className="pointer-events-none absolute left-1/2 top-full z-20 hidden w-[min(20rem,90vw)] -translate-x-1/2 pt-2 group-hover:block">
         <div className="rounded-xl border border-slate-200 bg-white p-3 text-[12px] leading-relaxed text-slate-700 shadow-lg shadow-slate-300/40">
           {hoverLines.map((line) => (
-            <p key={line} className="border-b border-slate-100 py-1 last:border-0">
+            <p
+              key={line}
+              className="line-clamp-2 break-words border-b border-slate-100 py-1 last:border-0"
+            >
               {line}
             </p>
           ))}
@@ -230,7 +201,7 @@ export default function AdminFeedbackPage() {
       ) : null}
 
       {analytics ? (
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard
             label="Total submissions"
             value={String(analytics.summary.totalSubmissions)}
@@ -270,7 +241,7 @@ export default function AdminFeedbackPage() {
       ) : null}
 
       {analytics?.stages ? (
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard
             label="Analysis accuracy"
             value={
@@ -329,7 +300,7 @@ export default function AdminFeedbackPage() {
       ) : null}
 
       {analytics ? (
-        <div className="mb-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="admin-charts-grid mb-10 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5 xl:grid-cols-3">
           <FunnelChart
             steps={(analytics.stages?.dropOff ?? []).map((d) => ({ step: d.step, count: d.count }))}
           />

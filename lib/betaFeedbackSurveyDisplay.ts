@@ -174,7 +174,12 @@ export function getSurveyValue(
 
 export function getNumericSurveyScore(survey: BetaFeedbackPayload, key: string): number | null {
   const v = getSurveyValue(survey, key)
-  return typeof v === "number" && Number.isFinite(v) ? v : null
+  if (typeof v === "number" && Number.isFinite(v)) return v
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v)
+    if (Number.isFinite(n)) return n
+  }
+  return null
 }
 
 export function getSurveyFieldLabel(key: string): string {
