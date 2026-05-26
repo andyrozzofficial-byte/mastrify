@@ -177,7 +177,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="footer-nav-columns footer-nav-group w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-[repeat(3,minmax(0,1fr))] md:items-start md:justify-items-start md:gap-x-12 md:gap-y-0 md:max-w-[26rem] lg:col-span-3 lg:max-w-[27rem] lg:justify-self-center lg:gap-x-14 xl:col-span-3 xl:max-w-[28rem]"
+            className="footer-nav-columns footer-nav-group w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-[repeat(3,minmax(0,1fr))] md:items-start md:justify-items-start md:gap-x-14 md:gap-y-0 md:max-w-[26rem] lg:col-span-3 lg:max-w-[27rem] lg:justify-self-start lg:-ml-24 lg:gap-x-16 xl:col-span-3 xl:max-w-[28rem] xl:-ml-28"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -233,18 +233,17 @@ export default function SiteFooter() {
 
         {/* Bottom metadata row */}
         <motion.div
-          className="footer-mobile-meta mt-4 flex flex-col gap-3 border-t border-white/[0.07] pt-4 max-md:mt-3 max-md:items-center max-md:gap-2 max-md:pt-3 md:mt-12 md:grid md:grid-cols-[auto_auto_1fr] md:grid-rows-[auto_auto] md:items-center md:gap-x-3 md:pt-9"
+          className="footer-mobile-meta mt-4 flex flex-col gap-3 border-t border-white/[0.07] pt-4 max-md:mt-3 max-md:items-center max-md:gap-2 max-md:pt-3 md:mt-12 md:pt-9"
           initial={reduce ? false : { opacity: 0 }}
           whileInView={reduce ? undefined : { opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.55, delay: 0.1, ease: EASE }}
         >
-          <p className="footer-copyright order-1 text-[11px] text-muted-soft max-md:w-full max-md:text-center md:col-start-1 md:row-start-1 md:justify-self-start">
-            © {year} Mastrify
-          </p>
-
-          <div className="footer-meta-cluster order-2 flex w-full flex-col items-center gap-2 max-md:gap-2 md:contents">
-            <div className="footer-social-row flex items-center justify-center gap-2 md:col-start-2 md:row-start-1 md:justify-self-start md:pl-3">
+          <div className="footer-bottom-start flex w-full flex-col items-center gap-2 max-md:gap-2 md:flex-row md:items-center md:justify-start md:gap-3">
+            <p className="footer-copyright text-[11px] text-muted-soft max-md:text-center">
+              © {year} Mastrify
+            </p>
+            <div className="footer-social-row flex items-center justify-center gap-2.5">
               <SocialLink href={socialLinks[0].href} label={socialLinks[0].label}>
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden>
                   <rect x="3" y="3" width="18" height="18" rx="5" />
@@ -258,23 +257,23 @@ export default function SiteFooter() {
                 </svg>
               </SocialLink>
             </div>
-
-            <p className="footer-lunov-credit px-1 text-center text-[8px] font-normal uppercase leading-snug tracking-[0.2em] text-muted-faint sm:text-[9px] sm:tracking-[0.24em] md:col-span-3 md:row-start-2 md:justify-self-center md:px-4 md:leading-relaxed md:tracking-[0.26em]">
-              Designed &amp; engineered by{" "}
-              <a
-                href="https://lunov.dev"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group/lunov relative inline tracking-[0.2em] text-label transition duration-500 hover:text-violet-200/78"
-              >
-                <span
-                  className="pointer-events-none absolute -inset-x-2 -inset-y-1 rounded-md opacity-0 blur-md transition duration-500 group-hover/lunov:bg-violet-500/[0.1] group-hover/lunov:opacity-100"
-                  aria-hidden
-                />
-                <span className="relative">Lunov</span>
-              </a>
-            </p>
           </div>
+
+          <p className="footer-lunov-credit w-full px-1 text-center text-[8px] font-normal uppercase leading-snug tracking-[0.2em] text-muted-faint sm:text-[9px] sm:tracking-[0.24em] md:px-4 md:leading-relaxed md:tracking-[0.26em]">
+            Designed &amp; engineered by{" "}
+            <a
+              href="https://lunov.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group/lunov relative inline tracking-[0.2em] text-label transition duration-500 hover:text-violet-200/78"
+            >
+              <span
+                className="pointer-events-none absolute -inset-x-2 -inset-y-1 rounded-md opacity-0 blur-md transition duration-500 group-hover/lunov:bg-violet-500/[0.1] group-hover/lunov:opacity-100"
+                aria-hidden
+              />
+              <span className="relative">Lunov</span>
+            </a>
+          </p>
         </motion.div>
       </motion.div>
     </footer>
