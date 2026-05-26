@@ -39,19 +39,19 @@ export default function BetaMasterStatusCard({ className = "" }: Props) {
 
   return (
     <motion.div
-      className={`cinematic-upload-card-root relative w-full ${className}`}
+      className={`beta-status-card-root relative w-full ${className}`}
       initial={reduce ? false : { opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: EASE }}
     >
       <div
-        className="cinematic-upload-card-glow pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/18 via-transparent to-cyan-500/10 blur-sm"
+        className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/10 via-transparent to-cyan-500/5 opacity-35 blur-[2px]"
         aria-hidden
       />
 
-      <div className="cinematic-upload-card-panel fluid-surface relative overflow-hidden border-violet-400/20 px-4 py-3.5 sm:px-5 sm:py-4">
+      <div className="relative overflow-hidden rounded-[1.3rem] border border-white/[0.06] bg-gradient-to-b from-black/55 via-black/72 to-black/88 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_10px_28px_rgba(0,0,0,0.32)] backdrop-blur-md sm:px-5 sm:py-4">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(124,58,237,0.11),transparent_68%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(124,58,237,0.06),transparent_70%)]"
           aria-hidden
         />
 

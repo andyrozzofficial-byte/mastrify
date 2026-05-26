@@ -50,6 +50,7 @@ export default function MasterUploadCard({
 
   return (
     <CinematicUploadCardShell
+      emphasis="primary"
       dragging={dragging}
       loaded={loaded}
       onDragOver={(e) => {

@@ -456,6 +456,9 @@ body {
   .cinematic-upload-card-glow {
     opacity: 0.45;
   }
+  .cinematic-upload-card-root--primary .cinematic-upload-card-glow {
+    opacity: 0.72;
+  }
   .cinematic-upload-card-panel,
   .marketing-panel-card {
     border-radius: 1.3rem;
