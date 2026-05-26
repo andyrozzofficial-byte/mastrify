@@ -1,5 +1,6 @@
 import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
 import type { ActionCenterIssue } from "./adminFeedbackActionCenter"
+import type { BetaRankProgress } from "./betaPoints"
 
 export const ADMIN_FEEDBACK_STATUSES = ["new", "read", "resolved"] as const
 export type AdminFeedbackStatus = (typeof ADMIN_FEEDBACK_STATUSES)[number]
@@ -189,16 +190,20 @@ export type BetaUserListRow = {
   genre: string | null
   daw: string | null
   betaRank: string
+  betaPoints: number
+  rewardStatus: string
   signupDate: string | null
   masterCount: number
   feedbackCount: number
   supportCount: number
+  bugReportCount: number
   avgRecommend: number | null
   topStyle: string | null
   topIssue: string | null
   lastActivity: string | null
   engagementScore: number
   engagementLevel: BetaEngagementLevel
+  rankProgress: BetaRankProgress
 }
 
 export type BetaUserTagCount = { label: string; count: number }

@@ -63,6 +63,7 @@ export default function AdminBetaUsersPage() {
             <tr>
               <th className="px-4 py-3">Beta user</th>
               <th className="px-3 py-2.5">Rank</th>
+              <th className="px-3 py-2.5">Points</th>
               <th className="px-3 py-2.5">Masters</th>
               <th className="px-3 py-2.5">Feedback</th>
               <th className="px-3 py-2.5">Support</th>
@@ -94,6 +95,7 @@ export default function AdminBetaUsersPage() {
                 <td className="px-3 py-2.5">
                   <BetaRankBadge rank={r.betaRank} />
                 </td>
+                <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.betaPoints}</td>
                 <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.masterCount}</td>
                 <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.feedbackCount}</td>
                 <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.supportCount}</td>

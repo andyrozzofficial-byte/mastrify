@@ -7,7 +7,7 @@ import type {
   BetaUserBadge,
 } from "./adminTypes"
 import type { BetaUserRank } from "./betaAccess"
-import { isBetaUserRank } from "./betaAccess"
+import { migrateLegacyRank } from "./betaAccess"
 
 export type { BetaEngagementLevel, BetaTimelineEvent, BetaUserBadge }
 
@@ -33,15 +33,15 @@ export function engagementLevelLabel(level: BetaEngagementLevel): string {
 }
 
 export function nextBetaRank(current: string | null | undefined): BetaUserRank {
-  const rank = current?.toLowerCase()
+  const rank = migrateLegacyRank(current)
+  if (rank === "explorer") return "insider"
   if (rank === "insider") return "pioneer"
-  if (rank === "pioneer") return "founding"
-  return "founding"
+  if (rank === "pioneer") return "legend"
+  return "legend"
 }
 
 export function normalizeRankKey(rank: string | null | undefined): BetaUserRank {
-  const r = rank?.toLowerCase()
-  return r && isBetaUserRank(r) ? r : "insider"
+  return migrateLegacyRank(rank)
 }
 
 export function computeBetaBadges(input: {
@@ -64,8 +64,8 @@ export function computeBetaBadges(input: {
   if (input.engagementLevel === "high") {
     badges.push({ id: "power_user", emoji: "🚀", label: "Power User" })
   }
-  if (normalizeRankKey(input.betaRank) === "founding") {
-    badges.push({ id: "founding_tester", emoji: "🏆", label: "Founding Tester" })
+  if (normalizeRankKey(input.betaRank) === "legend") {
+    badges.push({ id: "legend_tester", emoji: "🏆", label: "Legend" })
   }
   return badges
 }

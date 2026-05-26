@@ -15,6 +15,7 @@ import {
   SupportStatusBadge,
 } from "../../../components/admin/admin-shared"
 import { BetaEngagementBadge } from "../../../components/admin/BetaEngagementBadge"
+import { BetaRankProgressCard } from "../../../components/admin/BetaRankProgressCard"
 import { BetaUserQuickActions } from "../../../components/admin/BetaUserQuickActions"
 
 const TIMELINE_DOT: Record<BetaTimelineEventType, string> = {
@@ -120,7 +121,13 @@ export default function AdminBetaUserProfilePage() {
       </div>
 
       <div className="mb-8 grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="space-y-6 lg:col-span-2">
+          <BetaRankProgressCard
+            rankProgress={profile.rankProgress}
+            rewardStatus={profile.rewardStatus}
+            bugReportCount={profile.bugReportCount}
+            betaPoints={profile.betaPoints}
+          />
           <AdminCard>
             <h2 className="text-[15px] font-semibold text-white">Activity timeline</h2>
             {profile.timeline.length === 0 ? (

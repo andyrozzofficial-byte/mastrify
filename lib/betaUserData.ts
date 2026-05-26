@@ -19,9 +19,18 @@ import {
   BETA_USER_RANKS,
   betaRankLabel,
   isBetaUserRank,
+  migrateLegacyRank,
   normalizeBetaEmail,
   type BetaUserRank,
 } from "./betaAccess"
+import {
+  aggregateBetaActivityForEmail,
+  buildBetaRankProgress,
+  calcBetaPoints,
+  calcRecommendationScore,
+  effectiveBetaRank,
+  rewardStatusForRank,
+} from "./betaPoints"
 import { BETA_FEEDBACK_TABLE } from "./betaFeedbackDb"
 import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
 import {
@@ -90,10 +99,48 @@ function tagCountsFromArrays(arrays: string[][]): BetaUserTagCount[] {
     .sort((a, b) => b.count - a.count)
 }
 
-function avgRecommend(rows: AdminFeedbackRow[]): number | null {
-  if (!rows.length) return null
-  const sum = rows.reduce((a, r) => a + r.recommend_score, 0)
-  return Math.round((sum / rows.length) * 10) / 10
+function countCompletedMasters(email: string, jobs: AdminJobRow[]): number {
+  const normalized = email.toLowerCase()
+  return jobs.filter((j) => j.user_email?.toLowerCase() === normalized && j.status === "complete")
+    .length
+}
+
+export async function syncBetaProfileFromActivity(email: string): Promise<void> {
+  const normalized = normalizeBetaEmail(email)
+  if (!normalized.includes("@")) return
+
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return
+
+  const profile = await fetchBetaProfileByEmail(normalized)
+  const [feedback, support, jobsRes] = await Promise.all([
+    fetchAdminFeedback(),
+    fetchAdminSupport(),
+    fetchAdminJobs(),
+  ])
+  if (isFetchError(feedback) || isFetchError(support)) return
+  const jobs = isFetchError(jobsRes) ? [] : jobsRes
+
+  const userFeedback = feedback.filter((f) => f.contact_email?.toLowerCase() === normalized)
+  const userSupport = support.filter((s) => s.email.toLowerCase() === normalized)
+  const counts = aggregateBetaActivityForEmail(
+    normalized,
+    userFeedback,
+    userSupport,
+    jobs,
+    profile?.beta_approved ?? false,
+  )
+  const points = calcBetaPoints(counts)
+  const rank = effectiveBetaRank(profile?.beta_rank, points)
+
+  await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(
+    {
+      email: normalized,
+      beta_rank: rank,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "email" },
+  )
 }
 
 export function formatBetaLastActive(iso: string | null | undefined): string | null {
@@ -314,12 +361,10 @@ function buildListRow(
 
   const soundedOff = userFeedback.flatMap((f) => f.survey.soundedOff ?? [])
   const styles = userFeedback.map((f) => f.mastering_style)
-  const masterCount = Math.max(
-    userFeedback.length,
-    jobs.filter((j) => j.user_email?.toLowerCase() === email).length,
-  )
+  const masterCount = countCompletedMasters(email, jobs)
   const activeDaySet = new Set<string>()
   for (const iso of lastTimes) activeDaySet.add(dateKey(iso))
+  if (profile?.beta_signed_up_at) activeDaySet.add(dateKey(profile.beta_signed_up_at))
 
   const { engagementScore, engagementLevel: level } = engagementForUser(
     masterCount,
@@ -328,22 +373,38 @@ function buildListRow(
     activeDaySet.size,
   )
 
+  const bugReportCount = countBugReports(userFeedback, userSupport)
+  const counts = aggregateBetaActivityForEmail(
+    email,
+    userFeedback,
+    userSupport,
+    jobs,
+    profile?.beta_approved ?? false,
+  )
+  const betaPoints = calcBetaPoints(counts)
+  const rankKey = effectiveBetaRank(profile?.beta_rank, betaPoints)
+  const rankProgress = buildBetaRankProgress(betaPoints)
+
   return {
     email,
     name: displayName(email, profile?.name ?? userSupport[0]?.name ?? null),
     genre: genre && genre !== "Unknown" ? genre : genre,
     daw: profile?.daw ?? null,
-    betaRank: betaRankLabel(profile?.beta_rank ?? "insider"),
+    betaRank: betaRankLabel(rankKey),
+    betaPoints,
+    rewardStatus: rewardStatusForRank(rankKey),
     signupDate: profile?.beta_signed_up_at ?? null,
     masterCount,
     feedbackCount: userFeedback.length,
     supportCount: userSupport.length,
-    avgRecommend: avgRecommend(userFeedback),
+    bugReportCount,
+    avgRecommend: calcRecommendationScore(userFeedback),
     topStyle: topLabel(styles),
     topIssue: topLabel(soundedOff, new Set(["No, it sounded good"])),
     lastActivity: formatBetaLastActive(lastActivity),
     engagementScore,
     engagementLevel: level,
+    rankProgress,
   }
 }
 
@@ -393,6 +454,7 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
   )
 
   return rows.sort((a, b) => {
+    if (b.betaPoints !== a.betaPoints) return b.betaPoints - a.betaPoints
     if (b.engagementScore !== a.engagementScore) return b.engagementScore - a.engagementScore
     return (b.signupDate ?? "").localeCompare(a.signupDate ?? "")
   })
@@ -639,7 +701,10 @@ export async function updateBetaProfileAdmin(
       error: formatSupabaseTableError(CUSTOMER_PROFILES_TABLE, error.message, error.code),
     }
   }
-  return { ok: true, betaRank: newRank ? betaRankLabel(newRank) : undefined }
+  await syncBetaProfileFromActivity(normalized)
+  const refreshed = await fetchBetaProfileByEmail(normalized)
+  const displayRank = newRank ? betaRankLabel(newRank) : betaRankLabel(refreshed?.beta_rank)
+  return { ok: true, betaRank: displayRank }
 }
 
 /** Fast Join Beta signup — email (+ optional name) only; genre/DAW collected after mastering. */
@@ -661,7 +726,10 @@ export async function registerBetaOnboarding(input: {
 
   const body: Record<string, unknown> = {
     email,
-    beta_rank: existing?.beta_rank && isBetaUserRank(existing.beta_rank) ? existing.beta_rank : "insider",
+    beta_rank:
+      existing?.beta_rank && isBetaUserRank(existing.beta_rank)
+        ? migrateLegacyRank(existing.beta_rank)
+        : "explorer",
     updated_at: new Date().toISOString(),
   }
   if (input.name !== undefined) body.name = input.name?.trim() || null
@@ -675,6 +743,7 @@ export async function registerBetaOnboarding(input: {
       error: formatSupabaseTableError(CUSTOMER_PROFILES_TABLE, error.message, error.code),
     }
   }
+  await syncBetaProfileFromActivity(email)
   return { ok: true }
 }
 
@@ -695,7 +764,8 @@ export async function upsertBetaProfile(input: {
   if (!genre) return { error: "Genre required" }
   if (!daw) return { error: "DAW required" }
 
-  const rank = input.betaRank && isBetaUserRank(input.betaRank) ? input.betaRank : "insider"
+  const rank =
+    input.betaRank && isBetaUserRank(input.betaRank) ? migrateLegacyRank(input.betaRank) : "explorer"
 
   const { data: existing } = await supabase
     .from(CUSTOMER_PROFILES_TABLE)
@@ -742,9 +812,13 @@ export async function touchBetaProfileFromFeedback(
   if (g && g !== "Unknown") body.genre = g
   if (d) body.daw = d
 
-  if (!body.genre && !body.daw) return
+  if (!body.genre && !body.daw) {
+    await syncBetaProfileFromActivity(normalized)
+    return
+  }
 
   await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(body, { onConflict: "email" })
+  await syncBetaProfileFromActivity(normalized)
 }
 
 export async function getBetaProfileStatus(

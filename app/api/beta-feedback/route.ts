@@ -14,7 +14,7 @@ import {
   getSupabaseKeySource,
   getSupabaseUrl,
 } from "../../../lib/supabaseServer"
-import { touchBetaProfileFromFeedback } from "../../../lib/betaUserData"
+import { syncBetaProfileFromActivity, touchBetaProfileFromFeedback } from "../../../lib/betaUserData"
 
 function logBeta(message: string, detail?: unknown) {
   if (detail !== undefined) console.log(`[beta-feedback] ${message}`, detail)
@@ -160,6 +160,7 @@ export async function POST(request: Request) {
     const profileEmail = body.contactEmail?.trim() || cookieEmail
     const daw = parseDawFromWorthPaying(body.worthPaying)
     await touchBetaProfileFromFeedback(profileEmail, body.genre, daw)
+    if (profileEmail) await syncBetaProfileFromActivity(profileEmail)
 
     return NextResponse.json({ ok: true, success: true, id })
   } catch (err) {

@@ -26,8 +26,12 @@ alter table public.admin_customer_profiles add column if not exists beta_signed_
 alter table public.admin_customer_profiles add column if not exists beta_approved boolean not null default false;
 
 update public.admin_customer_profiles
-set beta_rank = coalesce(beta_rank, 'insider')
+set beta_rank = coalesce(beta_rank, 'explorer')
 where beta_signed_up_at is not null and (beta_rank is null or beta_rank = '');
+
+update public.admin_customer_profiles
+set beta_rank = 'legend'
+where lower(beta_rank) = 'founding';
 
 create index if not exists admin_customer_profiles_beta_signed_up_idx
   on public.admin_customer_profiles (beta_signed_up_at desc nulls last);

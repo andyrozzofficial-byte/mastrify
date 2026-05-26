@@ -70,8 +70,9 @@ export function BetaUserQuickActions({
           disabled={saving}
           onClick={() => void runAction("promote_rank")}
           className={`${ADMIN_BUTTON_PRIMARY} disabled:opacity-50`}
+          title="Optional override — ranks otherwise update from beta points"
         >
-          Promote rank
+          Promote rank (override)
         </button>
         <button
           type="button"
@@ -82,6 +83,11 @@ export function BetaUserQuickActions({
           Send invite code
         </button>
       </div>
+
+      <p className="mt-4 text-[11px] leading-relaxed text-white/45">
+        Mark feedback as useful: add the word &quot;useful&quot; in feedback admin notes (+5 beta points). Ranks
+        otherwise update automatically from activity.
+      </p>
 
       <label className="mt-5 block">
         <span className="text-[11px] font-medium uppercase tracking-wide text-white/42">Admin note</span>

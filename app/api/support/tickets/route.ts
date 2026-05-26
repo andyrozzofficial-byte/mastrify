@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { syncBetaProfileFromActivity } from "../../../../lib/betaUserData"
 import { createPublicSupportTicket } from "../../../../lib/supportTickets"
 import type { SupportSessionContext } from "../../../../lib/supportTypes"
 import { isSupportTicketCategory } from "../../../../lib/supportTypes"
@@ -45,6 +46,8 @@ export async function POST(request: Request) {
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 })
   }
+
+  await syncBetaProfileFromActivity(email)
 
   return NextResponse.json({ ok: true, id: result.id })
 }

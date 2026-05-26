@@ -126,8 +126,10 @@ export function StatusBadge({ status }: { status: AdminFeedbackStatus }) {
 }
 
 const BETA_RANK_STYLES: Record<string, string> = {
+  explorer: "bg-white/[0.06] text-white/70 ring-white/12",
   insider: "bg-violet-500/12 text-violet-200 ring-violet-400/25",
   pioneer: "bg-indigo-500/18 text-indigo-100 ring-indigo-400/28",
+  legend: "bg-violet-600/25 text-violet-50 ring-violet-300/35 shadow-[0_0_12px_rgba(139,92,246,0.12)]",
   founding: "bg-violet-600/25 text-violet-50 ring-violet-300/35 shadow-[0_0_12px_rgba(139,92,246,0.12)]",
 }
 
