@@ -157,7 +157,7 @@ export default function SiteFooter() {
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:gap-4 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-14">
+        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:gap-4 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-start lg:gap-x-14 xl:gap-x-16">
           {/* Brand */}
           <motion.div
             className="footer-brand min-w-0 max-md:mx-auto max-md:flex max-md:w-full max-md:max-w-[18.5rem] max-md:flex-col max-md:items-center max-md:text-center lg:col-span-3 xl:col-span-3"
@@ -177,7 +177,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="footer-nav-columns footer-nav-group w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-[repeat(3,minmax(0,1fr))] md:items-start md:justify-items-start md:gap-x-14 md:gap-y-0 md:max-w-[26rem] lg:col-span-3 lg:max-w-[27rem] lg:justify-self-start lg:-ml-24 lg:gap-x-16 xl:col-span-3 xl:max-w-[28rem] xl:-ml-28"
+            className="footer-nav-columns footer-nav-group w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-[repeat(3,minmax(0,1fr))] md:items-start md:justify-items-start md:gap-x-14 md:gap-y-0 md:max-w-[26rem] lg:col-span-3 lg:max-w-[27rem] lg:justify-self-center lg:gap-x-16 xl:col-span-3 xl:max-w-[28rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
