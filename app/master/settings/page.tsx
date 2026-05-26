@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
 import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
+import MasterFlowStepRail from "../../components/master/MasterFlowStepRail"
 import MasterStylePresetPicker from "../../components/master/MasterStylePresetPicker"
 import { useMasterSession } from "../MasterSessionProvider"
 import { AUDIO_UPLOAD_ACCEPT, isAcceptedAudioUpload } from "../../../lib/audioUploadAccept"
@@ -76,6 +77,8 @@ export default function MasterSettingsPage() {
     file,
     analysisBefore,
     sessionHydrated,
+    workflowPhase,
+    storedFileName,
     reconnectSourceFile,
     stylePreset,
     setStylePreset,
@@ -87,14 +90,18 @@ export default function MasterSettingsPage() {
     setLowEndControl,
     clarityPresence,
     setClarityPresence,
+    setWorkflowPhase,
+    persistSessionSnapshot,
   } = useMasterSession()
+
+  const needsFileReconnect = !file && (Boolean(analysisBefore) || workflowPhase !== "upload" || Boolean(storedFileName))
 
   useEffect(() => {
     if (!sessionHydrated) return
-    if (!file && !analysisBefore) {
+    if (!file && !analysisBefore && workflowPhase === "upload" && !storedFileName) {
       router.replace("/master")
     }
-  }, [file, analysisBefore, sessionHydrated, router])
+  }, [file, analysisBefore, sessionHydrated, workflowPhase, storedFileName, router])
 
   if (!sessionHydrated) {
     return (
@@ -108,11 +115,12 @@ export default function MasterSettingsPage() {
     )
   }
 
-  if (!file && analysisBefore) {
+  if (needsFileReconnect) {
     return (
       <div className="relative text-white">
         <CinematicBackground />
         <div className="relative mx-auto flex max-w-md flex-col items-center justify-center gap-5 px-6 py-12 text-center">
+          <MasterFlowStepRail phase="settings" className="mb-2" />
           <input
             ref={reconnectInputRef}
             type="file"
@@ -125,8 +133,11 @@ export default function MasterSettingsPage() {
             }}
           />
           <p className="text-sm leading-relaxed text-white/55">
-            Your mastering preferences and analysis were restored. Select the same audio file again to continue — this
-            does not clear your saved analysis snapshot.
+            {analysisBefore
+              ? "Your mastering preferences and analysis were restored. Select the same audio file again to continue — this does not clear your saved analysis snapshot."
+              : storedFileName
+                ? `Your session for “${storedFileName}” was restored. Select the same audio file again to continue mastering.`
+                : "Your mastering session was restored. Select your audio file again to continue."}
           </p>
           <button
             type="button"
@@ -144,24 +155,14 @@ export default function MasterSettingsPage() {
   }
 
   if (!file) {
-    return (
-      <div className="relative text-white">
-        <CinematicBackground />
-        <div className="relative flex flex-col items-center justify-center gap-4 px-6 py-12">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
-          <p className="text-sm text-white/50">Preparing session…</p>
-          <Link href="/master" className="text-xs text-purple-300 hover:underline">
-            Return to upload
-          </Link>
-        </div>
-      </div>
-    )
+    return null
   }
 
   return (
     <div className="relative text-white">
       <CinematicBackground />
       <div className="relative mx-auto w-full max-w-[720px] px-4 pb-10 pt-5 md:px-6 md:pb-12 md:pt-6">
+        <MasterFlowStepRail phase="settings" className="mb-6 justify-center" />
         <div className="relative">
           {/* Radial glow — behind main card */}
           <div
@@ -270,7 +271,13 @@ export default function MasterSettingsPage() {
             <div className="mt-7 flex flex-col items-stretch gap-2.5 border-t border-white/[0.06] pt-6 md:mt-8 md:pt-7">
               <button
                 type="button"
-                onClick={() => runIfAllowed(() => router.push("/master/processing"))}
+                onClick={() =>
+                  runIfAllowed(() => {
+                    setWorkflowPhase("master")
+                    persistSessionSnapshot()
+                    router.push("/master/processing")
+                  })
+                }
                 className="w-full rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] py-3 text-[13px] font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,0.3),0_14px_44px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 transition hover:brightness-110 md:text-sm"
               >
                 Start mastering

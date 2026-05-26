@@ -42,10 +42,20 @@ type Props = {
   fileInputRef: RefObject<HTMLInputElement | null>
   onFileSelected: (file: File) => void
   onPrimaryAction: () => void
+  primaryActionLoading?: boolean
+  primaryActionDisabled?: boolean
 }
 
 /** Shared upload card — Analyze styling is the source of truth for both flows. */
-export default function UploadCard({ mode, file, fileInputRef, onFileSelected, onPrimaryAction }: Props) {
+export default function UploadCard({
+  mode,
+  file,
+  fileInputRef,
+  onFileSelected,
+  onPrimaryAction,
+  primaryActionLoading = false,
+  primaryActionDisabled = false,
+}: Props) {
   const reduce = useReducedMotion()
   const fileInputId = useId()
   const [dragging, setDragging] = useState(false)
@@ -125,8 +135,13 @@ export default function UploadCard({ mode, file, fileInputRef, onFileSelected, o
 
       <div className="marketing-upload-actions">
         {file ? (
-          <button type="button" onClick={onPrimaryAction} className="marketing-upload-btn-primary">
-            {copy.primaryAction}
+          <button
+            type="button"
+            onClick={onPrimaryAction}
+            disabled={primaryActionDisabled || primaryActionLoading}
+            className="marketing-upload-btn-primary disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {primaryActionLoading ? "Opening settings…" : copy.primaryAction}
           </button>
         ) : (
           <label htmlFor={fileInputId} className="marketing-upload-btn-primary cursor-pointer">

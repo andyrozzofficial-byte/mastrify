@@ -4,7 +4,9 @@ import { motion, useReducedMotion } from "framer-motion"
 
 const STEPS = ["Upload", "Settings", "Master"] as const
 
-export type MasterFlowPhase = "upload" | "settings" | "master"
+import type { MasterWorkflowPhase } from "../../../lib/masterWorkflow"
+
+export type MasterFlowPhase = MasterWorkflowPhase
 
 type Props = {
   phase: MasterFlowPhase

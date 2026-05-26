@@ -15,6 +15,11 @@ import { extractMasterLufs } from "../../lib/extractMasterLufs"
 import { isBetaFeedbackEnabled } from "../../lib/betaFeedbackFeature"
 import { formatTrackNameForAnalytics } from "../../lib/formatTrackNameForAnalytics"
 import { createMasterSessionId } from "../../lib/masterSessionId"
+import {
+  isMasterWorkflowPhase,
+  logMasterWorkflow,
+  type MasterWorkflowPhase,
+} from "../../lib/masterWorkflow"
 import { readAudioDurationSec } from "../../lib/readAudioDurationSec"
 
 /** @deprecated use MASTER_SESSION_STORAGE_KEY — kept for one-time migration from older builds */
@@ -43,6 +48,7 @@ type MasterSessionSnapshotV2 = {
   trackDurationSec: number | null
   masterLufs: number | null
   processingTimeMs: number | null
+  workflowPhase: MasterWorkflowPhase
 }
 
 type MasterSession = {
@@ -88,6 +94,13 @@ type MasterSession = {
   seedAnalyzeIntoMasterFlow: (f: File, analysis: Record<string, unknown> | null) => void
   /** After refresh: attach a new File without clearing analysisBefore from storage. */
   reconnectSourceFile: (f: File) => void
+  workflowPhase: MasterWorkflowPhase
+  setWorkflowPhase: (phase: MasterWorkflowPhase) => void
+  /** Last known upload file name (persists in session storage for refresh). */
+  storedFileName: string
+  /** Validate file, persist session, advance to settings step. */
+  continueToSettings: () => boolean
+  persistSessionSnapshot: () => void
 }
 
 const MasterSessionContext = createContext<MasterSession | null>(null)
@@ -139,7 +152,59 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const [masterLufs, setMasterLufs] = useState<number | null>(null)
   const [processingTimeMs, setProcessingTimeMs] = useState<number | null>(null)
   const [sessionHydrated, setSessionHydrated] = useState(false)
+  const [workflowPhase, setWorkflowPhase] = useState<MasterWorkflowPhase>("upload")
+  const [storedFileName, setStoredFileName] = useState("")
   const hydrateRan = useRef(false)
+
+  const persistSessionSnapshot = useCallback(() => {
+    if (typeof window === "undefined") return
+    const payload: MasterSessionSnapshotV2 = {
+      v: 2,
+      analysisBefore,
+      analysisAfter,
+      stylePreset,
+      targetLufs,
+      stereoEnhance,
+      lowEndControl,
+      clarityPresence,
+      deliveryEmail,
+      masteredUrl,
+      masteredPreviewMp3Url,
+      masterObjectKey,
+      masterExpiresAt,
+      fileName: file?.name ?? storedFileName,
+      sessionId,
+      trackDurationSec,
+      masterLufs,
+      processingTimeMs,
+      workflowPhase,
+    }
+    try {
+      sessionStorage.setItem(MASTER_SESSION_STORAGE_KEY, JSON.stringify(payload))
+    } catch {
+      /* ignore quota */
+    }
+  }, [
+    analysisBefore,
+    analysisAfter,
+    stylePreset,
+    targetLufs,
+    stereoEnhance,
+    lowEndControl,
+    clarityPresence,
+    deliveryEmail,
+    masteredUrl,
+    masteredPreviewMp3Url,
+    masterObjectKey,
+    masterExpiresAt,
+    file,
+    storedFileName,
+    sessionId,
+    trackDurationSec,
+    masterLufs,
+    processingTimeMs,
+    workflowPhase,
+  ])
 
   const beginMasterSession = useCallback((f: File) => {
     if (!isBetaFeedbackEnabled()) return
@@ -175,17 +240,34 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       setMasterExpiresAt("")
       setAnalysisBefore(null)
       setAnalysisAfter(null)
-      if (f) beginMasterSession(f)
-      else {
+      if (f) {
+        setStoredFileName(f.name)
+        setWorkflowPhase("upload")
+        beginMasterSession(f)
+        logMasterWorkflow("Upload complete", { fileName: f.name })
+      } else {
         setSessionId("")
         setTrackDurationSec(null)
         setMasterLufs(null)
         setProcessingTimeMs(null)
+        setStoredFileName("")
+        setWorkflowPhase("upload")
       }
       clearMasterStorageKeys()
     },
     [beginMasterSession]
   )
+
+  const continueToSettings = useCallback((): boolean => {
+    if (!file) {
+      logMasterWorkflow("Continue blocked — no file uploaded")
+      return false
+    }
+    setStoredFileName(file.name)
+    setWorkflowPhase("settings")
+    logMasterWorkflow("Settings opened", { fileName: file.name, sessionId: sessionId || "(pending)" })
+    return true
+  }, [file, sessionId])
 
   const reconnectSourceFile = useCallback((f: File) => {
     setFileState(f)
@@ -235,6 +317,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setTrackDurationSec(null)
     setMasterLufs(null)
     setProcessingTimeMs(null)
+    setWorkflowPhase("upload")
+    setStoredFileName("")
     clearMasterStorageKeys()
   }, [])
 
@@ -278,6 +362,21 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
         if (typeof s.processingTimeMs === "number" && Number.isFinite(s.processingTimeMs)) {
           setProcessingTimeMs(Math.round(s.processingTimeMs))
         }
+        if (typeof s.fileName === "string" && s.fileName.trim()) {
+          setStoredFileName(s.fileName.trim())
+        }
+        if (isMasterWorkflowPhase(s.workflowPhase)) {
+          setWorkflowPhase(s.workflowPhase)
+        } else if (s.masteredUrl || s.analysisAfter) {
+          setWorkflowPhase("master")
+        } else if (s.fileName || s.sessionId) {
+          setWorkflowPhase("settings")
+        }
+        logMasterWorkflow("Session restored", {
+          fileName: s.fileName || null,
+          sessionId: s.sessionId || null,
+          workflowPhase: isMasterWorkflowPhase(s.workflowPhase) ? s.workflowPhase : undefined,
+        })
       } else if (snap.v === 1) {
         const mastered = typeof snap.masteredUrl === "string" ? snap.masteredUrl : ""
         if (mastered) setMasteredUrl(mastered)
@@ -317,6 +416,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       trackDurationSec,
       masterLufs,
       processingTimeMs,
+      workflowPhase,
     }
     const hasPayload =
       !!masteredUrl ||
@@ -410,6 +510,11 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,
       reconnectSourceFile,
+      workflowPhase,
+      setWorkflowPhase,
+      storedFileName,
+      continueToSettings,
+      persistSessionSnapshot,
     }),
     [
       file,
@@ -438,8 +543,17 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,
       reconnectSourceFile,
+      workflowPhase,
+      storedFileName,
+      continueToSettings,
+      persistSessionSnapshot,
     ]
   )
+
+  useEffect(() => {
+    if (!sessionHydrated || workflowPhase !== "settings") return
+    persistSessionSnapshot()
+  }, [sessionHydrated, workflowPhase, persistSessionSnapshot])
 
   return <MasterSessionContext.Provider value={value}>{children}</MasterSessionContext.Provider>
 }

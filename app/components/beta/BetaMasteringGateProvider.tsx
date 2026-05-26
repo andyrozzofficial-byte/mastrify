@@ -170,13 +170,17 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
   const closeProfilePanel = useCallback(() => setProfilePanelOpen(false), [])
 
   const ensureBetaAccess = useCallback(async (): Promise<boolean> => {
-    if (isBetaUserRef.current) return true
+    if (isBetaUserRef.current || isBetaUser) return true
     if (refreshInFlightRef.current) return refreshInFlightRef.current
     return refreshAccess({ silent: true })
-  }, [refreshAccess])
+  }, [isBetaUser, refreshAccess])
 
   const runIfAllowed = useCallback(
     (action: () => void) => {
+      if (isBetaUserRef.current || isBetaUser) {
+        action()
+        return
+      }
       void (async () => {
         const allowed = await ensureBetaAccess()
         if (allowed) {
@@ -187,7 +191,7 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
         setGateOpen(true)
       })()
     },
-    [ensureBetaAccess],
+    [isBetaUser, ensureBetaAccess],
   )
 
   const value = useMemo(

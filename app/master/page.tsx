@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import CinematicPageShell from "../components/cinematic/CinematicPageShell"
 import { useBetaMasteringGate } from "../components/beta/BetaMasteringGateProvider"
@@ -10,8 +10,34 @@ import { useMasterSession } from "./MasterSessionProvider"
 export default function MasterUploadPage() {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
-  const { file, setFile } = useMasterSession()
-  const { runIfAllowed } = useBetaMasteringGate()
+  const continuingRef = useRef(false)
+  const { file, setFile, continueToSettings, persistSessionSnapshot } = useMasterSession()
+  const { isBeta, runIfAllowed } = useBetaMasteringGate()
+  const [continuing, setContinuing] = useState(false)
+
+  function handleContinue() {
+    if (!file || continuingRef.current) return
+
+    const advance = () => {
+      continuingRef.current = true
+      setContinuing(true)
+      try {
+        if (!continueToSettings()) return
+        persistSessionSnapshot()
+        router.push("/master/settings")
+      } finally {
+        continuingRef.current = false
+        setContinuing(false)
+      }
+    }
+
+    if (isBeta) {
+      advance()
+      return
+    }
+
+    runIfAllowed(advance)
+  }
 
   return (
     <CinematicPageShell showBottomFade>
@@ -19,7 +45,8 @@ export default function MasterUploadPage() {
         file={file}
         fileInputRef={inputRef}
         onFileSelected={setFile}
-        onContinue={() => runIfAllowed(() => router.push("/master/settings"))}
+        onContinue={handleContinue}
+        continueLoading={continuing}
       />
     </CinematicPageShell>
   )

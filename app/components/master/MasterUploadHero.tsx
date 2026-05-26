@@ -21,6 +21,7 @@ type Props = {
   fileInputRef: RefObject<HTMLInputElement | null>
   onFileSelected: (file: File) => void
   onContinue: () => void
+  continueLoading?: boolean
 }
 
 export default function MasterUploadHero({
@@ -28,6 +29,7 @@ export default function MasterUploadHero({
   fileInputRef,
   onFileSelected,
   onContinue,
+  continueLoading = false,
 }: Props) {
   return (
     <MarketingDesktopHero variant="product">
@@ -70,6 +72,8 @@ export default function MasterUploadHero({
             fileInputRef={fileInputRef}
             onFileSelected={onFileSelected}
             onPrimaryAction={onContinue}
+            primaryActionLoading={continueLoading}
+            primaryActionDisabled={continueLoading}
           />
         </div>
       </MarketingActionSlot>
