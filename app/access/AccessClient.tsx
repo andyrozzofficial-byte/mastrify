@@ -6,37 +6,14 @@ import { FormEvent, useEffect, useRef, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import CinematicBackground from "../components/CinematicBackground"
 import { safeAccessRedirect } from "../../lib/access"
-import { BETA_DAW_OPTIONS } from "../../lib/betaAccess"
-import { BETA_FEEDBACK_GENRE_OPTIONS } from "../../lib/betaFeedbackTypes"
 import { getStoredBetaEmail, setStoredBetaEmail } from "../../lib/betaSessionStorage"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
-type BetaProfilePayload = {
-  name: string | null
-  genre: string | null
-  daw: string | null
-  betaRank?: string | null
-  signupDate?: string | null
-}
-
 type ProfileResponse = {
   complete?: boolean
   email?: string | null
-  profile?: BetaProfilePayload | null
-}
-
-function applyProfilePrefill(
-  json: ProfileResponse,
-  setEmail: (v: string) => void,
-  setName: (v: string) => void,
-  setGenre: (v: string) => void,
-  setDaw: (v: string) => void,
-) {
-  if (json.email) setEmail(json.email)
-  if (json.profile?.name) setName(json.profile.name)
-  if (json.profile?.genre) setGenre(json.profile.genre)
-  if (json.profile?.daw) setDaw(json.profile.daw)
+  profile?: { name: string | null } | null
 }
 
 export default function AccessClient() {
@@ -49,8 +26,6 @@ export default function AccessClient() {
   const [phase, setPhase] = useState<"checking" | "form">("checking")
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
-  const [genre, setGenre] = useState("")
-  const [daw, setDaw] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -72,7 +47,8 @@ export default function AccessClient() {
           return
         }
 
-        if (json) applyProfilePrefill(json, setEmail, setName, setGenre, setDaw)
+        if (json?.email) setEmail(json.email)
+        if (json?.profile?.name) setName(json.profile.name)
 
         const storedEmail = getStoredBetaEmail()
         if (storedEmail) {
@@ -87,7 +63,8 @@ export default function AccessClient() {
             goToMaster(resumeJson.email ?? storedEmail)
             return
           }
-          if (resumeJson) applyProfilePrefill(resumeJson, setEmail, setName, setGenre, setDaw)
+          if (resumeJson?.email) setEmail(resumeJson.email)
+          if (resumeJson?.profile?.name) setName(resumeJson.profile.name)
         }
       } catch {
         const storedEmail = getStoredBetaEmail()
@@ -108,7 +85,7 @@ export default function AccessClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, name: name.trim() || null, genre, daw }),
+        body: JSON.stringify({ email, name: name.trim() || null }),
       })
       const json = await res.json().catch(() => null)
       if (!res.ok) {
@@ -192,7 +169,7 @@ export default function AccessClient() {
             <p className="mx-auto mt-4 max-w-[16.5rem] text-center text-[14px] leading-[1.65] text-muted sm:text-[15px] sm:leading-[1.7]">
               {checking
                 ? "Please wait while we look up your profile."
-                : "Enter your email and a few details — then you can start mastering right away."}
+                : "Enter your email to start mastering. You can share more details after your first master."}
             </p>
 
             {checking ? (
@@ -222,50 +199,11 @@ export default function AccessClient() {
                   <input
                     type="text"
                     name="name"
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-[15px] text-white/92 outline-none focus:border-violet-400/35"
                   />
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
-                    Genre
-                  </span>
-                  <select
-                    value={genre}
-                    onChange={(e) => setGenre(e.target.value)}
-                    required
-                    className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-[15px] text-white/92 outline-none focus:border-violet-400/35"
-                  >
-                    <option value="" disabled>
-                      Select genre
-                    </option>
-                    {BETA_FEEDBACK_GENRE_OPTIONS.map((g) => (
-                      <option key={g} value={g} className="bg-[#111]">
-                        {g}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
-                    DAW
-                  </span>
-                  <select
-                    value={daw}
-                    onChange={(e) => setDaw(e.target.value)}
-                    required
-                    className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-[15px] text-white/92 outline-none focus:border-violet-400/35"
-                  >
-                    <option value="" disabled>
-                      Select DAW
-                    </option>
-                    {BETA_DAW_OPTIONS.map((d) => (
-                      <option key={d} value={d} className="bg-[#111]">
-                        {d}
-                      </option>
-                    ))}
-                  </select>
                 </label>
                 {error ? (
                   <p className="text-center text-[13px] leading-relaxed text-rose-300/88" role="alert">
@@ -274,7 +212,7 @@ export default function AccessClient() {
                 ) : null}
                 <button
                   type="submit"
-                  disabled={loading || !email.trim() || !genre || !daw}
+                  disabled={loading || !email.trim()}
                   className="flex min-h-[50px] w-full items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 to-indigo-800/95 text-[14px] font-semibold text-white disabled:opacity-50"
                 >
                   {loading ? "Saving…" : "Start mastering"}

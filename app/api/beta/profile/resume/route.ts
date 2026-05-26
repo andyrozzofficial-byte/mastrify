@@ -30,6 +30,7 @@ export async function POST(request: Request) {
 
   const payload = {
     complete: status.complete,
+    profileDetailsComplete: status.profileDetailsComplete,
     isBetaUser,
     hasMasteringAccess: isBetaUser,
     profileExists: access.profileExists || Boolean(status.profile),

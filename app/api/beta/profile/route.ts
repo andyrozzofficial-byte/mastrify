@@ -1,11 +1,10 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { BETA_DAW_OPTIONS, BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../lib/betaAccess"
+import { BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../lib/betaAccess"
 import { ACCESS_COOKIE_NAME } from "../../../../lib/access"
-import { BETA_FEEDBACK_GENRE_OPTIONS } from "../../../../lib/betaFeedbackTypes"
 import { betaProfileToJson, setBetaEmailCookieOnResponse } from "../../../../lib/betaProfileResponse"
 import { resolveBetaUserAccess } from "../../../../lib/betaUserAccess"
-import { getBetaProfileStatus, upsertBetaProfile } from "../../../../lib/betaUserData"
+import { getBetaProfileStatus, registerBetaOnboarding } from "../../../../lib/betaUserData"
 
 export async function GET() {
   const store = await cookies()
@@ -27,6 +26,7 @@ export async function GET() {
   const status = await getBetaProfileStatus(normalized)
   return NextResponse.json({
     complete: status.complete,
+    profileDetailsComplete: status.profileDetailsComplete,
     isBetaUser: access.isBetaUser,
     hasMasteringAccess: access.hasMasteringAccess,
     profileExists: access.profileExists,
@@ -36,7 +36,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  let body: { email?: string; name?: string; genre?: string; daw?: string }
+  let body: { email?: string; name?: string }
   try {
     body = await request.json()
   } catch {
@@ -44,24 +44,14 @@ export async function POST(request: Request) {
   }
 
   const email = typeof body.email === "string" ? body.email : ""
-  const genre = typeof body.genre === "string" ? body.genre : ""
-  const daw = typeof body.daw === "string" ? body.daw : ""
 
   if (!email.trim()) {
     return NextResponse.json({ error: "Email required" }, { status: 400 })
   }
-  if (!(BETA_FEEDBACK_GENRE_OPTIONS as readonly string[]).includes(genre)) {
-    return NextResponse.json({ error: "Select a valid genre" }, { status: 400 })
-  }
-  if (!(BETA_DAW_OPTIONS as readonly string[]).includes(daw)) {
-    return NextResponse.json({ error: "Select a valid DAW" }, { status: 400 })
-  }
 
-  const result = await upsertBetaProfile({
+  const result = await registerBetaOnboarding({
     email,
     name: typeof body.name === "string" ? body.name : null,
-    genre,
-    daw,
   })
 
   if ("error" in result) {

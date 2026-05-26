@@ -1,4 +1,6 @@
+import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
+import { BETA_USER_EMAIL_COOKIE } from "../../../lib/betaAccess"
 import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import {
   BETA_FEEDBACK_TABLE,
@@ -22,6 +24,12 @@ function logBeta(message: string, detail?: unknown) {
 function logBetaError(message: string, detail?: unknown) {
   if (detail !== undefined) console.error(`[beta-feedback] ${message}`, detail)
   else console.error(`[beta-feedback] ${message}`)
+}
+
+function parseDawFromWorthPaying(worthPaying: string | undefined): string | null {
+  if (!worthPaying?.trim()) return null
+  const match = worthPaying.match(/^DAW:\s*(.+)$/i)
+  return match?.[1]?.trim() || null
 }
 
 function validationFailureDetail(body: unknown): string | null {
@@ -147,7 +155,11 @@ export async function POST(request: Request) {
 
     logBeta("insert ok", { id })
 
-    await touchBetaProfileFromFeedback(body.contactEmail, body.genre)
+    const store = await cookies()
+    const cookieEmail = store.get(BETA_USER_EMAIL_COOKIE)?.value?.trim() || null
+    const profileEmail = body.contactEmail?.trim() || cookieEmail
+    const daw = parseDawFromWorthPaying(body.worthPaying)
+    await touchBetaProfileFromFeedback(profileEmail, body.genre, daw)
 
     return NextResponse.json({ ok: true, success: true, id })
   } catch (err) {

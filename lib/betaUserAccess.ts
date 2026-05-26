@@ -47,9 +47,13 @@ export async function resolveBetaUserAccess(
   if (lookupEmail) {
     const status = await getBetaProfileStatus(lookupEmail)
     profileExists = Boolean(status.profile)
-    profileComplete = status.complete
+    profileComplete = status.profileDetailsComplete
     if (profileExists) {
-      logBetaAccess("profile found", { email: lookupEmail, profileComplete })
+      logBetaAccess("profile found", {
+        email: lookupEmail,
+        onboardingComplete: status.complete,
+        profileDetailsComplete: status.profileDetailsComplete,
+      })
     }
   }
 

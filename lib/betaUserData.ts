@@ -642,6 +642,42 @@ export async function updateBetaProfileAdmin(
   return { ok: true, betaRank: newRank ? betaRankLabel(newRank) : undefined }
 }
 
+/** Fast Join Beta signup — email (+ optional name) only; genre/DAW collected after mastering. */
+export async function registerBetaOnboarding(input: {
+  email: string
+  name?: string | null
+}): Promise<{ ok: true } | { error: string }> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return { error: "Database unavailable" }
+
+  const email = normalizeBetaEmail(input.email)
+  if (!email.includes("@")) return { error: "Valid email required" }
+
+  const { data: existing } = await supabase
+    .from(CUSTOMER_PROFILES_TABLE)
+    .select("beta_signed_up_at, genre, daw, beta_rank")
+    .eq("email", email)
+    .maybeSingle()
+
+  const body: Record<string, unknown> = {
+    email,
+    beta_rank: existing?.beta_rank && isBetaUserRank(existing.beta_rank) ? existing.beta_rank : "insider",
+    updated_at: new Date().toISOString(),
+  }
+  if (input.name !== undefined) body.name = input.name?.trim() || null
+  if (!existing?.beta_signed_up_at) body.beta_signed_up_at = new Date().toISOString()
+  if (existing?.genre) body.genre = existing.genre
+  if (existing?.daw) body.daw = existing.daw
+
+  const { error } = await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(body, { onConflict: "email" })
+  if (error) {
+    return {
+      error: formatSupabaseTableError(CUSTOMER_PROFILES_TABLE, error.message, error.code),
+    }
+  }
+  return { ok: true }
+}
+
 export async function upsertBetaProfile(input: {
   email: string
   name?: string | null
@@ -689,6 +725,7 @@ export async function upsertBetaProfile(input: {
 export async function touchBetaProfileFromFeedback(
   email: string | null | undefined,
   genre: string | null | undefined,
+  daw?: string | null | undefined,
 ): Promise<void> {
   const normalized = email?.trim().toLowerCase()
   if (!normalized?.includes("@")) return
@@ -696,30 +733,27 @@ export async function touchBetaProfileFromFeedback(
   const supabase = createSupabaseServerClient()
   if (!supabase) return
 
-  const { data: existing } = await supabase
-    .from(CUSTOMER_PROFILES_TABLE)
-    .select("genre")
-    .eq("email", normalized)
-    .maybeSingle()
-
   const body: Record<string, unknown> = {
     email: normalized,
     updated_at: new Date().toISOString(),
   }
   const g = genre?.trim()
-  if (g && g !== "Unknown" && !existing?.genre) body.genre = g
+  const d = daw?.trim()
+  if (g && g !== "Unknown") body.genre = g
+  if (d) body.daw = d
 
-  if (Object.keys(body).length <= 2) return
+  if (!body.genre && !body.daw) return
 
   await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(body, { onConflict: "email" })
 }
 
 export async function getBetaProfileStatus(
   email: string,
-): Promise<{ complete: boolean; profile: BetaProfileRow | null }> {
+): Promise<{ complete: boolean; profileDetailsComplete: boolean; profile: BetaProfileRow | null }> {
   const profile = await fetchBetaProfileByEmail(email)
-  const complete = Boolean(profile?.beta_signed_up_at && profile.genre && profile.daw)
-  return { complete, profile }
+  const complete = Boolean(profile?.beta_signed_up_at)
+  const profileDetailsComplete = Boolean(profile?.genre && profile.daw)
+  return { complete, profileDetailsComplete, profile }
 }
 
 export { BETA_USER_RANKS }
