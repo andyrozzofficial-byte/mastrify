@@ -286,7 +286,7 @@ export default function MastrifyAssistant() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="mastrify-assistant-title"
-            className="pointer-events-auto flex h-[min(400px,calc(100dvh-12rem))] w-[min(340px,calc(100vw-2rem))] max-h-[min(420px,calc(100dvh-11rem))] flex-col overflow-hidden rounded-[20px] border border-white/[0.12] bg-[rgba(12,12,18,0.88)] shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.12)] backdrop-blur-xl backdrop-saturate-150 md:h-[min(440px,calc(100dvh-6rem))] md:max-h-[460px] md:w-[min(340px,calc(100vw-3rem))]"
+            className="pointer-events-auto flex h-[min(400px,calc(100dvh-12rem))] w-[min(340px,calc(100vw-2rem))] max-h-[min(420px,calc(100dvh-11rem))] flex-col overflow-hidden rounded-[20px] border border-white/[0.12] bg-[rgba(12,12,18,0.88)] shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 md:h-[min(440px,calc(100dvh-6rem))] md:max-h-[460px] md:w-[min(340px,calc(100vw-3rem))]"
             initial={reduce ? false : { opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? undefined : { opacity: 0, y: 8, scale: 0.98 }}
@@ -295,7 +295,7 @@ export default function MastrifyAssistant() {
             <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/[0.08] px-3.5 py-2.5">
               <div className="flex min-w-0 items-center gap-2">
                 <span
-                  className="h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.75)]"
+                  className="h-2 w-2 shrink-0 rounded-full bg-emerald-400/90 shadow-[0_0_5px_rgba(52,211,153,0.38)]"
                   aria-hidden
                 />
                 <h2 id="mastrify-assistant-title" className="truncate text-[14px] font-semibold text-white/92">
@@ -383,7 +383,7 @@ export default function MastrifyAssistant() {
                   <select
                     value={ticketCategory}
                     onChange={(e) => setTicketCategory(e.target.value as SupportTicketCategory)}
-                    className="w-full rounded-lg border border-white/[0.1] bg-black/50 px-2.5 py-1.5 text-[12px] text-white/90 outline-none focus:border-violet-400/45"
+                    className="w-full rounded-lg border border-white/[0.1] bg-black/50 px-2.5 py-1.5 text-[12px] text-white/90 outline-none focus:border-violet-500/28"
                   >
                     {Object.entries(SUPPORT_CATEGORY_LABELS).map(([value, label]) => (
                       <option key={value} value={value}>
@@ -397,7 +397,7 @@ export default function MastrifyAssistant() {
                     placeholder="Email"
                     value={ticketEmail}
                     onChange={(e) => setTicketEmail(e.target.value)}
-                    className="w-full rounded-lg border border-white/[0.1] bg-black/50 px-2.5 py-1.5 text-[12px] text-white/90 outline-none focus:border-violet-400/45"
+                    className="w-full rounded-lg border border-white/[0.1] bg-black/50 px-2.5 py-1.5 text-[12px] text-white/90 outline-none focus:border-violet-500/28"
                   />
                   <textarea
                     required
@@ -406,7 +406,7 @@ export default function MastrifyAssistant() {
                     placeholder="Describe the issue"
                     value={ticketBody}
                     onChange={(e) => setTicketBody(e.target.value)}
-                    className="w-full rounded-lg border border-white/[0.1] bg-black/50 px-2.5 py-1.5 text-[12px] text-white/90 outline-none focus:border-violet-400/45"
+                    className="w-full rounded-lg border border-white/[0.1] bg-black/50 px-2.5 py-1.5 text-[12px] text-white/90 outline-none focus:border-violet-500/28"
                   />
                   <SessionContextStrip ctx={sessionContext} processingStatus={processingStatus} />
                   {ticketError ? <p className="text-[11px] text-rose-300/90">{ticketError}</p> : null}
@@ -455,12 +455,12 @@ export default function MastrifyAssistant() {
                   }}
                   onKeyDown={onInputKeyDown}
                   placeholder="Ask about mastering..."
-                  className="max-h-[88px] min-h-[40px] min-w-0 flex-1 resize-none rounded-xl border border-white/[0.1] bg-black/45 px-3 py-2 text-[13px] leading-snug text-white/90 outline-none placeholder:text-white/35 focus:border-violet-400/45"
+                  className="max-h-[88px] min-h-[40px] min-w-0 flex-1 resize-none rounded-xl border border-white/[0.1] bg-black/45 px-3 py-2 text-[13px] leading-snug text-white/90 outline-none placeholder:text-white/35 focus:border-violet-500/28"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="mb-0.5 shrink-0 rounded-xl bg-violet-600 px-3.5 py-2 text-[12px] font-semibold text-white transition hover:bg-violet-500 disabled:opacity-40"
+                  className="mb-0.5 shrink-0 rounded-xl bg-indigo-800/95 px-3.5 py-2 text-[12px] font-semibold text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(0,0,0,0.2)] ring-1 ring-violet-950/30 transition hover:bg-indigo-700/95 disabled:opacity-40"
                 >
                   Send
                 </button>
@@ -475,7 +475,7 @@ export default function MastrifyAssistant() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open Mastrify Assistant"
-          className={`pointer-events-auto inline-flex items-center justify-center rounded-full border border-violet-400/35 bg-gradient-to-b from-violet-600/95 via-indigo-700/95 to-indigo-900/95 font-semibold text-white shadow-[0_10px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(167,139,250,0.18)] transition hover:brightness-[1.06] active:scale-[0.98] ${
+          className={`pointer-events-auto inline-flex items-center justify-center rounded-full border border-white/[0.1] bg-gradient-to-b from-violet-700/88 via-indigo-800/90 to-slate-900/94 font-semibold text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),inset_0_-1px_0_rgba(0,0,0,0.2),0_8px_24px_rgba(0,0,0,0.48)] ring-1 ring-violet-950/25 transition hover:border-white/[0.14] hover:brightness-[1.02] active:scale-[0.98] ${
             fabCompact
               ? "h-14 w-14 p-0 md:h-auto md:w-auto md:gap-2 md:px-4 md:py-2.5 md:text-[12px]"
               : "h-[58px] max-h-[60px] gap-2 px-4 py-2.5 text-[12px] md:h-auto md:max-h-none"
@@ -483,7 +483,7 @@ export default function MastrifyAssistant() {
           whileTap={reduce ? undefined : { scale: 0.98 }}
         >
           <span
-            className="h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] md:h-1.5 md:w-1.5"
+            className="h-2 w-2 shrink-0 rounded-full bg-emerald-400/90 shadow-[0_0_5px_rgba(52,211,153,0.4)] md:h-1.5 md:w-1.5"
             aria-hidden
           />
           <span className={fabCompact ? "sr-only md:not-sr-only md:inline" : "inline"}>Mastrify Assistant</span>
