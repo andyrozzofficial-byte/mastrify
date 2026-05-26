@@ -33,6 +33,7 @@ import {
   PIPELINE_EVENTS_TABLE,
 } from "./adminData"
 import { createSupabaseServerClient } from "./supabaseServer"
+import { formatSupabaseTableError } from "./supabaseSchemaErrors"
 
 type BetaProfileRow = {
   email: string
@@ -601,7 +602,11 @@ export async function updateBetaProfileAdmin(
   }
 
   const { error } = await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(body, { onConflict: "email" })
-  if (error) return { error: error.message }
+  if (error) {
+    return {
+      error: formatSupabaseTableError(CUSTOMER_PROFILES_TABLE, error.message, error.code),
+    }
+  }
   return { ok: true, betaRank: newRank ? betaRankLabel(newRank) : undefined }
 }
 
@@ -641,7 +646,11 @@ export async function upsertBetaProfile(input: {
   if (!existing?.beta_signed_up_at) body.beta_signed_up_at = new Date().toISOString()
 
   const { error } = await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(body, { onConflict: "email" })
-  if (error) return { error: error.message }
+  if (error) {
+    return {
+      error: formatSupabaseTableError(CUSTOMER_PROFILES_TABLE, error.message, error.code),
+    }
+  }
   return { ok: true }
 }
 

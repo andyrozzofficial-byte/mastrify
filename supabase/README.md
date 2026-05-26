@@ -44,6 +44,30 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 Beta feedback (optional): `ENABLE_BETA_FEEDBACK=true` on Vercel is mirrored to the client at build via `next.config.ts`.
 
+## Beta signup (`public.admin_customer_profiles`)
+
+If **Join Beta** / `POST /api/beta/profile` fails with **“Could not find the table 'public.admin_customer_profiles'”**:
+
+1. Open [Supabase SQL Editor](https://supabase.com/dashboard) for your project.
+2. Paste and run the full contents of [`admin_customer_profiles.sql`](./admin_customer_profiles.sql).
+3. Wait ~10 seconds (the script ends with `NOTIFY pgrst, 'reload schema';`).
+
+Verify locally:
+
+```bash
+npm run db:customer-profiles:check
+```
+
+Apply via `psql` when you have a DB URL in `.env.local`:
+
+```bash
+npm run db:customer-profiles
+```
+
+Or with Supabase CLI: `supabase db push` (includes `migrations/20260526120000_ensure_admin_customer_profiles.sql` and earlier migrations).
+
+Beta signup uses this table only — no separate `beta_users` table. Requires `SUPABASE_SERVICE_ROLE_KEY` (or working RLS) on the server for upserts.
+
 ## Admin dashboard
 
 Routes (internal only):

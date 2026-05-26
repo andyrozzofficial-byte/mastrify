@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "eslint",
     "db:beta-feedback": "node scripts/apply-beta-feedback-schema.mjs",
-    "db:beta-feedback:check": "node scripts/check-beta-feedback-table.mjs"
+    "db:beta-feedback:check": "node scripts/check-beta-feedback-table.mjs",
+    "db:customer-profiles": "node scripts/apply-admin-customer-profiles.mjs",
+    "db:customer-profiles:check": "node scripts/check-admin-customer-profiles.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.3",
