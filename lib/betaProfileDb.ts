@@ -42,6 +42,16 @@ function isMissingSchemaError(message: string, code?: string | null): boolean {
   )
 }
 
+function isRlsOrPermissionError(message: string, code?: string | null): boolean {
+  const raw = `${code ?? ""} ${message}`.toLowerCase()
+  return (
+    raw.includes("row-level security") ||
+    raw.includes("permission denied") ||
+    raw.includes("insufficient privilege") ||
+    code === "42501"
+  )
+}
+
 function mapProfileRow(row: Record<string, unknown>): BetaCustomerProfileRecord {
   return {
     email: String(row.email ?? ""),
@@ -79,13 +89,16 @@ export async function findBetaProfileByEmail(
     }
 
     if (error && !isMissingSchemaError(error.message, error.code)) {
-      console.error(`${LOG_PREFIX} find profile failed:`, error.message)
+      console.error(`${LOG_PREFIX} find profile failed:`, error.message, error.code)
       return null
     }
   }
 
   return null
 }
+
+/** Columns safe to write on every admin_customer_profiles deployment. */
+export const BETA_PROFILE_CORE_UPSERT_COLUMNS = ["email", "name", "updated_at"] as const
 
 /** Upsert with automatic retry when optional beta columns are missing from schema cache. */
 export async function upsertCustomerProfileRow(
@@ -110,6 +123,20 @@ export async function upsertCustomerProfileRow(
       continue
     }
 
+    if (isMissingSchemaError(error.message ?? "", error.code)) {
+      return {
+        error: formatSupabaseTableError(CUSTOMER_PROFILES_TABLE, error.message, error.code),
+      }
+    }
+
+    if (isRlsOrPermissionError(error.message ?? "", error.code)) {
+      return {
+        error:
+          "Beta profile write denied. Set SUPABASE_SERVICE_ROLE_KEY on the server (admin_customer_profiles allows service_role only).",
+      }
+    }
+
+    console.error(`${LOG_PREFIX} profile upsert failed:`, error.message, error.code, { record })
     return {
       error: formatSupabaseTableError(CUSTOMER_PROFILES_TABLE, error.message, error.code),
     }

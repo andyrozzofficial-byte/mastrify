@@ -553,6 +553,8 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
       ? Math.round(procValues.reduce((a, b) => a + b, 0) / procValues.length)
       : null
 
+  const completions = await fetchBetaMasterCompletionsForEmail(normalized)
+
   const activityDates = new Set<string>()
   for (const iso of [
     ...userFeedback.map((f) => f.created_at),
@@ -592,7 +594,6 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     userSupport.map((s) => [s.subject, s.category].filter((x): x is string => Boolean(x?.trim()))),
   )
 
-  const completions = await fetchBetaMasterCompletionsForEmail(normalized)
   const inviteMap = await buildCreatorInviteCountByReferrer()
   const list = buildListRow(
     normalized,
