@@ -130,6 +130,7 @@ const BETA_RANK_STYLES: Record<string, string> = {
   insider: "bg-violet-500/12 text-violet-200 ring-violet-400/25",
   pioneer: "bg-indigo-500/18 text-indigo-100 ring-indigo-400/28",
   legend: "bg-violet-600/25 text-violet-50 ring-violet-300/35 shadow-[0_0_12px_rgba(139,92,246,0.12)]",
+  founder: "bg-amber-500/15 text-amber-100 ring-amber-400/28",
   founding: "bg-violet-600/25 text-violet-50 ring-violet-300/35 shadow-[0_0_12px_rgba(139,92,246,0.12)]",
 }
 

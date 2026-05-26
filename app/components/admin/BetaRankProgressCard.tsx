@@ -1,6 +1,6 @@
 "use client"
 
-import type { BetaRankProgress } from "../../../lib/betaPoints"
+import { BETA_EARN_WAYS, buildBetaMilestoneProgress, type BetaRankProgress } from "../../../lib/betaPoints"
 import { AdminCard, BetaRankBadge } from "./admin-shared"
 
 export function BetaRankProgressCard({
@@ -15,6 +15,7 @@ export function BetaRankProgressCard({
   betaPoints: number
 }) {
   const { rankLabel, points, nextRankLabel, pointsToNext, nextThreshold, progressPct } = rankProgress
+  const milestone = buildBetaMilestoneProgress(points)
 
   return (
     <AdminCard className="!p-5">
@@ -58,8 +59,24 @@ export function BetaRankProgressCard({
       </div>
 
       <div className="mt-5 border-t border-white/[0.06] pt-4">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-white/42">Reward status</p>
-        <p className="mt-1.5 text-sm leading-relaxed text-white/75">{rewardStatus}</p>
+        <p className="text-[11px] font-medium uppercase tracking-wide text-white/42">Next reward</p>
+        <p className="mt-1.5 text-sm leading-relaxed text-white/82">{milestone.nextReward}</p>
+        {milestone.nextRewardDetail ? (
+          <p className="mt-1 text-xs text-white/55">{milestone.nextRewardDetail}</p>
+        ) : null}
+        <p className="mt-3 text-[11px] font-medium uppercase tracking-wide text-white/42">Unlocked</p>
+        <p className="mt-1 text-xs leading-relaxed text-white/60">{rewardStatus}</p>
+      </div>
+
+      <div className="mt-4">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-white/42">Ways to earn</p>
+        <ul className="mt-2 space-y-1 text-xs text-white/55">
+          {BETA_EARN_WAYS.map((w) => (
+            <li key={w.label}>
+              <span className="font-semibold text-violet-200/80">{w.points}</span> {w.label}
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="mt-4 flex items-center justify-between text-xs text-white/50">

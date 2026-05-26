@@ -37,7 +37,8 @@ export function nextBetaRank(current: string | null | undefined): BetaUserRank {
   if (rank === "explorer") return "insider"
   if (rank === "insider") return "pioneer"
   if (rank === "pioneer") return "legend"
-  return "legend"
+  if (rank === "legend") return "founder"
+  return "founder"
 }
 
 export function normalizeRankKey(rank: string | null | undefined): BetaUserRank {
@@ -66,6 +67,9 @@ export function computeBetaBadges(input: {
   }
   if (normalizeRankKey(input.betaRank) === "legend") {
     badges.push({ id: "legend_tester", emoji: "🏆", label: "Legend" })
+  }
+  if (normalizeRankKey(input.betaRank) === "founder") {
+    badges.push({ id: "founder_supporter", emoji: "✨", label: "Early Supporter" })
   }
   return badges
 }

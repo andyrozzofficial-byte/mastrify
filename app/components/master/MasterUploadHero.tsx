@@ -59,9 +59,8 @@ export default function MasterUploadHero({
 
       <MasterFlowStepRail phase="upload" className="marketing-hero-step-rail justify-start" />
 
-      <BetaMasterStatusCard className="my-2 sm:my-2.5" />
-
-      <MarketingActionSlot>
+      <MarketingActionSlot className="!mt-0 flex flex-col gap-3 sm:gap-3.5">
+        <BetaMasterStatusCard />
         <MasterUploadCard
           file={file}
           fileInputRef={fileInputRef}

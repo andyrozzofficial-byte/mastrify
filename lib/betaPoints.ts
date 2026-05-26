@@ -2,31 +2,62 @@ import type { AdminFeedbackRow, AdminJobRow, AdminSupportRow } from "./adminType
 import type { BetaUserRank } from "./betaAccess"
 import { betaRankLabel, migrateLegacyRank } from "./betaAccess"
 
+/** Point thresholds for ranks and reward milestones. */
 export const BETA_RANK_THRESHOLDS: Record<BetaUserRank, number> = {
   explorer: 0,
   insider: 10,
   pioneer: 25,
   legend: 50,
+  founder: 100,
 }
 
-const RANK_ORDER: BetaUserRank[] = ["explorer", "insider", "pioneer", "legend"]
+export const BETA_REWARD_MILESTONES = [
+  {
+    points: 10,
+    rank: "insider" as const,
+    perks: ["10% discount code", "Insider badge"],
+  },
+  {
+    points: 25,
+    rank: "pioneer" as const,
+    perks: ["25% discount code", "Early access to new features"],
+  },
+  {
+    points: 50,
+    rank: "legend" as const,
+    perks: ["50% discount / mastering credits"],
+  },
+  {
+    points: 100,
+    rank: "founder" as const,
+    perks: ["Founder / Early Supporter status", "Exclusive future perks"],
+  },
+] as const
+
+export const BETA_EARN_WAYS = [
+  { points: "+1", label: "Complete master" },
+  { points: "+1", label: "Submit feedback" },
+  { points: "+2", label: "Report bug" },
+  { points: "+3", label: "Invite creator" },
+  { points: "+5", label: "Valuable feedback (admin)" },
+] as const
+
+const RANK_ORDER: BetaUserRank[] = ["explorer", "insider", "pioneer", "legend", "founder"]
 
 export type BetaActivityCounts = {
   completedMasters: number
   feedbackCount: number
-  supportCount: number
   feedbackOnlyBugCount: number
   usefulFeedbackCount: number
-  betaApproved: boolean
+  creatorInviteCount: number
 }
 
 export type BetaPointsBreakdown = {
   masters: number
   feedback: number
-  support: number
   bugs: number
+  invites: number
   usefulFeedback: number
-  approvedInvite: number
   total: number
 }
 
@@ -42,6 +73,16 @@ export type BetaRankProgress = {
   progressPct: number
 }
 
+export type BetaMilestoneProgress = {
+  points: number
+  progressTitle: string
+  progressLabel: string
+  progressPct: number
+  nextReward: string
+  nextRewardDetail: string | null
+  nextMilestonePoints: number | null
+}
+
 export function rankTier(rank: BetaUserRank): number {
   return RANK_ORDER.indexOf(rank)
 }
@@ -51,6 +92,7 @@ export function maxBetaRank(a: BetaUserRank, b: BetaUserRank): BetaUserRank {
 }
 
 export function rankFromPoints(points: number): BetaUserRank {
+  if (points >= BETA_RANK_THRESHOLDS.founder) return "founder"
   if (points >= BETA_RANK_THRESHOLDS.legend) return "legend"
   if (points >= BETA_RANK_THRESHOLDS.pioneer) return "pioneer"
   if (points >= BETA_RANK_THRESHOLDS.insider) return "insider"
@@ -71,9 +113,9 @@ export function countUsefulFeedback(userFeedback: AdminFeedbackRow[]): number {
 export function aggregateBetaActivityForEmail(
   email: string,
   userFeedback: AdminFeedbackRow[],
-  userSupport: AdminSupportRow[],
+  _userSupport: AdminSupportRow[],
   jobs: AdminJobRow[],
-  betaApproved: boolean,
+  creatorInviteCount: number,
 ): BetaActivityCounts {
   const normalized = email.toLowerCase()
   const completedMasters = jobs.filter(
@@ -83,28 +125,25 @@ export function aggregateBetaActivityForEmail(
   return {
     completedMasters,
     feedbackCount: userFeedback.length,
-    supportCount: userSupport.length,
     feedbackOnlyBugCount: countFeedbackOnlyBugs(userFeedback),
     usefulFeedbackCount: countUsefulFeedback(userFeedback),
-    betaApproved,
+    creatorInviteCount,
   }
 }
 
 export function calcBetaPointsBreakdown(counts: BetaActivityCounts): BetaPointsBreakdown {
   const masters = counts.completedMasters * 1
-  const feedback = counts.feedbackCount * 2
-  const support = counts.supportCount * 3
-  const bugs = counts.feedbackOnlyBugCount * 3
+  const feedback = counts.feedbackCount * 1
+  const bugs = counts.feedbackOnlyBugCount * 2
+  const invites = counts.creatorInviteCount * 3
   const usefulFeedback = counts.usefulFeedbackCount * 5
-  const approvedInvite = counts.betaApproved ? 10 : 0
   return {
     masters,
     feedback,
-    support,
     bugs,
+    invites,
     usefulFeedback,
-    approvedInvite,
-    total: masters + feedback + support + bugs + usefulFeedback + approvedInvite,
+    total: masters + feedback + bugs + invites + usefulFeedback,
   }
 }
 
@@ -149,19 +188,46 @@ export function buildBetaRankProgress(points: number): BetaRankProgress {
   }
 }
 
-export function rewardStatusForRank(rank: BetaUserRank): string {
-  if (rank === "legend") return "Lifetime Insider badge + future premium rewards"
-  if (rank === "pioneer") return "25% discount code · Early feature access"
-  if (rank === "insider") return "10% discount code"
-  return "Keep mastering and sharing feedback to unlock rewards"
+export function buildBetaMilestoneProgress(points: number): BetaMilestoneProgress {
+  const next = BETA_REWARD_MILESTONES.find((m) => points < m.points)
+  const prevThreshold =
+    next != null
+      ? (BETA_REWARD_MILESTONES[BETA_REWARD_MILESTONES.indexOf(next) - 1]?.points ?? 0)
+      : BETA_REWARD_MILESTONES[BETA_REWARD_MILESTONES.length - 1]!.points
+
+  const span = next != null ? next.points - prevThreshold : 1
+  const progressPct =
+    next != null ? Math.min(100, Math.round(((points - prevThreshold) / span) * 100)) : 100
+
+  const progressTitle = next
+    ? `${betaRankLabel(next.rank).toUpperCase()} PROGRESS`
+    : "ALL REWARDS UNLOCKED"
+
+  const progressLabel = next ? `${points} / ${next.points} points` : `${points} points`
+
+  return {
+    points,
+    progressTitle,
+    progressLabel,
+    progressPct,
+    nextReward: next?.perks[0] ?? "You unlocked every beta milestone",
+    nextRewardDetail: next?.perks[1] ?? null,
+    nextMilestonePoints: next?.points ?? null,
+  }
 }
 
-/** Reward unlocked at the next rank tier (shown on master flow card). */
+export function rewardStatusForRank(rank: BetaUserRank): string {
+  if (rank === "founder") return "Founder / Early Supporter · Exclusive future perks"
+  if (rank === "legend") return "50% discount / mastering credits"
+  if (rank === "pioneer") return "25% discount code · Early feature access"
+  if (rank === "insider") return "10% discount code · Insider badge"
+  return "Earn points to unlock your first rewards"
+}
+
 export function nextRewardLabelForRank(nextRank: BetaUserRank | null): string {
-  if (nextRank === "insider") return "10% discount code"
-  if (nextRank === "pioneer") return "25% discount code · Early feature access"
-  if (nextRank === "legend") return "Lifetime Insider badge + future premium rewards"
-  return "Max tier — enjoy your rewards"
+  const milestone = BETA_REWARD_MILESTONES.find((m) => m.rank === nextRank)
+  if (!milestone) return "Max tier — enjoy your rewards"
+  return milestone.perks.join(" · ")
 }
 
 export type BetaMasteringUiState = {
@@ -172,6 +238,8 @@ export type BetaMasteringUiState = {
   progressLabel: string
   progressPct: number
   nextReward: string
+  nextRewardDetail: string | null
+  earnWays: readonly { points: string; label: string }[]
 }
 
 export function buildBetaMasteringUiState(input: {
@@ -180,27 +248,23 @@ export function buildBetaMasteringUiState(input: {
   rankProgress: BetaRankProgress
   rewardStatus: string
 }): BetaMasteringUiState {
-  const { rankProgress } = input
-  const navLabel = rankProgress.rank === "explorer" ? "Beta Member" : input.betaRank
-  const progressTitle = rankProgress.nextRankLabel
-    ? `${rankProgress.nextRankLabel} Progress`
-    : `${rankProgress.rankLabel} Progress`
-  const progressLabel =
-    rankProgress.nextThreshold != null
-      ? `${rankProgress.points} / ${rankProgress.nextThreshold} points`
-      : `${String(rankProgress.points)} points`
-  const nextReward = rankProgress.nextRank
-    ? nextRewardLabelForRank(rankProgress.nextRank)
+  const milestone = buildBetaMilestoneProgress(input.betaPoints)
+  const navLabel = input.rankProgress.rank === "explorer" ? "Beta Member" : input.betaRank
+
+  const nextReward = milestone.nextMilestonePoints
+    ? milestone.nextReward
     : input.rewardStatus
 
   return {
     rankLabel: input.betaRank,
     navLabel,
     points: input.betaPoints,
-    progressTitle,
-    progressLabel,
-    progressPct: rankProgress.progressPct,
+    progressTitle: milestone.progressTitle,
+    progressLabel: milestone.progressLabel,
+    progressPct: milestone.progressPct,
     nextReward,
+    nextRewardDetail: milestone.nextRewardDetail,
+    earnWays: BETA_EARN_WAYS,
   }
 }
 
@@ -208,11 +272,4 @@ export function effectiveBetaRank(storedRank: string | null | undefined, points:
   const stored = migrateLegacyRank(storedRank)
   const calculated = rankFromPoints(points)
   return maxBetaRank(stored, calculated)
-}
-
-export function countSupportOrBugIncidents(
-  userFeedback: AdminFeedbackRow[],
-  userSupport: AdminSupportRow[],
-): number {
-  return userSupport.length + countFeedbackOnlyBugs(userFeedback)
 }

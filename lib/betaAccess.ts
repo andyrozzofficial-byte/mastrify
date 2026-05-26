@@ -1,6 +1,6 @@
 export const BETA_USER_EMAIL_COOKIE = "mastrify_beta_email"
 
-export const BETA_USER_RANKS = ["explorer", "insider", "pioneer", "legend"] as const
+export const BETA_USER_RANKS = ["explorer", "insider", "pioneer", "legend", "founder"] as const
 export type BetaUserRank = (typeof BETA_USER_RANKS)[number]
 
 /** Legacy DB values mapped on read (founding → legend). */

@@ -107,6 +107,30 @@ function countCompletedMasters(email: string, jobs: AdminJobRow[]): number {
     .length
 }
 
+/** Count signups that stored `referred_by:<email>` in profile notes (no extra tables). */
+async function buildCreatorInviteCountByReferrer(): Promise<Map<string, number>> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return new Map()
+
+  const { data, error } = await supabase
+    .from(CUSTOMER_PROFILES_TABLE)
+    .select("notes")
+    .ilike("notes", "%referred_by:%")
+
+  if (error) return new Map()
+
+  const map = new Map<string, number>()
+  for (const row of data ?? []) {
+    const notes = row.notes
+    if (typeof notes !== "string") continue
+    const match = notes.match(/referred_by:([^\s,;]+)/i)
+    if (!match?.[1]) continue
+    const ref = normalizeBetaEmail(match[1])
+    map.set(ref, (map.get(ref) ?? 0) + 1)
+  }
+  return map
+}
+
 export async function syncBetaProfileFromActivity(email: string): Promise<void> {
   const normalized = normalizeBetaEmail(email)
   if (!normalized.includes("@")) return
@@ -125,12 +149,13 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
 
   const userFeedback = feedback.filter((f) => f.contact_email?.toLowerCase() === normalized)
   const userSupport = support.filter((s) => s.email.toLowerCase() === normalized)
+  const inviteMap = await buildCreatorInviteCountByReferrer()
   const counts = aggregateBetaActivityForEmail(
     normalized,
     userFeedback,
     userSupport,
     jobs,
-    profile?.beta_approved ?? false,
+    inviteMap.get(normalized) ?? 0,
   )
   const points = calcBetaPoints(counts)
   const rank = effectiveBetaRank(profile?.beta_rank, points)
@@ -346,6 +371,7 @@ function buildListRow(
   userFeedback: AdminFeedbackRow[],
   userSupport: AdminSupportRow[],
   jobs: AdminJobRow[],
+  creatorInviteCount: number,
 ): BetaUserListRow {
   const lastTimes = [
     ...userFeedback.map((f) => f.created_at),
@@ -381,7 +407,7 @@ function buildListRow(
     userFeedback,
     userSupport,
     jobs,
-    profile?.beta_approved ?? false,
+    creatorInviteCount,
   )
   const betaPoints = calcBetaPoints(counts)
   const rankKey = effectiveBetaRank(profile?.beta_rank, betaPoints)
@@ -458,6 +484,8 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
     supportByEmail.set(e, list)
   }
 
+  const inviteMap = await buildCreatorInviteCountByReferrer()
+
   const rows = emails.map((email) =>
     buildListRow(
       email,
@@ -465,6 +493,7 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
       feedbackByEmail.get(email) ?? [],
       supportByEmail.get(email) ?? [],
       jobs,
+      inviteMap.get(email) ?? 0,
     ),
   )
 
@@ -560,7 +589,15 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     userSupport.map((s) => [s.subject, s.category].filter((x): x is string => Boolean(x?.trim()))),
   )
 
-  const list = buildListRow(normalized, profile, userFeedback, userSupport, jobs)
+  const inviteMap = await buildCreatorInviteCountByReferrer()
+  const list = buildListRow(
+    normalized,
+    profile,
+    userFeedback,
+    userSupport,
+    jobs,
+    inviteMap.get(normalized) ?? 0,
+  )
   const userExports = await fetchExportsForEmail(normalized)
   const pipelineUploads = await fetchPipelineUploadsForSessions(sessions)
   const bugReportCount = countBugReports(userFeedback, userSupport)

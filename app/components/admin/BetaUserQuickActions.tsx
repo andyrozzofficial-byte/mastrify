@@ -85,8 +85,9 @@ export function BetaUserQuickActions({
       </div>
 
       <p className="mt-4 text-[11px] leading-relaxed text-white/45">
-        Mark feedback as useful: add the word &quot;useful&quot; in feedback admin notes (+5 beta points). Ranks
-        otherwise update automatically from activity.
+        Mark feedback as useful: add &quot;useful&quot; in feedback admin notes (+5 pts). Creator invites: set
+        referred user notes to <code className="text-violet-200/80">referred_by:their@email.com</code> (+3 pts).
+        Ranks update automatically from points (10 / 25 / 50 / 100).
       </p>
 
       <label className="mt-5 block">
