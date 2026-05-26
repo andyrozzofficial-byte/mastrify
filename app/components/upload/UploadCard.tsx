@@ -11,7 +11,7 @@ import {
 } from "../../../lib/audioUploadAccept"
 import {
   IOS_SAFE_FILE_INPUT_CLASS,
-  OFF_SCREEN_FILE_INPUT_CLASS,
+  LOADED_FILE_INPUT_CLASS,
   bindIosFileInputHandlers,
 } from "../../../lib/iosFileInput"
 
@@ -132,7 +132,8 @@ export default function UploadCard({
         type="file"
         ref={fileInputRef}
         tabIndex={-1}
-        className={loaded ? OFF_SCREEN_FILE_INPUT_CLASS : IOS_SAFE_FILE_INPUT_CLASS}
+        aria-hidden={loaded}
+        className={loaded ? LOADED_FILE_INPUT_CLASS : IOS_SAFE_FILE_INPUT_CLASS}
         accept={AUDIO_UPLOAD_ACCEPT}
         {...fileInputHandlers}
       />
@@ -148,18 +149,24 @@ export default function UploadCard({
               onPrimaryAction()
             }}
             disabled={primaryActionDisabled || primaryActionLoading}
-            className="marketing-upload-btn-primary disabled:cursor-not-allowed disabled:opacity-40"
+            className="marketing-upload-btn-primary relative z-30 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {primaryActionLoading ? "Opening settings…" : copy.primaryAction}
           </button>
         ) : (
-          <label htmlFor={fileInputId} className="marketing-upload-btn-primary cursor-pointer">
+          <label
+            htmlFor={fileInputId}
+            className="marketing-upload-btn-primary relative z-30 cursor-pointer"
+          >
             Choose file
           </label>
         )}
 
         {file ? (
-          <label htmlFor={fileInputId} className="marketing-upload-btn-secondary cursor-pointer">
+          <label
+            htmlFor={fileInputId}
+            className="marketing-upload-btn-secondary relative z-30 cursor-pointer"
+          >
             Choose a different file
           </label>
         ) : (

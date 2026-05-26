@@ -4,8 +4,12 @@ import type { ChangeEvent } from "react"
  * iOS Safari often fails to fire `change` on file inputs with `display: none` / `hidden`.
  * Pair with a visible <label htmlFor={id}> — do not overlay inputs on other buttons.
  */
+/** File picked — input off-screen, no pointer hits (labels use htmlFor). */
 export const OFF_SCREEN_FILE_INPUT_CLASS =
-  "pointer-events-none fixed left-0 top-0 -z-10 h-px w-px opacity-[0.01]"
+  "pointer-events-none fixed left-0 top-0 z-0 h-px w-px opacity-[0.01]"
+
+/** When a file is already loaded on the upload card. */
+export const LOADED_FILE_INPUT_CLASS = OFF_SCREEN_FILE_INPUT_CLASS
 
 /** @deprecated Prefer OFF_SCREEN_FILE_INPUT_CLASS + label htmlFor */
 export const IOS_SAFE_FILE_INPUT_CLASS =

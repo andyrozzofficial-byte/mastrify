@@ -177,7 +177,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const workflowPhase = workflowPhaseFromStep(masterState.step)
 
   useEffect(() => {
-    console.log("[master-workflow] CURRENT STEP:", currentStep, "file:", masterState.file?.name ?? null)
+    console.log("[master-workflow] Step changed:", currentStep, "file:", masterState.file?.name ?? null)
   }, [currentStep, masterState.file])
 
   const beginMasterSession = useCallback((f: File) => {
@@ -193,8 +193,18 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
 
   const handleMasterUpload = useCallback(
     (uploaded: File) => {
-      console.log("[master-workflow] handleMasterUpload → step 1", uploaded.name)
-      setMasterState({ step: 1, file: uploaded })
+      let ignored = false
+      setMasterState((prev) => {
+        if (prev.file?.name === uploaded.name && prev.file?.size === uploaded.size) {
+          console.log("[master-workflow] Upload ignored")
+          ignored = true
+          return prev
+        }
+        console.log("[master-workflow] Step changed: 1 (upload)")
+        return { step: 1, file: uploaded }
+      })
+      if (ignored) return
+
       attachFileAudio(setAudioUrl, uploaded)
       setStoredFileName(uploaded.name)
       setMasteredUrl("")
@@ -208,13 +218,13 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   )
 
   const handleContinueToSettings = useCallback(() => {
-    console.log("[master-workflow] continue clicked")
+    console.log("[master-workflow] Continue clicked")
     setMasterState((prev) => {
       if (!prev.file) {
-        console.log("[master-workflow] Missing file — step stays", prev.step)
         return prev
       }
-      console.log("[master-workflow] step 1 → 2", prev.file.name)
+      if (prev.step === 2) return prev
+      console.log("[master-workflow] Step changed: 2 (settings)")
       return { ...prev, step: 2 }
     })
   }, [])
@@ -222,13 +232,18 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const handleContinueToMaster = useCallback(() => {
     setMasterState((prev) => {
       if (!prev.file) return prev
+      if (prev.step === 3) return prev
+      console.log("[master-workflow] Step changed: 3 (master)")
       return { ...prev, step: 3 }
     })
   }, [])
 
   const handleBackToUpload = useCallback(() => {
-    console.log("[master-workflow] handleBackToUpload → step 1")
-    setMasterState((prev) => ({ ...prev, step: 1 }))
+    setMasterState((prev) => {
+      if (prev.step === 1) return prev
+      console.log("[master-workflow] Step changed: 1 (back to upload)")
+      return { ...prev, step: 1 }
+    })
   }, [])
 
   const setCurrentStep = useCallback((step: MasterWorkflowStep) => {
