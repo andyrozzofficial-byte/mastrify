@@ -5,14 +5,22 @@ import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import AdminShortcut from "./AdminShortcut"
 import GatedMasterNavLink from "./beta/GatedMasterNavLink"
+import JoinBetaNavLink from "./beta/JoinBetaNavLink"
 import "./site-header.css"
 
-const links = [
+type NavLink = {
+  href: string
+  label: string
+  short: string
+  gateMastering?: boolean
+}
+
+const links: NavLink[] = [
   { href: "/analyze", label: "Analyze", short: "Analyze" },
-  { href: "/master", label: "Master", short: "Master" },
+  { href: "/master", label: "Master", short: "Master", gateMastering: true },
   { href: "/how-it-works", label: "Why Mastrify", short: "Why" },
   { href: "/pricing", label: "Pricing", short: "Pricing" },
-] as const
+]
 
 const navCtaClass =
   "site-header-cta inline-flex shrink-0 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.04] px-4 py-2 text-[13px] font-semibold leading-none text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:border-white/[0.14] hover:bg-white/[0.07] hover:text-white active:scale-[0.98]"
@@ -37,7 +45,7 @@ export default function SiteHeader() {
       }`}
     >
       <div className="site-header-inner mx-auto w-full max-w-[1240px] min-w-0">
-        {/* Mobile: logo + compact CTA, then nav row */}
+        {/* Mobile: logo + Join Beta pill, then nav row */}
         <div className="site-header-mobile md:hidden">
           <div className="site-header-mobile-top flex min-w-0 items-center justify-between gap-2 px-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] min-[430px]:px-[max(0.875rem,env(safe-area-inset-left))] min-[430px]:pr-[max(0.875rem,env(safe-area-inset-right))] sm:gap-3 sm:px-4">
             <Link
@@ -46,7 +54,7 @@ export default function SiteHeader() {
             >
               Mastrify
             </Link>
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
               <AdminShortcut />
               <Link
                 href="/login"
@@ -54,13 +62,6 @@ export default function SiteHeader() {
               >
                 Login
               </Link>
-              <GatedMasterNavLink
-                href="/master"
-                gateMastering
-                className={`${navCtaClass} min-h-[40px] rounded-xl px-3.5 py-2 text-[11px] sm:min-h-[44px] sm:px-5 sm:py-2.5 sm:text-[12px]`}
-              >
-                Start
-              </GatedMasterNavLink>
             </div>
           </div>
 
@@ -68,28 +69,33 @@ export default function SiteHeader() {
             className="flex min-w-0 items-center justify-between gap-0.5 overflow-hidden border-t border-white/[0.06] px-[max(0.375rem,env(safe-area-inset-left))] pr-[max(0.375rem,env(safe-area-inset-right))] py-2 min-[430px]:px-[max(0.5rem,env(safe-area-inset-left))] min-[430px]:pr-[max(0.5rem,env(safe-area-inset-right))] sm:gap-1.5 sm:px-4 sm:py-2.5"
             aria-label="Main"
           >
-            {links.map(({ href, label, short }) => {
+            {links.map(({ href, label, short, gateMastering }) => {
               const active = pathname === href || pathname?.startsWith(`${href}/`)
-              const gate = href === "/master"
               const className = `relative flex min-h-[38px] min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 py-2 text-[11px] font-medium leading-none tracking-wide transition active:scale-[0.98] min-[430px]:px-2 sm:min-h-[40px] sm:px-3.5 sm:text-[12px] ${
                 active
                   ? "bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.06]"
                   : "text-white/62 hover:bg-white/[0.04] hover:text-white/88"
               }`
-              return gate ? (
-                <GatedMasterNavLink key={href} href={href} gateMastering className={className}>
-                  {short}
-                </GatedMasterNavLink>
-              ) : (
+              if (gateMastering) {
+                return (
+                  <GatedMasterNavLink key={href} href={href} gateMastering className={className}>
+                    {short}
+                  </GatedMasterNavLink>
+                )
+              }
+              return (
                 <Link key={href} href={href} className={className}>
                   {short}
                 </Link>
               )
             })}
+            <div className="flex shrink-0 items-center pl-0.5 sm:pl-1">
+              <JoinBetaNavLink compact className="max-[360px]:px-2 max-[360px]:text-[9px]" />
+            </div>
           </nav>
         </div>
 
-        {/* Desktop: single row — logo | center nav | CTA */}
+        {/* Desktop: single row — logo | center nav | utilities + main CTA */}
         <div className="site-header-desktop hidden md:flex md:min-h-[58px] md:items-center md:justify-between md:gap-6 md:px-8 lg:gap-10">
           <Link
             href="/"
@@ -99,21 +105,20 @@ export default function SiteHeader() {
           </Link>
 
           <nav
-            className="site-header-nav flex min-w-0 flex-1 items-center justify-center gap-6 lg:gap-8"
+            className="site-header-nav flex min-w-0 flex-1 items-center justify-center gap-5 lg:gap-7"
             aria-label="Main"
           >
-            {links.map(({ href, label }) => {
+            {links.map(({ href, label, gateMastering }) => {
               const active = pathname === href || pathname?.startsWith(`${href}/`)
-              const gate = href === "/master"
               const className = `site-header-nav-link relative inline-flex items-center text-[13px] font-medium leading-none tracking-wide transition hover:text-white/88 ${
                 active ? "text-white" : "text-white/62"
               }`
-              const link = gate ? (
-                <GatedMasterNavLink key={href} href={href} gateMastering className={className}>
+              const link = gateMastering ? (
+                <GatedMasterNavLink href={href} gateMastering className={className}>
                   {label}
                 </GatedMasterNavLink>
               ) : (
-                <Link key={href} href={href} className={className}>
+                <Link href={href} className={className}>
                   {label}
                 </Link>
               )
@@ -129,6 +134,7 @@ export default function SiteHeader() {
                 </span>
               )
             })}
+            <JoinBetaNavLink />
           </nav>
 
           <div className="flex shrink-0 items-center gap-4">
