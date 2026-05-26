@@ -65,11 +65,11 @@ export default function Landing() {
             <h2 className="mt-3 text-[1.5rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.75rem]">
               Understand your mix with clarity
             </h2>
-            <p className="mt-4 text-[14px] leading-relaxed text-white/70 md:text-[15px]">
+            <p className="mt-5 text-[14px] leading-relaxed text-white/70 sm:mt-6 md:text-[15px]">
               Perceptual analysis highlights dynamics, balance, and release readiness — so you know what your song needs
               before the final master.
             </p>
-            <PremiumButton href="/analyze" variant="secondary" className="mt-5 min-h-[48px] px-8 sm:mt-7">
+            <PremiumButton href="/analyze" variant="secondary" className="mt-7 min-h-[48px] px-8 sm:mt-9">
               Run a free mix analysis
             </PremiumButton>
           </div>

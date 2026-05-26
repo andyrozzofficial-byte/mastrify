@@ -121,7 +121,7 @@ export default function SiteFooter() {
   const footerTopClass = onAnalyze
     ? "max-md:pt-5 sm:pt-7 lg:pt-[3.25rem]"
     : onLanding
-      ? "max-md:pt-4 sm:pt-4 lg:pt-8"
+      ? "max-md:pt-8 sm:pt-10 lg:pt-[5rem]"
       : "max-md:pt-6 sm:pt-8 lg:pt-[3.25rem]"
   const year = new Date().getFullYear()
 
@@ -157,7 +157,7 @@ export default function SiteFooter() {
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-4 max-md:gap-3 max-md:justify-items-center max-md:text-center sm:gap-6 md:gap-10 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-start lg:gap-x-8 xl:gap-x-10">
+        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:gap-4 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-start lg:gap-x-14 xl:gap-x-16">
           {/* Brand */}
           <motion.div
             className="footer-brand min-w-0 max-md:mx-auto max-md:flex max-md:w-full max-md:max-w-[18.5rem] max-md:flex-col max-md:items-center max-md:text-center lg:col-span-3 xl:col-span-3"
@@ -177,7 +177,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="footer-nav-columns w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-3 md:items-start md:gap-x-12 md:gap-y-0 md:max-w-[28rem] lg:col-span-3 lg:max-w-[30rem] xl:col-span-3 xl:max-w-[34rem]"
+            className="footer-nav-columns w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-3 md:items-start md:gap-x-16 md:gap-y-0 md:max-w-[32rem] lg:col-span-3 lg:max-w-[34rem] xl:col-span-3 xl:max-w-[38rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -192,7 +192,7 @@ export default function SiteFooter() {
 
           {/* Mastering CTA */}
           <motion.div
-            className="min-w-0 max-md:flex max-md:w-full max-md:justify-center lg:col-span-6 lg:pl-2 xl:col-span-6 xl:pl-4"
+            className="min-w-0 max-md:flex max-md:w-full max-md:justify-center lg:col-span-6 lg:pl-6 xl:col-span-6 xl:pl-8"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}

@@ -1325,16 +1325,16 @@ body {
     }
   }
   .landing-close-footer {
-    padding-bottom: 0;
+    padding-bottom: 2.5rem;
   }
   @media (min-width: 768px) {
     .landing-close-footer {
-      padding-bottom: 2rem;
+      padding-bottom: 3.5rem;
     }
   }
   @media (min-width: 1024px) {
     .landing-close-footer {
-      padding-bottom: 0.25rem;
+      padding-bottom: 4rem;
     }
   }
   .footer-shell {
