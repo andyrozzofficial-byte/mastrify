@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
+import {
+  BETA_IMPROVEMENT_OPTIONS,
+  BETA_LIKED_FEATURE_OPTIONS,
+} from "../../../lib/betaFeedbackChipOptions"
 import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import {
   readPostMasterFeedbackStatus,
@@ -9,6 +13,8 @@ import {
 } from "../../../lib/betaPostMasterStorage"
 import { BETA_WOULD_USE_AGAIN_OPTIONS } from "../../../lib/betaPostMasterFeedbackTypes"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
+import BetaFeedbackChipSelect from "./BetaFeedbackChipSelect"
+import BetaFeedbackOptionalNotes from "./BetaFeedbackOptionalNotes"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -28,8 +34,9 @@ export default function BetaPostMasterFeedback({
   const reduce = useReducedMotion()
   const [show, setShow] = useState(false)
   const [masterRating, setMasterRating] = useState(8)
-  const [soundedGood, setSoundedGood] = useState("")
-  const [couldImprove, setCouldImprove] = useState("")
+  const [likedFeatures, setLikedFeatures] = useState<string[]>([])
+  const [improvements, setImprovements] = useState<string[]>([])
+  const [optionalComment, setOptionalComment] = useState("")
   const [wouldUseAgain, setWouldUseAgain] = useState<string>("Yes")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -60,8 +67,8 @@ export default function BetaPostMasterFeedback({
   )
 
   const handleSubmit = useCallback(async () => {
-    if (!soundedGood.trim() || !couldImprove.trim()) {
-      setError("Please answer all three questions.")
+    if (likedFeatures.length === 0 || improvements.length === 0) {
+      setError("Select at least one option in each section.")
       return
     }
     setSubmitting(true)
@@ -82,8 +89,9 @@ export default function BetaPostMasterFeedback({
           masterLufs: sessionAnalytics.masterLufs,
           processingTimeMs: sessionAnalytics.processingTimeMs,
           masterRating,
-          soundedGood: soundedGood.trim(),
-          couldImprove: couldImprove.trim(),
+          likedFeatures,
+          improvements,
+          optionalComment: optionalComment.trim(),
           wouldUseAgain,
         }),
       })
@@ -99,13 +107,14 @@ export default function BetaPostMasterFeedback({
       setSubmitting(false)
     }
   }, [
-    couldImprove,
     dismiss,
+    improvements,
+    likedFeatures,
     masterObjectKey,
     masterRating,
+    optionalComment,
     sessionAnalytics,
     sessionId,
-    soundedGood,
     wouldUseAgain,
   ])
 
@@ -116,10 +125,10 @@ export default function BetaPostMasterFeedback({
       initial={reduce ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: EASE }}
-      className="mx-auto mb-6 w-full max-w-lg px-4 sm:px-0"
+      className="product-form-column mx-auto mb-6 w-full"
       aria-labelledby="beta-post-master-title"
     >
-      <div className="overflow-hidden rounded-2xl border border-violet-400/22 bg-white/[0.04] p-4 shadow-[0_0_32px_rgba(124,58,237,0.1),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:p-5">
+      <div className="product-surface-card overflow-hidden border-violet-400/22 p-4 sm:p-5">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-200/65">Beta feedback</p>
         <h2 id="beta-post-master-title" className="mt-2 text-lg font-semibold text-white">
           <span aria-hidden>⭐ </span>
@@ -140,50 +149,46 @@ export default function BetaPostMasterFeedback({
           <span className="w-8 text-center font-mono text-sm font-semibold text-violet-200">{masterRating}</span>
         </div>
 
-        <label className="mt-4 block">
-          <span className="text-[12px] font-medium text-white/80">What sounded good?</span>
-          <textarea
-            value={soundedGood}
-            onChange={(e) => setSoundedGood(e.target.value)}
-            rows={2}
-            className="mt-2 w-full resize-y rounded-xl border border-white/[0.08] bg-black/30 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/32 focus:border-violet-400/35"
-            placeholder="Punch, clarity, low end…"
+        <div className="mt-5 space-y-5">
+          <BetaFeedbackChipSelect
+            label="What sounded good?"
+            options={BETA_LIKED_FEATURE_OPTIONS}
+            selected={likedFeatures}
+            onChange={setLikedFeatures}
           />
-        </label>
 
-        <label className="mt-3 block">
-          <span className="text-[12px] font-medium text-white/80">What could improve?</span>
-          <textarea
-            value={couldImprove}
-            onChange={(e) => setCouldImprove(e.target.value)}
-            rows={2}
-            className="mt-2 w-full resize-y rounded-xl border border-white/[0.08] bg-black/30 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/32 focus:border-violet-400/35"
-            placeholder="Too bright, more width, etc."
+          <BetaFeedbackChipSelect
+            label="What could improve?"
+            options={BETA_IMPROVEMENT_OPTIONS}
+            selected={improvements}
+            onChange={setImprovements}
           />
-        </label>
 
-        <fieldset className="mt-4">
-          <legend className="text-[12px] font-medium text-white/80">Would you use Mastrify again?</legend>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {BETA_WOULD_USE_AGAIN_OPTIONS.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => setWouldUseAgain(opt)}
-                className={`rounded-lg border px-3 py-2 text-[13px] font-medium transition ${
-                  wouldUseAgain === opt
-                    ? "border-violet-400/40 bg-violet-500/15 text-white"
-                    : "border-white/[0.08] bg-white/[0.02] text-white/65 hover:bg-white/[0.05]"
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+          <fieldset>
+            <legend className="text-[12px] font-medium text-white/80">Would you use Mastrify again?</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {BETA_WOULD_USE_AGAIN_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setWouldUseAgain(opt)}
+                  className={`rounded-lg border px-3 py-2 text-[13px] font-medium transition ${
+                    wouldUseAgain === opt
+                      ? "border-violet-400/40 bg-violet-500/15 text-white"
+                      : "border-white/[0.08] bg-white/[0.02] text-white/65 hover:bg-white/[0.05]"
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        </div>
+
+        <BetaFeedbackOptionalNotes value={optionalComment} onChange={setOptionalComment} />
 
         {error ? (
-          <p className="mt-3 text-xs text-rose-300/90" role="alert">
+          <p className="mt-4 text-xs text-rose-300/90" role="alert">
             {error}
           </p>
         ) : null}

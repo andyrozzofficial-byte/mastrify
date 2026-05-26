@@ -1,3 +1,4 @@
+import { formatChipSelections } from "./betaFeedbackChipOptions"
 import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
 import type { BetaFeedbackPulseBody } from "./betaFeedbackPulseTypes"
 import type { BetaPostMasterQuickBody } from "./betaPostMasterFeedbackTypes"
@@ -112,18 +113,29 @@ export function buildBetaPostMasterQuickRow(
       ? body.masteringStyle.trim()
       : "Unknown"
 
+  const liked = body.likedFeatures.filter(Boolean)
+  const improve = body.improvements.filter(Boolean)
+  const optionalComment = body.optionalComment?.trim() ?? ""
+  const soundedGood = formatChipSelections(liked)
+  const couldImprove = formatChipSelections(improve)
+
   const responses: Record<string, unknown> = {
     feedbackStage: "post_master_quick",
     sessionId,
     trackName,
     masterRating: body.masterRating,
-    soundedGood: body.soundedGood.trim(),
-    couldImprove: body.couldImprove.trim(),
+    liked_features: liked,
+    improvements: improve,
+    optional_comment: optionalComment,
+    soundedGood,
+    couldImprove,
     wouldUseAgain: body.wouldUseAgain,
     recommendScore: body.masterRating,
     useAgainScore: useAgainScoreFromChoice(body.wouldUseAgain),
-    additional: body.soundedGood.trim(),
-    oneChange: body.couldImprove.trim(),
+    additional: optionalComment
+      ? [soundedGood, "", "Optional comment:", optionalComment].filter(Boolean).join("\n")
+      : soundedGood,
+    oneChange: couldImprove,
   }
 
   return {

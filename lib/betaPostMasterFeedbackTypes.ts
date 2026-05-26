@@ -12,7 +12,8 @@ export type BetaPostMasterQuickBody = {
   masterLufs?: number | null
   processingTimeMs?: number | null
   masterRating: number
-  soundedGood: string
-  couldImprove: string
+  likedFeatures: string[]
+  improvements: string[]
+  optionalComment?: string
   wouldUseAgain: BetaWouldUseAgain
 }

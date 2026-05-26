@@ -11,6 +11,10 @@ import {
   BETA_RESULT_GENRE_OPTIONS,
   BETA_STEREO_OPTIONS,
 } from "../../../lib/betaFeedbackSimplifiedForm"
+import {
+  BETA_IMPROVEMENT_OPTIONS,
+  BETA_LIKED_FEATURE_OPTIONS,
+} from "../../../lib/betaFeedbackChipOptions"
 import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import { writeBetaFeedbackStatus } from "../../../lib/betaFeedbackStorage"
 import {
@@ -22,11 +26,10 @@ import {
   BETA_FEEDBACK_WOULD_RELEASE_OPTIONS,
   type BetaFeedbackSessionAnalytics,
 } from "../../../lib/betaFeedbackTypes"
+import BetaFeedbackChipSelect from "./BetaFeedbackChipSelect"
+import BetaFeedbackOptionalNotes from "./BetaFeedbackOptionalNotes"
 
 const EASE = [0.22, 1, 0.36, 1] as const
-
-const textareaClass =
-  "mt-3 w-full resize-y rounded-xl border border-white/[0.08] bg-black/35 px-4 py-3.5 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/32 focus:border-violet-400/35 focus:ring-2 focus:ring-violet-500/15"
 
 type Props = {
   visible: boolean
@@ -57,7 +60,7 @@ function RadioRow({
       {options.map((opt) => (
         <label
           key={opt}
-          className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3.5 text-[14px] transition ${
+          className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 text-[14px] transition ${
             value === opt
               ? "border-violet-400/35 bg-violet-500/10 text-white"
               : "border-white/[0.08] bg-white/[0.02] text-white/72 hover:border-white/[0.12] hover:bg-white/[0.04]"
@@ -87,13 +90,13 @@ function PillChoice({
   onChange: (v: string) => void
 }) {
   return (
-    <div className="mt-4 flex flex-wrap gap-2.5">
+    <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
       {options.map((opt) => (
         <button
           key={opt}
           type="button"
           onClick={() => onChange(opt)}
-          className={`rounded-xl border px-4 py-2.5 text-[13px] font-semibold transition sm:px-5 sm:py-3 sm:text-[14px] ${
+          className={`rounded-xl border px-4 py-2.5 text-[13px] font-semibold transition ${
             value === opt
               ? "border-violet-400/40 bg-gradient-to-r from-violet-600/90 to-indigo-700/90 text-white shadow-[0_0_16px_rgba(99,102,241,0.15)]"
               : "border-white/[0.08] bg-white/[0.03] text-white/70 hover:bg-white/[0.05]"
@@ -117,8 +120,9 @@ export default function BetaMasterFeedback({
 
   const [show, setShow] = useState(false)
   const [masterRating, setMasterRating] = useState(8)
-  const [soundedGood, setSoundedGood] = useState("")
-  const [couldImprove, setCouldImprove] = useState("")
+  const [likedFeatures, setLikedFeatures] = useState<string[]>([])
+  const [improvements, setImprovements] = useState<string[]>([])
+  const [optionalComment, setOptionalComment] = useState("")
   const [wouldUseAgain, setWouldUseAgain] = useState("")
   const [role, setRole] = useState("")
   const [genre, setGenre] = useState("")
@@ -127,7 +131,6 @@ export default function BetaMasterFeedback({
   const [lowEnd, setLowEnd] = useState("")
   const [stereoImage, setStereoImage] = useState("")
   const [clarity, setClarity] = useState("")
-  const [extraComments, setExtraComments] = useState("")
   const [contactEmail, setContactEmail] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -179,8 +182,12 @@ export default function BetaMasterFeedback({
   )
 
   const handleSubmit = useCallback(async () => {
-    if (!soundedGood.trim() || !couldImprove.trim()) {
-      setError("Please share what sounded good and what could improve.")
+    if (likedFeatures.length === 0) {
+      setError("Select at least one thing that sounded good.")
+      return
+    }
+    if (improvements.length === 0) {
+      setError("Select at least one area that could improve.")
       return
     }
     if (!wouldUseAgain) {
@@ -209,8 +216,9 @@ export default function BetaMasterFeedback({
 
     const payload = buildBetaFeedbackPayloadFromResultForm({
       masterRating,
-      soundedGood,
-      couldImprove,
+      likedFeatures,
+      improvements,
+      optionalComment,
       wouldUseAgain: wouldUseAgain as (typeof BETA_FEEDBACK_WOULD_RELEASE_OPTIONS)[number],
       role,
       genre,
@@ -219,7 +227,6 @@ export default function BetaMasterFeedback({
       lowEnd: lowEnd as (typeof BETA_LOW_END_OPTIONS)[number],
       stereoImage: stereoImage as (typeof BETA_STEREO_OPTIONS)[number],
       clarity: clarity as (typeof BETA_CLARITY_OPTIONS)[number],
-      extraComments,
       masterObjectKey: masterObjectKey ?? null,
       sessionAnalytics,
       contactEmail,
@@ -247,18 +254,18 @@ export default function BetaMasterFeedback({
   }, [
     clarity,
     contactEmail,
-    couldImprove,
-    daw,
     dismiss,
-    extraComments,
+    daw,
     genre,
+    improvements,
+    likedFeatures,
     loudness,
     lowEnd,
     masterObjectKey,
     masterRating,
+    optionalComment,
     role,
     sessionAnalytics,
-    soundedGood,
     stereoImage,
     wouldUseAgain,
   ])
@@ -273,71 +280,64 @@ export default function BetaMasterFeedback({
       className="product-form-column mt-8 w-full sm:mt-10"
       aria-labelledby="beta-master-feedback-title"
     >
-      <div className="product-surface-card overflow-hidden border-violet-400/18 bg-white/[0.035] p-5 shadow-[0_0_32px_rgba(124,58,237,0.08)] sm:p-7 sm:pb-8">
+      <div className="product-surface-card overflow-hidden border-violet-400/18 bg-white/[0.035] p-5 shadow-[0_0_32px_rgba(124,58,237,0.08)] sm:p-6">
         <header className="text-center">
           <h2 id="beta-master-feedback-title" className="text-lg font-semibold text-white sm:text-xl">
             Help improve Mastrify
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-white/55 sm:text-[14px]">
-            Your feedback helps improve future masters, but downloading is available immediately.
-          </p>
-          <p className="mx-auto mt-1.5 max-w-sm text-[12px] leading-relaxed text-white/42">
-            Your feedback directly improves the engine.
+          <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-white/55">
+            Tap what worked and what to improve — download stays available while you answer.
           </p>
         </header>
 
-        <div className="mt-7">
-          <h3 className="text-center text-lg font-semibold text-white sm:text-xl">
-            <span aria-hidden>⭐ </span>
-            Rate your master (1–10)
-          </h3>
-          <div className="mt-6 flex items-center gap-4 px-2">
-            <input
-              type="range"
-              min={1}
-              max={10}
-              step={1}
-              value={masterRating}
-              onChange={(e) => setMasterRating(Number(e.target.value))}
-              className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-white/[0.08] accent-violet-500"
-              aria-label="Master rating"
-            />
-            <span className="w-11 text-center font-mono text-xl font-semibold text-violet-200">{masterRating}</span>
+        <div className="mt-6 space-y-6">
+          <div>
+            <h3 className="text-center text-base font-semibold text-white sm:text-lg">
+              <span aria-hidden>⭐ </span>
+              Rate your master (1–10)
+            </h3>
+            <div className="mt-4 flex items-center gap-4 px-1">
+              <input
+                type="range"
+                min={1}
+                max={10}
+                step={1}
+                value={masterRating}
+                onChange={(e) => setMasterRating(Number(e.target.value))}
+                className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-white/[0.08] accent-violet-500"
+                aria-label="Master rating"
+              />
+              <span className="w-11 text-center font-mono text-xl font-semibold text-violet-200">{masterRating}</span>
+            </div>
           </div>
+
+          <BetaFeedbackChipSelect
+            label="What sounded good?"
+            options={BETA_LIKED_FEATURE_OPTIONS}
+            selected={likedFeatures}
+            onChange={setLikedFeatures}
+          />
+
+          <BetaFeedbackChipSelect
+            label="What could improve?"
+            options={BETA_IMPROVEMENT_OPTIONS}
+            selected={improvements}
+            onChange={setImprovements}
+          />
+
+          <fieldset>
+            <legend className="text-center text-[15px] font-medium text-white/88 sm:text-left">
+              Would you use Mastrify again?
+            </legend>
+            <PillChoice
+              options={BETA_FEEDBACK_WOULD_RELEASE_OPTIONS}
+              value={wouldUseAgain}
+              onChange={setWouldUseAgain}
+            />
+          </fieldset>
         </div>
 
-        <label className="mt-10 block">
-          <span className="text-[15px] font-medium text-white/88">What sounded good?</span>
-          <textarea
-            value={soundedGood}
-            onChange={(e) => setSoundedGood(e.target.value)}
-            rows={4}
-            placeholder="Punch, clarity, stereo width, low-end, dynamics, etc."
-            className={textareaClass}
-          />
-        </label>
-
-        <label className="mt-8 block">
-          <span className="text-[15px] font-medium text-white/88">What could improve?</span>
-          <textarea
-            value={couldImprove}
-            onChange={(e) => setCouldImprove(e.target.value)}
-            rows={4}
-            placeholder="Too bright, too compressed, more width, stronger low-end, etc."
-            className={textareaClass}
-          />
-        </label>
-
-        <fieldset className="mt-10">
-          <legend className="text-center text-[15px] font-medium text-white/88">Would you use Mastrify again?</legend>
-          <PillChoice
-            options={BETA_FEEDBACK_WOULD_RELEASE_OPTIONS}
-            value={wouldUseAgain}
-            onChange={setWouldUseAgain}
-          />
-        </fieldset>
-
-        <div className="mt-12 space-y-10 border-t border-white/[0.08] pt-10">
+        <div className="mt-8 space-y-8 border-t border-white/[0.08] pt-8">
           <div>
             <SectionTitle>About you</SectionTitle>
             <p className="mt-3 text-[15px] font-medium text-white/80">Which best describes you?</p>
@@ -346,7 +346,7 @@ export default function BetaMasterFeedback({
 
           <div>
             <SectionTitle>Session information</SectionTitle>
-            <p className="mt-4 text-[15px] font-medium text-white/80">What genre did you test with?</p>
+            <p className="mt-3 text-[15px] font-medium text-white/80">What genre did you test with?</p>
             <RadioRow
               name="beta-genre"
               options={BETA_RESULT_GENRE_OPTIONS.map((o) => o.label)}
@@ -356,7 +356,7 @@ export default function BetaMasterFeedback({
                 setGenre(match?.value ?? "Other")
               }}
             />
-            <p className="mt-8 text-[15px] font-medium text-white/80">Which DAW do you use?</p>
+            <p className="mt-6 text-[15px] font-medium text-white/80">Which DAW do you use?</p>
             <RadioRow
               name="beta-daw"
               options={BETA_RESULT_DAW_OPTIONS.map((o) => o.label)}
@@ -370,40 +370,26 @@ export default function BetaMasterFeedback({
 
           <div>
             <SectionTitle>Mastering experience</SectionTitle>
-            <p className="mt-4 text-[15px] font-medium text-white/80">How would you rate loudness?</p>
+            <p className="mt-3 text-[15px] font-medium text-white/80">How would you rate loudness?</p>
             <RadioRow name="beta-loudness" options={BETA_LOUDNESS_OPTIONS} value={loudness} onChange={setLoudness} />
-            <p className="mt-8 text-[15px] font-medium text-white/80">How would you rate low-end?</p>
+            <p className="mt-6 text-[15px] font-medium text-white/80">How would you rate low-end?</p>
             <RadioRow name="beta-lowend" options={BETA_LOW_END_OPTIONS} value={lowEnd} onChange={setLowEnd} />
-            <p className="mt-8 text-[15px] font-medium text-white/80">How would you rate stereo image?</p>
+            <p className="mt-6 text-[15px] font-medium text-white/80">How would you rate stereo image?</p>
             <RadioRow name="beta-stereo" options={BETA_STEREO_OPTIONS} value={stereoImage} onChange={setStereoImage} />
-            <p className="mt-8 text-[15px] font-medium text-white/80">How would you rate clarity?</p>
+            <p className="mt-6 text-[15px] font-medium text-white/80">How would you rate clarity?</p>
             <RadioRow name="beta-clarity" options={BETA_CLARITY_OPTIONS} value={clarity} onChange={setClarity} />
           </div>
 
-          <div>
-            <SectionTitle>Additional comments</SectionTitle>
-            <label className="mt-4 block">
-              <span className="text-[15px] font-medium text-white/80">
-                Anything else you&apos;d like us to improve?
-              </span>
-              <textarea
-                value={extraComments}
-                onChange={(e) => setExtraComments(e.target.value)}
-                rows={4}
-                placeholder="Optional — features, workflow, pricing, etc."
-                className={textareaClass}
-              />
-            </label>
-          </div>
+          <BetaFeedbackOptionalNotes value={optionalComment} onChange={setOptionalComment} />
         </div>
 
         {error ? (
-          <p className="mt-8 text-center text-sm text-rose-300/90" role="alert">
+          <p className="mt-6 text-center text-sm text-rose-300/90" role="alert">
             {error}
           </p>
         ) : null}
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-white/[0.08] pt-8 sm:flex-row">
+        <div className="mt-8 flex flex-col gap-3 border-t border-white/[0.08] pt-6 sm:flex-row">
           <button
             type="button"
             disabled={submitting}

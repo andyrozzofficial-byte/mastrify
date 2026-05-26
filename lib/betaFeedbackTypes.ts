@@ -39,6 +39,10 @@ export type BetaFeedbackPayload = {
   lowEnd: number
   masterLufs: number | null
   processingTimeMs: number | null
+  /** Result-page chip flow (also mirrored in additional / oneChange for legacy admin). */
+  liked_features?: string[]
+  improvements?: string[]
+  optional_comment?: string
 }
 
 export const BETA_FEEDBACK_ROLE_OPTIONS = [

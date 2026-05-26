@@ -1,3 +1,8 @@
+import {
+  formatChipSelections,
+  soundedOffTagsFromImprovementChips,
+  stoodOutTagsFromLikedChips,
+} from "./betaFeedbackChipOptions"
 import type { BetaFeedbackPayload, BetaFeedbackSessionAnalytics } from "./betaFeedbackTypes"
 import {
   BETA_FEEDBACK_COMPARISON_OPTIONS,
@@ -38,8 +43,9 @@ export const BETA_CLARITY_OPTIONS = ["Needs work", "Good", "Excellent"] as const
 
 export type BetaResultFeedbackInput = {
   masterRating: number
-  soundedGood: string
-  couldImprove: string
+  likedFeatures: string[]
+  improvements: string[]
+  optionalComment: string
   wouldUseAgain: (typeof BETA_FEEDBACK_WOULD_RELEASE_OPTIONS)[number]
   role: string
   genre: string
@@ -48,7 +54,6 @@ export type BetaResultFeedbackInput = {
   lowEnd: (typeof BETA_LOW_END_OPTIONS)[number]
   stereoImage: (typeof BETA_STEREO_OPTIONS)[number]
   clarity: (typeof BETA_CLARITY_OPTIONS)[number]
-  extraComments: string
   masterObjectKey: string | null
   sessionAnalytics: BetaFeedbackSessionAnalytics
   contactEmail?: string
@@ -138,8 +143,8 @@ function sessionNotesBlock(input: BetaResultFeedbackInput): string {
     `Stereo image: ${input.stereoImage}`,
     `Clarity: ${input.clarity}`,
   ]
-  if (input.extraComments.trim()) {
-    lines.push("", "Additional comments:", input.extraComments.trim())
+  if (input.optionalComment.trim()) {
+    lines.push("", "Additional comments:", input.optionalComment.trim())
   }
   return lines.join("\n")
 }
@@ -147,8 +152,11 @@ function sessionNotesBlock(input: BetaResultFeedbackInput): string {
 /** Map the unified result-page form into the original beta_master_feedback survey payload. */
 export function buildBetaFeedbackPayloadFromResultForm(input: BetaResultFeedbackInput): BetaFeedbackPayload {
   const rating = Math.min(10, Math.max(1, Math.round(input.masterRating)))
-  const soundedGood = input.soundedGood.trim()
-  const couldImprove = input.couldImprove.trim()
+  const likedFeatures = input.likedFeatures.filter(Boolean)
+  const improvements = input.improvements.filter(Boolean)
+  const optionalComment = input.optionalComment.trim()
+  const soundedGood = formatChipSelections(likedFeatures)
+  const couldImprove = formatChipSelections(improvements)
   const role = pickOption(input.role, BETA_FEEDBACK_ROLE_OPTIONS, "Other")
   const genre = pickOption(input.genre, BETA_FEEDBACK_GENRE_OPTIONS, "Other")
   const daw = BETA_DAW_OPTIONS.includes(input.daw as (typeof BETA_DAW_OPTIONS)[number]) ? input.daw : "Other"
@@ -162,15 +170,24 @@ export function buildBetaFeedbackPayloadFromResultForm(input: BetaResultFeedback
   )
   const wouldRelease = pickOption(input.wouldUseAgain, BETA_FEEDBACK_WOULD_RELEASE_OPTIONS, "Maybe")
 
-  const { stoodOut, soundedOff } = experienceToTags({
+  const expTags = experienceToTags({
     loudness: input.loudness,
     lowEnd: input.lowEnd,
     stereoImage: input.stereoImage,
     clarity: input.clarity,
   })
 
-  if (soundedGood && !stoodOut.includes("Other")) stoodOut.push("Other")
-  if (couldImprove && !soundedOff.includes("Other") && !soundedOff.includes("No, it sounded good")) {
+  const stoodOut = [...new Set([...expTags.stoodOut, ...stoodOutTagsFromLikedChips(likedFeatures)])]
+  const soundedOff = [
+    ...new Set([...expTags.soundedOff, ...soundedOffTagsFromImprovementChips(improvements)]),
+  ]
+
+  if (likedFeatures.length > 0 && !stoodOut.length) stoodOut.push("Other")
+  if (
+    improvements.length > 0 &&
+    !soundedOff.includes("Other") &&
+    !soundedOff.includes("No, it sounded good")
+  ) {
     soundedOff.push("Other")
   }
 
@@ -192,7 +209,12 @@ export function buildBetaFeedbackPayloadFromResultForm(input: BetaResultFeedback
     missing: sessionBlock,
     oneChange: couldImprove,
     worthPaying: `DAW: ${daw}`,
-    additional: soundedGood,
+    additional: optionalComment
+      ? [soundedGood, "", "Optional comment:", optionalComment].filter(Boolean).join("\n")
+      : soundedGood,
+    liked_features: likedFeatures,
+    improvements,
+    optional_comment: optionalComment,
     contactEmail: input.contactEmail?.trim() ?? "",
     contactDiscord: "",
     futureBetaContact: null,
