@@ -239,10 +239,19 @@ export default function BetaMasterFeedback({
         credentials: "include",
         body: JSON.stringify(payload),
       })
-      const json = await res.json().catch(() => null)
+      const json = (await res.json().catch(() => null)) as {
+        error?: string
+        strippedColumns?: string[]
+      } | null
       if (!res.ok) {
         setError(typeof json?.error === "string" ? json.error : "Could not send feedback.")
         return
+      }
+      if (json?.strippedColumns?.length) {
+        console.warn(
+          "[beta-feedback] Saved to responses JSON; apply Supabase migration for columns:",
+          json.strippedColumns,
+        )
       }
       writeBetaFeedbackStatus("submitted")
       dismiss("submitted")

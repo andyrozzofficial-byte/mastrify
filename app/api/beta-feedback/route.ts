@@ -5,6 +5,7 @@ import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import {
   BETA_FEEDBACK_TABLE,
   buildBetaFeedbackRow,
+  insertBetaFeedbackRow,
   sanitizeBetaFeedbackInsert,
 } from "../../../lib/betaFeedbackDb"
 import type { BetaFeedbackPayload } from "../../../lib/betaFeedbackTypes"
@@ -110,48 +111,37 @@ export async function POST(request: Request) {
   })
 
   try {
-    const insertQuery = supabase.from(BETA_FEEDBACK_TABLE).insert([row])
-    const result =
-      keySource === "service_role"
-        ? await insertQuery.select("id").single()
-        : await insertQuery
-
-    logBeta("Supabase insert response", {
-      data: result.data,
-      error: result.error
-        ? {
-            message: result.error.message,
-            details: result.error.details,
-            code: result.error.code,
-            hint: result.error.hint,
-          }
-        : null,
+    const insertResult = await insertBetaFeedbackRow(supabase, row, {
+      selectId: keySource === "service_role",
     })
 
-    if (result.error) {
-      const error = result.error
-      logBetaError("insert failed", {
-        message: error.message,
-        details: error.details,
-        code: error.code,
-        hint: error.hint,
-      })
+    logBeta("Supabase insert response", {
+      id: insertResult.data?.id,
+      strippedColumns: insertResult.strippedColumns,
+      error: insertResult.error,
+    })
+
+    if (insertResult.error) {
+      logBetaError("insert failed", insertResult.error)
       return NextResponse.json(
         {
           success: false,
-          error: error.message || "Unknown error",
-          details: error.details || null,
-          code: error.code || null,
-          hint: error.hint || null,
+          error: insertResult.error.message || "Unknown error",
+          details: insertResult.error.details || null,
+          code: insertResult.error.code || null,
+          hint: insertResult.error.hint || null,
         },
         { status: 500 },
       )
     }
 
-    const id =
-      result.data && typeof result.data === "object" && "id" in result.data
-        ? (result.data as { id: string }).id
-        : null
+    if (insertResult.strippedColumns.length > 0) {
+      logBeta("insert ok with omitted columns (run supabase migration)", {
+        strippedColumns: insertResult.strippedColumns,
+      })
+    }
+
+    const id = insertResult.data?.id ?? null
 
     logBeta("insert ok", { id })
 
@@ -162,7 +152,14 @@ export async function POST(request: Request) {
     await touchBetaProfileFromFeedback(profileEmail, body.genre, daw)
     if (profileEmail) await syncBetaProfileFromActivity(profileEmail)
 
-    return NextResponse.json({ ok: true, success: true, id })
+    return NextResponse.json({
+      ok: true,
+      success: true,
+      id,
+      ...(insertResult.strippedColumns.length > 0
+        ? { strippedColumns: insertResult.strippedColumns }
+        : {}),
+    })
   } catch (err) {
     const error = err as { message?: string; details?: string; code?: string; hint?: string }
     logBetaError("insert exception", err)

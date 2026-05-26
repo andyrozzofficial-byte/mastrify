@@ -4,8 +4,8 @@ import { normalizeBetaEmail } from "../../../../lib/betaAccess"
 import { resolveBetaEmailFromCookies } from "../../../../lib/betaSession"
 import { isBetaFeedbackEnabled } from "../../../../lib/betaFeedbackFeature"
 import {
-  BETA_FEEDBACK_TABLE,
   buildBetaPostMasterQuickRow,
+  insertBetaFeedbackRow,
   sanitizeBetaFeedbackInsert,
 } from "../../../../lib/betaFeedbackDb"
 import {
@@ -108,10 +108,14 @@ export async function POST(request: Request) {
   }
 
   const row = sanitizeBetaFeedbackInsert(buildBetaPostMasterQuickRow(validated.data, contactEmail))
-  const { error } = await supabase.from(BETA_FEEDBACK_TABLE).insert([row])
+  const insertResult = await insertBetaFeedbackRow(supabase, row, { selectId: false })
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (insertResult.error) {
+    return NextResponse.json({ error: insertResult.error.message }, { status: 500 })
+  }
+
+  if (insertResult.strippedColumns.length > 0) {
+    console.warn("[beta-feedback/quick] omitted columns — run supabase migration", insertResult.strippedColumns)
   }
 
   if (contactEmail) {

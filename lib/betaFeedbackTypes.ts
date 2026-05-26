@@ -43,6 +43,11 @@ export type BetaFeedbackPayload = {
   liked_features?: string[]
   improvements?: string[]
   optional_comment?: string
+  /** Denormalized mastering experience ratings (result form). */
+  loudnessRating?: string
+  lowEndRating?: string
+  stereoRating?: string
+  clarityRating?: string
 }
 
 export const BETA_FEEDBACK_ROLE_OPTIONS = [

@@ -20,7 +20,18 @@ create table if not exists public.beta_master_feedback (
   future_beta_contact boolean,
   master_object_key text,
   track_title text,
-  feedback_stage text default 'new'
+  feedback_stage text default 'new',
+  liked_features jsonb default '[]'::jsonb,
+  improvements jsonb default '[]'::jsonb,
+  optional_comment text,
+  rating integer,
+  would_use_again text,
+  user_type text,
+  genre text,
+  loudness_rating text,
+  low_end_rating text,
+  stereo_rating text,
+  clarity_rating text
 );
 
 -- Backfill columns on older partial deployments
@@ -39,12 +50,25 @@ alter table public.beta_master_feedback add column if not exists future_beta_con
 alter table public.beta_master_feedback add column if not exists master_object_key text;
 alter table public.beta_master_feedback add column if not exists track_title text;
 alter table public.beta_master_feedback add column if not exists feedback_stage text default 'new';
+alter table public.beta_master_feedback add column if not exists liked_features jsonb default '[]'::jsonb;
+alter table public.beta_master_feedback add column if not exists improvements jsonb default '[]'::jsonb;
+alter table public.beta_master_feedback add column if not exists optional_comment text;
+alter table public.beta_master_feedback add column if not exists rating integer;
+alter table public.beta_master_feedback add column if not exists would_use_again text;
+alter table public.beta_master_feedback add column if not exists user_type text;
+alter table public.beta_master_feedback add column if not exists genre text;
+alter table public.beta_master_feedback add column if not exists loudness_rating text;
+alter table public.beta_master_feedback add column if not exists low_end_rating text;
+alter table public.beta_master_feedback add column if not exists stereo_rating text;
+alter table public.beta_master_feedback add column if not exists clarity_rating text;
 alter table public.beta_master_feedback add column if not exists status text default 'new';
 alter table public.beta_master_feedback add column if not exists admin_notes text;
 alter table public.beta_master_feedback add column if not exists updated_at timestamptz default now();
 alter table public.beta_master_feedback add column if not exists created_at timestamptz;
 
 update public.beta_master_feedback set feedback_stage = 'new' where feedback_stage is null;
+update public.beta_master_feedback set liked_features = '[]'::jsonb where liked_features is null;
+update public.beta_master_feedback set improvements = '[]'::jsonb where improvements is null;
 update public.beta_master_feedback set status = 'new' where status is null;
 update public.beta_master_feedback set updated_at = coalesce(created_at, now()) where updated_at is null;
 
