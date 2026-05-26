@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { isAccessBypassPath, safeAccessRedirect } from "./lib/access"
-import { BETA_USER_EMAIL_COOKIE, isValidBetaUserCookie } from "./lib/betaAccess"
+import { BETA_USER_EMAIL_COOKIE } from "./lib/betaAccess"
+import { BETA_SESSION_COOKIE, hasValidBetaSessionCookie } from "./lib/betaSession"
 
 function normalizePathname(pathname: string): string {
   return pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
@@ -17,6 +18,7 @@ function isAdminOrFeedbackApiBypass(pathname: string): boolean {
     path === "/api/beta-feedback" ||
     path === "/api/beta/profile" ||
     path === "/api/beta/profile/resume" ||
+    path.startsWith("/api/beta/session/") ||
     path === "/api/beta-feedback/quick"
   )
 }
@@ -46,9 +48,11 @@ export async function middleware(request: NextRequest) {
   }
 
   const betaEmailCookie = request.cookies.get(BETA_USER_EMAIL_COOKIE)?.value
+  const betaSessionCookie = request.cookies.get(BETA_SESSION_COOKIE)?.value
+  const hasBetaSession = await hasValidBetaSessionCookie(betaSessionCookie, betaEmailCookie)
 
   if (isAccessBypassPath(pathname)) {
-    if (pathname === "/access" && isValidBetaUserCookie(betaEmailCookie)) {
+    if (pathname === "/access" && hasBetaSession) {
       try {
         const profileUrl = new URL("/api/beta/profile", request.url)
         const profileRes = await fetch(profileUrl, {
@@ -92,7 +96,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/admin") ||
     pathname === "/api/beta-feedback" ||
     pathname === "/api/beta/profile" ||
-    pathname === "/api/beta/profile/resume"
+    pathname === "/api/beta/profile/resume" ||
+    pathname.startsWith("/api/beta/session/")
   ) {
     return NextResponse.next()
   }
@@ -109,6 +114,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/beta-feedback/") ||
     pathname === "/api/beta/profile" ||
     pathname === "/api/beta/profile/resume" ||
+    pathname.startsWith("/api/beta/session/") ||
     pathname === "/api/support/tickets"
   ) {
     return NextResponse.next()

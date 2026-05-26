@@ -1,6 +1,7 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../lib/betaAccess"
+import { normalizeBetaEmail } from "../../../../lib/betaAccess"
+import { resolveBetaEmailFromCookies } from "../../../../lib/betaSession"
 import { ACCESS_COOKIE_NAME } from "../../../../lib/access"
 import { betaProfileToJson, setBetaEmailCookieOnResponse } from "../../../../lib/betaProfileResponse"
 import { resolveBetaUserAccess } from "../../../../lib/betaUserAccess"
@@ -24,11 +25,11 @@ function resolveIsBeta(
 
 export async function GET() {
   const store = await cookies()
-  const email = store.get(BETA_USER_EMAIL_COOKIE)?.value?.trim()
+  const cookieEmail = await resolveBetaEmailFromCookies(store)
   const accessCookie = store.get(ACCESS_COOKIE_NAME)?.value
-  const access = await resolveBetaUserAccess(accessCookie, email)
+  const access = await resolveBetaUserAccess(accessCookie, cookieEmail)
 
-  if (!email && !access.email) {
+  if (!cookieEmail && !access.email) {
     const isBeta = access.isBetaUser
     return NextResponse.json({
       complete: false,
@@ -41,7 +42,7 @@ export async function GET() {
     })
   }
 
-  const normalized = access.email ?? normalizeBetaEmail(email!)
+  const normalized = access.email ?? cookieEmail!
   const status = await getBetaProfileStatus(normalized)
   const isBeta = resolveIsBeta(access, status)
   const betaUi = isBeta ? await getBetaMasteringUiStateForEmail(normalized) : null
@@ -93,6 +94,6 @@ export async function POST(request: Request) {
     hasMasteringAccess: true,
     betaUi,
   })
-  setBetaEmailCookieOnResponse(response, normalized)
+  await setBetaEmailCookieOnResponse(response, normalized)
   return response
 }

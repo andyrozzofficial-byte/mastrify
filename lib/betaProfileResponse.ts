@@ -1,5 +1,6 @@
 import type { NextResponse } from "next/server"
 import { betaEmailCookieOptions, BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "./betaAccess"
+import { BETA_SESSION_COOKIE, createBetaSessionToken } from "./betaSession"
 
 type BetaProfileShape = {
   name: string | null
@@ -19,6 +20,12 @@ export function betaProfileToJson(profile: BetaProfileShape) {
   }
 }
 
-export function setBetaEmailCookieOnResponse(response: NextResponse, email: string) {
-  response.cookies.set(BETA_USER_EMAIL_COOKIE, normalizeBetaEmail(email), betaEmailCookieOptions())
+export async function setBetaEmailCookieOnResponse(response: NextResponse, email: string) {
+  const normalized = normalizeBetaEmail(email)
+  const options = betaEmailCookieOptions()
+  response.cookies.set(BETA_USER_EMAIL_COOKIE, normalized, options)
+  const sessionToken = await createBetaSessionToken(normalized)
+  if (sessionToken) {
+    response.cookies.set(BETA_SESSION_COOKIE, sessionToken, options)
+  }
 }

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../lib/betaAccess"
+import { normalizeBetaEmail } from "../../../../lib/betaAccess"
+import { resolveBetaEmailFromCookies } from "../../../../lib/betaSession"
 import { isBetaFeedbackEnabled } from "../../../../lib/betaFeedbackFeature"
 import {
   BETA_FEEDBACK_TABLE,
@@ -73,8 +74,8 @@ export async function POST(request: Request) {
   }
 
   const store = await cookies()
-  const cookieEmail = store.get(BETA_USER_EMAIL_COOKIE)?.value?.trim()
-  const contactEmail = cookieEmail?.includes("@") ? normalizeBetaEmail(cookieEmail) : null
+  const cookieEmail = await resolveBetaEmailFromCookies(store)
+  const contactEmail = cookieEmail ? normalizeBetaEmail(cookieEmail) : null
 
   const supabase = createSupabaseServerClient()
   if (!supabase) {

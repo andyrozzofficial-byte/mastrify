@@ -1,6 +1,6 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { BETA_USER_EMAIL_COOKIE } from "../../../lib/betaAccess"
+import { resolveBetaEmailFromCookies } from "../../../lib/betaSession"
 import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import {
   BETA_FEEDBACK_TABLE,
@@ -156,7 +156,7 @@ export async function POST(request: Request) {
     logBeta("insert ok", { id })
 
     const store = await cookies()
-    const cookieEmail = store.get(BETA_USER_EMAIL_COOKIE)?.value?.trim() || null
+    const cookieEmail = (await resolveBetaEmailFromCookies(store)) || null
     const profileEmail = body.contactEmail?.trim() || cookieEmail
     const daw = parseDawFromWorthPaying(body.worthPaying)
     await touchBetaProfileFromFeedback(profileEmail, body.genre, daw)

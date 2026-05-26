@@ -1,6 +1,7 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../../lib/betaAccess"
+import { normalizeBetaEmail } from "../../../../../lib/betaAccess"
+import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
 import { ACCESS_COOKIE_NAME } from "../../../../../lib/access"
 import { betaProfileToJson, setBetaEmailCookieOnResponse } from "../../../../../lib/betaProfileResponse"
 import { resolveBetaUserAccess } from "../../../../../lib/betaUserAccess"
@@ -22,8 +23,8 @@ export async function POST(request: Request) {
   const normalized = normalizeBetaEmail(email)
   const store = await cookies()
   const accessCookie = store.get(ACCESS_COOKIE_NAME)?.value
-  const cookieEmail = store.get(BETA_USER_EMAIL_COOKIE)?.value?.trim()
-  const access = await resolveBetaUserAccess(accessCookie, cookieEmail, normalized)
+  const resolvedCookieEmail = await resolveBetaEmailFromCookies(store)
+  const access = await resolveBetaUserAccess(accessCookie, resolvedCookieEmail, normalized)
   const status = await getBetaProfileStatus(normalized)
 
   const isBeta = Boolean(
@@ -47,8 +48,8 @@ export async function POST(request: Request) {
   }
 
   const response = NextResponse.json(payload)
-  if (!cookieEmail || normalizeBetaEmail(cookieEmail) !== normalized) {
-    setBetaEmailCookieOnResponse(response, normalized)
+  if (!resolvedCookieEmail || resolvedCookieEmail !== normalized) {
+    await setBetaEmailCookieOnResponse(response, normalized)
   }
   return response
 }

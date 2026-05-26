@@ -16,7 +16,10 @@ const EASE = [0.22, 1, 0.36, 1] as const
 type ProfileResponse = BetaAccessJson & {
   profile?: { name: string | null } | null
   error?: string
+  profileExists?: boolean
 }
+
+type Phase = "checking" | "continue" | "join" | "magic-sent"
 
 async function syncBetaSessionAfterSignup(
   gate: ReturnType<typeof useBetaMasteringGateOptional>,
@@ -36,12 +39,23 @@ export default function AccessClient() {
   const refreshAccess = gate?.refreshAccess
   const reduce = useReducedMotion()
   const next = safeAccessRedirect(searchParams.get("next"))
+  const modeParam = searchParams.get("mode")
+  const errorParam = searchParams.get("error")
   const redirectStarted = useRef(false)
 
-  const [phase, setPhase] = useState<"checking" | "form">("checking")
+  const initialPhase: Phase = modeParam === "join" ? "join" : "continue"
+  const [phase, setPhase] = useState<Phase>("checking")
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(() => {
+    if (errorParam === "link_expired") {
+      return "That sign-in link has expired. Request a new one below."
+    }
+    if (errorParam === "no_profile") {
+      return "We could not find a beta profile for that link. Join below to get started."
+    }
+    return null
+  })
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -89,10 +103,10 @@ export default function AccessClient() {
         const storedEmail = getStoredBetaEmail()
         if (storedEmail) setEmail(storedEmail)
       } finally {
-        if (!redirectStarted.current) setPhase("form")
+        if (!redirectStarted.current) setPhase(initialPhase)
       }
     })()
-  }, [next, router, applyBetaSession, refreshAccess])
+  }, [next, router, applyBetaSession, refreshAccess, initialPhase])
 
   async function onProfileSubmit(e: FormEvent) {
     e.preventDefault()
@@ -122,7 +136,65 @@ export default function AccessClient() {
     }
   }
 
+  async function onMagicLinkSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+
+    try {
+      const res = await fetch("/api/beta/session/magic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, next }),
+      })
+      const json = (await res.json().catch(() => null)) as {
+        ok?: boolean
+        profileExists?: boolean
+        error?: string
+        devSignInUrl?: string
+      } | null
+
+      if (!res.ok) {
+        if (json?.devSignInUrl && process.env.NODE_ENV !== "production") {
+          console.info("[beta] dev sign-in URL:", json.devSignInUrl)
+        }
+        if (json?.profileExists === false) {
+          setError("No beta profile found for this email. Join the beta to get started.")
+          setPhase("join")
+          return
+        }
+        setError(json?.error ?? "Could not send sign-in link.")
+        return
+      }
+
+      setStoredBetaEmail(email)
+      setPhase("magic-sent")
+    } catch {
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const checking = phase === "checking"
+  const isJoin = phase === "join"
+  const isMagicSent = phase === "magic-sent"
+
+  const title = checking
+    ? "Checking your beta access…"
+    : isJoin
+      ? "Join the beta"
+      : isMagicSent
+        ? "Check your email"
+        : "Welcome back"
+
+  const subtitle = checking
+    ? "Please wait while we restore your session."
+    : isJoin
+      ? "Enter your email to start mastering. You can share more details after your first master."
+      : isMagicSent
+        ? `We sent a secure sign-in link to ${email || "your email"}. Open it on this device to continue where you left off.`
+        : "Continue with your email — we'll send a secure link. No password needed."
 
   return (
     <motion.div
@@ -184,19 +256,30 @@ export default function AccessClient() {
               Private beta
             </p>
             <h1 className="mt-5 text-center text-[1.5rem] font-semibold leading-[1.15] tracking-[-0.03em] text-white/95 sm:text-[1.65rem]">
-              {checking ? "Checking your beta access…" : "Join the beta"}
+              {title}
             </h1>
             <p className="mx-auto mt-4 max-w-[16.5rem] text-center text-[14px] leading-[1.65] text-muted sm:text-[15px] sm:leading-[1.7]">
-              {checking
-                ? "Please wait while we look up your profile."
-                : "Enter your email to start mastering. You can share more details after your first master."}
+              {subtitle}
             </p>
 
             {checking ? (
               <div className="mt-8 flex justify-center" aria-live="polite">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-violet-400/90" />
               </div>
-            ) : (
+            ) : isMagicSent ? (
+              <div className="mt-8 space-y-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhase("continue")
+                    setError(null)
+                  }}
+                  className="flex min-h-[50px] w-full items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.04] text-[14px] font-semibold text-white/88 transition hover:bg-white/[0.07]"
+                >
+                  Use a different email
+                </button>
+              </div>
+            ) : isJoin ? (
               <form onSubmit={onProfileSubmit} className="mt-8 space-y-4">
                 <label className="block">
                   <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
@@ -237,6 +320,57 @@ export default function AccessClient() {
                 >
                   {loading ? "Saving…" : "Start mastering"}
                 </button>
+                <p className="text-center text-[12px] text-white/42">
+                  Already in the beta?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhase("continue")
+                      setError(null)
+                    }}
+                    className="text-violet-200/90 underline-offset-2 hover:underline"
+                  >
+                    Continue with email
+                  </button>
+                </p>
+              </form>
+            ) : (
+              <form onSubmit={onMagicLinkSubmit} className="mt-8 space-y-4">
+                <label className="block">
+                  <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
+                    Email
+                  </span>
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-[15px] text-white/92 outline-none focus:border-violet-400/35"
+                  />
+                </label>
+                {error ? (
+                  <p className="text-center text-[13px] leading-relaxed text-rose-300/88" role="alert">
+                    {error}
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={loading || !email.trim()}
+                  className="flex min-h-[50px] w-full items-center justify-center rounded-xl bg-gradient-to-b from-violet-500/95 to-indigo-800/95 text-[14px] font-semibold text-white disabled:opacity-50"
+                >
+                  {loading ? "Sending link…" : "Continue with email"}
+                </button>
+                <p className="text-center text-[12px] text-white/42">
+                  New to the beta?{" "}
+                  <Link
+                    href={`/access?mode=join${next !== "/master" ? `&next=${encodeURIComponent(next)}` : ""}`}
+                    className="text-violet-200/90 underline-offset-2 hover:underline"
+                  >
+                    Join the beta
+                  </Link>
+                </p>
               </form>
             )}
           </motion.div>

@@ -15,7 +15,7 @@ import {
 import type { BetaAccessJson } from "../../../lib/betaClientAccess"
 import { accessFromBetaJson } from "../../../lib/betaClientAccess"
 import type { BetaMasteringUiState } from "../../../lib/betaPoints"
-import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
+import { getStoredBetaEmail, setStoredBetaEmail } from "../../../lib/betaSessionStorage"
 
 function logClientBetaAccess(message: string, detail?: Record<string, unknown>) {
   if (detail) console.log(`[beta-access] ${message}`, detail)
@@ -94,6 +94,7 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
 
           if (accessFromBetaJson(json)) {
             logClientBetaAccess("beta access granted", { source: "profile-api", email: json?.email })
+            if (json?.email) setStoredBetaEmail(json.email)
             applyAccess(true, json?.betaUi ?? null)
             return true
           }
@@ -110,6 +111,7 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
             const resumeJson = (await resumeRes.json().catch(() => null)) as BetaAccessJson | null
             if (accessFromBetaJson(resumeJson)) {
               logClientBetaAccess("beta access granted", { source: "resume", email: resumeJson?.email })
+              if (resumeJson?.email) setStoredBetaEmail(resumeJson.email)
               applyAccess(true, resumeJson?.betaUi ?? null)
               return true
             }
@@ -138,6 +140,15 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
 
   useEffect(() => {
     void refreshAccess()
+  }, [refreshAccess])
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (isBetaUserRef.current) return
+      void refreshAccess({ silent: true })
+    }
+    window.addEventListener("focus", onFocus)
+    return () => window.removeEventListener("focus", onFocus)
   }, [refreshAccess])
 
   useEffect(() => {
@@ -231,11 +242,18 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
             <p className="mt-3 text-center text-sm text-white/72">Want early access? Join beta.</p>
             <div className="mt-7 flex flex-col gap-2.5">
               <Link
-                href="/access"
+                href="/access?mode=join"
                 onClick={closeGate}
                 className="flex min-h-[48px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-700 text-sm font-semibold text-white shadow-[0_0_24px_rgba(99,102,241,0.2)] ring-1 ring-white/10 transition hover:brightness-110"
               >
                 Join Beta
+              </Link>
+              <Link
+                href="/access"
+                onClick={closeGate}
+                className="min-h-[40px] text-center text-sm text-violet-200/85 transition hover:text-white"
+              >
+                Continue with email
               </Link>
               <button
                 type="button"

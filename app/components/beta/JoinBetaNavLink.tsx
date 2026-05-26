@@ -49,7 +49,7 @@ export default function JoinBetaNavLink({
 
   return (
     <Link
-      href="/access"
+      href="/access?mode=join"
       className={`${pillBase} ${
         compact
           ? "min-h-[32px] px-2.5 py-1 text-[10px] tracking-wide sm:px-3 sm:text-[11px]"
