@@ -11,7 +11,7 @@ export default function AccessPage() {
     <Suspense
       fallback={
         <div className="flex min-h-[100dvh] items-center justify-center text-muted">
-          Loading…
+          Checking your beta access…
         </div>
       }
     >

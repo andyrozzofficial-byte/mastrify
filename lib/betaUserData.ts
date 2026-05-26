@@ -123,6 +123,56 @@ function displayName(email: string, name: string | null): string | null {
   return local.charAt(0).toUpperCase() + local.slice(1)
 }
 
+function mapBetaProfileRow(row: {
+  email: string
+  name?: string | null
+  genre?: string | null
+  daw?: string | null
+  beta_rank?: string | null
+  beta_signed_up_at?: string | null
+  notes?: string | null
+  beta_approved?: boolean | null
+}): BetaProfileRow {
+  return {
+    email: row.email.toLowerCase(),
+    name: row.name ?? null,
+    genre: row.genre ?? null,
+    daw: row.daw ?? null,
+    beta_rank: row.beta_rank ?? null,
+    beta_signed_up_at: row.beta_signed_up_at ?? null,
+    notes: row.notes ?? null,
+    beta_approved: Boolean(row.beta_approved),
+  }
+}
+
+export async function fetchBetaProfileByEmail(email: string): Promise<BetaProfileRow | null> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return null
+
+  const normalized = normalizeBetaEmail(email)
+  const { data, error } = await supabase
+    .from(CUSTOMER_PROFILES_TABLE)
+    .select("email, name, genre, daw, beta_rank, beta_signed_up_at, notes, beta_approved")
+    .eq("email", normalized)
+    .maybeSingle()
+
+  if (error) {
+    if (/beta_approved|does not exist/i.test(error.message)) {
+      const fallback = await supabase
+        .from(CUSTOMER_PROFILES_TABLE)
+        .select("email, name, genre, daw, beta_rank, beta_signed_up_at, notes")
+        .eq("email", normalized)
+        .maybeSingle()
+      if (!fallback.data) return null
+      return mapBetaProfileRow({ ...fallback.data, beta_approved: false })
+    }
+    return null
+  }
+
+  if (!data) return null
+  return mapBetaProfileRow(data)
+}
+
 async function fetchBetaProfileRows(): Promise<BetaProfileRow[]> {
   const supabase = createSupabaseServerClient()
   if (!supabase) return []
@@ -138,29 +188,11 @@ async function fetchBetaProfileRows(): Promise<BetaProfileRow[]> {
         .from(CUSTOMER_PROFILES_TABLE)
         .select("email, name, genre, daw, beta_rank, beta_signed_up_at, notes")
         .order("beta_signed_up_at", { ascending: false, nullsFirst: false })
-      return (fallback.data ?? []).map((row) => ({
-        email: row.email.toLowerCase(),
-        name: row.name ?? null,
-        genre: row.genre ?? null,
-        daw: row.daw ?? null,
-        beta_rank: row.beta_rank ?? null,
-        beta_signed_up_at: row.beta_signed_up_at ?? null,
-        notes: row.notes ?? null,
-        beta_approved: false,
-      }))
+      return (fallback.data ?? []).map((row) => mapBetaProfileRow({ ...row, beta_approved: false }))
     }
     return []
   }
-  return (data ?? []).map((row) => ({
-    email: row.email.toLowerCase(),
-    name: row.name ?? null,
-    genre: row.genre ?? null,
-    daw: row.daw ?? null,
-    beta_rank: row.beta_rank ?? null,
-    beta_signed_up_at: row.beta_signed_up_at ?? null,
-    notes: row.notes ?? null,
-    beta_approved: Boolean(row.beta_approved),
-  }))
+  return (data ?? []).map((row) => mapBetaProfileRow(row))
 }
 
 async function fetchExportsForEmail(email: string) {
@@ -685,9 +717,7 @@ export async function touchBetaProfileFromFeedback(
 export async function getBetaProfileStatus(
   email: string,
 ): Promise<{ complete: boolean; profile: BetaProfileRow | null }> {
-  const normalized = normalizeBetaEmail(email)
-  const profiles = await fetchBetaProfileRows()
-  const profile = profiles.find((p) => p.email === normalized) ?? null
+  const profile = await fetchBetaProfileByEmail(email)
   const complete = Boolean(profile?.beta_signed_up_at && profile.genre && profile.daw)
   return { complete, profile }
 }

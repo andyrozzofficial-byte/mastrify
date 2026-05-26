@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { BETA_DAW_OPTIONS, BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../lib/betaAccess"
 import { ACCESS_COOKIE_NAME, hasMasteringAccess } from "../../../../lib/access"
 import { BETA_FEEDBACK_GENRE_OPTIONS } from "../../../../lib/betaFeedbackTypes"
+import { betaProfileToJson, setBetaEmailCookieOnResponse } from "../../../../lib/betaProfileResponse"
 import { getBetaProfileStatus, upsertBetaProfile } from "../../../../lib/betaUserData"
 
 export async function GET() {
@@ -21,15 +22,7 @@ export async function GET() {
     complete: status.complete,
     hasMasteringAccess: masteringAccess,
     email: normalized,
-    profile: status.profile
-      ? {
-          name: status.profile.name,
-          genre: status.profile.genre,
-          daw: status.profile.daw,
-          betaRank: status.profile.beta_rank,
-          signupDate: status.profile.beta_signed_up_at,
-        }
-      : null,
+    profile: status.profile ? betaProfileToJson(status.profile) : null,
   })
 }
 
@@ -73,12 +66,6 @@ export async function POST(request: Request) {
     complete: true,
     hasMasteringAccess: true,
   })
-  response.cookies.set(BETA_USER_EMAIL_COOKIE, normalized, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 400,
-  })
+  setBetaEmailCookieOnResponse(response, normalized)
   return response
 }

@@ -15,7 +15,8 @@ function isAdminOrFeedbackApiBypass(pathname: string): boolean {
     path.startsWith("/admin") ||
     path.startsWith("/api/admin") ||
     path === "/api/beta-feedback" ||
-    path === "/api/beta/profile"
+    path === "/api/beta/profile" ||
+    path === "/api/beta/profile/resume"
   )
 }
 
@@ -47,10 +48,21 @@ export async function middleware(request: NextRequest) {
 
   if (isAccessBypassPath(pathname)) {
     if (pathname === "/access" && isValidBetaUserCookie(betaEmailCookie)) {
-      const next = safeAccessRedirect(url.searchParams.get("next"))
-      url.pathname = next
-      url.search = ""
-      return NextResponse.redirect(url)
+      try {
+        const profileUrl = new URL("/api/beta/profile", request.url)
+        const profileRes = await fetch(profileUrl, {
+          headers: { cookie: request.headers.get("cookie") ?? "" },
+        })
+        const profileJson = (await profileRes.json().catch(() => null)) as { complete?: boolean } | null
+        if (profileJson?.complete) {
+          const next = safeAccessRedirect(url.searchParams.get("next"))
+          url.pathname = next
+          url.search = ""
+          return NextResponse.redirect(url)
+        }
+      } catch {
+        /* fall through to access page */
+      }
     }
     return NextResponse.next()
   }
@@ -78,7 +90,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/admin") ||
     pathname.startsWith("/api/admin") ||
     pathname === "/api/beta-feedback" ||
-    pathname === "/api/beta/profile"
+    pathname === "/api/beta/profile" ||
+    pathname === "/api/beta/profile/resume"
   ) {
     return NextResponse.next()
   }
@@ -93,6 +106,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/admin") ||
     pathname === "/api/beta-feedback" ||
     pathname === "/api/beta/profile" ||
+    pathname === "/api/beta/profile/resume" ||
     pathname === "/api/support/tickets"
   ) {
     return NextResponse.next()

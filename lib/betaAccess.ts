@@ -31,3 +31,15 @@ export function betaRankLabel(rank: string | null | undefined): string {
   if (!rank) return "Insider"
   return rank.charAt(0).toUpperCase() + rank.slice(1)
 }
+
+export const BETA_EMAIL_COOKIE_MAX_AGE = 60 * 60 * 24 * 400
+
+export function betaEmailCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: BETA_EMAIL_COOKIE_MAX_AGE,
+  }
+}

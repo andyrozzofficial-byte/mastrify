@@ -2,22 +2,51 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { FormEvent, useEffect, useState } from "react"
+import { FormEvent, useEffect, useRef, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import CinematicBackground from "../components/CinematicBackground"
 import { safeAccessRedirect } from "../../lib/access"
 import { BETA_DAW_OPTIONS } from "../../lib/betaAccess"
 import { BETA_FEEDBACK_GENRE_OPTIONS } from "../../lib/betaFeedbackTypes"
+import { getStoredBetaEmail, setStoredBetaEmail } from "../../lib/betaSessionStorage"
 
 const EASE = [0.22, 1, 0.36, 1] as const
+
+type BetaProfilePayload = {
+  name: string | null
+  genre: string | null
+  daw: string | null
+  betaRank?: string | null
+  signupDate?: string | null
+}
+
+type ProfileResponse = {
+  complete?: boolean
+  email?: string | null
+  profile?: BetaProfilePayload | null
+}
+
+function applyProfilePrefill(
+  json: ProfileResponse,
+  setEmail: (v: string) => void,
+  setName: (v: string) => void,
+  setGenre: (v: string) => void,
+  setDaw: (v: string) => void,
+) {
+  if (json.email) setEmail(json.email)
+  if (json.profile?.name) setName(json.profile.name)
+  if (json.profile?.genre) setGenre(json.profile.genre)
+  if (json.profile?.daw) setDaw(json.profile.daw)
+}
 
 export default function AccessClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const reduce = useReducedMotion()
   const next = safeAccessRedirect(searchParams.get("next"))
+  const redirectStarted = useRef(false)
 
-  const [ready, setReady] = useState(false)
+  const [phase, setPhase] = useState<"checking" | "form">("checking")
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
   const [genre, setGenre] = useState("")
@@ -27,21 +56,44 @@ export default function AccessClient() {
 
   useEffect(() => {
     void (async () => {
+      const goToMaster = (targetEmail?: string | null) => {
+        if (redirectStarted.current) return
+        redirectStarted.current = true
+        if (targetEmail) setStoredBetaEmail(targetEmail)
+        router.replace(next)
+      }
+
       try {
-        const res = await fetch("/api/beta/profile", { cache: "no-store" })
-        const json = await res.json().catch(() => null)
+        const res = await fetch("/api/beta/profile", { cache: "no-store", credentials: "include" })
+        const json = (await res.json().catch(() => null)) as ProfileResponse | null
+
         if (json?.complete) {
-          router.replace(next)
+          goToMaster(json.email)
           return
         }
-        if (json?.email) setEmail(json.email)
-        if (json?.profile?.genre) setGenre(json.profile.genre)
-        if (json?.profile?.daw) setDaw(json.profile.daw)
-        if (json?.profile?.name) setName(json.profile.name)
+
+        if (json) applyProfilePrefill(json, setEmail, setName, setGenre, setDaw)
+
+        const storedEmail = getStoredBetaEmail()
+        if (storedEmail) {
+          const resumeRes = await fetch("/api/beta/profile/resume", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ email: storedEmail }),
+          })
+          const resumeJson = (await resumeRes.json().catch(() => null)) as ProfileResponse | null
+          if (resumeJson?.complete) {
+            goToMaster(resumeJson.email ?? storedEmail)
+            return
+          }
+          if (resumeJson) applyProfilePrefill(resumeJson, setEmail, setName, setGenre, setDaw)
+        }
       } catch {
-        /* show signup form */
+        const storedEmail = getStoredBetaEmail()
+        if (storedEmail) setEmail(storedEmail)
       } finally {
-        setReady(true)
+        if (!redirectStarted.current) setPhase("form")
       }
     })()
   }, [next, router])
@@ -55,6 +107,7 @@ export default function AccessClient() {
       const res = await fetch("/api/beta/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, name: name.trim() || null, genre, daw }),
       })
       const json = await res.json().catch(() => null)
@@ -62,6 +115,7 @@ export default function AccessClient() {
         setError(json?.error ?? "Could not save your profile.")
         return
       }
+      setStoredBetaEmail(email)
       router.replace(next)
       router.refresh()
     } catch {
@@ -70,6 +124,8 @@ export default function AccessClient() {
       setLoading(false)
     }
   }
+
+  const checking = phase === "checking"
 
   return (
     <motion.div
@@ -131,15 +187,19 @@ export default function AccessClient() {
               Private beta
             </p>
             <h1 className="mt-5 text-center text-[1.5rem] font-semibold leading-[1.15] tracking-[-0.03em] text-white/95 sm:text-[1.65rem]">
-              {ready ? "Join the beta" : "Loading…"}
+              {checking ? "Checking your beta access…" : "Join the beta"}
             </h1>
             <p className="mx-auto mt-4 max-w-[16.5rem] text-center text-[14px] leading-[1.65] text-muted sm:text-[15px] sm:leading-[1.7]">
-              {ready
-                ? "Enter your email and a few details — then you can start mastering right away."
-                : "Please wait."}
+              {checking
+                ? "Please wait while we look up your profile."
+                : "Enter your email and a few details — then you can start mastering right away."}
             </p>
 
-            {ready ? (
+            {checking ? (
+              <div className="mt-8 flex justify-center" aria-live="polite">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-violet-400/90" />
+              </div>
+            ) : (
               <form onSubmit={onProfileSubmit} className="mt-8 space-y-4">
                 <label className="block">
                   <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
@@ -220,7 +280,7 @@ export default function AccessClient() {
                   {loading ? "Saving…" : "Start mastering"}
                 </button>
               </form>
-            ) : null}
+            )}
           </motion.div>
         </motion.div>
 
