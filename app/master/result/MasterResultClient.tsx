@@ -44,6 +44,7 @@ import BetaMasterStatusCard from "../../components/master/BetaMasterStatusCard"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
 import { reportBetaMasterCompleted, reportBetaMasterDownload } from "../../../lib/betaMasterTrackingClient"
+import { getBetaReporterEmail } from "../../../lib/betaReporterEmail"
 import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
 import { logResourceClient } from "../../../lib/resourceUsageLogClient"
@@ -223,7 +224,7 @@ export default function MasterResultClient() {
     void refreshAccess({ silent: true })
   }, [mounted, showBetaRewards, refreshAccess])
 
-  const masterCompletionReportedRef = useRef(false)
+  const masterCompletionReportedRef = useRef<string | null>(null)
 
   const originalPreviewUrl = useMemo(() => normalizePlaybackUrl(audioUrl), [audioUrl])
   const masteredWavUrl = useMemo(() => normalizePlaybackUrl(masteredUrl), [masteredUrl])
@@ -259,13 +260,13 @@ export default function MasterResultClient() {
                 isBeta: true,
                 complete: true,
                 betaUi: ui,
-                email: email || getStoredBetaEmail() || undefined,
+                email: reporterEmail || getStoredBetaEmail() || undefined,
               })
             }
           },
         },
       )
-      if (!ok) masterCompletionReportedRef.current = false
+      if (ok) masterCompletionReportedRef.current = completionKey
     })()
   }, [
     mounted,

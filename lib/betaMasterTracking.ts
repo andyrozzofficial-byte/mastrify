@@ -38,6 +38,7 @@ async function fetchCompletionsTableRows(email: string): Promise<BetaMasterCompl
 
   if (error) {
     if (/does not exist|42P01/i.test(error.message)) return []
+    console.warn("[beta] beta_master_completions fetch failed:", error.message)
     return []
   }
 
@@ -67,7 +68,10 @@ async function fetchPipelineMasterCompleteRows(email: string): Promise<BetaMaste
     .order("created_at", { ascending: false })
     .limit(500)
 
-  if (error) return []
+  if (error) {
+    console.warn("[beta] pipeline master_complete fetch failed:", error.message)
+    return []
+  }
 
   return (data ?? [])
     .filter((row) => row.session_id)
@@ -104,9 +108,14 @@ export async function countBetaMastersForEmail(email: string): Promise<number> {
   return rows.length
 }
 
-export async function isBetaMasterSessionCompleted(sessionId: string): Promise<boolean> {
+/** Dedupe is per email + session_id (session_id is globally unique in the completions table). */
+export async function isBetaMasterSessionCompleted(
+  sessionId: string,
+  email: string,
+): Promise<boolean> {
   const sid = sessionId.trim()
-  if (!sid) return false
+  const normalized = normalizeBetaEmail(email)
+  if (!sid || !normalized.includes("@")) return false
 
   const supabase = createSupabaseServerClient()
   if (!supabase) return false
@@ -115,6 +124,7 @@ export async function isBetaMasterSessionCompleted(sessionId: string): Promise<b
     .from(BETA_MASTER_COMPLETIONS_TABLE)
     .select("session_id")
     .eq("session_id", sid)
+    .eq("email", normalized)
     .maybeSingle()
 
   if (!error && data?.session_id) return true
@@ -124,6 +134,7 @@ export async function isBetaMasterSessionCompleted(sessionId: string): Promise<b
     .select("session_id")
     .eq("event_type", PIPELINE_EVENT_MASTER_COMPLETE)
     .eq("session_id", sid)
+    .eq("user_email", normalized)
     .maybeSingle()
 
   return Boolean(pipe?.session_id)
@@ -198,9 +209,9 @@ export async function recordBetaMasterCompletion(
   if (!sessionId) return { error: "session_id required" }
   if (!email.includes("@")) return { error: "email required" }
 
-  const alreadyCounted = await isBetaMasterSessionCompleted(sessionId)
+  const alreadyCounted = await isBetaMasterSessionCompleted(sessionId, email)
   if (alreadyCounted) {
-    logBeta("master already counted", { sessionId })
+    logBeta("master already counted", { sessionId, email })
     return { ok: true, created: false, alreadyCounted: true }
   }
 
@@ -229,8 +240,13 @@ export async function recordBetaMasterCompletion(
       logBeta("master already counted", { sessionId })
       return { ok: true, created: false, alreadyCounted: true }
     }
-    if (!/does not exist|42P01/i.test(error.message)) {
-      logBeta("completions table insert failed", { message: error.message })
+    if (/does not exist|42P01/i.test(error.message)) {
+      logBeta("completions table missing — apply beta_master_completions migration", {
+        sessionId,
+        email,
+      })
+    } else {
+      logBeta("completions table insert failed", { message: error.message, sessionId, email })
     }
   } else {
     tableWriteOk = true

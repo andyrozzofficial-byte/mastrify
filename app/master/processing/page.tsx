@@ -17,6 +17,7 @@ import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGatePro
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
 import { reportBetaMasterCompleted } from "../../../lib/betaMasterTrackingClient"
+import { getBetaReporterEmail } from "../../../lib/betaReporterEmail"
 import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
 import { useMasterSession } from "../MasterSessionProvider"
 
@@ -62,6 +63,7 @@ export default function MasterProcessingPage() {
     sessionId,
     ensureSessionId,
     masterObjectKey,
+    deliveryEmail,
     masteredUrl,
     setMasteredUrl,
     setMasteredPreviewMp3Url,
@@ -97,6 +99,11 @@ export default function MasterProcessingPage() {
       } else {
         router.replace("/master")
       }
+      return
+    }
+
+    if (masteredUrl?.trim()) {
+      router.replace("/master/result")
       return
     }
 
@@ -199,12 +206,13 @@ export default function MasterProcessingPage() {
 
         if (isBeta) {
           const trackingSessionId = ensureSessionId()
-          const email = getStoredBetaEmail()
+          const reporterEmail = getBetaReporterEmail(getStoredBetaEmail(), deliveryEmail)
           await reportBetaMasterCompleted(
             {
               sessionId: trackingSessionId,
               objectKey: responseObjectKey || masterObjectKey || null,
-              email: email || undefined,
+              email: reporterEmail || undefined,
+              deliveryEmail: deliveryEmail.trim() || undefined,
               trackName: activeFile.name,
               masteringStyle: masteringStyleLabel(stylePreset),
               processingTimeMs: elapsedMs,
@@ -219,7 +227,7 @@ export default function MasterProcessingPage() {
                     isBeta: true,
                     complete: true,
                     betaUi: ui,
-                    email: email || undefined,
+                    email: reporterEmail || undefined,
                   })
                 }
               },
@@ -277,8 +285,7 @@ export default function MasterProcessingPage() {
     onMasterRoot,
     masterState.file,
     file,
-    masteredUrl,
-    masterObjectKey,
+    deliveryEmail,
     setMasterState,
     setMasteredUrl,
     setMasteredPreviewMp3Url,

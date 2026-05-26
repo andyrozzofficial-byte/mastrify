@@ -1,5 +1,6 @@
 import { isBetaFeedbackEnabled } from "./betaFeedbackFeature"
 import { createMasterSessionId } from "./masterSessionId"
+import { getBetaReporterEmail } from "./betaReporterEmail"
 import { getStoredBetaEmail } from "./betaSessionStorage"
 import type { BetaMasteringUiState } from "./betaPoints"
 import type { BetaProfilePanelData } from "./betaProfilePanel"
@@ -13,6 +14,7 @@ export type RegisterBetaMasterCompletePayload = {
   sessionId: string
   objectKey?: string | null
   email?: string | null
+  deliveryEmail?: string | null
   trackName?: string | null
   masteringStyle?: string | null
   processingTimeMs?: number | null
@@ -67,7 +69,10 @@ export async function registerBetaMasterComplete(
   sessionId?: string
 }> {
   const sessionId = resolveCompletionSessionId(payload)
-  const email = payload.email?.trim() || getStoredBetaEmail() || ""
+  const email = getBetaReporterEmail(
+    payload.email ?? getStoredBetaEmail(),
+    payload.deliveryEmail,
+  )
 
   try {
     const res = await fetch("/api/beta/master/complete", {
@@ -78,6 +83,10 @@ export async function registerBetaMasterComplete(
         sessionId,
         objectKey: payload.objectKey ?? null,
         email: email.includes("@") ? email : undefined,
+        deliveryEmail:
+          payload.deliveryEmail?.trim() && payload.deliveryEmail.includes("@")
+            ? payload.deliveryEmail.trim()
+            : undefined,
         trackName: payload.trackName ?? null,
         masteringStyle: payload.masteringStyle ?? null,
         processingTimeMs: payload.processingTimeMs ?? null,
