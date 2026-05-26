@@ -109,9 +109,14 @@ body {
     --mkt-space-12: 3rem;
     --mkt-action-width: 29.5rem;
     --mkt-pricing-features-width: 25rem;
-    --mkt-content-max: 1080px;
+    --mkt-content-max: 75rem;
     --mkt-interior-max: 920px;
     --mkt-copy-max: 36rem;
+    --product-space-6: 1.5rem;
+    --product-space-8: 2rem;
+    --product-space-16: 4rem;
+    --product-form-max: 43.75rem;
+    --product-card-radius: 1.3rem;
   }
   .marketing-interior {
     width: 100%;
@@ -120,27 +125,84 @@ body {
     min-width: 0;
   }
   .page-container {
-    margin-inline: auto;
+    box-sizing: border-box;
     width: 100%;
     max-width: var(--mkt-content-max);
+    margin-left: auto;
+    margin-right: auto;
     padding-left: max(1rem, env(safe-area-inset-left, 0px));
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
   }
-  @media (min-width: 430px) {
-    .page-container {
-      padding-left: max(1.125rem, env(safe-area-inset-left, 0px));
-      padding-right: max(1.125rem, env(safe-area-inset-right, 0px));
-    }
-  }
   @media (min-width: 640px) {
     .page-container {
-      padding-inline: 1.25rem;
+      padding-left: max(2rem, env(safe-area-inset-left, 0px));
+      padding-right: max(2rem, env(safe-area-inset-right, 0px));
     }
   }
-  @media (min-width: 768px) {
-    .page-container {
-      padding-inline: 2.5rem;
-    }
+  .product-form-column {
+    width: 100%;
+    max-width: var(--product-form-max);
+    margin-inline: auto;
+    min-width: 0;
+  }
+  .product-flow-page-bottom {
+    padding-bottom: var(--product-space-16);
+  }
+  .product-surface-card {
+    border-radius: var(--product-card-radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.045), rgba(0, 0, 0, 0.72));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 24px 56px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(10px);
+  }
+  .product-action-stack {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .product-action-upload-group {
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--product-space-8);
+  }
+  .marketing-hero-copy--product {
+    text-align: left;
+  }
+  .marketing-hero-copy--product > .hero-lead {
+    margin-inline: 0;
+  }
+  .marketing-hero-copy--product > .marketing-hero-bullets {
+    margin-top: var(--product-space-6);
+    margin-inline: 0;
+    max-width: 32rem;
+  }
+  .marketing-hero-copy--product > .marketing-hero-step-rail {
+    margin-top: var(--product-space-8);
+  }
+  .marketing-hero-copy--product > .marketing-hero-action-slot,
+  .marketing-hero-copy--product > .cinematic-upload-slot {
+    margin-top: var(--product-space-6);
+  }
+  .marketing-hero-copy--product > .cinematic-trust-row {
+    margin-top: var(--product-space-8);
+  }
+  .marketing-hero-copy--product > .marketing-hero-footer-note {
+    margin-top: var(--product-space-16);
+    text-align: left;
+  }
+  .product-result-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .product-result-center {
+    width: 100%;
+    max-width: var(--product-form-max);
+    margin-inline: auto;
+    min-width: 0;
   }
   .page-hero-pad {
     padding-top: 1rem;
@@ -251,7 +313,7 @@ body {
   }
   @media (min-width: 1440px) {
     .marketing-hero-lockup {
-      width: min(1080px, 100%);
+      width: min(var(--mkt-content-max), 100%);
       gap: 3rem;
     }
   }
@@ -334,23 +396,10 @@ body {
       margin-top: var(--mkt-space-8);
     }
   }
-  /* Product flows: upload/pricing card stays locked width, sits closer to copy */
+  /* Product flows: upload/pricing card stays locked width under hero stack */
   .marketing-hero-copy--product > .marketing-hero-action-slot,
   .marketing-hero-copy--product > .cinematic-upload-slot {
-    margin-top: var(--mkt-space-4);
     max-width: var(--mkt-action-width);
-  }
-  @media (min-width: 640px) {
-    .marketing-hero-copy--product > .marketing-hero-action-slot,
-    .marketing-hero-copy--product > .cinematic-upload-slot {
-      margin-top: var(--mkt-space-5);
-    }
-  }
-  @media (min-width: 1024px) {
-    .marketing-hero-copy--product > .marketing-hero-action-slot,
-    .marketing-hero-copy--product > .cinematic-upload-slot {
-      margin-top: var(--mkt-space-5);
-    }
   }
   .marketing-hero-copy > .marketing-hero-step-rail {
     margin-top: var(--mkt-space-6);
@@ -360,28 +409,12 @@ body {
       margin-top: var(--mkt-space-8);
     }
   }
-  .marketing-hero-copy--product > .marketing-hero-step-rail {
-    margin-top: var(--mkt-space-4);
-  }
-  @media (min-width: 640px) {
-    .marketing-hero-copy--product > .marketing-hero-step-rail {
-      margin-top: var(--mkt-space-5);
-    }
-  }
   .marketing-hero-copy > .cinematic-trust-row {
     margin-top: var(--mkt-space-5);
   }
   @media (min-width: 640px) {
     .marketing-hero-copy > .cinematic-trust-row {
       margin-top: var(--mkt-space-6);
-    }
-  }
-  .marketing-hero-copy--product > .cinematic-trust-row {
-    margin-top: var(--mkt-space-4);
-  }
-  @media (min-width: 640px) {
-    .marketing-hero-copy--product > .cinematic-trust-row {
-      margin-top: var(--mkt-space-5);
     }
   }
   @media (min-width: 1024px) {
@@ -676,10 +709,6 @@ body {
   }
   /* Marketing heroes: orbs hidden below md via .marketing-hero-orb-slot (product flow keeps orbs) */
   @media (max-width: 767px) {
-    .page-container {
-      padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
-      padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
-    }
     .marketing-hero-lockup {
       gap: 0.625rem;
     }

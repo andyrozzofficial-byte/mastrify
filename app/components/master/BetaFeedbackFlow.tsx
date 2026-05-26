@@ -305,7 +305,7 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 16 }}
-              className="flex h-[min(92dvh,720px)] w-full max-w-lg flex-col rounded-t-2xl border border-white/[0.1] bg-[#090912] shadow-[0_24px_80px_rgba(0,0,0,0.65)] sm:h-auto sm:max-h-[min(88dvh,720px)] sm:rounded-2xl"
+              className="product-surface-card flex h-[min(92dvh,720px)] w-full max-w-[min(100%,var(--product-form-max))] flex-col rounded-t-2xl border-white/[0.1] bg-[#090912] shadow-[0_24px_80px_rgba(0,0,0,0.65)] sm:mx-auto sm:h-auto sm:max-h-[min(88dvh,720px)] sm:rounded-2xl"
             >
               {phase === "success" ? (
                 <div className="flex flex-1 flex-col items-center justify-center px-6 py-14 text-center">

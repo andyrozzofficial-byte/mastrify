@@ -312,7 +312,7 @@ export default function AnalyzePage() {
     <CinematicPageShell
       innerClassName={
         result && !processing
-          ? "mx-auto w-full max-w-6xl px-5 pb-6 pt-3 sm:pb-10 md:max-w-7xl md:px-10 md:pb-16 md:pt-8"
+          ? "page-container product-flow-page-bottom w-full pt-3 sm:pt-6 md:pt-8"
           : ""
       }
     >

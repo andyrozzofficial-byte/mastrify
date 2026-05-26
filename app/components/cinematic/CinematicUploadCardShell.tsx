@@ -63,7 +63,7 @@ export default function CinematicUploadCardShell({
           aria-hidden
         />
 
-        <div className="relative flex min-w-0 flex-col p-3.5 sm:p-6">{children}</div>
+        <div className="relative flex min-w-0 flex-col p-4 sm:p-6">{children}</div>
       </motion.div>
     </motion.div>
   )

@@ -65,9 +65,9 @@ export default function MasterUploadHero({
 
       <MasterFlowStepRail phase={stepRailPhase} className="marketing-hero-step-rail justify-start" />
 
-      <MarketingActionSlot className="!mt-0 flex flex-col">
+      <MarketingActionSlot className="product-action-stack">
         <BetaMasterStatusCard />
-        <div className="flex flex-col pt-8 sm:pt-10">
+        <div className="product-action-upload-group">
           <UploadSectionDivider />
           <UploadCard
             mode="master"

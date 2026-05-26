@@ -99,7 +99,7 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
     return (
       <div className="relative text-white">
         <CinematicBackground />
-        <div className="relative mx-auto flex max-w-md flex-col items-center justify-center gap-5 px-6 py-12 text-center">
+        <div className="page-container relative flex max-w-md flex-col items-center justify-center gap-5 py-12 text-center">
           <MasterFlowStepRail phase="settings" className="mb-2" />
           <input
             ref={reconnectInputRef}
@@ -148,7 +148,8 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
   return (
     <div className="relative text-white">
       <CinematicBackground />
-      <div className="relative mx-auto w-full max-w-[720px] px-4 pb-10 pt-5 md:px-6 md:pb-12 md:pt-6">
+      <div className="page-container product-flow-page-bottom relative w-full pt-5 md:pt-6">
+        <div className="product-form-column w-full max-w-[720px]">
         <MasterFlowStepRail phase="settings" className="mb-6 justify-center" />
         <div className="relative">
           <div
@@ -159,7 +160,7 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative z-10 overflow-hidden rounded-2xl border border-white/[0.09] bg-gradient-to-b from-white/[0.07] to-black/[0.72] p-6 shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_0_32px_rgba(88,28,135,0.1),0_28px_72px_rgba(0,0,0,0.62)] ring-1 ring-purple-500/8 backdrop-blur-2xl md:p-8 md:pb-7"
+            className="product-surface-card relative z-10 overflow-hidden p-6 ring-1 ring-purple-500/8 md:p-8 md:pb-7"
           >
             <button
               type="button"
@@ -277,6 +278,7 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
               </button>
             </div>
           </motion.div>
+        </div>
         </div>
       </div>
     </div>

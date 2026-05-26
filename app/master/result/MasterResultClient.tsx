@@ -915,8 +915,9 @@ export default function MasterResultClient() {
       <BetaDownloadRewardToast visible={downloadToastVisible} onDismiss={dismissDownloadToast} />
 
       <motion.div
-        className={`master-result-shell relative min-w-0 px-4 pb-3 pt-5 sm:px-6 md:pb-4 md:px-8 md:pt-6 ${showBetaRewards ? "sm:pr-[14.5rem]" : ""}`}
+        className={`page-container product-flow-page-bottom product-result-page master-result-shell relative min-w-0 pt-5 md:pt-6 ${showBetaRewards ? "sm:pr-[14.5rem]" : ""}`}
       >
+        <div className="master-result-stack w-full">
         {showBetaRewards && betaUi ? <BetaResultRewardWidget betaUi={betaUi} /> : null}
 
       <motion.header
@@ -994,7 +995,7 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
-        className="master-result-panel mt-8 min-w-0 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.46),0_0_72px_rgba(124,58,237,0.09)] backdrop-blur-2xl sm:p-5 md:mt-10 md:rounded-[1.35rem]"
+        className="product-surface-card master-result-panel mt-8 min-w-0 w-full overflow-hidden p-4 sm:p-5 md:mt-10"
       >
         <div className="master-result-grid grid gap-6 md:gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-stretch lg:gap-8">
           {/* Before / After metrics */}
@@ -1171,7 +1172,7 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.08, ease: "easeOut" }}
-        className="relative z-10 mx-auto mt-8 w-full max-w-[28rem] sm:mt-9"
+        className="product-result-center relative z-10 mt-8 w-full sm:mt-9"
         aria-labelledby="master-result-download-heading"
       >
         <h2
@@ -1271,7 +1272,7 @@ export default function MasterResultClient() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="mx-auto mt-4 max-w-md pb-1 text-center md:mt-5"
+        className="product-result-center mt-4 pb-1 text-center md:mt-5"
       >
         <p className="text-[12px] leading-relaxed text-white/66 md:text-[13px]">Happy with the result? Share your master!</p>
         <button
@@ -1312,6 +1313,7 @@ export default function MasterResultClient() {
           className="hidden"
         />
       ) : null}
+        </div>
       </motion.div>
     </>
   )

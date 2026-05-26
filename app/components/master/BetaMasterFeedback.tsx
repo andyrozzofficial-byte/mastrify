@@ -270,10 +270,10 @@ export default function BetaMasterFeedback({
       initial={reduce ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: EASE }}
-      className="mx-auto mt-8 w-full max-w-2xl px-4 sm:mt-10 sm:px-0"
+      className="product-form-column mt-8 w-full sm:mt-10"
       aria-labelledby="beta-master-feedback-title"
     >
-      <div className="overflow-hidden rounded-[1.35rem] border border-violet-400/18 bg-white/[0.035] p-5 shadow-[0_0_32px_rgba(124,58,237,0.08),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-md sm:p-7 sm:pb-8">
+      <div className="product-surface-card overflow-hidden border-violet-400/18 bg-white/[0.035] p-5 shadow-[0_0_32px_rgba(124,58,237,0.08)] sm:p-7 sm:pb-8">
         <header className="text-center">
           <h2 id="beta-master-feedback-title" className="text-lg font-semibold text-white sm:text-xl">
             Help improve Mastrify

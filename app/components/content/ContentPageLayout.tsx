@@ -12,8 +12,7 @@ export const contentPageProseClass =
 
 export const contentPageSectionsClass = "flex flex-col gap-8"
 
-const pageContainerClass =
-  "mx-auto box-border w-full max-w-[1200px] min-w-0 px-8 pb-[100px] pt-16"
+const pageContainerClass = "page-container min-w-0 pb-[100px] pt-16"
 
 type ContentPageLayoutProps = {
   children: ReactNode
@@ -54,13 +53,7 @@ export function PageContainer({ children, className = "" }: PageContainerProps) 
 
 /** Help Center — centered documentation rail (1200px) */
 export function HelpPageContainer({ children, className = "" }: PageContainerProps) {
-  return (
-    <div
-      className={`mx-auto box-border w-full max-w-[1200px] min-w-0 px-8 pb-[100px] pt-16 ${className}`}
-    >
-      {children}
-    </div>
-  )
+  return <div className={`page-container min-w-0 pb-[100px] pt-16 ${className}`}>{children}</div>
 }
 
 /** @deprecated Use PageContainer */

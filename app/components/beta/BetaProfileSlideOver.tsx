@@ -39,7 +39,7 @@ function formatActivityDate(iso: string): string {
 function DashboardCard({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-black/40 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_12px_32px_rgba(0,0,0,0.28)] sm:p-5 ${className}`}
+      className={`product-surface-card p-4 sm:p-5 ${className}`}
     >
       {children}
     </div>
@@ -145,7 +145,7 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
             />
 
             <header className="shrink-0 border-b border-white/[0.06]">
-              <div className="mx-auto flex w-full max-w-[900px] items-center justify-between gap-3 px-4 py-4 sm:px-6">
+              <div className="mx-auto flex w-full max-w-[900px] items-center justify-between gap-3 px-8 py-4">
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/65">
                     Private beta
@@ -168,7 +168,7 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <div className="mx-auto w-full max-w-[900px] px-4 py-5 pb-8 sm:px-6 sm:py-6">
+              <div className="mx-auto w-full max-w-[900px] px-8 py-5 pb-8 sm:py-6">
                 {loading ? (
                   <div className="flex justify-center py-20" aria-live="polite">
                     <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-violet-400/90" />

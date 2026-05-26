@@ -51,7 +51,7 @@
   flex-shrink: 0;
   flex-direction: column;
   align-items: center;
-  padding: 0.5rem 1.5rem 0;
+  padding: 0.5rem 0 0;
   text-align: center;
 }
 
@@ -80,13 +80,7 @@
   margin-inline: auto;
   margin-top: 1.5rem;
   min-height: 0;
-  padding-inline: 1rem;
-}
-
-@media (min-width: 640px) {
-  .product-processing-stage {
-    padding-inline: 1.25rem;
-  }
+  padding-inline: 0;
 }
 
 @media (min-width: 768px) {
@@ -133,7 +127,7 @@
   margin-inline: auto;
   margin-top: 0.5rem;
   min-width: 0;
-  padding-inline: 1.25rem;
+  padding-inline: 0;
   padding-bottom: 2.5rem;
 }
 

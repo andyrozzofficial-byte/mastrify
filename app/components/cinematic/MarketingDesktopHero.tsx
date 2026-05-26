@@ -34,7 +34,7 @@ export default function MarketingDesktopHero({
     <section
       className={[
         "marketing-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12",
-        isProduct ? "marketing-hero-shell--product" : "",
+        isProduct ? "marketing-hero-shell--product product-flow-page-bottom" : "",
         scrollSafe ? "marketing-hero-shell--scroll-safe" : "",
       ]
         .filter(Boolean)
@@ -58,8 +58,8 @@ export default function MarketingDesktopHero({
       >
         <div
           className={[
-            "marketing-hero-copy text-center lg:text-left",
-            isProduct ? "marketing-hero-copy--product" : "",
+            "marketing-hero-copy",
+            isProduct ? "marketing-hero-copy--product text-left" : "text-center lg:text-left",
             useEnter ? "marketing-hero-copy--enter" : "",
           ]
             .filter(Boolean)

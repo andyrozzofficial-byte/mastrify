@@ -49,7 +49,7 @@ export default function BetaMasterStatusCard({ className = "" }: Props) {
         aria-hidden
       />
 
-      <div className="relative overflow-hidden rounded-[1.3rem] border border-white/[0.06] bg-gradient-to-b from-black/55 via-black/72 to-black/88 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_10px_28px_rgba(0,0,0,0.32)] backdrop-blur-md sm:px-5 sm:py-4">
+      <div className="product-surface-card relative overflow-hidden px-4 py-3.5 sm:px-5 sm:py-4">
         <div
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(124,58,237,0.06),transparent_70%)]"
           aria-hidden

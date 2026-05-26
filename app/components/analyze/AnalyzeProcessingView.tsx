@@ -31,6 +31,7 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
   }, [audioUrl])
 
   return (
+    <div className="page-container product-flow-page-bottom w-full">
     <div className={`product-processing-view ${reduce ? "" : "product-processing-view--enter"}`}>
       <div className="product-processing-view__ambient" aria-hidden />
       <div className="product-processing-view__glow" aria-hidden />
@@ -78,7 +79,7 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
 
       <div className="product-processing-card">
         <div className="product-processing-card__halo" aria-hidden />
-        <div className="fluid-surface relative overflow-hidden rounded-[1.25rem] border border-white/[0.08] bg-black/50 px-3.5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_32px_80px_rgba(0,0,0,0.55)] sm:px-4 sm:py-5 md:px-6 md:py-6">
+        <div className="product-surface-card fluid-surface relative overflow-hidden p-4 sm:p-6">
           <div
             className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,transparent_22%,transparent_100%)]"
             aria-hidden
@@ -89,6 +90,7 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
           The engine is mapping your mix — this usually takes a moment
         </p>
       </div>
+    </div>
     </div>
   )
 }
