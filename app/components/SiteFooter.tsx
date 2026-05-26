@@ -24,58 +24,96 @@ const legal = [
   { href: "/terms", label: "Terms" },
 ] as const
 
-function FooterLinkList({ links }: { links: readonly { href: string; label: string }[] }) {
+type FooterLinkColumn = {
+  title: string
+  links: readonly { href: string; label: string }[]
+}
+
+const FOOTER_LINK_COLUMNS: FooterLinkColumn[] = [
+  { title: "Product", links: product },
+  { title: "Support", links: support },
+  { title: "Legal", links: legal },
+]
+
+const FOOTER_LINKS_HEADING_CLASS =
+  "text-[9px] font-medium uppercase tracking-[0.28em] text-label sm:text-[10px]"
+
+function FooterLinksMobile({ columns }: { columns: FooterLinkColumn[] }) {
+  const [open, setOpen] = useState<Record<string, boolean>>({ Product: true })
+
   return (
-    <ul className="footer-column-links mt-4 flex w-full flex-col items-start gap-1 sm:mt-4 md:mt-6 md:gap-[18px]">
-      {links.map(({ href, label }) => (
-        <li key={href + label} className="w-full">
-          <Link href={href} className="footer-tap-link">
-            {label}
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <nav aria-label="Footer navigation" className="footer-links-mobile w-full min-w-0 md:hidden">
+      <div className="flex flex-col divide-y divide-white/[0.07]">
+        {columns.map((column) => {
+          const isOpen = Boolean(open[column.title])
+          return (
+            <div key={column.title} className="min-w-0 py-0">
+              <button
+                type="button"
+                className="footer-accordion-trigger flex w-full min-h-[44px] items-center justify-between gap-3 py-1 text-left"
+                aria-expanded={isOpen}
+                onClick={() => setOpen((prev) => ({ ...prev, [column.title]: !prev[column.title] }))}
+              >
+                <span className={FOOTER_LINKS_HEADING_CLASS}>{column.title}</span>
+                <span
+                  className={`text-[10px] text-white/45 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                  aria-hidden
+                >
+                  ▼
+                </span>
+              </button>
+              {isOpen ? (
+                <ul className="m-0 flex list-none flex-col items-start gap-1 pb-2 pl-0">
+                  {column.links.map((link) => (
+                    <li key={link.href} className="w-full">
+                      <Link href={link.href} className="footer-tap-link">
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          )
+        })}
+      </div>
+    </nav>
   )
 }
 
-function FooterColumn({
-  title,
-  links,
-  defaultOpen = false,
-}: {
-  title: string
-  links: readonly { href: string; label: string }[]
-  defaultOpen?: boolean
-}) {
-  const [open, setOpen] = useState(defaultOpen)
+function FooterLinksDesktop({ columns }: { columns: FooterLinkColumn[] }) {
+  return (
+    <nav
+      aria-label="Footer navigation"
+      className="footer-links-grid hidden w-full min-w-0 md:grid md:grid-cols-3 md:items-start"
+      style={{ columnGap: "48px" }}
+    >
+      {columns.map((column) => (
+        <div key={column.title} className="footer-links-col flex min-w-0 flex-col">
+          <h3 className={`m-0 w-full text-center ${FOOTER_LINKS_HEADING_CLASS}`}>{column.title}</h3>
+          <ul
+            className="m-0 mt-6 flex w-full list-none flex-col items-start p-0"
+            style={{ rowGap: "18px" }}
+          >
+            {column.links.map((link) => (
+              <li key={link.href} className="m-0 w-full p-0">
+                <Link href={link.href} className="footer-tap-link">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  )
+}
 
+function FooterLinksSection() {
   return (
     <>
-      <div className="min-w-0 md:hidden">
-        <button
-          type="button"
-          className="footer-accordion-trigger flex w-full min-h-[44px] items-center justify-between gap-3 py-1 text-left"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span className="footer-column-title text-[9px] font-medium uppercase tracking-[0.28em] text-label sm:text-[10px]">
-            {title}
-          </span>
-          <span
-            className={`text-[10px] text-white/45 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-            aria-hidden
-          >
-            ▼
-          </span>
-        </button>
-        {open ? <FooterLinkList links={links} /> : null}
-      </div>
-      <motion.div initial={false} className="footer-column hidden min-w-0 w-full md:flex md:flex-col md:items-center">
-        <p className="footer-column-title w-full text-center text-[9px] font-medium uppercase tracking-[0.28em] text-label sm:text-[10px]">
-          {title}
-        </p>
-        <FooterLinkList links={links} />
-      </motion.div>
+      <FooterLinksMobile columns={FOOTER_LINK_COLUMNS} />
+      <FooterLinksDesktop columns={FOOTER_LINK_COLUMNS} />
     </>
   )
 }
@@ -177,17 +215,13 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="footer-nav-columns footer-nav-group w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-3 md:items-start md:gap-x-12 md:gap-y-0 md:max-w-[26rem] lg:col-span-3 lg:max-w-[27rem] lg:justify-self-center xl:col-span-3 xl:max-w-[28rem]"
+            className="min-w-0 w-full max-md:mx-auto max-md:max-w-[20.5rem] lg:col-span-3 lg:justify-self-center"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.05, ease: EASE }}
           >
-            <div className="flex flex-col gap-0 max-md:divide-y max-md:divide-white/[0.07] md:contents">
-              <FooterColumn title="Product" links={product} defaultOpen />
-              <FooterColumn title="Support" links={support} />
-              <FooterColumn title="Legal" links={legal} />
-            </div>
+            <FooterLinksSection />
           </motion.div>
 
           {/* Mastering CTA */}
