@@ -61,21 +61,21 @@ export default function MasterUploadHero({
 
       <MarketingActionSlot className="!mt-0 flex flex-col">
         <BetaMasterStatusCard />
-        <div className="flex flex-col pt-7 sm:pt-8">
+        <div className="flex flex-col pt-8 sm:pt-10">
           <div
-            className="mb-5 flex items-center gap-3 sm:mb-6"
+            className="mb-6 flex items-center gap-3.5 sm:mb-6"
             role="separator"
             aria-label="Upload your mix"
           >
             <div
-              className="h-px min-w-0 flex-1 bg-gradient-to-r from-transparent via-white/[0.08] to-white/[0.12]"
+              className="h-px min-w-0 flex-1 bg-gradient-to-r from-transparent via-white/[0.05] to-white/[0.08]"
               aria-hidden
             />
-            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/32">
+            <span className="shrink-0 px-1 text-[10px] font-medium tracking-[0.18em] text-white/28">
               Upload your mix
             </span>
             <div
-              className="h-px min-w-0 flex-1 bg-gradient-to-l from-transparent via-white/[0.08] to-white/[0.12]"
+              className="h-px min-w-0 flex-1 bg-gradient-to-l from-transparent via-white/[0.05] to-white/[0.08]"
               aria-hidden
             />
           </div>
