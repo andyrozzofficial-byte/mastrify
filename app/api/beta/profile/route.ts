@@ -1,20 +1,25 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { BETA_DAW_OPTIONS, BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../lib/betaAccess"
+import { ACCESS_COOKIE_NAME, hasMasteringAccess } from "../../../../lib/access"
 import { BETA_FEEDBACK_GENRE_OPTIONS } from "../../../../lib/betaFeedbackTypes"
 import { getBetaProfileStatus, upsertBetaProfile } from "../../../../lib/betaUserData"
 
 export async function GET() {
   const store = await cookies()
   const email = store.get(BETA_USER_EMAIL_COOKIE)?.value?.trim()
+  const accessCookie = store.get(ACCESS_COOKIE_NAME)?.value
+  const masteringAccess = await hasMasteringAccess(accessCookie, email)
+
   if (!email) {
-    return NextResponse.json({ complete: false, email: null })
+    return NextResponse.json({ complete: false, email: null, hasMasteringAccess: masteringAccess })
   }
 
   const normalized = normalizeBetaEmail(email)
   const status = await getBetaProfileStatus(normalized)
   return NextResponse.json({
     complete: status.complete,
+    hasMasteringAccess: masteringAccess,
     email: normalized,
     profile: status.profile
       ? {
@@ -62,7 +67,12 @@ export async function POST(request: Request) {
   }
 
   const normalized = normalizeBetaEmail(email)
-  const response = NextResponse.json({ ok: true, email: normalized, complete: true })
+  const response = NextResponse.json({
+    ok: true,
+    email: normalized,
+    complete: true,
+    hasMasteringAccess: true,
+  })
   response.cookies.set(BETA_USER_EMAIL_COOKIE, normalized, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import SiteChrome from "./components/SiteChrome"
+import { BetaMasteringGateProvider } from "./components/beta/BetaMasteringGateProvider"
 import { MasterSessionRootProvider } from "./MasterSessionRootProvider"
 
 const geistSans = Geist({
@@ -51,7 +52,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} site-overflow-guard flex min-h-screen flex-col bg-black text-white antialiased`}
       >
         <MasterSessionRootProvider>
-          <SiteChrome>{children}</SiteChrome>
+          <BetaMasteringGateProvider>
+            <SiteChrome>{children}</SiteChrome>
+          </BetaMasteringGateProvider>
         </MasterSessionRootProvider>
       </body>
     </html>

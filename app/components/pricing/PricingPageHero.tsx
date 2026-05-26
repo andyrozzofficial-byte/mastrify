@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import GatedMasterNavLink from "../beta/GatedMasterNavLink"
 import MarketingActionSlot from "../cinematic/MarketingActionSlot"
 import MarketingDesktopHero from "../cinematic/MarketingDesktopHero"
 import PricingUnlockCard from "./PricingUnlockCard"
@@ -40,12 +41,13 @@ export default function PricingPageHero() {
       </MarketingActionSlot>
 
       <p className="marketing-hero-footer-note">
-        <Link
+        <GatedMasterNavLink
           href="/master"
+          gateMastering
           className="transition hover:text-violet-200/70 hover:underline hover:underline-offset-2"
         >
           Start mastering
-        </Link>
+        </GatedMasterNavLink>
         <span className="mx-2 text-white/48">·</span>
         <Link href="/how-it-works" className="transition hover:text-white/75 hover:underline hover:underline-offset-2">
           Why Mastrify

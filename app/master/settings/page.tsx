@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
+import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
 import MasterStylePresetPicker from "../../components/master/MasterStylePresetPicker"
 import { useMasterSession } from "../MasterSessionProvider"
 import { AUDIO_UPLOAD_ACCEPT, isAcceptedAudioUpload } from "../../../lib/audioUploadAccept"
@@ -69,6 +70,7 @@ function sliderHelper(type: "stereo" | "low" | "clarity", value: number) {
 
 export default function MasterSettingsPage() {
   const router = useRouter()
+  const { runIfAllowed } = useBetaMasteringGate()
   const reconnectInputRef = useRef<HTMLInputElement>(null)
   const {
     file,
@@ -268,7 +270,7 @@ export default function MasterSettingsPage() {
             <div className="mt-7 flex flex-col items-stretch gap-2.5 border-t border-white/[0.06] pt-6 md:mt-8 md:pt-7">
               <button
                 type="button"
-                onClick={() => router.push("/master/processing")}
+                onClick={() => runIfAllowed(() => router.push("/master/processing"))}
                 className="w-full rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] py-3 text-[13px] font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,0.3),0_14px_44px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 transition hover:brightness-110 md:text-sm"
               >
                 Start mastering

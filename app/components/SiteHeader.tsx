@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import AdminShortcut from "./AdminShortcut"
+import GatedMasterNavLink from "./beta/GatedMasterNavLink"
 import "./site-header.css"
 
 const links = [
@@ -53,12 +54,13 @@ export default function SiteHeader() {
               >
                 Login
               </Link>
-              <Link
+              <GatedMasterNavLink
                 href="/master"
+                gateMastering
                 className={`${navCtaClass} min-h-[40px] rounded-xl px-3.5 py-2 text-[11px] sm:min-h-[44px] sm:px-5 sm:py-2.5 sm:text-[12px]`}
               >
                 Start
-              </Link>
+              </GatedMasterNavLink>
             </div>
           </div>
 
@@ -68,16 +70,18 @@ export default function SiteHeader() {
           >
             {links.map(({ href, label, short }) => {
               const active = pathname === href || pathname?.startsWith(`${href}/`)
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`relative flex min-h-[38px] min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 py-2 text-[11px] font-medium leading-none tracking-wide transition active:scale-[0.98] min-[430px]:px-2 sm:min-h-[40px] sm:px-3.5 sm:text-[12px] ${
-                    active
-                      ? "bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.06]"
-                      : "text-white/62 hover:bg-white/[0.04] hover:text-white/88"
-                  }`}
-                >
+              const gate = href === "/master"
+              const className = `relative flex min-h-[38px] min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 py-2 text-[11px] font-medium leading-none tracking-wide transition active:scale-[0.98] min-[430px]:px-2 sm:min-h-[40px] sm:px-3.5 sm:text-[12px] ${
+                active
+                  ? "bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.06]"
+                  : "text-white/62 hover:bg-white/[0.04] hover:text-white/88"
+              }`
+              return gate ? (
+                <GatedMasterNavLink key={href} href={href} gateMastering className={className}>
+                  {short}
+                </GatedMasterNavLink>
+              ) : (
+                <Link key={href} href={href} className={className}>
                   {short}
                 </Link>
               )
@@ -100,22 +104,29 @@ export default function SiteHeader() {
           >
             {links.map(({ href, label }) => {
               const active = pathname === href || pathname?.startsWith(`${href}/`)
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`site-header-nav-link relative inline-flex items-center text-[13px] font-medium leading-none tracking-wide transition hover:text-white/88 ${
-                    active ? "text-white" : "text-white/62"
-                  }`}
-                >
+              const gate = href === "/master"
+              const className = `site-header-nav-link relative inline-flex items-center text-[13px] font-medium leading-none tracking-wide transition hover:text-white/88 ${
+                active ? "text-white" : "text-white/62"
+              }`
+              const link = gate ? (
+                <GatedMasterNavLink key={href} href={href} gateMastering className={className}>
                   {label}
+                </GatedMasterNavLink>
+              ) : (
+                <Link key={href} href={href} className={className}>
+                  {label}
+                </Link>
+              )
+              return (
+                <span key={href} className="relative">
+                  {link}
                   {active ? (
                     <span
                       className="pointer-events-none absolute -bottom-[7px] left-0 right-0 h-[2px] rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_10px_rgba(192,132,252,0.42)]"
                       aria-hidden
                     />
                   ) : null}
-                </Link>
+                </span>
               )
             })}
           </nav>
@@ -128,9 +139,9 @@ export default function SiteHeader() {
             >
               Login
             </Link>
-            <Link href="/master" className={navCtaClass}>
+            <GatedMasterNavLink href="/master" gateMastering className={navCtaClass}>
               Start mastering
-            </Link>
+            </GatedMasterNavLink>
           </div>
         </div>
       </div>

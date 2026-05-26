@@ -37,6 +37,7 @@ import { parseTrackDisplayName } from "../../../lib/parseTrackDisplayName"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
+import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
 import BetaFeedbackFlow from "../../components/master/BetaFeedbackFlow"
 import BetaFeedbackPulse from "../../components/master/BetaFeedbackPulse"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
@@ -106,6 +107,7 @@ function objectKeyFromPlaybackUrl(url: string | null): string {
 }
 
 export default function MasterResultClient() {
+  const { hasAccess, openGate, runIfAllowed } = useBetaMasteringGate()
   const {
     file,
     audioUrl,
@@ -724,12 +726,18 @@ export default function MasterResultClient() {
   }, [betaFeedbackOn, isPlaying, selectedSource, markMasterEngaged])
 
   const handleDownloadMaster = () => {
-    markMasterEngaged()
-    setDeliveryOpen(true)
-    setDeliveryError("")
+    runIfAllowed(() => {
+      markMasterEngaged()
+      setDeliveryOpen(true)
+      setDeliveryError("")
+    })
   }
 
   const handleEmailDelivery = async () => {
+    if (!hasAccess) {
+      openGate()
+      return
+    }
     const email = deliveryEmail.trim()
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setDeliveryError("Enter a valid email address.")

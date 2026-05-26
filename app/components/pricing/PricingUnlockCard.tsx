@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import GatedMasterNavLink from "../beta/GatedMasterNavLink"
 import { motion, useReducedMotion } from "framer-motion"
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -62,9 +62,9 @@ export default function PricingUnlockCard() {
           </ul>
 
           <div className="marketing-upload-actions !mt-6 border-t-0 pt-0">
-            <Link href="/master" className="marketing-upload-btn-primary">
+            <GatedMasterNavLink href="/master" gateMastering className="marketing-upload-btn-primary">
               Start mastering
-            </Link>
+            </GatedMasterNavLink>
             <p className="text-center text-[11px] text-white/58">
               Payment is collected on the results screen after your master is generated.
             </p>

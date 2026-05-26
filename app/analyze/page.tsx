@@ -14,6 +14,7 @@ import AnalyzeStepRail from "../components/analyze/AnalyzeStepRail"
 import AnalyzeUploadHero from "../components/analyze/AnalyzeUploadHero"
 import CinematicPageShell from "../components/cinematic/CinematicPageShell"
 import AnalyzeResultsCta from "../components/analyze/AnalyzeResultsCta"
+import { useBetaMasteringGate } from "../components/beta/BetaMasteringGateProvider"
 import {
   polishIssueDisplay,
   polishVerdictDisplay,
@@ -160,6 +161,7 @@ function generateIssues(result: any) {
 export default function AnalyzePage() {
   const router = useRouter()
   const { seedAnalyzeIntoMasterFlow } = useMasterSession()
+  const { runIfAllowed } = useBetaMasteringGate()
 
   const [showWaitlist, setShowWaitlist] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -543,15 +545,19 @@ export default function AnalyzePage() {
           <AnalyzeResultsCta
             canMaster={canMaster}
             onMaster={() => {
-              if (file && result) {
-                seedAnalyzeIntoMasterFlow(file, result as Record<string, unknown>)
-                router.push("/master/settings")
-              } else {
-                router.push("/master")
-              }
+              runIfAllowed(() => {
+                if (file && result) {
+                  seedAnalyzeIntoMasterFlow(file, result as Record<string, unknown>)
+                  router.push("/master/settings")
+                } else {
+                  router.push("/master")
+                }
+              })
             }}
             onFlow={() => {
-              window.location.href = "/flow"
+              runIfAllowed(() => {
+                window.location.href = "/flow"
+              })
             }}
           />
           <p className="-mt-0.5 text-center text-[10px] leading-tight text-white/60 md:text-left">

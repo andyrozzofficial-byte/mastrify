@@ -83,7 +83,7 @@ export default function ContactClient() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.12, ease: EASE }}
         >
-          <PremiumButton href="/master" className="min-h-[52px] min-w-[13.5rem] px-9">
+          <PremiumButton href="/master" gateMastering className="min-h-[52px] min-w-[13.5rem] px-9">
             Start mastering
           </PremiumButton>
           <Link

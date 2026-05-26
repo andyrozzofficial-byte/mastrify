@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import {
-  ACCESS_COOKIE_NAME,
-  hasMasteringAccess,
-  isAccessBypassPath,
-  isProtectedPath,
-  safeAccessRedirect,
-} from "./lib/access"
+import { isAccessBypassPath, safeAccessRedirect } from "./lib/access"
 import { BETA_USER_EMAIL_COOKIE, isValidBetaUserCookie } from "./lib/betaAccess"
 
 function normalizePathname(pathname: string): string {
@@ -50,8 +44,6 @@ export async function middleware(request: NextRequest) {
   }
 
   const betaEmailCookie = request.cookies.get(BETA_USER_EMAIL_COOKIE)?.value
-  const accessCookie = request.cookies.get(ACCESS_COOKIE_NAME)?.value
-  const hasAccess = await hasMasteringAccess(accessCookie, betaEmailCookie)
 
   if (isAccessBypassPath(pathname)) {
     if (pathname === "/access" && isValidBetaUserCookie(betaEmailCookie)) {
@@ -61,13 +53,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
     return NextResponse.next()
-  }
-
-  if (isProtectedPath(pathname) && !hasAccess) {
-    url.pathname = "/access"
-    url.search = ""
-    url.searchParams.set("next", pathname)
-    return NextResponse.redirect(url)
   }
 
   // ✅ Tillåt sidor

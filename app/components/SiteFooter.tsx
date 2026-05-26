@@ -185,6 +185,7 @@ export default function SiteFooter() {
                 </p>
                 <PremiumButton
                   href="/master"
+                  gateMastering
                   className="mt-4 min-h-[46px] w-full px-7 text-[13px] min-[430px]:w-auto min-[430px]:min-w-[13rem] min-[430px]:px-8 sm:mt-5 lg:mt-7"
                 >
                   Start mastering

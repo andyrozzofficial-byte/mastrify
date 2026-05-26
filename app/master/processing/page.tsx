@@ -12,6 +12,7 @@ import "../../components/cinematic/product-processing-view.css"
 import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
+import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
 import { useMasterSession } from "../MasterSessionProvider"
 
 const API = PUBLIC_BACKEND_API_BASE
@@ -44,6 +45,7 @@ const PROCESSING_EASE = [0.22, 1, 0.36, 1] as const
 export default function MasterProcessingPage() {
   const router = useRouter()
   const reduce = useReducedMotion()
+  const { hasAccess, checking, openGate } = useBetaMasteringGate()
   const {
     file,
     audioUrl,
@@ -64,9 +66,14 @@ export default function MasterProcessingPage() {
   const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
-    if (!sessionHydrated) return
+    if (!sessionHydrated || checking) return
     if (!file) {
       router.replace("/master")
+      return
+    }
+    if (!hasAccess) {
+      openGate()
+      router.replace("/master/settings")
       return
     }
 
@@ -171,6 +178,9 @@ export default function MasterProcessingPage() {
     }
   }, [
     sessionHydrated,
+    checking,
+    hasAccess,
+    openGate,
     file,
     router,
     setMasteredUrl,

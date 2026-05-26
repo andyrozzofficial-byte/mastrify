@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import type { ComponentProps } from "react"
+import type { ComponentProps, MouseEvent } from "react"
+import { useBetaMasteringGate } from "./beta/BetaMasteringGateProvider"
 
 type Variant = "primary" | "secondary"
 
@@ -14,17 +15,31 @@ const styles: Record<Variant, string> = {
 
 type Props = ComponentProps<typeof Link> & {
   variant?: Variant
+  /** When true, blocks navigation and shows the beta gate unless the user has mastering access. */
+  gateMastering?: boolean
 }
 
 export default function PremiumButton({
   variant = "primary",
   className = "",
   children,
+  gateMastering = false,
+  onClick,
   ...props
 }: Props) {
+  const { hasAccess, checking, openGate } = useBetaMasteringGate()
+
+  function handleClick(e: MouseEvent<HTMLAnchorElement>) {
+    onClick?.(e)
+    if (!gateMastering || e.defaultPrevented || checking || hasAccess) return
+    e.preventDefault()
+    openGate()
+  }
+
   return (
     <Link
       className={`group relative inline-flex min-h-[48px] max-w-full min-w-0 shrink-0 items-center justify-center overflow-hidden rounded-xl px-6 text-center text-[13px] font-semibold tracking-[-0.01em] transition-all duration-300 active:scale-[0.98] sm:min-h-[48px] sm:px-7 md:min-h-[50px] md:px-8 md:text-[14px] ${styles[variant]} ${className}`}
+      onClick={gateMastering ? handleClick : onClick}
       {...props}
     >
       <span

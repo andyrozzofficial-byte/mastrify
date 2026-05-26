@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import MarketingDesktopHero from "../components/cinematic/MarketingDesktopHero"
 import MarketingPageFrame from "../components/cinematic/MarketingPageFrame"
 import MarketingSection from "../components/cinematic/MarketingSection"
+import GatedMasterNavLink from "../components/beta/GatedMasterNavLink"
 import PremiumButton from "../components/PremiumButton"
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -197,7 +198,7 @@ export default function HowItWorksClient() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.5, ease: EASE }}
         >
-          <PremiumButton href="/master" className="w-full sm:w-auto sm:px-9">
+          <PremiumButton href="/master" gateMastering className="w-full sm:w-auto sm:px-9">
             Start mastering
           </PremiumButton>
           <PremiumButton href="/analyze" variant="secondary" className="w-full sm:w-auto sm:px-9">
@@ -342,12 +343,13 @@ export default function HowItWorksClient() {
 
         <Reveal delay={0.15} className="mt-8 text-center md:mt-9">
           <p className="text-[14px] text-white/66">Ready when your mix is.</p>
-          <Link
+          <GatedMasterNavLink
             href="/master"
+            gateMastering
             className="mt-4 inline-flex min-h-[52px] items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-10 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition hover:brightness-[1.06] md:mt-5"
           >
             Master your track
-          </Link>
+          </GatedMasterNavLink>
         </Reveal>
       </MarketingSection>
     </MarketingPageFrame>

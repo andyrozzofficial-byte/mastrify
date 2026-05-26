@@ -13,6 +13,7 @@ import {
   progressPercentFromAbsolute,
   type PreviewSource,
 } from "../../lib/audioPreviewTimeline"
+import { useBetaMasteringGate } from "../components/beta/BetaMasteringGateProvider"
 import { PUBLIC_BACKEND_API_BASE } from "../../lib/publicBackendUrl"
 
 type Step = "upload" | "analyzing" | "done"
@@ -42,6 +43,7 @@ function objectKeyFromPlaybackUrl(url: string): string {
 export default function FlowPage() {
   const API = PUBLIC_BACKEND_API_BASE
   const SHOW_REFERENCE = false
+  const { hasAccess, openGate, runIfAllowed } = useBetaMasteringGate()
 
   const sleep = (ms: number) => new Promise(res => setTimeout(res, ms))
   const [mounted, setMounted] = useState(false)
@@ -226,6 +228,13 @@ export default function FlowPage() {
 }
 
   const runMaster = async () => {
+  if (!file) return
+  runIfAllowed(() => {
+    void runMasterJob()
+  })
+  }
+
+  const runMasterJob = async () => {
   if (!file) return
 
   const autoMaster = async (file: File) => {
@@ -433,11 +442,17 @@ useEffect(() => {
 }, [step])
 
 const handlePayment = () => {
-  setDeliveryOpen(true)
-  setDeliveryError("")
+  runIfAllowed(() => {
+    setDeliveryOpen(true)
+    setDeliveryError("")
+  })
 }
 
 const handleEmailDelivery = async () => {
+  if (!hasAccess) {
+    openGate()
+    return
+  }
   const email = deliveryEmail.trim()
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     setDeliveryError("Enter a valid email address.")

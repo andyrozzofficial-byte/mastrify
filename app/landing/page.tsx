@@ -36,7 +36,7 @@ export default function Landing() {
         </ul>
 
         <div className="mobile-cta-stack marketing-hero-cta">
-          <PremiumButton href="/master" className="w-full sm:w-auto sm:px-9">
+          <PremiumButton href="/master" gateMastering className="w-full sm:w-auto sm:px-9">
             Start mastering
           </PremiumButton>
           <PremiumButton href="/analyze" variant="secondary" className="w-full sm:w-auto sm:px-9">
