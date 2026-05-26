@@ -130,8 +130,8 @@ body {
     max-width: var(--mkt-content-max);
     margin-left: auto;
     margin-right: auto;
-    padding-left: max(1rem, env(safe-area-inset-left, 0px));
-    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+    padding-left: max(1.125rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1.125rem, env(safe-area-inset-right, 0px));
   }
   @media (min-width: 640px) {
     .page-container {
@@ -1343,13 +1343,29 @@ body {
     overflow-x: clip;
   }
   @media (max-width: 767px) {
+    .marketing-upload-dropzone {
+      padding: 1.35rem 1rem;
+    }
+    .marketing-upload-actions {
+      margin-top: 0.875rem;
+      padding-top: 0.875rem;
+      gap: 0.625rem;
+    }
+    .marketing-upload-btn-primary,
+    .marketing-upload-btn-secondary {
+      min-height: 48px;
+      font-size: 15px;
+    }
+    .product-flow-page-bottom {
+      padding-bottom: calc(var(--product-space-16) + 4.5rem);
+    }
     .footer-shell {
       padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
       padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
       padding-bottom: max(0.875rem, env(safe-area-inset-bottom, 0px));
     }
     .footer-mobile-grid {
-      gap: 1.5rem;
+      gap: 1.25rem;
       justify-items: center;
       text-align: center;
     }
@@ -1396,7 +1412,10 @@ body {
     .footer-cta-card {
       max-width: 20.5rem;
       margin-inline: auto;
-      padding: 0.8125rem 0.875rem;
+      padding: 0.75rem 0.875rem;
+    }
+    .footer-accordion-trigger {
+      -webkit-tap-highlight-color: transparent;
     }
   }
   .footer-cta-card {

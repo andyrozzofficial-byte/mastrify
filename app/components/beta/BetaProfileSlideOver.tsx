@@ -198,7 +198,7 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <div className="mx-auto w-full max-w-[900px] px-8 py-5 pb-8 sm:py-6">
+              <div className="mx-auto w-full max-w-[900px] px-5 py-4 pb-8 max-md:px-[max(1.25rem,env(safe-area-inset-left))] max-md:pr-[max(1.25rem,env(safe-area-inset-right))] sm:px-8 sm:py-6">
                 {loading ? (
                   <div className="flex justify-center py-20" aria-live="polite">
                     <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-violet-400/90" />
@@ -232,10 +232,10 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
                         </div>
                       </div>
 
-                      <div className="mt-5 border-t border-white/[0.06] pt-5">
+                      <div className="mt-5 border-t border-white/[0.06] pt-4 max-md:px-1 max-md:pt-4 sm:pt-5">
                         <p className="text-[11px] font-medium uppercase tracking-wide text-white/42">Progress</p>
                         <div
-                          className="mt-2.5 h-2 overflow-hidden rounded-full bg-white/[0.08]"
+                          className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/[0.08] max-md:h-[10px] sm:mt-2.5 sm:h-2"
                           role="progressbar"
                           aria-valuenow={panel.progress.progressPct}
                           aria-valuemin={0}
@@ -247,11 +247,11 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
                             style={{ width: `${panel.progress.progressPct}%` }}
                           />
                         </div>
-                        <p className="mt-2 text-[13px] font-medium tabular-nums text-white/82">
+                        <p className="mt-2.5 text-[14px] font-semibold tabular-nums text-white/88 max-md:text-[15px]">
                           {panel.progress.progressLabel}
                         </p>
-                        <p className="mt-2 text-[13px] leading-snug text-white/58">
-                          <span className="text-white/42">Next reward: </span>
+                        <p className="mt-2.5 rounded-lg border border-violet-400/12 bg-violet-500/[0.05] px-2.5 py-2 text-[13px] leading-snug text-white/72 max-md:mt-3 md:border-0 md:bg-transparent md:px-0 md:py-0">
+                          <span className="font-medium text-violet-200/75">Next reward: </span>
                           {panel.rewards.nextReward}
                         </p>
                       </div>

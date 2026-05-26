@@ -33,7 +33,7 @@ const COPY: Record<
     primaryAction: "Scan my track",
   },
   master: {
-    dropIdle: "Drop your mix here",
+    dropIdle: "Drop your mix",
     dropDrag: "Release your mix",
     dropLoaded: "Mix ready to master",
     primaryAction: "Continue to settings",
@@ -104,11 +104,11 @@ export default function UploadCard({
         className={`marketing-upload-dropzone ${loaded ? "is-loaded" : ""} ${dragging ? "is-dragging" : ""}`.trim()}
       >
         <motion.div
-          className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] ring-1 ring-white/[0.08]"
+          className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] ring-1 ring-white/[0.08] sm:mb-4 sm:h-12 sm:w-12"
           animate={reduce ? undefined : { y: [0, -3, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         >
-          <svg className="h-6 w-6 text-violet-200/70" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <svg className="h-7 w-7 text-violet-200/70 sm:h-6 sm:w-6" viewBox="0 0 24 24" fill="none" aria-hidden>
             <path
               stroke="currentColor"
               strokeLinecap="round"
@@ -118,9 +118,12 @@ export default function UploadCard({
             />
           </svg>
         </motion.div>
-        <p className="text-[1rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.05rem]">{dropTitle}</p>
-        <p className="mx-auto mt-2 max-w-[18rem] text-[12px] leading-relaxed text-white/64">
-          WAV, AIFF, FLAC, MP3 — up to 500MB
+        <p className="text-[1.05rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.05rem]">{dropTitle}</p>
+        <p className="mx-auto mt-1.5 text-[12px] font-medium tracking-wide text-white/58 sm:mt-2">
+          WAV · AIFF · FLAC · MP3
+        </p>
+        <p className="mx-auto mt-1 hidden max-w-[18rem] text-[12px] leading-relaxed text-white/50 sm:block">
+          Up to 500MB — drag and drop supported
         </p>
         {file ? (
           <p className="mx-auto mt-2 max-w-full truncate px-1 text-[12px] text-cyan-200/60">{file.name}</p>
@@ -170,7 +173,7 @@ export default function UploadCard({
             Choose a different file
           </label>
         ) : (
-          <p className="text-center text-[11px] text-white/58">or drag and drop</p>
+          <p className="hidden text-center text-[11px] text-white/58 sm:block">or drag and drop</p>
         )}
 
         {pickError ? (

@@ -135,6 +135,8 @@ export default function MastrifyAssistant() {
   const [ticketSubmitting, setTicketSubmitting] = useState(false)
   const [ticketError, setTicketError] = useState<string | null>(null)
   const [lastUserQuery, setLastUserQuery] = useState("")
+  const [pageScrolled, setPageScrolled] = useState(false)
+  const [isMobileViewport, setIsMobileViewport] = useState(false)
 
   const sessionContext = useMemo((): SupportSessionContext => {
     const stored = readSupportSessionContext(pathname)
@@ -168,6 +170,21 @@ export default function MastrifyAssistant() {
     requestAnimationFrame(() => {
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
     })
+  }, [])
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)")
+    const syncViewport = () => setIsMobileViewport(mq.matches)
+    syncViewport()
+    mq.addEventListener("change", syncViewport)
+    return () => mq.removeEventListener("change", syncViewport)
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setPageScrolled(window.scrollY > 40)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   useEffect(() => {
@@ -258,8 +275,10 @@ export default function MastrifyAssistant() {
         transition: { duration: 0.28, ease: EASE },
       }
 
+  const fabCompact = isMobileViewport && pageScrolled && !open
+
   return (
-    <div className="pointer-events-none fixed bottom-12 right-6 z-[70] flex flex-col items-end">
+    <div className="pointer-events-none fixed bottom-[104px] right-4 z-[70] flex flex-col items-end max-md:max-w-[calc(100vw-2rem)] md:bottom-12 md:right-6">
       <AnimatePresence>
         {open ? (
           <motion.div
@@ -267,7 +286,7 @@ export default function MastrifyAssistant() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="mastrify-assistant-title"
-            className="pointer-events-auto flex h-[min(440px,calc(100dvh-6rem))] w-[min(340px,calc(100vw-3rem))] max-h-[460px] flex-col overflow-hidden rounded-[20px] border border-white/[0.12] bg-[rgba(12,12,18,0.88)] shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.12)] backdrop-blur-xl backdrop-saturate-150"
+            className="pointer-events-auto flex h-[min(400px,calc(100dvh-12rem))] w-[min(340px,calc(100vw-2rem))] max-h-[min(420px,calc(100dvh-11rem))] flex-col overflow-hidden rounded-[20px] border border-white/[0.12] bg-[rgba(12,12,18,0.88)] shadow-[0_20px_60px_rgba(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.12)] backdrop-blur-xl backdrop-saturate-150 md:h-[min(440px,calc(100dvh-6rem))] md:max-h-[460px] md:w-[min(340px,calc(100vw-3rem))]"
             initial={reduce ? false : { opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? undefined : { opacity: 0, y: 8, scale: 0.98 }}
@@ -456,14 +475,18 @@ export default function MastrifyAssistant() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open Mastrify Assistant"
-          className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-violet-400/35 bg-gradient-to-b from-violet-600/95 via-indigo-700/95 to-indigo-900/95 px-4 py-2.5 text-[12px] font-semibold text-white shadow-[0_10px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(167,139,250,0.18)] transition hover:brightness-[1.06] active:scale-[0.98]"
+          className={`pointer-events-auto inline-flex items-center justify-center rounded-full border border-violet-400/35 bg-gradient-to-b from-violet-600/95 via-indigo-700/95 to-indigo-900/95 font-semibold text-white shadow-[0_10px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(167,139,250,0.18)] transition hover:brightness-[1.06] active:scale-[0.98] ${
+            fabCompact
+              ? "h-14 w-14 p-0 md:h-auto md:w-auto md:gap-2 md:px-4 md:py-2.5 md:text-[12px]"
+              : "h-[58px] max-h-[60px] gap-2 px-4 py-2.5 text-[12px] md:h-auto md:max-h-none"
+          }`}
           whileTap={reduce ? undefined : { scale: 0.98 }}
         >
           <span
-            className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+            className="h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] md:h-1.5 md:w-1.5"
             aria-hidden
           />
-          Mastrify Assistant
+          <span className={fabCompact ? "sr-only md:not-sr-only md:inline" : "inline"}>Mastrify Assistant</span>
         </motion.button>
       ) : null}
     </div>

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import AdminShortcut from "./AdminShortcut"
 import GatedMasterNavLink from "./beta/GatedMasterNavLink"
 import JoinBetaNavLink from "./beta/JoinBetaNavLink"
+import MobileNavMenu from "./MobileNavMenu"
 import { useAdminNavSession } from "./useAdminNavSession"
 import "./site-header.css"
 
@@ -51,55 +52,11 @@ export default function SiteHeader({ showAdminNav = false }: SiteHeaderProps) {
       }`}
     >
       <div className="site-header-inner mx-auto w-full max-w-[1240px] min-w-0">
-        {/* Mobile: logo + Join Beta pill, then nav row */}
-        <div className="site-header-mobile md:hidden">
-          <div className="site-header-mobile-top flex min-w-0 items-center justify-between gap-2 px-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] min-[430px]:px-[max(0.875rem,env(safe-area-inset-left))] min-[430px]:pr-[max(0.875rem,env(safe-area-inset-right))] sm:gap-3 sm:px-4">
-            <Link
-              href="/"
-              className="site-header-logo min-w-0 shrink bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text text-[1.02rem] font-extrabold leading-none tracking-tight text-transparent sm:text-lg"
-            >
-              Mastrify
-            </Link>
-            <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
-              <AdminShortcut visible={isAdmin} />
-              <Link
-                href="/login"
-                className="text-[11px] font-medium text-white/45 transition hover:text-white/75 sm:text-xs"
-              >
-                Login
-              </Link>
-            </div>
-          </div>
-
-          <nav
-            className="flex min-w-0 items-center justify-between gap-0.5 overflow-hidden border-t border-white/[0.06] px-[max(0.375rem,env(safe-area-inset-left))] pr-[max(0.375rem,env(safe-area-inset-right))] py-2 min-[430px]:px-[max(0.5rem,env(safe-area-inset-left))] min-[430px]:pr-[max(0.5rem,env(safe-area-inset-right))] sm:gap-1.5 sm:px-4 sm:py-2.5"
-            aria-label="Main"
-          >
-            {links.map(({ href, label, short, gateMastering }) => {
-              const active = pathname === href || pathname?.startsWith(`${href}/`)
-              const className = `relative flex min-h-[38px] min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 py-2 text-[11px] font-medium leading-none tracking-wide transition active:scale-[0.98] min-[430px]:px-2 sm:min-h-[40px] sm:px-3.5 sm:text-[12px] ${
-                active
-                  ? "bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.06]"
-                  : "text-white/62 hover:bg-white/[0.04] hover:text-white/88"
-              }`
-              if (gateMastering) {
-                return (
-                  <GatedMasterNavLink key={href} href={href} gateMastering className={className}>
-                    {short}
-                  </GatedMasterNavLink>
-                )
-              }
-              return (
-                <Link key={href} href={href} className={className}>
-                  {short}
-                </Link>
-              )
-            })}
-            <div className="flex shrink-0 items-center pl-0.5 sm:pl-1">
-              <JoinBetaNavLink compact className="max-[360px]:px-2 max-[360px]:text-[9px]" />
-            </div>
-          </nav>
-        </div>
+        {/* Mobile: logo + Beta Member CTA + hamburger menu */}
+        <MobileNavMenu
+          showAdminNav={isAdmin}
+          links={links.map(({ href, label, gateMastering }) => ({ href, label, gateMastering }))}
+        />
 
         {/* Desktop: single row — logo | center nav | utilities + main CTA */}
         <div className="site-header-desktop hidden md:flex md:min-h-[58px] md:items-center md:justify-between md:gap-6 md:px-8 lg:gap-10">

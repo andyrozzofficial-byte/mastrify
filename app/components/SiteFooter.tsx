@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion"
 import { usePathname } from "next/navigation"
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import Link from "next/link"
 import PremiumButton from "./PremiumButton"
 
@@ -17,33 +17,66 @@ const product = [
 const support = [
   { href: "/how-it-works", label: "Why Mastrify" },
   { href: "/help", label: "Contact" },
+] as const
+
+const legal = [
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
 ] as const
 
+function FooterLinkList({ links }: { links: readonly { href: string; label: string }[] }) {
+  return (
+    <ul className="footer-column-links mt-2 flex flex-col space-y-0.5 sm:mt-3 sm:space-y-1 md:mt-4 md:space-y-2">
+      {links.map(({ href, label }) => (
+        <li key={href + label}>
+          <Link href={href} className="footer-tap-link">
+            {label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function FooterColumn({
   title,
   links,
+  defaultOpen = false,
 }: {
   title: string
   links: readonly { href: string; label: string }[]
+  defaultOpen?: boolean
 }) {
+  const [open, setOpen] = useState(defaultOpen)
+
   return (
-    <motion.div
-      initial={false}
-      className="min-w-0"
-    >
-      <p className="footer-column-title text-[11px] font-semibold uppercase tracking-[0.24em] text-label-strong">{title}</p>
-      <ul className="footer-column-links mt-3 flex flex-col space-y-0.5 max-md:mt-2 max-md:space-y-0 sm:mt-4 sm:space-y-1 md:mt-4 md:space-y-2">
-        {links.map(({ href, label }) => (
-          <li key={href + label}>
-            <Link href={href} className="footer-tap-link">
-              {label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </motion.div>
+    <>
+      <div className="min-w-0 md:hidden">
+        <button
+          type="button"
+          className="footer-accordion-trigger flex w-full min-h-[44px] items-center justify-between gap-3 py-1 text-left"
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span className="footer-column-title text-[11px] font-semibold uppercase tracking-[0.24em] text-label-strong">
+            {title}
+          </span>
+          <span
+            className={`text-[10px] text-white/45 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            aria-hidden
+          >
+            ▼
+          </span>
+        </button>
+        {open ? <FooterLinkList links={links} /> : null}
+      </div>
+      <motion.div initial={false} className="hidden min-w-0 md:block">
+        <p className="footer-column-title text-[11px] font-semibold uppercase tracking-[0.24em] text-label-strong">
+          {title}
+        </p>
+        <FooterLinkList links={links} />
+      </motion.div>
+    </>
   )
 }
 
@@ -124,7 +157,7 @@ export default function SiteFooter() {
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:gap-4 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
+        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-4 max-md:gap-3 max-md:justify-items-center max-md:text-center sm:gap-6 md:gap-10 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-start lg:gap-x-8 xl:gap-x-10">
           {/* Brand */}
           <motion.div
             className="footer-brand min-w-0 max-md:mx-auto max-md:flex max-md:w-full max-md:max-w-[18.5rem] max-md:flex-col max-md:items-center max-md:text-center lg:col-span-3 xl:col-span-3"
@@ -144,14 +177,17 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="footer-nav-columns grid w-full max-w-[17.5rem] min-w-0 grid-cols-2 gap-x-8 gap-y-6 max-md:mx-auto max-md:gap-x-8 max-md:gap-y-4 sm:gap-x-8 sm:gap-y-6 md:gap-x-10 md:gap-y-8 lg:col-span-3 lg:max-w-[15.5rem] lg:justify-self-center xl:col-span-3 xl:max-w-[16.5rem]"
+            className="footer-nav-columns w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:max-w-[20rem] md:grid-cols-3 md:gap-x-4 md:gap-y-4 lg:col-span-3 lg:max-w-[18rem] lg:justify-self-center xl:col-span-3 xl:max-w-[19rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.05, ease: EASE }}
           >
-            <FooterColumn title="Product" links={product} />
-            <FooterColumn title="Support" links={support} />
+            <div className="flex flex-col gap-0 max-md:divide-y max-md:divide-white/[0.07] md:contents">
+              <FooterColumn title="Product" links={product} defaultOpen />
+              <FooterColumn title="Support" links={support} />
+              <FooterColumn title="Legal" links={legal} />
+            </div>
           </motion.div>
 
           {/* Mastering CTA */}
@@ -197,7 +233,7 @@ export default function SiteFooter() {
 
         {/* Bottom metadata row */}
         <motion.div
-          className="footer-mobile-meta mt-6 flex flex-col gap-3.5 border-t border-white/[0.07] pt-5 max-md:mt-4 max-md:items-center max-md:gap-2 max-md:pt-3.5 md:mt-14 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-9"
+          className="footer-mobile-meta mt-4 flex flex-col gap-3 border-t border-white/[0.07] pt-4 max-md:mt-3 max-md:items-center max-md:gap-2 max-md:pt-3 md:mt-12 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-8"
           initial={reduce ? false : { opacity: 0 }}
           whileInView={reduce ? undefined : { opacity: 1 }}
           viewport={{ once: true }}

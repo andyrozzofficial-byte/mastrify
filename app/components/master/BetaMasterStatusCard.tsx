@@ -60,8 +60,8 @@ export default function BetaMasterStatusCard({
       />
 
       <div
-        className={`product-surface-card relative overflow-hidden px-4 sm:px-5 ${
-          isResult ? "py-4 sm:py-5" : "py-3.5 sm:py-4"
+        className={`product-surface-card relative overflow-hidden px-[14px] py-[14px] sm:px-5 ${
+          isResult ? "sm:py-5" : "sm:py-4"
         }`}
       >
         <div
@@ -94,26 +94,26 @@ export default function BetaMasterStatusCard({
             </div>
           ) : null}
 
-          <div className="space-y-2 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-2.5 sm:px-3.5 sm:py-3">
+          <div className="space-y-2.5 rounded-xl border border-white/[0.08] bg-black/25 px-3.5 py-3 sm:px-3.5 sm:py-3">
             <div className="flex items-baseline justify-between gap-3">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/45 sm:text-[10px]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50 sm:text-[10px]">
                 {progressTitle}
               </p>
               <div className="text-right">
-                <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-white/38">Points</p>
-                <p className="text-[12px] font-semibold tabular-nums text-violet-100/95 sm:text-[13px]">
+                <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-white/42">Points</p>
+                <p className="text-[15px] font-bold tabular-nums text-violet-100 sm:text-[13px]">
                   {points}
                 </p>
               </div>
             </div>
             <div className="flex items-baseline justify-between gap-3">
-              <p className="text-[10px] text-white/48">Progress</p>
-              <p className="shrink-0 text-[11px] font-medium tabular-nums text-white/72 sm:text-[12px]">
+              <p className="text-[11px] text-white/52">Progress</p>
+              <p className="shrink-0 text-[12px] font-medium tabular-nums text-white/78 sm:text-[12px]">
                 {progressLabel}
               </p>
             </div>
             <div
-              className="h-1.5 overflow-hidden rounded-full bg-white/[0.08]"
+              className="h-2 overflow-hidden rounded-full bg-white/[0.08] sm:h-1.5"
               role="progressbar"
               aria-valuenow={progressPct}
               aria-valuemin={0}
@@ -146,16 +146,16 @@ export default function BetaMasterStatusCard({
             </div>
           ) : null}
 
-          <div className="border-t border-white/[0.06] pt-2.5">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/38 sm:text-[10px]">
+          <div className="rounded-lg border border-violet-400/15 bg-violet-500/[0.06] px-3 py-2.5 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-200/70 sm:text-[10px]">
               Next reward
             </p>
-            <p className="mt-1 text-[12px] font-medium leading-snug text-white/82 sm:text-[13px]">
+            <p className="mt-1 text-[13px] font-semibold leading-snug text-white/90 sm:text-[13px]">
               <span aria-hidden>🎁 </span>
               {nextReward}
             </p>
             {nextRewardDetail ? (
-              <p className="mt-0.5 text-[11px] leading-snug text-white/52">{nextRewardDetail}</p>
+              <p className="mt-1 text-[12px] leading-snug text-white/58">{nextRewardDetail}</p>
             ) : null}
           </div>
         </div>
