@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import type { AdminOverview } from "../../lib/adminTypes"
 import { AdminActionCenter } from "../components/admin/AdminActionCenter"
+import { BetaDashboardSummaryPanels } from "../components/admin/BetaDashboardSummary"
 import {
   AdminPageHeader,
   AdminPanel,
@@ -79,6 +80,8 @@ export default function AdminOverviewPage() {
           <AdminActionCenter items={data.actionCenter} />
         </div>
       ) : null}
+
+      <BetaDashboardSummaryPanels />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">

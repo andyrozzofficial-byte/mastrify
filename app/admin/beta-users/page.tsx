@@ -10,6 +10,7 @@ import {
   AdminTable,
   AvatarCircle,
 } from "../../components/admin/admin-shared"
+import { BetaEngagementBadge } from "../../components/admin/BetaEngagementBadge"
 
 export default function AdminBetaUsersPage() {
   const [rows, setRows] = useState<BetaUserListRow[]>([])
@@ -64,6 +65,7 @@ export default function AdminBetaUsersPage() {
               <th className="px-3 py-2.5">Masters</th>
               <th className="px-3 py-2.5">Feedback</th>
               <th className="px-3 py-2.5">Support</th>
+              <th className="px-3 py-2.5">Engagement</th>
               <th className="px-3 py-2.5">Recommend</th>
               <th className="px-3 py-2.5">Last active</th>
             </tr>
@@ -92,6 +94,9 @@ export default function AdminBetaUsersPage() {
                 <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.masterCount}</td>
                 <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.feedbackCount}</td>
                 <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">{r.supportCount}</td>
+                <td className="px-3 py-2.5">
+                  <BetaEngagementBadge level={r.engagementLevel} score={r.engagementScore} />
+                </td>
                 <td className="px-3 py-2.5 text-sm tabular-nums text-white/80">
                   {r.avgRecommend != null ? r.avgRecommend.toFixed(1) : "—"}
                 </td>

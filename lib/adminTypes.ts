@@ -158,6 +158,31 @@ export type AdminCustomerProfile = {
   sessions: string[]
 }
 
+export type BetaEngagementLevel = "low" | "medium" | "high"
+
+export type BetaTimelineEventType =
+  | "signup"
+  | "upload"
+  | "master"
+  | "feedback"
+  | "support"
+  | "download"
+
+export type BetaTimelineEvent = {
+  id: string
+  type: BetaTimelineEventType
+  label: string
+  detail: string | null
+  created_at: string
+  href: string | null
+}
+
+export type BetaUserBadge = {
+  id: string
+  emoji: string
+  label: string
+}
+
 export type BetaUserListRow = {
   email: string
   name: string | null
@@ -172,6 +197,8 @@ export type BetaUserListRow = {
   topStyle: string | null
   topIssue: string | null
   lastActivity: string | null
+  engagementScore: number
+  engagementLevel: BetaEngagementLevel
 }
 
 export type BetaUserTagCount = { label: string; count: number }
@@ -183,6 +210,10 @@ export type BetaUserProfile = BetaUserListRow & {
   avgProcessingMs: number | null
   activeDays: number
   totalUsageEvents: number
+  betaApproved: boolean
+  adminNotes: string | null
+  badges: BetaUserBadge[]
+  timeline: BetaTimelineEvent[]
   feedback: AdminFeedbackRow[]
   support: AdminSupportRow[]
   sessions: string[]
@@ -191,8 +222,16 @@ export type BetaUserProfile = BetaUserListRow & {
   missingFeatures: string[]
   featureRequests: string[]
   bugsReported: string[]
+  bugReportCount: number
   recommendTrend: { date: string; score: number }[]
   supportIssues: BetaUserTagCount[]
+}
+
+export type BetaDashboardSummary = {
+  mostActive: { email: string; name: string | null; engagementScore: number; engagementLevel: BetaEngagementLevel }[]
+  recentSignups: { email: string; name: string | null; signupDate: string; betaRank: string }[]
+  topFeedbackContributors: { email: string; name: string | null; feedbackCount: number }[]
+  topBugReporters: { email: string; name: string | null; bugReportCount: number }[]
 }
 
 export type AdminJobRow = {

@@ -1,4 +1,20 @@
-import type { AdminFeedbackRow, AdminJobRow, AdminSupportRow, BetaUserListRow, BetaUserProfile, BetaUserTagCount } from "./adminTypes"
+import type {
+  AdminFeedbackRow,
+  AdminJobRow,
+  AdminSupportRow,
+  BetaDashboardSummary,
+  BetaUserListRow,
+  BetaUserProfile,
+  BetaUserTagCount,
+} from "./adminTypes"
+import {
+  buildBetaTimeline,
+  calcEngagementScore,
+  computeBetaBadges,
+  countBugReports,
+  engagementLevel,
+  nextBetaRank,
+} from "./betaEngagement"
 import {
   BETA_USER_RANKS,
   betaRankLabel,
@@ -25,6 +41,8 @@ type BetaProfileRow = {
   daw: string | null
   beta_rank: string | null
   beta_signed_up_at: string | null
+  notes: string | null
+  beta_approved: boolean
 }
 
 function isFetchError<T>(v: T | { error: string }): v is { error: string } {
@@ -110,11 +128,26 @@ async function fetchBetaProfileRows(): Promise<BetaProfileRow[]> {
 
   const { data, error } = await supabase
     .from(CUSTOMER_PROFILES_TABLE)
-    .select("email, name, genre, daw, beta_rank, beta_signed_up_at")
+    .select("email, name, genre, daw, beta_rank, beta_signed_up_at, notes, beta_approved")
     .order("beta_signed_up_at", { ascending: false, nullsFirst: false })
 
   if (error) {
-    if (/does not exist/i.test(error.message)) return []
+    if (/beta_approved|does not exist/i.test(error.message)) {
+      const fallback = await supabase
+        .from(CUSTOMER_PROFILES_TABLE)
+        .select("email, name, genre, daw, beta_rank, beta_signed_up_at, notes")
+        .order("beta_signed_up_at", { ascending: false, nullsFirst: false })
+      return (fallback.data ?? []).map((row) => ({
+        email: row.email.toLowerCase(),
+        name: row.name ?? null,
+        genre: row.genre ?? null,
+        daw: row.daw ?? null,
+        beta_rank: row.beta_rank ?? null,
+        beta_signed_up_at: row.beta_signed_up_at ?? null,
+        notes: row.notes ?? null,
+        beta_approved: false,
+      }))
+    }
     return []
   }
   return (data ?? []).map((row) => ({
@@ -124,7 +157,57 @@ async function fetchBetaProfileRows(): Promise<BetaProfileRow[]> {
     daw: row.daw ?? null,
     beta_rank: row.beta_rank ?? null,
     beta_signed_up_at: row.beta_signed_up_at ?? null,
+    notes: row.notes ?? null,
+    beta_approved: Boolean(row.beta_approved),
   }))
+}
+
+async function fetchExportsForEmail(email: string) {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return [] as { id: string; created_at: string; track_title?: string | null }[]
+
+  const { data, error } = await supabase
+    .from(MASTERED_EXPORTS_TABLE)
+    .select("id, created_at, track_title")
+    .eq("email", email)
+    .order("created_at", { ascending: false })
+    .limit(200)
+
+  if (error) return []
+  return data ?? []
+}
+
+async function fetchPipelineUploadsForSessions(
+  sessions: string[],
+): Promise<{ session_id: string; created_at: string }[]> {
+  if (!sessions.length) return []
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return []
+
+  const { data, error } = await supabase
+    .from(PIPELINE_EVENTS_TABLE)
+    .select("session_id, created_at")
+    .eq("event_type", "upload")
+    .in("session_id", sessions.slice(0, 200))
+    .order("created_at", { ascending: false })
+
+  if (error) return []
+  return (data ?? []).filter((r) => r.session_id) as { session_id: string; created_at: string }[]
+}
+
+function engagementForUser(
+  masterCount: number,
+  feedbackCount: number,
+  supportCount: number,
+  activeDays: number,
+) {
+  const engagementScore = calcEngagementScore({
+    masterCount,
+    feedbackCount,
+    supportCount,
+    activeDays,
+  })
+  return { engagementScore, engagementLevel: engagementLevel(engagementScore) }
 }
 
 async function fetchExportCountsByEmail(): Promise<Map<string, number>> {
@@ -198,6 +281,19 @@ function buildListRow(
 
   const soundedOff = userFeedback.flatMap((f) => f.survey.soundedOff ?? [])
   const styles = userFeedback.map((f) => f.mastering_style)
+  const masterCount = Math.max(
+    userFeedback.length,
+    jobs.filter((j) => j.user_email?.toLowerCase() === email).length,
+  )
+  const activeDaySet = new Set<string>()
+  for (const iso of lastTimes) activeDaySet.add(dateKey(iso))
+
+  const { engagementScore, engagementLevel: level } = engagementForUser(
+    masterCount,
+    userFeedback.length,
+    userSupport.length,
+    activeDaySet.size,
+  )
 
   return {
     email,
@@ -206,16 +302,15 @@ function buildListRow(
     daw: profile?.daw ?? null,
     betaRank: betaRankLabel(profile?.beta_rank ?? "insider"),
     signupDate: profile?.beta_signed_up_at ?? null,
-    masterCount: Math.max(
-      userFeedback.length,
-      jobs.filter((j) => j.user_email?.toLowerCase() === email).length,
-    ),
+    masterCount,
     feedbackCount: userFeedback.length,
     supportCount: userSupport.length,
     avgRecommend: avgRecommend(userFeedback),
     topStyle: topLabel(styles),
     topIssue: topLabel(soundedOff, new Set(["No, it sounded good"])),
     lastActivity: formatBetaLastActive(lastActivity),
+    engagementScore,
+    engagementLevel: level,
   }
 }
 
@@ -265,10 +360,8 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
   )
 
   return rows.sort((a, b) => {
-    const aIso = a.signupDate ?? ""
-    const bIso = b.signupDate ?? ""
-    if (aIso !== bIso) return bIso.localeCompare(aIso)
-    return (b.lastActivity ?? "").localeCompare(a.lastActivity ?? "")
+    if (b.engagementScore !== a.engagementScore) return b.engagementScore - a.engagementScore
+    return (b.signupDate ?? "").localeCompare(a.signupDate ?? "")
   })
 }
 
@@ -358,6 +451,24 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
   )
 
   const list = buildListRow(normalized, profile, userFeedback, userSupport, jobs)
+  const userExports = await fetchExportsForEmail(normalized)
+  const pipelineUploads = await fetchPipelineUploadsForSessions(sessions)
+  const bugReportCount = countBugReports(userFeedback, userSupport)
+  const badges = computeBetaBadges({
+    masterCount: list.masterCount,
+    feedbackCount: list.feedbackCount,
+    bugReportCount,
+    engagementLevel: list.engagementLevel,
+    betaRank: profile?.beta_rank,
+  })
+  const timeline = buildBetaTimeline({
+    signupAt: profile?.beta_signed_up_at ?? null,
+    uploads: pipelineUploads,
+    userFeedback,
+    userJobs,
+    userSupport,
+    exports: userExports,
+  })
 
   return {
     ...list,
@@ -367,6 +478,10 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     avgProcessingMs,
     activeDays: activityDates.size,
     totalUsageEvents: userFeedback.length + userSupport.length + userJobs.length + downloadCount,
+    betaApproved: profile?.beta_approved ?? false,
+    adminNotes: profile?.notes ?? null,
+    badges,
+    timeline,
     feedback: userFeedback,
     support: userSupport,
     sessions,
@@ -377,9 +492,117 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     missingFeatures,
     featureRequests,
     bugsReported,
+    bugReportCount,
     recommendTrend,
     supportIssues,
   }
+}
+
+export async function fetchBetaDashboardSummary(): Promise<BetaDashboardSummary | { error: string }> {
+  const users = await fetchBetaUsers()
+  if (isFetchError(users)) return users
+
+  const [feedback, support] = await Promise.all([fetchAdminFeedback(), fetchAdminSupport()])
+  if (isFetchError(feedback)) return feedback
+  if (isFetchError(support)) return support
+
+  const bugCountByEmail = new Map<string, number>()
+  const feedbackByEmail = new Map<string, number>()
+
+  for (const row of feedback) {
+    const e = row.contact_email?.trim().toLowerCase()
+    if (!e) continue
+    feedbackByEmail.set(e, (feedbackByEmail.get(e) ?? 0) + 1)
+    const list = bugCountByEmail.get(e) ?? 0
+    const extra = row.survey.additional?.trim()
+    if (extra && /bug|error|crash|broken|glitch/i.test(extra)) {
+      bugCountByEmail.set(e, list + 1)
+    }
+  }
+  for (const row of support) {
+    const e = row.email.trim().toLowerCase()
+    if (/bug|error|crash|broken|glitch/i.test(`${row.subject} ${row.category ?? ""}`)) {
+      bugCountByEmail.set(e, (bugCountByEmail.get(e) ?? 0) + 1)
+    }
+  }
+
+  const mostActive = [...users]
+    .sort((a, b) => b.engagementScore - a.engagementScore)
+    .slice(0, 5)
+    .map((u) => ({
+      email: u.email,
+      name: u.name,
+      engagementScore: u.engagementScore,
+      engagementLevel: u.engagementLevel,
+    }))
+
+  const recentSignups = [...users]
+    .filter((u) => u.signupDate)
+    .sort((a, b) => (b.signupDate ?? "").localeCompare(a.signupDate ?? ""))
+    .slice(0, 5)
+    .map((u) => ({
+      email: u.email,
+      name: u.name,
+      signupDate: u.signupDate!,
+      betaRank: u.betaRank,
+    }))
+
+  const topFeedbackContributors = [...users]
+    .filter((u) => u.feedbackCount > 0)
+    .sort((a, b) => b.feedbackCount - a.feedbackCount)
+    .slice(0, 5)
+    .map((u) => ({ email: u.email, name: u.name, feedbackCount: u.feedbackCount }))
+
+  const topBugReporters = [...bugCountByEmail.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([email, bugReportCount]) => {
+      const u = users.find((r) => r.email === email)
+      return { email, name: u?.name ?? null, bugReportCount }
+    })
+
+  return { mostActive, recentSignups, topFeedbackContributors, topBugReporters }
+}
+
+export async function updateBetaProfileAdmin(
+  email: string,
+  patch: {
+    notes?: string | null
+    betaApproved?: boolean
+    betaRank?: BetaUserRank
+    promoteRank?: boolean
+  },
+): Promise<{ ok: true; betaRank?: string } | { error: string }> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return { error: "Database unavailable" }
+
+  const normalized = normalizeBetaEmail(email)
+  const { data: existing } = await supabase
+    .from(CUSTOMER_PROFILES_TABLE)
+    .select("beta_rank")
+    .eq("email", normalized)
+    .maybeSingle()
+
+  const body: Record<string, unknown> = {
+    email: normalized,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (patch.notes !== undefined) body.notes = patch.notes
+  if (patch.betaApproved !== undefined) body.beta_approved = patch.betaApproved
+
+  let newRank: string | undefined
+  if (patch.promoteRank) {
+    newRank = nextBetaRank(existing?.beta_rank)
+    body.beta_rank = newRank
+  } else if (patch.betaRank) {
+    newRank = patch.betaRank
+    body.beta_rank = newRank
+  }
+
+  const { error } = await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(body, { onConflict: "email" })
+  if (error) return { error: error.message }
+  return { ok: true, betaRank: newRank ? betaRankLabel(newRank) : undefined }
 }
 
 export async function upsertBetaProfile(input: {
