@@ -6,7 +6,7 @@ import MarketingActionSlot from "../cinematic/MarketingActionSlot"
 import MarketingDesktopHero from "../cinematic/MarketingDesktopHero"
 import CinematicTrustRow from "../cinematic/CinematicTrustRow"
 import AnalyzeStepRail, { type AnalyzePhase } from "./AnalyzeStepRail"
-import AnalyzeUploadCard from "./AnalyzeUploadCard"
+import UploadCard from "../upload/UploadCard"
 
 const TRUST = [
   { title: "100% free", sub: "No credit card" },
@@ -61,11 +61,12 @@ export default function AnalyzeUploadHero({
       <AnalyzeStepRail phase={phase} className="marketing-hero-step-rail justify-start" />
 
       <MarketingActionSlot>
-        <AnalyzeUploadCard
+        <UploadCard
+          mode="analyze"
           file={file}
           fileInputRef={fileInputRef}
-          onFileInputChange={onFileInputChange}
-          onScanClick={onScanClick}
+          onFileSelected={onFileInputChange}
+          onPrimaryAction={onScanClick}
         />
       </MarketingActionSlot>
 

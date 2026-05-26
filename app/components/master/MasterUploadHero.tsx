@@ -7,7 +7,8 @@ import MarketingDesktopHero from "../cinematic/MarketingDesktopHero"
 import CinematicTrustRow from "../cinematic/CinematicTrustRow"
 import BetaMasterStatusCard from "./BetaMasterStatusCard"
 import MasterFlowStepRail from "./MasterFlowStepRail"
-import MasterUploadCard from "./MasterUploadCard"
+import UploadCard from "../upload/UploadCard"
+import UploadSectionDivider from "../upload/UploadSectionDivider"
 
 const FEATURES = [
   { title: "Musical intelligence", sub: "Adapts to your material" },
@@ -62,28 +63,13 @@ export default function MasterUploadHero({
       <MarketingActionSlot className="!mt-0 flex flex-col">
         <BetaMasterStatusCard />
         <div className="flex flex-col pt-8 sm:pt-10">
-          <div
-            className="mb-6 flex items-center gap-3.5 sm:mb-6"
-            role="separator"
-            aria-label="Upload your mix"
-          >
-            <div
-              className="h-px min-w-0 flex-1 bg-gradient-to-r from-transparent via-white/[0.05] to-white/[0.08]"
-              aria-hidden
-            />
-            <span className="shrink-0 px-1 text-[10px] font-medium tracking-[0.18em] text-white/28">
-              Upload your mix
-            </span>
-            <div
-              className="h-px min-w-0 flex-1 bg-gradient-to-l from-transparent via-white/[0.05] to-white/[0.08]"
-              aria-hidden
-            />
-          </div>
-          <MasterUploadCard
+          <UploadSectionDivider />
+          <UploadCard
+            mode="master"
             file={file}
             fileInputRef={fileInputRef}
             onFileSelected={onFileSelected}
-            onContinue={onContinue}
+            onPrimaryAction={onContinue}
           />
         </div>
       </MarketingActionSlot>

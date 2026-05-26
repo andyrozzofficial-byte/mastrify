@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useId, useState, type RefObject } from "react"
 import CinematicUploadCardShell from "../cinematic/CinematicUploadCardShell"
@@ -10,24 +11,47 @@ import {
 } from "../../../lib/audioUploadAccept"
 import { IOS_SAFE_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
 
-type Props = {
-  file: File | null
-  fileInputRef: RefObject<HTMLInputElement | null>
-  onFileInputChange: (file: File) => void
-  onScanClick: () => void
+export type UploadCardMode = "analyze" | "master"
+
+const COPY: Record<
+  UploadCardMode,
+  {
+    dropIdle: string
+    dropDrag: string
+    dropLoaded: string
+    primaryAction: string
+  }
+> = {
+  analyze: {
+    dropIdle: "Drop your track here",
+    dropDrag: "Release to analyze",
+    dropLoaded: "Track ready to scan",
+    primaryAction: "Scan my track",
+  },
+  master: {
+    dropIdle: "Drop your mix here",
+    dropDrag: "Release your mix",
+    dropLoaded: "Mix ready to master",
+    primaryAction: "Continue to settings",
+  },
 }
 
-export default function AnalyzeUploadCard({
-  file,
-  fileInputRef,
-  onFileInputChange,
-  onScanClick,
-}: Props) {
+type Props = {
+  mode: UploadCardMode
+  file: File | null
+  fileInputRef: RefObject<HTMLInputElement | null>
+  onFileSelected: (file: File) => void
+  onPrimaryAction: () => void
+}
+
+/** Shared upload card — Analyze styling is the source of truth for both flows. */
+export default function UploadCard({ mode, file, fileInputRef, onFileSelected, onPrimaryAction }: Props) {
   const reduce = useReducedMotion()
   const fileInputId = useId()
   const [dragging, setDragging] = useState(false)
   const [pickError, setPickError] = useState<string | null>(null)
   const loaded = Boolean(file)
+  const copy = COPY[mode]
 
   function handlePickedFile(candidate: File | undefined, input?: HTMLInputElement | null) {
     if (!candidate) return
@@ -37,13 +61,15 @@ export default function AnalyzeUploadCard({
       return
     }
     setPickError(null)
-    onFileInputChange(candidate)
+    onFileSelected(candidate)
     if (input) input.value = ""
   }
 
   const fileInputHandlers = bindIosFileInputHandlers((candidate, input) =>
-    handlePickedFile(candidate, input)
+    handlePickedFile(candidate, input),
   )
+
+  const dropTitle = dragging ? copy.dropDrag : loaded ? copy.dropLoaded : copy.dropIdle
 
   return (
     <CinematicUploadCardShell
@@ -78,9 +104,7 @@ export default function AnalyzeUploadCard({
             />
           </svg>
         </motion.div>
-        <p className="text-[1rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.05rem]">
-          {dragging ? "Release to analyze" : loaded ? "Track ready to scan" : "Drop your track here"}
-        </p>
+        <p className="text-[1rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.05rem]">{dropTitle}</p>
         <p className="mx-auto mt-2 max-w-[18rem] text-[12px] leading-relaxed text-white/64">
           WAV, AIFF, FLAC, MP3 — up to 500MB
         </p>
@@ -94,15 +118,15 @@ export default function AnalyzeUploadCard({
         type="file"
         ref={fileInputRef}
         tabIndex={-1}
-        className="pointer-events-none fixed left-0 top-0 h-px w-px opacity-[0.01]"
+        className={IOS_SAFE_FILE_INPUT_CLASS}
         accept={AUDIO_UPLOAD_ACCEPT}
         {...fileInputHandlers}
       />
 
       <div className="marketing-upload-actions">
         {file ? (
-          <button type="button" onClick={onScanClick} className="marketing-upload-btn-primary">
-            Scan my track
+          <button type="button" onClick={onPrimaryAction} className="marketing-upload-btn-primary">
+            {copy.primaryAction}
           </button>
         ) : (
           <label htmlFor={fileInputId} className="marketing-upload-btn-primary cursor-pointer">
@@ -122,6 +146,22 @@ export default function AnalyzeUploadCard({
           <p className="text-center text-[12px] leading-relaxed text-rose-300/88" role="alert">
             {pickError}
           </p>
+        ) : null}
+
+        {mode === "master" ? (
+          <>
+            <Link
+              href="/analyze"
+              className="flex min-h-[40px] items-center justify-center rounded-xl text-[12px] font-medium text-white/50 transition hover:bg-white/[0.03] hover:text-white/75"
+            >
+              Analyze mix first
+            </Link>
+            <p className="pt-0.5 text-center text-[11px] leading-snug text-muted sm:text-[12px]">
+              Pay only for masters you export
+              <span className="text-muted-soft"> · </span>
+              Typically 30–60 seconds per render
+            </p>
+          </>
         ) : null}
       </div>
     </CinematicUploadCardShell>
