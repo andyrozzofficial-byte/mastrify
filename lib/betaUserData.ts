@@ -25,11 +25,13 @@ import {
 } from "./betaAccess"
 import {
   aggregateBetaActivityForEmail,
+  buildBetaMasteringUiState,
   buildBetaRankProgress,
   calcBetaPoints,
   calcRecommendationScore,
   effectiveBetaRank,
   rewardStatusForRank,
+  type BetaMasteringUiState,
 } from "./betaPoints"
 import { BETA_FEEDBACK_TABLE } from "./betaFeedbackDb"
 import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
@@ -406,6 +408,19 @@ function buildListRow(
     engagementLevel: level,
     rankProgress,
   }
+}
+
+export async function getBetaMasteringUiStateForEmail(
+  email: string,
+): Promise<BetaMasteringUiState | null> {
+  const profile = await fetchBetaUserProfile(email)
+  if ("error" in profile) return null
+  return buildBetaMasteringUiState({
+    betaRank: profile.betaRank,
+    betaPoints: profile.betaPoints,
+    rankProgress: profile.rankProgress,
+    rewardStatus: profile.rewardStatus,
+  })
 }
 
 export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: string }> {

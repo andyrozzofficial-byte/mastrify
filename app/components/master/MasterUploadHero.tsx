@@ -5,6 +5,7 @@ import type { RefObject } from "react"
 import MarketingActionSlot from "../cinematic/MarketingActionSlot"
 import MarketingDesktopHero from "../cinematic/MarketingDesktopHero"
 import CinematicTrustRow from "../cinematic/CinematicTrustRow"
+import BetaMasterStatusCard from "./BetaMasterStatusCard"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import MasterUploadCard from "./MasterUploadCard"
 
@@ -57,6 +58,8 @@ export default function MasterUploadHero({
       </ul>
 
       <MasterFlowStepRail phase="upload" className="marketing-hero-step-rail justify-start" />
+
+      <BetaMasterStatusCard className="my-3 sm:my-3.5" />
 
       <MarketingActionSlot>
         <MasterUploadCard

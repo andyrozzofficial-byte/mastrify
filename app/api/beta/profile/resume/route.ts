@@ -4,7 +4,7 @@ import { BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../../lib/b
 import { ACCESS_COOKIE_NAME } from "../../../../../lib/access"
 import { betaProfileToJson, setBetaEmailCookieOnResponse } from "../../../../../lib/betaProfileResponse"
 import { resolveBetaUserAccess } from "../../../../../lib/betaUserAccess"
-import { getBetaProfileStatus } from "../../../../../lib/betaUserData"
+import { getBetaMasteringUiStateForEmail, getBetaProfileStatus } from "../../../../../lib/betaUserData"
 
 export async function POST(request: Request) {
   let body: { email?: string }
@@ -26,19 +26,23 @@ export async function POST(request: Request) {
   const access = await resolveBetaUserAccess(accessCookie, cookieEmail, normalized)
   const status = await getBetaProfileStatus(normalized)
 
-  const isBetaUser = access.isBetaUser || access.profileExists
+  const isBeta = Boolean(
+    access.isBetaUser || access.profileExists || status.complete || status.profile,
+  )
 
   const payload = {
     complete: status.complete,
     profileDetailsComplete: status.profileDetailsComplete,
-    isBetaUser,
-    hasMasteringAccess: isBetaUser,
+    isBeta,
+    isBetaUser: isBeta,
+    hasMasteringAccess: isBeta,
     profileExists: access.profileExists || Boolean(status.profile),
     email: normalized,
     profile: status.profile ? betaProfileToJson(status.profile) : null,
+    betaUi: isBeta ? await getBetaMasteringUiStateForEmail(normalized) : null,
   }
 
-  if (!isBetaUser) {
+  if (!isBeta) {
     return NextResponse.json(payload)
   }
 

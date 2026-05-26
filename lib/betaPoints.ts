@@ -156,6 +156,52 @@ export function rewardStatusForRank(rank: BetaUserRank): string {
   return "Keep mastering and sharing feedback to unlock rewards"
 }
 
+/** Reward unlocked at the next rank tier (shown on master flow card). */
+export function nextRewardLabelForRank(nextRank: BetaUserRank | null): string {
+  if (nextRank === "insider") return "10% discount code"
+  if (nextRank === "pioneer") return "25% discount code · Early feature access"
+  if (nextRank === "legend") return "Lifetime Insider badge + future premium rewards"
+  return "Max tier — enjoy your rewards"
+}
+
+export type BetaMasteringUiState = {
+  rankLabel: string
+  navLabel: string
+  points: number
+  progressTitle: string
+  progressLabel: string
+  nextReward: string
+}
+
+export function buildBetaMasteringUiState(input: {
+  betaRank: string
+  betaPoints: number
+  rankProgress: BetaRankProgress
+  rewardStatus: string
+}): BetaMasteringUiState {
+  const { rankProgress } = input
+  const navLabel = rankProgress.rank === "explorer" ? "Beta Member" : input.betaRank
+  const progressTitle = rankProgress.nextRankLabel
+    ? `${rankProgress.nextRankLabel} progress`
+    : `${rankProgress.rankLabel} progress`
+  const progressLabel =
+    rankProgress.nextThreshold != null
+      ? `${rankProgress.points} / ${rankProgress.nextThreshold} points`
+      : `${String(rankProgress.points)} points`
+  const nextReward = rankProgress.nextRank
+    ? nextRewardLabelForRank(rankProgress.nextRank)
+    : input.rewardStatus
+
+  return {
+    rankLabel: input.betaRank,
+    navLabel,
+    points: input.betaPoints,
+    progressTitle,
+    progressLabel,
+    nextReward,
+  }
+}
+
 export function effectiveBetaRank(storedRank: string | null | undefined, points: number): BetaUserRank {
   const stored = migrateLegacyRank(storedRank)
   const calculated = rankFromPoints(points)
