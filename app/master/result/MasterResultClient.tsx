@@ -237,16 +237,14 @@ export default function MasterResultClient() {
     const objectKey =
       masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl) || null
     const reporterEmail = getBetaReporterEmail(getStoredBetaEmail(), deliveryEmail)
-    const completionKey = `${trackingSessionId}:${reporterEmail || "pending-email"}`
-    if (masterCompletionReportedRef.current === completionKey) return
-    if (!reporterEmail.includes("@")) return
+    if (masterCompletionReportedRef.current === trackingSessionId) return
 
     void (async () => {
       const ok = await reportBetaMasterCompleted(
         {
           sessionId: trackingSessionId,
           objectKey,
-          email: reporterEmail,
+          email: reporterEmail.includes("@") ? reporterEmail : undefined,
           deliveryEmail: deliveryEmail.trim() || undefined,
           trackName: file?.name ?? trackName ?? null,
           masteringStyle: masteringStyleLabel(stylePreset),
@@ -268,7 +266,7 @@ export default function MasterResultClient() {
           },
         },
       )
-      if (ok) masterCompletionReportedRef.current = completionKey
+      if (ok) masterCompletionReportedRef.current = trackingSessionId
     })()
   }, [
     mounted,

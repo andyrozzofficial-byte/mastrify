@@ -117,13 +117,13 @@ function countTrackedMasterCompletions(completions: BetaMasterCompletionRow[]): 
 }
 
 /**
- * Admin display count — matches legacy Beta Users (completed admin_master_jobs per email).
- * Includes feedback-synced jobs when the dedicated completions table has no rows yet.
+ * Admin display count — completions, completed jobs, and feedback sessions (legacy parity).
  */
 function countAdminDisplayMasters(
   completions: BetaMasterCompletionRow[],
   userJobs: AdminJobRow[] = [],
   email = "",
+  userFeedback: AdminFeedbackRow[] = [],
 ): number {
   const sessions = new Set(
     completions.map((c) => c.session_id).filter((sid): sid is string => Boolean(sid?.trim())),
@@ -144,7 +144,35 @@ function countAdminDisplayMasters(
     }
     count++
   }
+
+  for (const fb of userFeedback) {
+    if (fb.contact_email?.trim().toLowerCase() !== normalized) continue
+    const sid = fb.session_id?.trim()
+    if (sid) {
+      if (sessions.has(sid)) continue
+      sessions.add(sid)
+      count++
+      continue
+    }
+    count++
+  }
+
   return count
+}
+
+/** Feedback rows that should not also earn a separate feedback point when a master completion exists. */
+function countFeedbackForPoints(
+  userFeedback: AdminFeedbackRow[],
+  completions: BetaMasterCompletionRow[],
+): number {
+  const completionSessions = new Set(
+    completions.map((c) => c.session_id).filter((sid): sid is string => Boolean(sid?.trim())),
+  )
+  return userFeedback.filter((f) => {
+    const sid = f.session_id?.trim()
+    if (sid && completionSessions.has(sid)) return false
+    return true
+  }).length
 }
 
 /** Count signups that stored `referred_by:<email>` in profile notes (no extra tables). */
@@ -202,6 +230,7 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
     inviteMap.get(normalized) ?? 0,
     countTrackedMasterCompletions(completions),
     issueReportCount,
+    countFeedbackForPoints(userFeedback, completions),
   )
   const points = calcBetaPoints(counts)
   const rank = effectiveBetaRank(profile?.beta_rank, points)
@@ -426,7 +455,8 @@ function buildListRow(
   const soundedOff = userFeedback.flatMap((f) => f.survey.soundedOff ?? [])
   const styles = userFeedback.map((f) => f.mastering_style)
   const trackedMasterCount = countTrackedMasterCompletions(completions)
-  const masterCount = countAdminDisplayMasters(completions, jobs, email)
+  const masterCount = countAdminDisplayMasters(completions, jobs, email, userFeedback)
+  const feedbackCountForPoints = countFeedbackForPoints(userFeedback, completions)
   const activeDaySet = new Set<string>()
   for (const iso of lastTimes) activeDaySet.add(dateKey(iso))
   if (profile?.beta_signed_up_at) activeDaySet.add(dateKey(profile.beta_signed_up_at))
@@ -446,6 +476,7 @@ function buildListRow(
     creatorInviteCount,
     trackedMasterCount,
     issueReportCount,
+    feedbackCountForPoints,
   )
   const betaPoints = calcBetaPoints(counts)
   const rankKey = effectiveBetaRank(profile?.beta_rank, betaPoints)

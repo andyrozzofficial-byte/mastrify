@@ -1,4 +1,4 @@
-import { MASTERED_EXPORTS_TABLE, PIPELINE_EVENTS_TABLE } from "./adminData"
+import { BETA_FEEDBACK_TABLE, MASTERED_EXPORTS_TABLE, PIPELINE_EVENTS_TABLE } from "./adminData"
 import { normalizeBetaEmail } from "./betaAccess"
 import { createSupabaseServerClient } from "./supabaseServer"
 
@@ -87,10 +87,68 @@ async function fetchPipelineMasterCompleteRows(email: string): Promise<BetaMaste
     }))
 }
 
+/**
+ * One-time per email: if feedback exists but completions table is empty, record sessions from feedback.
+ * Keeps Insider points stable by pairing with deduped feedback counting in aggregateBetaActivityForEmail.
+ */
+export async function backfillMasterCompletionsFromFeedback(email: string): Promise<number> {
+  const normalized = normalizeBetaEmail(email)
+  if (!normalized.includes("@")) return 0
+
+  const existing = await fetchCompletionsTableRows(normalized)
+  if (existing.length > 0) return 0
+
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return 0
+
+  const { data: feedbackRows, error } = await supabase
+    .from(BETA_FEEDBACK_TABLE)
+    .select("session_id, track_name, mastering_style, created_at, contact_email, responses")
+    .eq("contact_email", normalized)
+    .order("created_at", { ascending: false })
+    .limit(200)
+
+  if (error || !feedbackRows?.length) return 0
+
+  let created = 0
+  for (const row of feedbackRows) {
+    const sessionId = typeof row.session_id === "string" ? row.session_id.trim() : ""
+    if (!sessionId) continue
+
+    const responses = row.responses as { processingTimeMs?: number; masterLufs?: number } | null
+    const processingTimeMs =
+      responses?.processingTimeMs != null && Number.isFinite(Number(responses.processingTimeMs))
+        ? Number(responses.processingTimeMs)
+        : null
+    const masterLufs =
+      responses?.masterLufs != null && Number.isFinite(Number(responses.masterLufs))
+        ? Number(responses.masterLufs)
+        : null
+
+    const result = await recordBetaMasterCompletion({
+      email: normalized,
+      sessionId,
+      trackName: typeof row.track_name === "string" ? row.track_name : null,
+      masteringStyle: typeof row.mastering_style === "string" ? row.mastering_style : null,
+      processingTimeMs,
+      masterLufs,
+    })
+    if ("error" in result) continue
+    if (result.created) created++
+  }
+
+  if (created > 0) {
+    logBeta("backfilled master completions from feedback", { email: normalized, created })
+  }
+  return created
+}
+
 /** Merged completions from dedicated table + pipeline fallback (deduped by session_id). */
 export async function fetchBetaMasterCompletionsForEmail(
   email: string,
 ): Promise<BetaMasterCompletionRow[]> {
+  await backfillMasterCompletionsFromFeedback(email)
+
   const [tableRows, pipelineRows] = await Promise.all([
     fetchCompletionsTableRows(email),
     fetchPipelineMasterCompleteRows(email),

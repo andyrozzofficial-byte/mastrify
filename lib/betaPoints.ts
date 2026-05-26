@@ -111,12 +111,14 @@ export function aggregateBetaActivityForEmail(
   creatorInviteCount: number,
   completedMasterCount?: number,
   issueReportCount?: number,
+  /** When set, excludes feedback rows that already have a master completion (keeps points stable after backfill). */
+  feedbackCountForPoints?: number,
 ): BetaActivityCounts {
   const completedMasters = completedMasterCount ?? 0
 
   return {
     completedMasters,
-    feedbackCount: userFeedback.length,
+    feedbackCount: feedbackCountForPoints ?? userFeedback.length,
     issueReportCount: issueReportCount ?? 0,
     usefulFeedbackCount: countUsefulFeedback(userFeedback),
     creatorInviteCount,
