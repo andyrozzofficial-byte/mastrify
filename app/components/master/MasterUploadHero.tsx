@@ -6,6 +6,7 @@ import MarketingActionSlot from "../cinematic/MarketingActionSlot"
 import MarketingDesktopHero from "../cinematic/MarketingDesktopHero"
 import CinematicTrustRow from "../cinematic/CinematicTrustRow"
 import BetaMasterStatusCard from "./BetaMasterStatusCard"
+import { useMasterSession } from "../../master/MasterSessionProvider"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import UploadCard from "../upload/UploadCard"
 import UploadSectionDivider from "../upload/UploadSectionDivider"
@@ -31,6 +32,9 @@ export default function MasterUploadHero({
   onContinue,
   continueLoading = false,
 }: Props) {
+  const { currentStep } = useMasterSession()
+  const railPhase = currentStep >= 2 ? "settings" : "upload"
+
   return (
     <MarketingDesktopHero variant="product">
       <span className="hero-eyebrow-pill">Spatial mastering engine</span>
@@ -60,7 +64,7 @@ export default function MasterUploadHero({
         </li>
       </ul>
 
-      <MasterFlowStepRail phase="upload" className="marketing-hero-step-rail justify-start" />
+      <MasterFlowStepRail phase={railPhase} className="marketing-hero-step-rail justify-start" />
 
       <MarketingActionSlot className="!mt-0 flex flex-col">
         <BetaMasterStatusCard />

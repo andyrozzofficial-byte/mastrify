@@ -78,6 +78,7 @@ export default function MasterSettingsPage() {
     analysisBefore,
     sessionHydrated,
     workflowPhase,
+    currentStep,
     storedFileName,
     reconnectSourceFile,
     stylePreset,
@@ -94,14 +95,20 @@ export default function MasterSettingsPage() {
     persistSessionSnapshot,
   } = useMasterSession()
 
-  const needsFileReconnect = !file && (Boolean(analysisBefore) || workflowPhase !== "upload" || Boolean(storedFileName))
+  const needsFileReconnect =
+    !file && (Boolean(analysisBefore) || currentStep > 1 || workflowPhase !== "upload" || Boolean(storedFileName))
 
   useEffect(() => {
     if (!sessionHydrated) return
-    if (!file && !analysisBefore && workflowPhase === "upload" && !storedFileName) {
+    if (!file && !analysisBefore && currentStep < 2 && workflowPhase === "upload" && !storedFileName) {
       router.replace("/master")
     }
-  }, [file, analysisBefore, sessionHydrated, workflowPhase, storedFileName, router])
+  }, [file, analysisBefore, sessionHydrated, workflowPhase, currentStep, storedFileName, router])
+
+  useEffect(() => {
+    if (!sessionHydrated || !file) return
+    console.log("[master-workflow] Settings view active", { currentStep, fileName: file.name })
+  }, [sessionHydrated, file, currentStep])
 
   if (!sessionHydrated) {
     return (
@@ -120,7 +127,7 @@ export default function MasterSettingsPage() {
       <div className="relative text-white">
         <CinematicBackground />
         <div className="relative mx-auto flex max-w-md flex-col items-center justify-center gap-5 px-6 py-12 text-center">
-          <MasterFlowStepRail phase="settings" className="mb-2" />
+          <MasterFlowStepRail phase={currentStep >= 3 ? "master" : "settings"} className="mb-2" />
           <input
             ref={reconnectInputRef}
             type="file"
@@ -162,7 +169,7 @@ export default function MasterSettingsPage() {
     <div className="relative text-white">
       <CinematicBackground />
       <div className="relative mx-auto w-full max-w-[720px] px-4 pb-10 pt-5 md:px-6 md:pb-12 md:pt-6">
-        <MasterFlowStepRail phase="settings" className="mb-6 justify-center" />
+        <MasterFlowStepRail phase={currentStep >= 3 ? "master" : "settings"} className="mb-6 justify-center" />
         <div className="relative">
           {/* Radial glow — behind main card */}
           <div
@@ -274,7 +281,7 @@ export default function MasterSettingsPage() {
                 onClick={() =>
                   runIfAllowed(() => {
                     setWorkflowPhase("master")
-                    persistSessionSnapshot()
+                    persistSessionSnapshot({ workflowPhase: "master" })
                     router.push("/master/processing")
                   })
                 }

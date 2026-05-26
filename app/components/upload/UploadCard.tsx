@@ -137,7 +137,12 @@ export default function UploadCard({
         {file ? (
           <button
             type="button"
-            onClick={onPrimaryAction}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (primaryActionDisabled || primaryActionLoading) return
+              onPrimaryAction()
+            }}
             disabled={primaryActionDisabled || primaryActionLoading}
             className="marketing-upload-btn-primary disabled:cursor-not-allowed disabled:opacity-40"
           >
