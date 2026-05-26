@@ -1,7 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
 import { motion } from "framer-motion"
 import CinematicBackground from "../CinematicBackground"
 import { useBetaMasteringGate } from "../beta/BetaMasteringGateProvider"
@@ -70,16 +69,15 @@ function sliderHelper(type: "stereo" | "low" | "clarity", value: number) {
 
 type MasterSettingsStepProps = {
   file: File | null
+  onContinue: () => void
+  onBack: () => void
 }
 
-export default function MasterSettingsStep({ file }: MasterSettingsStepProps) {
-  const router = useRouter()
+export default function MasterSettingsStep({ file, onContinue, onBack }: MasterSettingsStepProps) {
   const { runIfAllowed } = useBetaMasteringGate()
   const reconnectInputRef = useRef<HTMLInputElement>(null)
   const {
     analysisBefore,
-    sessionHydrated,
-    currentStep,
     storedFileName,
     reconnectSourceFile,
     stylePreset,
@@ -92,36 +90,17 @@ export default function MasterSettingsStep({ file }: MasterSettingsStepProps) {
     setLowEndControl,
     clarityPresence,
     setClarityPresence,
-    setWorkflowPhase,
-    setCurrentStep,
     persistSessionSnapshot,
   } = useMasterSession()
 
   const needsFileReconnect = !file && (Boolean(analysisBefore) || Boolean(storedFileName))
-
-  useEffect(() => {
-    if (!sessionHydrated || !file) return
-    console.log("[master-workflow] Settings view active", { currentStep, fileName: file.name })
-  }, [sessionHydrated, file, currentStep])
-
-  if (!sessionHydrated) {
-    return (
-      <div className="relative text-white">
-        <CinematicBackground />
-        <div className="relative flex flex-col items-center justify-center gap-4 px-6 py-12">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
-          <p className="text-sm text-white/50">Restoring session…</p>
-        </div>
-      </div>
-    )
-  }
 
   if (needsFileReconnect) {
     return (
       <div className="relative text-white">
         <CinematicBackground />
         <div className="relative mx-auto flex max-w-md flex-col items-center justify-center gap-5 px-6 py-12 text-center">
-          <MasterFlowStepRail phase={currentStep >= 3 ? "master" : "settings"} className="mb-2" />
+          <MasterFlowStepRail phase="settings" className="mb-2" />
           <input
             ref={reconnectInputRef}
             type="file"
@@ -147,11 +126,7 @@ export default function MasterSettingsStep({ file }: MasterSettingsStepProps) {
           >
             Choose audio file
           </button>
-          <button
-            type="button"
-            onClick={() => setCurrentStep(1)}
-            className="text-xs text-purple-300 hover:underline"
-          >
+          <button type="button" onClick={onBack} className="text-xs text-purple-300 hover:underline">
             Start over from upload
           </button>
         </div>
@@ -160,14 +135,21 @@ export default function MasterSettingsStep({ file }: MasterSettingsStepProps) {
   }
 
   if (!file) {
-    return null
+    return (
+      <div className="relative flex min-h-[40vh] flex-col items-center justify-center gap-3 text-white/60">
+        <p className="text-sm">No upload in this session.</p>
+        <button type="button" onClick={onBack} className="text-sm text-purple-300 hover:underline">
+          Back to upload
+        </button>
+      </div>
+    )
   }
 
   return (
     <div className="relative text-white">
       <CinematicBackground />
       <div className="relative mx-auto w-full max-w-[720px] px-4 pb-10 pt-5 md:px-6 md:pb-12 md:pt-6">
-        <MasterFlowStepRail phase={currentStep >= 3 ? "master" : "settings"} className="mb-6 justify-center" />
+        <MasterFlowStepRail phase="settings" className="mb-6 justify-center" />
         <div className="relative">
           <div
             className="pointer-events-none absolute left-1/2 top-[28%] z-0 h-[min(420px,90vw)] w-[min(680px,120%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_55%_42%_at_50%_50%,rgba(124,58,237,0.11),rgba(88,28,135,0.032)_50%,transparent_72%)] blur-3xl"
@@ -181,7 +163,7 @@ export default function MasterSettingsStep({ file }: MasterSettingsStepProps) {
           >
             <button
               type="button"
-              onClick={() => setCurrentStep(1)}
+              onClick={onBack}
               className="absolute left-5 top-5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/64 transition hover:text-white/85 md:left-6 md:top-6"
             >
               &lt; Back
@@ -278,9 +260,8 @@ export default function MasterSettingsStep({ file }: MasterSettingsStepProps) {
                 type="button"
                 onClick={() =>
                   runIfAllowed(() => {
-                    setWorkflowPhase("master")
                     persistSessionSnapshot({ workflowPhase: "master" })
-                    router.push("/master/processing")
+                    onContinue()
                   })
                 }
                 className="w-full rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] py-3 text-[13px] font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,0.3),0_14px_44px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 transition hover:brightness-110 md:text-sm"
@@ -289,7 +270,7 @@ export default function MasterSettingsStep({ file }: MasterSettingsStepProps) {
               </button>
               <button
                 type="button"
-                onClick={() => setCurrentStep(1)}
+                onClick={onBack}
                 className="pb-0.5 text-center text-[10px] text-white/62 transition hover:text-white/82"
               >
                 ← Change file

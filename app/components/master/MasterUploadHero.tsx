@@ -6,8 +6,8 @@ import MarketingActionSlot from "../cinematic/MarketingActionSlot"
 import MarketingDesktopHero from "../cinematic/MarketingDesktopHero"
 import CinematicTrustRow from "../cinematic/CinematicTrustRow"
 import BetaMasterStatusCard from "./BetaMasterStatusCard"
-import { useMasterSession } from "../../master/MasterSessionProvider"
 import MasterFlowStepRail from "./MasterFlowStepRail"
+import type { MasterWorkflowPhase } from "../../../lib/masterWorkflow"
 import UploadCard from "../upload/UploadCard"
 import UploadSectionDivider from "../upload/UploadSectionDivider"
 
@@ -19,6 +19,7 @@ const FEATURES = [
 
 type Props = {
   file: File | null
+  stepRailPhase?: MasterWorkflowPhase
   fileInputRef: RefObject<HTMLInputElement | null>
   onFileSelected: (file: File) => void
   onContinue: () => void
@@ -27,14 +28,12 @@ type Props = {
 
 export default function MasterUploadHero({
   file,
+  stepRailPhase = "upload",
   fileInputRef,
   onFileSelected,
   onContinue,
   continueLoading = false,
 }: Props) {
-  const { currentStep } = useMasterSession()
-  const railPhase = currentStep >= 2 ? "settings" : "upload"
-
   return (
     <MarketingDesktopHero variant="product">
       <span className="hero-eyebrow-pill">Spatial mastering engine</span>
@@ -64,7 +63,7 @@ export default function MasterUploadHero({
         </li>
       </ul>
 
-      <MasterFlowStepRail phase={railPhase} className="marketing-hero-step-rail justify-start" />
+      <MasterFlowStepRail phase={stepRailPhase} className="marketing-hero-step-rail justify-start" />
 
       <MarketingActionSlot className="!mt-0 flex flex-col">
         <BetaMasterStatusCard />

@@ -47,6 +47,8 @@ export default function MasterProcessingPage() {
   const reduce = useReducedMotion()
   const { isBeta, checking } = useBetaMasteringGate()
   const {
+    masterState,
+    setMasterState,
     file,
     audioUrl,
     sessionHydrated,
@@ -66,8 +68,9 @@ export default function MasterProcessingPage() {
   const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
-    if (!sessionHydrated || checking) return
-    if (!file) {
+    if (checking) return
+    const activeFile = masterState.file ?? file
+    if (!activeFile) {
       router.replace("/master")
       return
     }
@@ -90,13 +93,13 @@ export default function MasterProcessingPage() {
 
       try {
         const formData = new FormData()
-        formData.append("file", file)
+        formData.append("file", activeFile)
         formData.append("stylePreset", stylePreset)
         formData.append("targetLufs", String(targetLufs))
         formData.append("stereoEnhance", String(stereoEnhance))
         formData.append("lowEndControl", String(lowEndControl))
         formData.append("clarityPresence", String(clarityPresence))
-        formData.append("trackTitle", file.name)
+        formData.append("trackTitle", activeFile.name)
         const sliderDebug = sliderDebugEnabled()
         if (sliderDebug) formData.append("sliderDebug", "1")
 
@@ -154,7 +157,7 @@ export default function MasterProcessingPage() {
 
         appendHistory({
           kind: "master",
-          name: file.name,
+          name: activeFile.name,
           masteredUrl: mastered || undefined,
         })
 
@@ -166,7 +169,7 @@ export default function MasterProcessingPage() {
           (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "ERR_CANCELED")
         if (aborted) return
         alert("Mastering failed")
-        if (!cancelled) router.replace("/master")
+        if (!cancelled) setMasterState({ step: 2, file: activeFile })
       }
     }
 
@@ -176,11 +179,11 @@ export default function MasterProcessingPage() {
       ac.abort()
     }
   }, [
-    sessionHydrated,
     checking,
     isBeta,
+    masterState.file,
     file,
-    router,
+    setMasterState,
     setMasteredUrl,
     setMasteredPreviewMp3Url,
     setMasterObjectKey,
@@ -225,7 +228,7 @@ export default function MasterProcessingPage() {
         <div className="product-processing-stage">
           <CinematicOrbCenter activeStep={activeStep} />
 
-          {(audioUrl || file) && (
+          {(audioUrl || masterState.file || file) && (
             <motion.div
               className="cinematic-waveform-slot relative min-h-[4.75rem] overflow-hidden"
               initial={reduce ? false : { opacity: 0, y: 8 }}
@@ -234,7 +237,7 @@ export default function MasterProcessingPage() {
             >
               <CinematicWaveform
                 mode="processing"
-                audioSrc={file ?? audioUrl}
+                audioSrc={masterState.file ?? file ?? audioUrl}
                 activeStep={activeStep}
                 height={72}
                 className="shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_rgba(0,0,0,0.35)]"

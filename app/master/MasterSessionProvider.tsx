@@ -16,13 +16,9 @@ import { isBetaFeedbackEnabled } from "../../lib/betaFeedbackFeature"
 import { formatTrackNameForAnalytics } from "../../lib/formatTrackNameForAnalytics"
 import { createMasterSessionId } from "../../lib/masterSessionId"
 import {
-  clearMasterWorkflowLocal,
-  isMasterWorkflowPhase,
-  logMasterWorkflow,
-  readMasterWorkflowLocal,
-  stepFromWorkflowPhase,
+  INITIAL_MASTER_STATE,
   workflowPhaseFromStep,
-  writeMasterWorkflowLocal,
+  type MasterState,
   type MasterWorkflowPhase,
   type MasterWorkflowStep,
 } from "../../lib/masterWorkflow"
@@ -58,7 +54,15 @@ type MasterSessionSnapshotV2 = {
 }
 
 type MasterSession = {
+  masterState: MasterState
+  setMasterState: React.Dispatch<React.SetStateAction<MasterState>>
+  handleMasterUpload: (file: File) => void
+  handleContinueToSettings: () => void
+  handleContinueToMaster: () => void
+  handleBackToUpload: () => void
+  /** @deprecated Use masterState.file */
   file: File | null
+  /** @deprecated Use handleMasterUpload */
   setFile: (f: File | null) => void
   audioUrl: string
   setAudioUrl: (u: string) => void
@@ -86,7 +90,6 @@ type MasterSession = {
   setMasterObjectKey: (key: string) => void
   masterExpiresAt: string
   setMasterExpiresAt: (expiresAt: string) => void
-  /** Stable ID for the current upload → master run (feedback analytics). */
   sessionId: string
   trackDurationSec: number | null
   trackName: string | null
@@ -94,23 +97,19 @@ type MasterSession = {
   processingTimeMs: number | null
   recordProcessingComplete: (processingTimeMs: number, analysisAfter: Record<string, unknown> | null) => void
   resetSession: () => void
-  /** True after first client storage hydrate attempt (for /master/settings gating). */
   sessionHydrated: boolean
-  /** Analyze → Master: same file + analysis snapshot as “before master” metrics. */
   seedAnalyzeIntoMasterFlow: (f: File, analysis: Record<string, unknown> | null) => void
-  /** After refresh: attach a new File without clearing analysisBefore from storage. */
   reconnectSourceFile: (f: File) => void
+  /** @deprecated Use masterState.step */
+  currentStep: MasterWorkflowStep
+  /** @deprecated Use setMasterState */
+  setCurrentStep: (step: MasterWorkflowStep) => void
+  /** @deprecated Use masterState.step via workflowPhaseFromStep */
   workflowPhase: MasterWorkflowPhase
   setWorkflowPhase: (phase: MasterWorkflowPhase) => void
-  /** Last known upload file name (persists in session storage for refresh). */
   storedFileName: string
-  /** 1 = Upload, 2 = Settings, 3 = Master */
-  currentStep: MasterWorkflowStep
-  setCurrentStep: (step: MasterWorkflowStep) => void
-  /** Validate file, advance to settings step (file stays in React state only). */
-  handleContinueToSettings: () => boolean
-  /** @deprecated Use handleContinueToSettings */
-  continueToSettings: () => boolean
+  continueToSettings: () => void
+  handleContinueToSettingsLegacy: () => void
   persistSessionSnapshot: (overrides?: Partial<Pick<MasterSessionSnapshotV2, "workflowPhase" | "fileName" | "sessionId">>) => void
 }
 
@@ -143,8 +142,15 @@ function isPreset(x: unknown): x is MasterStylePreset {
   return x === "STREAM" || x === "CLUB" || x === "LOUD" || x === "WARM" || x === "FESTIVAL"
 }
 
+function attachFileAudio(setAudioUrl: (fn: (prev: string) => string) => void, file: File) {
+  setAudioUrl((prev) => {
+    if (prev) URL.revokeObjectURL(prev)
+    return URL.createObjectURL(file)
+  })
+}
+
 export function MasterSessionProvider({ children }: { children: ReactNode }) {
-  const [file, setFileState] = useState<File | null>(null)
+  const [masterState, setMasterState] = useState<MasterState>(INITIAL_MASTER_STATE)
   const [audioUrl, setAudioUrl] = useState("")
   const [masteredUrl, setMasteredUrl] = useState("")
   const [masteredPreviewMp3Url, setMasteredPreviewMp3Url] = useState("")
@@ -162,42 +168,75 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const [trackDurationSec, setTrackDurationSec] = useState<number | null>(null)
   const [masterLufs, setMasterLufs] = useState<number | null>(null)
   const [processingTimeMs, setProcessingTimeMs] = useState<number | null>(null)
-  const [sessionHydrated, setSessionHydrated] = useState(false)
-  const [workflowPhase, setWorkflowPhaseState] = useState<MasterWorkflowPhase>("upload")
-  const [currentStep, setCurrentStep] = useState<MasterWorkflowStep>(1)
+  const [sessionHydrated, setSessionHydrated] = useState(true)
   const [storedFileName, setStoredFileName] = useState("")
   const hydrateRan = useRef(false)
 
-  const setWorkflowPhase = useCallback((phase: MasterWorkflowPhase) => {
-    setWorkflowPhaseState(phase)
-    setCurrentStep(stepFromWorkflowPhase(phase))
+  const file = masterState.file
+  const currentStep = masterState.step
+  const workflowPhase = workflowPhaseFromStep(masterState.step)
+
+  const beginMasterSession = useCallback((f: File) => {
+    if (!isBetaFeedbackEnabled()) return
+    setSessionId(createMasterSessionId())
+    setTrackDurationSec(null)
+    setMasterLufs(null)
+    setProcessingTimeMs(null)
+    void readAudioDurationSec(f).then((sec) => {
+      if (sec != null) setTrackDurationSec(sec)
+    })
   }, [])
 
-  const persistWorkflowLocal = useCallback(
-    (step: MasterWorkflowStep, activeFile: File | null) => {
-      writeMasterWorkflowLocal({
-        step,
-        fileName: activeFile?.name,
-        fileSize: activeFile?.size,
-        sessionId: sessionId || undefined,
-      })
+  const handleMasterUpload = useCallback(
+    (uploaded: File) => {
+      setMasterState({ step: 1, file: uploaded })
+      attachFileAudio(setAudioUrl, uploaded)
+      setStoredFileName(uploaded.name)
+      setMasteredUrl("")
+      setMasteredPreviewMp3Url("")
+      setMasterObjectKey("")
+      setMasterExpiresAt("")
+      beginMasterSession(uploaded)
+      clearMasterStorageKeys()
     },
-    [sessionId],
+    [beginMasterSession],
   )
 
-  const applyCurrentStep = useCallback(
-    (step: MasterWorkflowStep) => {
-      setCurrentStep(step)
-      setWorkflowPhaseState(workflowPhaseFromStep(step))
-      persistWorkflowLocal(step, file)
-    },
-    [file, persistWorkflowLocal],
-  )
+  const handleContinueToSettings = useCallback(() => {
+    console.log("continue")
+    setMasterState((prev) => {
+      if (!prev.file) {
+        console.log("Missing file")
+        return prev
+      }
+      return { ...prev, step: 2 }
+    })
+  }, [])
+
+  const handleContinueToMaster = useCallback(() => {
+    setMasterState((prev) => {
+      if (!prev.file) return prev
+      return { ...prev, step: 3 }
+    })
+  }, [])
+
+  const handleBackToUpload = useCallback(() => {
+    setMasterState((prev) => ({ ...prev, step: 1 }))
+  }, [])
+
+  const setCurrentStep = useCallback((step: MasterWorkflowStep) => {
+    setMasterState((prev) => ({ ...prev, step }))
+  }, [])
+
+  const setWorkflowPhase = useCallback((phase: MasterWorkflowPhase) => {
+    const step = phase === "settings" ? 2 : phase === "master" ? 3 : 1
+    setMasterState((prev) => ({ ...prev, step: step as MasterWorkflowStep }))
+  }, [])
 
   const persistSessionSnapshot = useCallback(
     (overrides?: Partial<Pick<MasterSessionSnapshotV2, "workflowPhase" | "fileName" | "sessionId">>) => {
       if (typeof window === "undefined") return
-      const phase = overrides?.workflowPhase ?? workflowPhase
+      const phase = overrides?.workflowPhase ?? workflowPhaseFromStep(masterState.step)
       const payload: MasterSessionSnapshotV2 = {
         v: 2,
         analysisBefore,
@@ -212,7 +251,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
         masteredPreviewMp3Url,
         masterObjectKey,
         masterExpiresAt,
-        fileName: overrides?.fileName ?? file?.name ?? storedFileName,
+        fileName: overrides?.fileName ?? masterState.file?.name ?? storedFileName,
         sessionId: overrides?.sessionId ?? sessionId,
         trackDurationSec,
         masterLufs,
@@ -226,139 +265,78 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       }
     },
     [
-    analysisBefore,
-    analysisAfter,
-    stylePreset,
-    targetLufs,
-    stereoEnhance,
-    lowEndControl,
-    clarityPresence,
-    deliveryEmail,
-    masteredUrl,
-    masteredPreviewMp3Url,
-    masterObjectKey,
-    masterExpiresAt,
-    file,
-    storedFileName,
-    sessionId,
-    trackDurationSec,
-    masterLufs,
-    processingTimeMs,
-    workflowPhase,
-  ])
-
-  const beginMasterSession = useCallback((f: File) => {
-    if (!isBetaFeedbackEnabled()) return
-    setSessionId(createMasterSessionId())
-    setTrackDurationSec(null)
-    setMasterLufs(null)
-    setProcessingTimeMs(null)
-    void readAudioDurationSec(f).then((sec) => {
-      if (sec != null) setTrackDurationSec(sec)
-    })
-  }, [])
+      masterState.step,
+      masterState.file?.name,
+      analysisBefore,
+      analysisAfter,
+      stylePreset,
+      targetLufs,
+      stereoEnhance,
+      lowEndControl,
+      clarityPresence,
+      deliveryEmail,
+      masteredUrl,
+      masteredPreviewMp3Url,
+      masterObjectKey,
+      masterExpiresAt,
+      storedFileName,
+      sessionId,
+      trackDurationSec,
+      masterLufs,
+      processingTimeMs,
+    ],
+  )
 
   const recordProcessingComplete = useCallback(
-    (elapsedMs: number, analysisAfter: Record<string, unknown> | null) => {
+    (elapsedMs: number, after: Record<string, unknown> | null) => {
       if (!isBetaFeedbackEnabled()) return
       const ms = Math.max(0, Math.round(elapsedMs))
       setProcessingTimeMs(ms)
-      setMasterLufs(extractMasterLufs(analysisAfter))
+      setMasterLufs(extractMasterLufs(after))
     },
-    []
+    [],
   )
 
   const setFile = useCallback(
     (f: File | null) => {
-      setFileState(f)
+      if (f) {
+        handleMasterUpload(f)
+        return
+      }
+      setMasterState(INITIAL_MASTER_STATE)
       setAudioUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev)
-        return f ? URL.createObjectURL(f) : ""
+        return ""
       })
+      setAnalysisBefore(null)
+      setAnalysisAfter(null)
+      setSessionId("")
+      setTrackDurationSec(null)
+      setMasterLufs(null)
+      setProcessingTimeMs(null)
+      setStoredFileName("")
       setMasteredUrl("")
       setMasteredPreviewMp3Url("")
       setMasterObjectKey("")
       setMasterExpiresAt("")
-      if (f) {
-        setStoredFileName(f.name)
-        setWorkflowPhaseState("upload")
-        setCurrentStep(1)
-        beginMasterSession(f)
-        writeMasterWorkflowLocal({
-          step: 1,
-          fileName: f.name,
-          fileSize: f.size,
-          sessionId: sessionId || undefined,
-        })
-        logMasterWorkflow("Upload complete", { fileName: f.name })
-      } else {
-        setAnalysisBefore(null)
-        setAnalysisAfter(null)
-        setSessionId("")
-        setTrackDurationSec(null)
-        setMasterLufs(null)
-        setProcessingTimeMs(null)
-        setStoredFileName("")
-        setWorkflowPhaseState("upload")
-        setCurrentStep(1)
-        clearMasterWorkflowLocal()
-      }
-      if (!f) {
-        setAnalysisBefore(null)
-        setAnalysisAfter(null)
-      }
       clearMasterStorageKeys()
     },
-    [beginMasterSession, sessionId]
+    [handleMasterUpload],
   )
 
-  const handleContinueToSettings = useCallback((): boolean => {
-    if (!file) {
-      console.log("No uploaded file")
-      logMasterWorkflow("Continue blocked — no file uploaded")
-      return false
-    }
-
-    setStoredFileName(file.name)
-    setWorkflowPhaseState("settings")
-    setCurrentStep(2)
-    writeMasterWorkflowLocal({
-      step: 2,
-      fileName: file.name,
-      fileSize: file.size,
-      sessionId: sessionId || undefined,
-    })
-
-    logMasterWorkflow("Settings opened", { fileName: file.name, sessionId: sessionId || "(pending)" })
-    return true
-  }, [file, sessionId])
-
   const reconnectSourceFile = useCallback((f: File) => {
-    setFileState(f)
-    setAudioUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return URL.createObjectURL(f)
-    })
+    setMasterState((prev) => ({
+      step: prev.step >= 2 ? prev.step : 2,
+      file: f,
+    }))
+    attachFileAudio(setAudioUrl, f)
     setStoredFileName(f.name)
-    if (currentStep < 2) {
-      setCurrentStep(2)
-      setWorkflowPhaseState("settings")
-    }
-    writeMasterWorkflowLocal({
-      step: currentStep >= 2 ? currentStep : 2,
-      fileName: f.name,
-      fileSize: f.size,
-      sessionId: sessionId || undefined,
-    })
-  }, [currentStep, sessionId])
+  }, [])
 
   const seedAnalyzeIntoMasterFlow = useCallback(
     (f: File, analysis: Record<string, unknown> | null) => {
-      setFileState(f)
-      setAudioUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev)
-        return URL.createObjectURL(f)
-      })
+      setMasterState({ step: 1, file: f })
+      attachFileAudio(setAudioUrl, f)
       setAnalysisBefore(cloneAnalysis(analysis))
       setAnalysisAfter(null)
       setMasteredUrl("")
@@ -366,17 +344,10 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       setMasterObjectKey("")
       setMasterExpiresAt("")
       setStoredFileName(f.name)
-      setWorkflowPhaseState("upload")
-      setCurrentStep(1)
-      writeMasterWorkflowLocal({
-        step: 1,
-        fileName: f.name,
-        fileSize: f.size,
-        sessionId: sessionId || undefined,
-      })
       beginMasterSession(f)
+      clearMasterStorageKeys()
     },
-    [beginMasterSession, sessionId]
+    [beginMasterSession],
   )
 
   const resetSession = useCallback(() => {
@@ -384,7 +355,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       if (prev) URL.revokeObjectURL(prev)
       return ""
     })
-    setFileState(null)
+    setMasterState(INITIAL_MASTER_STATE)
     setMasteredUrl("")
     setMasteredPreviewMp3Url("")
     setMasterObjectKey("")
@@ -401,10 +372,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setTrackDurationSec(null)
     setMasterLufs(null)
     setProcessingTimeMs(null)
-    setWorkflowPhaseState("upload")
-    setCurrentStep(1)
     setStoredFileName("")
-    clearMasterWorkflowLocal()
     clearMasterStorageKeys()
   }, [])
 
@@ -414,24 +382,13 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     try {
       let raw = sessionStorage.getItem(MASTER_SESSION_STORAGE_KEY)
       if (!raw) raw = sessionStorage.getItem(MASTER_RESULT_STORAGE_KEY)
-      const localWorkflow = readMasterWorkflowLocal()
-      if (localWorkflow?.fileName) {
-        setStoredFileName(localWorkflow.fileName)
-      }
-      if (localWorkflow?.sessionId?.trim()) {
-        setSessionId((prev) => prev || localWorkflow.sessionId!.trim())
-      }
+      if (!raw) return
 
-      if (!raw) {
-        setSessionHydrated(true)
-        return
-      }
       const snap = JSON.parse(raw) as Record<string, unknown>
       if (snap.v === 2) {
         const s = snap as unknown as MasterSessionSnapshotV2
         if (s.analysisBefore) setAnalysisBefore(cloneAnalysis(s.analysisBefore))
-        else setAnalysisBefore(null)
-        setAnalysisAfter(s.analysisAfter ? cloneAnalysis(s.analysisAfter as Record<string, unknown>) : null)
+        if (s.analysisAfter) setAnalysisAfter(cloneAnalysis(s.analysisAfter as Record<string, unknown>))
         if (isPreset(s.stylePreset)) setStylePreset(s.stylePreset)
         if (typeof s.targetLufs === "number" && Number.isFinite(s.targetLufs)) setTargetLufs(s.targetLufs)
         if (typeof s.stereoEnhance === "number" && Number.isFinite(s.stereoEnhance)) setStereoEnhance(s.stereoEnhance)
@@ -444,27 +401,16 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
         if (typeof s.deliveryEmail === "string") setDeliveryEmail(s.deliveryEmail)
         if (typeof s.sessionId === "string" && s.sessionId.trim()) {
           setSessionId(s.sessionId.trim())
-        } else if (s.masteredUrl || s.fileName) {
-          setSessionId(createMasterSessionId())
         }
         if (typeof s.trackDurationSec === "number" && Number.isFinite(s.trackDurationSec)) {
           setTrackDurationSec(s.trackDurationSec)
         }
-        if (typeof s.masterLufs === "number" && Number.isFinite(s.masterLufs)) {
-          setMasterLufs(s.masterLufs)
-        }
+        if (typeof s.masterLufs === "number" && Number.isFinite(s.masterLufs)) setMasterLufs(s.masterLufs)
         if (typeof s.processingTimeMs === "number" && Number.isFinite(s.processingTimeMs)) {
           setProcessingTimeMs(Math.round(s.processingTimeMs))
         }
         if (typeof s.fileName === "string" && s.fileName.trim()) {
           setStoredFileName(s.fileName.trim())
-        }
-        if (isMasterWorkflowPhase(s.workflowPhase)) {
-          setWorkflowPhaseState(s.workflowPhase)
-          setCurrentStep(stepFromWorkflowPhase(s.workflowPhase))
-        } else if (s.masteredUrl || s.analysisAfter) {
-          setWorkflowPhaseState("master")
-          setCurrentStep(3)
         }
       } else if (snap.v === 1) {
         const mastered = typeof snap.masteredUrl === "string" ? snap.masteredUrl : ""
@@ -481,11 +427,10 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore corrupt storage */
     }
-    setSessionHydrated(true)
   }, [])
 
   useEffect(() => {
-    if (typeof window === "undefined" || !sessionHydrated) return
+    if (typeof window === "undefined") return
     const payload: MasterSessionSnapshotV2 = {
       v: 2,
       analysisBefore,
@@ -500,22 +445,21 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       masteredPreviewMp3Url,
       masterObjectKey,
       masterExpiresAt,
-      fileName: file?.name ?? "",
+      fileName: masterState.file?.name ?? "",
       sessionId,
       trackDurationSec,
       masterLufs,
       processingTimeMs,
-      workflowPhase,
+      workflowPhase: workflowPhaseFromStep(masterState.step),
     }
     const hasPayload =
       !!masteredUrl ||
       !!analysisBefore ||
       !!analysisAfter ||
-      !!file ||
+      !!masterState.file ||
       !!masterObjectKey ||
       !!masterExpiresAt ||
-      workflowPhase !== "upload" ||
-      currentStep > 1 ||
+      masterState.step > 1 ||
       stylePreset !== "STREAM" ||
       targetLufs !== -14 ||
       stereoEnhance !== 50 ||
@@ -530,17 +474,15 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       }
       return
     }
-    if (file?.name) setStoredFileName(file.name)
+    if (masterState.file?.name) setStoredFileName(masterState.file.name)
     try {
       sessionStorage.setItem(MASTER_SESSION_STORAGE_KEY, JSON.stringify(payload))
-      persistWorkflowLocal(currentStep, file)
     } catch {
       /* ignore quota */
     }
   }, [
-    sessionHydrated,
-    workflowPhase,
-    currentStep,
+    masterState.step,
+    masterState.file,
     analysisBefore,
     analysisAfter,
     stylePreset,
@@ -553,22 +495,26 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     masteredPreviewMp3Url,
     masterObjectKey,
     masterExpiresAt,
-    file,
     sessionId,
     trackDurationSec,
     masterLufs,
     processingTimeMs,
-    persistWorkflowLocal,
   ])
 
   const trackName = useMemo(
-    () => formatTrackNameForAnalytics(file?.name),
-    [file?.name]
+    () => formatTrackNameForAnalytics(masterState.file?.name),
+    [masterState.file?.name],
   )
 
   const value = useMemo(
     () => ({
-      file,
+      masterState,
+      setMasterState,
+      handleMasterUpload,
+      handleContinueToSettings,
+      handleContinueToMaster,
+      handleBackToUpload,
+      file: masterState.file,
       setFile,
       audioUrl,
       setAudioUrl,
@@ -606,24 +552,25 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,
       reconnectSourceFile,
-      workflowPhase,
+      currentStep: masterState.step,
+      setCurrentStep,
+      workflowPhase: workflowPhaseFromStep(masterState.step),
       setWorkflowPhase,
       storedFileName,
-      currentStep,
-      setCurrentStep: applyCurrentStep,
-      handleContinueToSettings,
       continueToSettings: handleContinueToSettings,
+      handleContinueToSettingsLegacy: handleContinueToSettings,
       persistSessionSnapshot,
     }),
     [
-      file,
+      masterState,
+      handleMasterUpload,
+      handleContinueToSettings,
+      handleContinueToMaster,
+      handleBackToUpload,
       setFile,
       audioUrl,
-      setAudioUrl,
       masteredUrl,
       masteredPreviewMp3Url,
-      masterObjectKey,
-      masterExpiresAt,
       analysisBefore,
       analysisAfter,
       stylePreset,
@@ -632,6 +579,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       lowEndControl,
       clarityPresence,
       deliveryEmail,
+      masterObjectKey,
+      masterExpiresAt,
       sessionId,
       trackDurationSec,
       trackName,
@@ -642,13 +591,11 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,
       reconnectSourceFile,
-      workflowPhase,
+      setCurrentStep,
+      setWorkflowPhase,
       storedFileName,
-      currentStep,
-      applyCurrentStep,
-      handleContinueToSettings,
       persistSessionSnapshot,
-    ]
+    ],
   )
 
   return <MasterSessionContext.Provider value={value}>{children}</MasterSessionContext.Provider>
