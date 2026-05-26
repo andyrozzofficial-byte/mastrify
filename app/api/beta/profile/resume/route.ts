@@ -1,8 +1,9 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { normalizeBetaEmail } from "../../../../../lib/betaAccess"
-import { ACCESS_COOKIE_NAME, hasMasteringAccess } from "../../../../../lib/access"
+import { BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../../lib/betaAccess"
+import { ACCESS_COOKIE_NAME } from "../../../../../lib/access"
 import { betaProfileToJson, setBetaEmailCookieOnResponse } from "../../../../../lib/betaProfileResponse"
+import { resolveBetaUserAccess } from "../../../../../lib/betaUserAccess"
 import { getBetaProfileStatus } from "../../../../../lib/betaUserData"
 
 export async function POST(request: Request) {
@@ -19,23 +20,30 @@ export async function POST(request: Request) {
   }
 
   const normalized = normalizeBetaEmail(email)
-  const status = await getBetaProfileStatus(normalized)
   const store = await cookies()
   const accessCookie = store.get(ACCESS_COOKIE_NAME)?.value
-  const masteringAccess = await hasMasteringAccess(accessCookie, normalized)
+  const cookieEmail = store.get(BETA_USER_EMAIL_COOKIE)?.value?.trim()
+  const access = await resolveBetaUserAccess(accessCookie, cookieEmail, normalized)
+  const status = await getBetaProfileStatus(normalized)
+
+  const isBetaUser = access.isBetaUser || access.profileExists
 
   const payload = {
     complete: status.complete,
-    hasMasteringAccess: masteringAccess || status.complete,
+    isBetaUser,
+    hasMasteringAccess: isBetaUser,
+    profileExists: access.profileExists || Boolean(status.profile),
     email: normalized,
     profile: status.profile ? betaProfileToJson(status.profile) : null,
   }
 
-  if (!status.complete) {
+  if (!isBetaUser) {
     return NextResponse.json(payload)
   }
 
   const response = NextResponse.json(payload)
-  setBetaEmailCookieOnResponse(response, normalized)
+  if (!cookieEmail || normalizeBetaEmail(cookieEmail) !== normalized) {
+    setBetaEmailCookieOnResponse(response, normalized)
+  }
   return response
 }

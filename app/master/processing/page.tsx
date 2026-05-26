@@ -45,7 +45,7 @@ const PROCESSING_EASE = [0.22, 1, 0.36, 1] as const
 export default function MasterProcessingPage() {
   const router = useRouter()
   const reduce = useReducedMotion()
-  const { hasAccess, checking, openGate } = useBetaMasteringGate()
+  const { isBetaUser, checking } = useBetaMasteringGate()
   const {
     file,
     audioUrl,
@@ -71,9 +71,8 @@ export default function MasterProcessingPage() {
       router.replace("/master")
       return
     }
-    if (!hasAccess) {
-      openGate()
-      router.replace("/master/settings")
+    if (!isBetaUser) {
+      router.replace("/master")
       return
     }
 
@@ -179,8 +178,7 @@ export default function MasterProcessingPage() {
   }, [
     sessionHydrated,
     checking,
-    hasAccess,
-    openGate,
+    isBetaUser,
     file,
     router,
     setMasteredUrl,

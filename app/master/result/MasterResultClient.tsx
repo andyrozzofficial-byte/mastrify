@@ -108,7 +108,7 @@ function objectKeyFromPlaybackUrl(url: string | null): string {
 }
 
 export default function MasterResultClient() {
-  const { hasAccess, openGate, runIfAllowed } = useBetaMasteringGate()
+  const { isBetaUser, runIfAllowed } = useBetaMasteringGate()
   const {
     file,
     audioUrl,
@@ -735,11 +735,9 @@ export default function MasterResultClient() {
     })
   }
 
-  const handleEmailDelivery = async () => {
-    if (!hasAccess) {
-      openGate()
-      return
-    }
+  const handleEmailDelivery = () => {
+    runIfAllowed(() => {
+      void (async () => {
     const email = deliveryEmail.trim()
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setDeliveryError("Enter a valid email address.")
@@ -777,6 +775,8 @@ export default function MasterResultClient() {
     } finally {
       setDeliverySending(false)
     }
+      })()
+    })
   }
 
   const handleShare = async () => {
@@ -966,7 +966,7 @@ export default function MasterResultClient() {
         ) : null}
       </motion.header>
 
-      {betaFeedbackOn && hasAccess && isPlayableMediaUrl(masteredPlayback.url) ? (
+      {betaFeedbackOn && isBetaUser && isPlayableMediaUrl(masteredPlayback.url) ? (
         <BetaPostMasterFeedback
           visible={!postMasterDismissed}
           masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}
@@ -1245,7 +1245,7 @@ export default function MasterResultClient() {
         </div>
       ) : null}
 
-      {betaFeedbackOn && hasAccess ? (
+      {betaFeedbackOn && isBetaUser ? (
         <BetaFeedbackFlow
           engaged={masterEngaged || isPlayableMediaUrl(masteredPlayback.url)}
           masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}

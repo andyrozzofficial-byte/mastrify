@@ -12,10 +12,10 @@ const REWARDS = [
 ] as const
 
 export default function BetaExperienceBanner() {
-  const { hasAccess, checking } = useBetaMasteringGate()
+  const { isBetaUser, checking } = useBetaMasteringGate()
   const reduce = useReducedMotion()
 
-  if (checking || !hasAccess) return null
+  if (checking || !isBetaUser) return null
 
   return (
     <motion.div

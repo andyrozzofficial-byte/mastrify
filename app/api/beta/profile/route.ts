@@ -1,26 +1,35 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { BETA_DAW_OPTIONS, BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../lib/betaAccess"
-import { ACCESS_COOKIE_NAME, hasMasteringAccess } from "../../../../lib/access"
+import { ACCESS_COOKIE_NAME } from "../../../../lib/access"
 import { BETA_FEEDBACK_GENRE_OPTIONS } from "../../../../lib/betaFeedbackTypes"
 import { betaProfileToJson, setBetaEmailCookieOnResponse } from "../../../../lib/betaProfileResponse"
+import { resolveBetaUserAccess } from "../../../../lib/betaUserAccess"
 import { getBetaProfileStatus, upsertBetaProfile } from "../../../../lib/betaUserData"
 
 export async function GET() {
   const store = await cookies()
   const email = store.get(BETA_USER_EMAIL_COOKIE)?.value?.trim()
   const accessCookie = store.get(ACCESS_COOKIE_NAME)?.value
-  const masteringAccess = await hasMasteringAccess(accessCookie, email)
+  const access = await resolveBetaUserAccess(accessCookie, email)
 
-  if (!email) {
-    return NextResponse.json({ complete: false, email: null, hasMasteringAccess: masteringAccess })
+  if (!email && !access.email) {
+    return NextResponse.json({
+      complete: false,
+      email: null,
+      isBetaUser: access.isBetaUser,
+      hasMasteringAccess: access.hasMasteringAccess,
+      profileExists: access.profileExists,
+    })
   }
 
-  const normalized = normalizeBetaEmail(email)
+  const normalized = access.email ?? normalizeBetaEmail(email!)
   const status = await getBetaProfileStatus(normalized)
   return NextResponse.json({
     complete: status.complete,
-    hasMasteringAccess: masteringAccess,
+    isBetaUser: access.isBetaUser,
+    hasMasteringAccess: access.hasMasteringAccess,
+    profileExists: access.profileExists,
     email: normalized,
     profile: status.profile ? betaProfileToJson(status.profile) : null,
   })
@@ -64,6 +73,7 @@ export async function POST(request: Request) {
     ok: true,
     email: normalized,
     complete: true,
+    isBetaUser: true,
     hasMasteringAccess: true,
   })
   setBetaEmailCookieOnResponse(response, normalized)

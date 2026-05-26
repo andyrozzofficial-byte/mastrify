@@ -43,7 +43,7 @@ function objectKeyFromPlaybackUrl(url: string): string {
 export default function FlowPage() {
   const API = PUBLIC_BACKEND_API_BASE
   const SHOW_REFERENCE = false
-  const { hasAccess, openGate, runIfAllowed } = useBetaMasteringGate()
+  const { runIfAllowed } = useBetaMasteringGate()
 
   const sleep = (ms: number) => new Promise(res => setTimeout(res, ms))
   const [mounted, setMounted] = useState(false)
@@ -448,11 +448,9 @@ const handlePayment = () => {
   })
 }
 
-const handleEmailDelivery = async () => {
-  if (!hasAccess) {
-    openGate()
-    return
-  }
+const handleEmailDelivery = () => {
+  runIfAllowed(() => {
+    void (async () => {
   const email = deliveryEmail.trim()
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     setDeliveryError("Enter a valid email address.")
@@ -489,6 +487,8 @@ const handleEmailDelivery = async () => {
   } finally {
     setDeliverySending(false)
   }
+    })()
+  })
 }
 
   // (metadata sync handled in the preview enforcement effect above)
