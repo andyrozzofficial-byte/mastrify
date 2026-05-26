@@ -18,6 +18,11 @@ export function normalizeBetaEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
+export function isValidBetaUserCookie(value: string | undefined): boolean {
+  const email = value?.trim()
+  return Boolean(email && email.includes("@"))
+}
+
 export function isBetaUserRank(v: string): v is BetaUserRank {
   return (BETA_USER_RANKS as readonly string[]).includes(v)
 }

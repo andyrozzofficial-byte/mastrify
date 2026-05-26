@@ -174,12 +174,9 @@ export function getBetaInvitePayload(origin: string): {
 } {
   const base = origin.replace(/\/$/, "")
   const accessUrl = `${base}/access`
-  const inviteCode =
-    process.env.MASTRIFY_BETA_INVITE_CODE?.trim() ||
-    process.env.MASTRIFY_ACCESS_PASSWORD?.trim() ||
-    null
+  const inviteCode = process.env.MASTRIFY_BETA_INVITE_CODE?.trim() || null
   const inviteMessage = inviteCode
-    ? `Join Mastrify Beta\n${accessUrl}\nAccess code: ${inviteCode}`
-    : `Join Mastrify Beta\n${accessUrl}\nAsk the team for the shared access password.`
+    ? `Join Mastrify Beta\n${accessUrl}\nReferral code: ${inviteCode}`
+    : `Join Mastrify Beta\n${accessUrl}\nSign up with your email to start mastering.`
   return { accessUrl, inviteCode, inviteMessage }
 }

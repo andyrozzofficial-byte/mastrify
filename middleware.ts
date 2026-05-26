@@ -2,14 +2,12 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import {
   ACCESS_COOKIE_NAME,
-  getAccessSecret,
+  hasMasteringAccess,
   isAccessBypassPath,
-  isAccessGateEnabled,
   isProtectedPath,
   safeAccessRedirect,
-  verifyAccessToken,
 } from "./lib/access"
-import { BETA_USER_EMAIL_COOKIE } from "./lib/betaAccess"
+import { BETA_USER_EMAIL_COOKIE, isValidBetaUserCookie } from "./lib/betaAccess"
 
 function normalizePathname(pathname: string): string {
   return pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
@@ -51,28 +49,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  if (isAccessGateEnabled()) {
-    const hasAccess = await verifyAccessToken(
-      request.cookies.get(ACCESS_COOKIE_NAME)?.value,
-      getAccessSecret(),
-    )
+  const betaEmailCookie = request.cookies.get(BETA_USER_EMAIL_COOKIE)?.value
+  const accessCookie = request.cookies.get(ACCESS_COOKIE_NAME)?.value
+  const hasAccess = await hasMasteringAccess(accessCookie, betaEmailCookie)
 
-    if (isAccessBypassPath(pathname)) {
-      if (pathname === "/access" && hasAccess && request.cookies.get(BETA_USER_EMAIL_COOKIE)?.value) {
-        const next = safeAccessRedirect(url.searchParams.get("next"))
-        url.pathname = next
-        url.search = ""
-        return NextResponse.redirect(url)
-      }
-      return NextResponse.next()
-    }
-
-    if (isProtectedPath(pathname) && !hasAccess) {
-      url.pathname = "/access"
+  if (isAccessBypassPath(pathname)) {
+    if (pathname === "/access" && isValidBetaUserCookie(betaEmailCookie)) {
+      const next = safeAccessRedirect(url.searchParams.get("next"))
+      url.pathname = next
       url.search = ""
-      url.searchParams.set("next", pathname)
       return NextResponse.redirect(url)
     }
+    return NextResponse.next()
+  }
+
+  if (isProtectedPath(pathname) && !hasAccess) {
+    url.pathname = "/access"
+    url.search = ""
+    url.searchParams.set("next", pathname)
+    return NextResponse.redirect(url)
   }
 
   // ✅ Tillåt sidor

@@ -1,28 +1,10 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import {
-  ACCESS_COOKIE_NAME,
-  getAccessSecret,
-  isAccessGateEnabled,
-  verifyAccessToken,
-} from "../../../../lib/access"
 import { BETA_DAW_OPTIONS, BETA_USER_EMAIL_COOKIE, normalizeBetaEmail } from "../../../../lib/betaAccess"
 import { BETA_FEEDBACK_GENRE_OPTIONS } from "../../../../lib/betaFeedbackTypes"
-import {
-  getBetaProfileStatus,
-  upsertBetaProfile,
-} from "../../../../lib/betaUserData"
-async function hasBetaAccess(): Promise<boolean> {
-  if (!isAccessGateEnabled()) return true
-  const store = await cookies()
-  return verifyAccessToken(store.get(ACCESS_COOKIE_NAME)?.value, getAccessSecret())
-}
+import { getBetaProfileStatus, upsertBetaProfile } from "../../../../lib/betaUserData"
 
 export async function GET() {
-  if (!(await hasBetaAccess())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
   const store = await cookies()
   const email = store.get(BETA_USER_EMAIL_COOKIE)?.value?.trim()
   if (!email) {
@@ -47,10 +29,6 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!(await hasBetaAccess())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
   let body: { email?: string; name?: string; genre?: string; daw?: string }
   try {
     body = await request.json()
@@ -84,7 +62,7 @@ export async function POST(request: Request) {
   }
 
   const normalized = normalizeBetaEmail(email)
-  const response = NextResponse.json({ ok: true, email: normalized })
+  const response = NextResponse.json({ ok: true, email: normalized, complete: true })
   response.cookies.set(BETA_USER_EMAIL_COOKIE, normalized, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

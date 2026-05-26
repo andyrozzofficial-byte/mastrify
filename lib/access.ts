@@ -1,3 +1,5 @@
+import { isValidBetaUserCookie } from "./betaAccess"
+
 export const ACCESS_COOKIE_NAME = "mastrify_access"
 const ACCESS_PAYLOAD = "mastrify-access-v1"
 
@@ -51,4 +53,16 @@ export async function verifyAccessToken(cookieValue: string | undefined, secret:
     mismatch |= cookieValue.charCodeAt(i) ^ expected.charCodeAt(i)
   }
   return mismatch === 0
+}
+
+/** Beta email cookie or legacy access token (internal / admin tooling). */
+export async function hasMasteringAccess(
+  accessCookie: string | undefined,
+  betaEmailCookie: string | undefined,
+): Promise<boolean> {
+  if (isValidBetaUserCookie(betaEmailCookie)) return true
+  if (isAccessGateEnabled()) {
+    return verifyAccessToken(accessCookie, getAccessSecret())
+  }
+  return false
 }
