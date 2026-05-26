@@ -90,6 +90,12 @@ export function countBugReports(
 
 type PipelineUpload = { session_id: string; created_at: string }
 type ExportRow = { id: string; created_at: string; track_title?: string | null }
+type MasterCompletion = {
+  session_id: string
+  track_name: string | null
+  mastering_style: string | null
+  completed_at: string
+}
 
 export function buildBetaTimeline(input: {
   signupAt: string | null
@@ -98,6 +104,7 @@ export function buildBetaTimeline(input: {
   userJobs: AdminJobRow[]
   userSupport: AdminSupportRow[]
   exports: ExportRow[]
+  completions?: MasterCompletion[]
 }): BetaTimelineEvent[] {
   const events: BetaTimelineEvent[] = []
 
@@ -123,8 +130,22 @@ export function buildBetaTimeline(input: {
     })
   }
 
+  const completionSessions = new Set<string>()
+  for (const c of input.completions ?? []) {
+    completionSessions.add(c.session_id)
+    events.push({
+      id: `master-complete-${c.session_id}`,
+      type: "master",
+      label: "Completed master",
+      detail: c.track_name ?? c.mastering_style,
+      created_at: c.completed_at,
+      href: null,
+    })
+  }
+
   for (const j of input.userJobs) {
     if (j.status !== "complete") continue
+    if (j.session_id && completionSessions.has(j.session_id)) continue
     events.push({
       id: `master-${j.id}`,
       type: "master",

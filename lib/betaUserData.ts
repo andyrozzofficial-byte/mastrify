@@ -43,6 +43,10 @@ import {
   MASTERED_EXPORTS_TABLE,
   PIPELINE_EVENTS_TABLE,
 } from "./adminData"
+import {
+  fetchBetaMasterCompletionsForEmail,
+  type BetaMasterCompletionRow,
+} from "./betaMasterTracking"
 import { createSupabaseServerClient } from "./supabaseServer"
 import { formatSupabaseTableError } from "./supabaseSchemaErrors"
 
@@ -101,10 +105,8 @@ function tagCountsFromArrays(arrays: string[][]): BetaUserTagCount[] {
     .sort((a, b) => b.count - a.count)
 }
 
-function countCompletedMasters(email: string, jobs: AdminJobRow[]): number {
-  const normalized = email.toLowerCase()
-  return jobs.filter((j) => j.user_email?.toLowerCase() === normalized && j.status === "complete")
-    .length
+function countCompletedMasters(completions: BetaMasterCompletionRow[]): number {
+  return completions.length
 }
 
 /** Count signups that stored `referred_by:<email>` in profile notes (no extra tables). */
@@ -149,6 +151,7 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
 
   const userFeedback = feedback.filter((f) => f.contact_email?.toLowerCase() === normalized)
   const userSupport = support.filter((s) => s.email.toLowerCase() === normalized)
+  const completions = await fetchBetaMasterCompletionsForEmail(normalized)
   const inviteMap = await buildCreatorInviteCountByReferrer()
   const counts = aggregateBetaActivityForEmail(
     normalized,
@@ -156,6 +159,7 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
     userSupport,
     jobs,
     inviteMap.get(normalized) ?? 0,
+    countCompletedMasters(completions),
   )
   const points = calcBetaPoints(counts)
   const rank = effectiveBetaRank(profile?.beta_rank, points)
@@ -372,6 +376,7 @@ function buildListRow(
   userSupport: AdminSupportRow[],
   jobs: AdminJobRow[],
   creatorInviteCount: number,
+  completions: BetaMasterCompletionRow[],
 ): BetaUserListRow {
   const lastTimes = [
     ...userFeedback.map((f) => f.created_at),
@@ -389,7 +394,7 @@ function buildListRow(
 
   const soundedOff = userFeedback.flatMap((f) => f.survey.soundedOff ?? [])
   const styles = userFeedback.map((f) => f.mastering_style)
-  const masterCount = countCompletedMasters(email, jobs)
+  const masterCount = countCompletedMasters(completions)
   const activeDaySet = new Set<string>()
   for (const iso of lastTimes) activeDaySet.add(dateKey(iso))
   if (profile?.beta_signed_up_at) activeDaySet.add(dateKey(profile.beta_signed_up_at))
@@ -408,6 +413,7 @@ function buildListRow(
     userSupport,
     jobs,
     creatorInviteCount,
+    masterCount,
   )
   const betaPoints = calcBetaPoints(counts)
   const rankKey = effectiveBetaRank(profile?.beta_rank, betaPoints)
@@ -485,6 +491,12 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
   }
 
   const inviteMap = await buildCreatorInviteCountByReferrer()
+  const completionsByEmail = new Map<string, BetaMasterCompletionRow[]>()
+  await Promise.all(
+    emails.map(async (email) => {
+      completionsByEmail.set(email, await fetchBetaMasterCompletionsForEmail(email))
+    }),
+  )
 
   const rows = emails.map((email) =>
     buildListRow(
@@ -494,6 +506,7 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
       supportByEmail.get(email) ?? [],
       jobs,
       inviteMap.get(email) ?? 0,
+      completionsByEmail.get(email) ?? [],
     ),
   )
 
@@ -556,6 +569,7 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     ...userFeedback.map((f) => f.created_at),
     ...userSupport.map((s) => s.created_at),
     ...userJobs.map((j) => j.created_at),
+    ...completions.map((c) => c.completed_at),
   ]) {
     activityDates.add(dateKey(iso))
   }
@@ -589,6 +603,7 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     userSupport.map((s) => [s.subject, s.category].filter((x): x is string => Boolean(x?.trim()))),
   )
 
+  const completions = await fetchBetaMasterCompletionsForEmail(normalized)
   const inviteMap = await buildCreatorInviteCountByReferrer()
   const list = buildListRow(
     normalized,
@@ -597,6 +612,7 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     userSupport,
     jobs,
     inviteMap.get(normalized) ?? 0,
+    completions,
   )
   const userExports = await fetchExportsForEmail(normalized)
   const pipelineUploads = await fetchPipelineUploadsForSessions(sessions)
@@ -615,6 +631,7 @@ export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfi
     userJobs,
     userSupport,
     exports: userExports,
+    completions,
   })
 
   return {

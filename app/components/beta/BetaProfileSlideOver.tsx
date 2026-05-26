@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useCallback, useEffect, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import type { BetaProfilePanelData } from "../../../lib/betaProfilePanel"
+import { BETA_PROFILE_REFRESH_EVENT } from "../../../lib/betaMasterTrackingClient"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 const PANEL_MS = 0.28
@@ -91,6 +92,15 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) return
     void loadPanel()
+  }, [open, loadPanel])
+
+  useEffect(() => {
+    const onRefresh = () => {
+      if (!open) return
+      void loadPanel()
+    }
+    window.addEventListener(BETA_PROFILE_REFRESH_EVENT, onRefresh)
+    return () => window.removeEventListener(BETA_PROFILE_REFRESH_EVENT, onRefresh)
   }, [open, loadPanel])
 
   useEffect(() => {

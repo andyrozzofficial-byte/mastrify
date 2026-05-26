@@ -114,13 +114,11 @@ export function aggregateBetaActivityForEmail(
   email: string,
   userFeedback: AdminFeedbackRow[],
   _userSupport: AdminSupportRow[],
-  jobs: AdminJobRow[],
+  _jobs: AdminJobRow[],
   creatorInviteCount: number,
+  completedMasterCount?: number,
 ): BetaActivityCounts {
-  const normalized = email.toLowerCase()
-  const completedMasters = jobs.filter(
-    (j) => j.user_email?.toLowerCase() === normalized && j.status === "complete",
-  ).length
+  const completedMasters = completedMasterCount ?? 0
 
   return {
     completedMasters,

@@ -26,6 +26,7 @@ import {
   BETA_FEEDBACK_WOULD_RELEASE_OPTIONS,
   type BetaFeedbackSessionAnalytics,
 } from "../../../lib/betaFeedbackTypes"
+import { dispatchBetaProfileRefresh } from "../../../lib/betaMasterTrackingClient"
 import { useBetaMasteringGate } from "../beta/BetaMasteringGateProvider"
 import BetaFeedbackChipSelect from "./BetaFeedbackChipSelect"
 import BetaFeedbackOptionalNotes from "./BetaFeedbackOptionalNotes"
@@ -275,6 +276,7 @@ export default function BetaMasterFeedback({
       writeBetaFeedbackStatus("submitted")
       writePostMasterFeedbackStatus(sessionId, "submitted")
       await refreshAccess?.({ silent: true })
+      dispatchBetaProfileRefresh()
       setSubmitted(true)
     } catch {
       setError("Something went wrong. Please try again.")

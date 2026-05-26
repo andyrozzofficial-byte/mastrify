@@ -13,6 +13,13 @@ import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
 import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
+import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
+import { extractMasterLufs } from "../../../lib/extractMasterLufs"
+import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
+import {
+  dispatchBetaProfileRefresh,
+  registerBetaMasterComplete,
+} from "../../../lib/betaMasterTrackingClient"
 import { useMasterSession } from "../MasterSessionProvider"
 
 const API = PUBLIC_BACKEND_API_BASE
@@ -47,13 +54,14 @@ export default function MasterProcessingPage() {
   const pathname = usePathname()
   const onMasterRoot = pathname === "/master" || pathname === "/master/"
   const reduce = useReducedMotion()
-  const { isBeta, checking } = useBetaMasteringGate()
+  const { isBeta, checking, refreshAccess } = useBetaMasteringGate()
   const {
     masterState,
     setMasterState,
     file,
     audioUrl,
     sessionHydrated,
+    sessionId,
     setMasteredUrl,
     setMasteredPreviewMp3Url,
     setMasterObjectKey,
@@ -142,9 +150,24 @@ export default function MasterProcessingPage() {
 
         const analysisBeforePayload = (res.data.analysisBefore ?? null) as Record<string, unknown> | null
         const analysisAfterPayload = (res.data.analysisAfter ?? null) as Record<string, unknown> | null
+        const elapsedMs = Date.now() - processingStartedAt
         setAnalysisBefore(analysisBeforePayload)
         setAnalysisAfter(analysisAfterPayload)
-        recordProcessingComplete(Date.now() - processingStartedAt, analysisAfterPayload)
+        recordProcessingComplete(elapsedMs, analysisAfterPayload)
+
+        if (isBetaFeedbackEnabled() && sessionId.trim()) {
+          const completeResult = await registerBetaMasterComplete({
+            sessionId,
+            trackName: activeFile.name,
+            masteringStyle: masteringStyleLabel(stylePreset),
+            processingTimeMs: elapsedMs,
+            masterLufs: extractMasterLufs(analysisAfterPayload),
+          })
+          if (completeResult.ok) {
+            await refreshAccess({ silent: true })
+            dispatchBetaProfileRefresh()
+          }
+        }
 
         const mastered =
           res.data.afterUrl || res.data.fullUrl || (res.data.after ? `${API}${res.data.after}` : "")
@@ -204,6 +227,8 @@ export default function MasterProcessingPage() {
     setAnalysisBefore,
     setAnalysisAfter,
     recordProcessingComplete,
+    sessionId,
+    refreshAccess,
     stylePreset,
     targetLufs,
     stereoEnhance,
