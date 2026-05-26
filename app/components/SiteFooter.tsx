@@ -82,29 +82,44 @@ function FooterLinksMobile({ columns }: { columns: FooterLinkColumn[] }) {
 }
 
 function FooterLinksDesktop({ columns }: { columns: FooterLinkColumn[] }) {
+  const linkRowCount = Math.max(...columns.map((column) => column.links.length), 0)
+
   return (
     <nav
       aria-label="Footer navigation"
-      className="footer-links-grid hidden w-full min-w-0 md:grid md:grid-cols-3 md:items-start"
-      style={{ columnGap: "48px" }}
+      className="footer-links-grid hidden w-full min-w-0 md:grid md:items-center"
+      style={{
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        columnGap: "48px",
+        rowGap: "18px",
+      }}
     >
       {columns.map((column) => (
-        <div key={column.title} className="footer-links-col flex min-w-0 flex-col">
-          <h3 className={`m-0 w-full text-center ${FOOTER_LINKS_HEADING_CLASS}`}>{column.title}</h3>
-          <ul
-            className="m-0 mt-6 flex w-full list-none flex-col items-start p-0"
-            style={{ rowGap: "18px" }}
-          >
-            {column.links.map((link) => (
-              <li key={link.href} className="m-0 w-full p-0">
-                <Link href={link.href} className="footer-tap-link">
+        <h3
+          key={`heading-${column.title}`}
+          className={`m-0 whitespace-nowrap text-center ${FOOTER_LINKS_HEADING_CLASS}`}
+        >
+          {column.title}
+        </h3>
+      ))}
+
+      {Array.from({ length: linkRowCount }, (_, rowIndex) =>
+        columns.map((column) => {
+          const link = column.links[rowIndex]
+          return (
+            <div
+              key={`${column.title}-row-${rowIndex}`}
+              className="flex min-h-[2.5rem] min-w-0 items-center justify-start"
+            >
+              {link ? (
+                <Link href={link.href} className="footer-tap-link whitespace-nowrap">
                   {link.label}
                 </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+              ) : null}
+            </div>
+          )
+        }),
+      )}
     </nav>
   )
 }
