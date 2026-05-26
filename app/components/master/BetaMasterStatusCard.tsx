@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion"
 import { useBetaMasteringGate } from "../beta/BetaMasteringGateProvider"
+import BetaResultRewardStrip from "./BetaResultRewardStrip"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -21,9 +22,18 @@ function rankPillClass(rankLabel: string): string {
 
 type Props = {
   className?: string
+  /** Result page: tighter panel + completion reward strip */
+  variant?: "upload" | "result"
+  /** @deprecated Use variant="result" */
+  showCompletionReward?: boolean
 }
 
-export default function BetaMasterStatusCard({ className = "" }: Props) {
+export default function BetaMasterStatusCard({
+  className = "",
+  variant = "upload",
+  showCompletionReward = false,
+}: Props) {
+  const isResult = variant === "result" || showCompletionReward
   const { isBeta, checking, betaUi } = useBetaMasteringGate()
   const reduce = useReducedMotion()
 
@@ -69,14 +79,16 @@ export default function BetaMasterStatusCard({ className = "" }: Props) {
             </div>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-[13px] font-semibold leading-snug text-white/94 sm:text-[14px]">
-              You&apos;re helping shape Mastrify.
-            </p>
-            <p className="text-[11px] leading-relaxed text-white/50 sm:text-[12px]">
-              Every master and feedback helps improve Mastrify.
-            </p>
-          </div>
+          {!isResult ? (
+            <div className="space-y-1">
+              <p className="text-[13px] font-semibold leading-snug text-white/94 sm:text-[14px]">
+                You&apos;re helping shape Mastrify.
+              </p>
+              <p className="text-[11px] leading-relaxed text-white/50 sm:text-[12px]">
+                Every master and feedback helps improve Mastrify.
+              </p>
+            </div>
+          ) : null}
 
           <div className="space-y-2 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-2.5 sm:px-3.5 sm:py-3">
             <div className="flex items-baseline justify-between gap-3">
@@ -102,7 +114,9 @@ export default function BetaMasterStatusCard({ className = "" }: Props) {
             </div>
           </div>
 
-          {earnWays.length > 0 ? (
+          {isResult && betaUi ? <BetaResultRewardStrip betaUi={betaUi} /> : null}
+
+          {!isResult && earnWays.length > 0 ? (
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/38 sm:text-[10px]">
                 Ways to earn

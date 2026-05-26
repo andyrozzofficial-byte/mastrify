@@ -277,7 +277,7 @@ export default function BetaMasterFeedback({
       initial={reduce ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: EASE }}
-      className="product-form-column mt-8 w-full sm:mt-10"
+      className="product-form-column mx-auto mt-0 w-full max-w-[43.75rem]"
       aria-labelledby="beta-master-feedback-title"
     >
       <div className="product-surface-card overflow-hidden border-violet-400/18 bg-white/[0.035] p-5 shadow-[0_0_32px_rgba(124,58,237,0.08)] sm:p-6">

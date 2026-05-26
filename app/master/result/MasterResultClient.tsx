@@ -41,7 +41,7 @@ import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGatePro
 import BetaDownloadRewardToast from "../../components/master/BetaDownloadRewardToast"
 import BetaMasterFeedback from "../../components/master/BetaMasterFeedback"
 import BetaResultCompleteCelebration from "../../components/master/BetaResultCompleteCelebration"
-import BetaResultRewardWidget from "../../components/master/BetaResultRewardWidget"
+import BetaMasterStatusCard from "../../components/master/BetaMasterStatusCard"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
@@ -914,78 +914,78 @@ export default function MasterResultClient() {
     <>
       <BetaDownloadRewardToast visible={downloadToastVisible} onDismiss={dismissDownloadToast} />
 
-      <motion.div
-        className={`page-container product-flow-page-bottom product-result-page master-result-shell relative min-w-0 pt-5 md:pt-6 ${showBetaRewards ? "sm:pr-[14.5rem]" : ""}`}
-      >
-        <div className="master-result-stack w-full">
-        {showBetaRewards && betaUi ? <BetaResultRewardWidget betaUi={betaUi} /> : null}
+      <motion.div className="page-container product-flow-page-bottom product-result-page master-result-shell relative min-w-0">
+        <div className="master-result-rail">
+          {showBetaRewards && betaUi ? (
+            <BetaMasterStatusCard className="master-result-insider" variant="result" />
+          ) : null}
 
-      <motion.header
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
-        className="text-center"
-      >
-        <h1 className="text-[1.7rem] font-semibold leading-[1.12] tracking-[-0.02em] text-white sm:text-[1.95rem] md:text-[2.1rem]">
-          Your master is ready!
-        </h1>
-        <p className="mx-auto mt-3 max-w-lg text-[15px] font-medium tracking-[-0.01em] text-violet-100/88 sm:mt-3.5 sm:text-base">
-          {masterDescriptor}
-        </p>
-        <div
-          className="mx-auto mt-3 h-px w-12 bg-gradient-to-r from-transparent via-violet-400/35 to-transparent sm:mt-3.5 sm:w-16 sm:via-violet-400/30"
-          aria-hidden
-        />
-        <p className="mx-auto mt-3 max-w-md text-[13px] leading-snug text-white/70 md:mt-3.5 md:text-[14px] md:leading-relaxed">
-          Smart mastering tuned for punch, clarity, and your loudness goal.
-        </p>
-        {adaptiveMessage ? (
-          <motion.div
-            initial={{ opacity: 0, y: 4 }}
+          <motion.header
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mx-auto mt-3 flex max-w-md flex-col items-center gap-1.5"
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            className="master-result-hero"
           >
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/[0.08] px-3 py-1 text-[11px] font-medium text-emerald-200/90">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80" aria-hidden />
-              {adaptiveMessage}
-            </span>
-            {adaptiveDetails.map((line) => (
-              <span key={line} className="text-[11px] text-white/68">
-                {line}
-              </span>
-            ))}
-          </motion.div>
-        ) : null}
-        {qualityTags.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.08 }}
-            className="mx-auto mt-3 flex max-w-md flex-wrap justify-center gap-1.5"
-          >
-            {qualityTags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-white/[0.07] bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-white/50"
-              >
-                {tag}
-              </span>
-            ))}
-          </motion.div>
-        ) : null}
-        {trackMeta ? (
-          <div className="mx-auto mt-6 w-full max-w-md min-w-0 px-2 text-center sm:mt-7">
-            <p className="break-words text-[17px] font-semibold leading-snug tracking-[-0.02em] text-white/78 sm:text-[18px]">
-              {trackMeta.title}
-            </p>
-            {trackMeta.artist ? (
-              <p className="mt-1.5 break-words text-[12px] font-medium leading-snug tracking-[0.01em] text-white/68 sm:text-[13px]">
-                {trackMeta.artist}
-              </p>
+            <h1 className="master-result-hero__title text-[1.65rem] font-semibold leading-[1.12] text-white sm:text-[1.9rem] md:text-[2rem]">
+              Your master is ready!
+            </h1>
+            {trackMeta ? (
+              <div className="master-result-hero__track mx-auto w-full min-w-0 max-w-lg px-1">
+                <p className="break-words text-[16px] font-semibold leading-snug tracking-[-0.02em] text-white/85 sm:text-[17px]">
+                  {trackMeta.title}
+                </p>
+                {trackMeta.artist ? (
+                  <p className="mt-1 break-words text-[12px] font-medium leading-snug text-white/62 sm:text-[13px]">
+                    {trackMeta.artist}
+                  </p>
+                ) : null}
+              </div>
             ) : null}
-          </div>
-        ) : null}
-      </motion.header>
+            <p className="mx-auto mt-2.5 max-w-lg text-[14px] font-medium tracking-[-0.01em] text-violet-100/88 sm:text-[15px]">
+              {masterDescriptor}
+            </p>
+            {qualityTags.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.06 }}
+                className="master-result-hero__tags mx-auto flex max-w-lg flex-wrap justify-center gap-1.5"
+              >
+                {qualityTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-white/[0.08] bg-white/[0.05] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-white/55"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </motion.div>
+            ) : null}
+            <div
+              className="mx-auto mt-2.5 h-px w-12 bg-gradient-to-r from-transparent via-violet-400/35 to-transparent sm:w-14"
+              aria-hidden
+            />
+            <p className="mx-auto mt-2.5 max-w-lg text-[13px] leading-snug text-white/68 sm:text-[14px]">
+              Smart mastering tuned for punch, clarity, and your loudness goal.
+            </p>
+            {adaptiveMessage ? (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mx-auto mt-2.5 flex max-w-lg flex-col items-center gap-1.5"
+              >
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/[0.08] px-3 py-1 text-[11px] font-medium text-emerald-200/90">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80" aria-hidden />
+                  {adaptiveMessage}
+                </span>
+                {adaptiveDetails.map((line) => (
+                  <span key={line} className="text-[11px] text-white/65">
+                    {line}
+                  </span>
+                ))}
+              </motion.div>
+            ) : null}
+          </motion.header>
 
       {showBetaRewards && betaUi && showRewardCelebration ? (
         <BetaResultCompleteCelebration points={betaUi.points} onComplete={handleRewardCelebrationComplete} />
@@ -995,7 +995,7 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
-        className="product-surface-card master-result-panel mt-8 min-w-0 w-full overflow-hidden p-4 sm:p-5 md:mt-10"
+        className="master-result-panel min-w-0 w-full overflow-hidden p-4 sm:p-5 md:p-6"
       >
         <div className="master-result-grid grid gap-6 md:gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-stretch lg:gap-8">
           {/* Before / After metrics */}
@@ -1172,16 +1172,16 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.08, ease: "easeOut" }}
-        className="product-result-center relative z-10 mt-8 w-full sm:mt-9"
+        className="master-result-download relative z-10"
         aria-labelledby="master-result-download-heading"
       >
         <h2
           id="master-result-download-heading"
-          className="text-center text-[1.15rem] font-semibold tracking-[-0.02em] text-white sm:text-[1.25rem]"
+          className="text-center text-[1.05rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.15rem]"
         >
-          Your master is ready
+          Download your master
         </h2>
-        <div className="mt-4 flex flex-col gap-3 sm:mt-5">
+        <div className="mt-3 flex flex-col gap-3 sm:mt-4">
           {!deliverySent ? (
             <button
               type="button"
@@ -1206,12 +1206,14 @@ export default function MasterResultClient() {
       </motion.section>
 
       {betaFeedbackOn && isBetaUser && isPlayableMediaUrl(masteredPlayback.url) ? (
-        <BetaMasterFeedback
-          visible={!feedbackDismissed}
-          masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}
-          sessionAnalytics={feedbackSessionAnalytics}
-          onDismiss={() => setFeedbackDismissed(true)}
-        />
+        <div className="master-result-feedback">
+          <BetaMasterFeedback
+            visible={!feedbackDismissed}
+            masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}
+            sessionAnalytics={feedbackSessionAnalytics}
+            onDismiss={() => setFeedbackDismissed(true)}
+          />
+        </div>
       ) : null}
 
       {deliveryOpen && !deliverySent ? (
@@ -1272,7 +1274,7 @@ export default function MasterResultClient() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="product-result-center mt-4 pb-1 text-center md:mt-5"
+        className="mx-auto mt-5 max-w-lg pb-1 text-center"
       >
         <p className="text-[12px] leading-relaxed text-white/66 md:text-[13px]">Happy with the result? Share your master!</p>
         <button
