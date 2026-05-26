@@ -170,6 +170,7 @@ export type BetaMasteringUiState = {
   points: number
   progressTitle: string
   progressLabel: string
+  progressPct: number
   nextReward: string
 }
 
@@ -182,8 +183,8 @@ export function buildBetaMasteringUiState(input: {
   const { rankProgress } = input
   const navLabel = rankProgress.rank === "explorer" ? "Beta Member" : input.betaRank
   const progressTitle = rankProgress.nextRankLabel
-    ? `${rankProgress.nextRankLabel} progress`
-    : `${rankProgress.rankLabel} progress`
+    ? `${rankProgress.nextRankLabel} Progress`
+    : `${rankProgress.rankLabel} Progress`
   const progressLabel =
     rankProgress.nextThreshold != null
       ? `${rankProgress.points} / ${rankProgress.nextThreshold} points`
@@ -198,6 +199,7 @@ export function buildBetaMasteringUiState(input: {
     points: input.betaPoints,
     progressTitle,
     progressLabel,
+    progressPct: rankProgress.progressPct,
     nextReward,
   }
 }

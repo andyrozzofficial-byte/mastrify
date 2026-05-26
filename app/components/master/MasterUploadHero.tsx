@@ -59,7 +59,7 @@ export default function MasterUploadHero({
 
       <MasterFlowStepRail phase="upload" className="marketing-hero-step-rail justify-start" />
 
-      <BetaMasterStatusCard className="my-3 sm:my-3.5" />
+      <BetaMasterStatusCard className="my-2 sm:my-2.5" />
 
       <MarketingActionSlot>
         <MasterUploadCard
