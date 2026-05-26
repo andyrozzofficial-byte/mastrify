@@ -43,6 +43,7 @@ export default function JoinBetaNavLink({
         label={gate.betaUi?.navLabel ?? "Beta Member"}
         compact={compact}
         className={className}
+        onClick={gate.openProfilePanel}
       />
     )
   }

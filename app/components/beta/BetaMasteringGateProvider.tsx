@@ -16,6 +16,7 @@ import type { BetaAccessJson } from "../../../lib/betaClientAccess"
 import { accessFromBetaJson } from "../../../lib/betaClientAccess"
 import type { BetaMasteringUiState } from "../../../lib/betaPoints"
 import { getStoredBetaEmail, setStoredBetaEmail } from "../../../lib/betaSessionStorage"
+import BetaProfileSlideOver from "./BetaProfileSlideOver"
 
 function logClientBetaAccess(message: string, detail?: Record<string, unknown>) {
   if (detail) console.log(`[beta-access] ${message}`, detail)
@@ -33,6 +34,9 @@ type BetaMasteringGateContextValue = {
   gateOpen: boolean
   openGate: () => void
   closeGate: () => void
+  profilePanelOpen: boolean
+  openProfilePanel: () => void
+  closeProfilePanel: () => void
   /** Apply profile API JSON immediately (e.g. right after signup POST). */
   applyBetaSession: (json: BetaAccessJson | null | undefined) => boolean
   refreshAccess: (options?: { silent?: boolean }) => Promise<boolean>
@@ -59,6 +63,7 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
   const [betaUi, setBetaUi] = useState<BetaMasteringUiState | null>(null)
   const [checking, setChecking] = useState(true)
   const [gateOpen, setGateOpen] = useState(false)
+  const [profilePanelOpen, setProfilePanelOpen] = useState(false)
   const isBetaUserRef = useRef(false)
   const refreshInFlightRef = useRef<Promise<boolean> | null>(null)
 
@@ -161,6 +166,8 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
 
   const openGate = useCallback(() => setGateOpen(true), [])
   const closeGate = useCallback(() => setGateOpen(false), [])
+  const openProfilePanel = useCallback(() => setProfilePanelOpen(true), [])
+  const closeProfilePanel = useCallback(() => setProfilePanelOpen(false), [])
 
   const ensureBetaAccess = useCallback(async (): Promise<boolean> => {
     if (isBetaUserRef.current) return true
@@ -193,6 +200,9 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
       gateOpen,
       openGate,
       closeGate,
+      profilePanelOpen,
+      openProfilePanel,
+      closeProfilePanel,
       applyBetaSession,
       refreshAccess,
       runIfAllowed,
@@ -204,6 +214,9 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
       gateOpen,
       openGate,
       closeGate,
+      profilePanelOpen,
+      openProfilePanel,
+      closeProfilePanel,
       applyBetaSession,
       refreshAccess,
       runIfAllowed,
@@ -266,6 +279,7 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
           </div>
         </div>
       ) : null}
+      <BetaProfileSlideOver open={profilePanelOpen} onClose={closeProfilePanel} />
     </BetaMasteringGateContext.Provider>
   )
 }
