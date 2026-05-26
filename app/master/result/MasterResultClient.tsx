@@ -43,7 +43,8 @@ import BetaReportIssueSection from "../../components/beta/BetaReportIssueSection
 import BetaMasterStatusCard from "../../components/master/BetaMasterStatusCard"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
-import { reportBetaMasterCompleted, reportBetaMasterDownload } from "../../../lib/betaMasterTrackingClient"
+import { reportBetaMasterCompleted } from "../../../lib/betaMasterTrackingClient"
+import { hasClientReportedBetaMasterComplete } from "../../../lib/betaTrackingStorage"
 import { getBetaReporterEmail } from "../../../lib/betaReporterEmail"
 import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
@@ -219,11 +220,6 @@ export default function MasterResultClient() {
     setIsMobileClient(/iPhone|iPad|iPod|Android|Mobile/i.test(ua))
   }, [])
 
-  useEffect(() => {
-    if (!mounted || !showBetaRewards) return
-    void refreshAccess({ silent: true })
-  }, [mounted, showBetaRewards, refreshAccess])
-
   const masterCompletionReportedRef = useRef<string | null>(null)
 
   const originalPreviewUrl = useMemo(() => normalizePlaybackUrl(audioUrl), [audioUrl])
@@ -238,6 +234,10 @@ export default function MasterResultClient() {
       masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl) || null
     const reporterEmail = getBetaReporterEmail(getStoredBetaEmail(), deliveryEmail)
     if (masterCompletionReportedRef.current === trackingSessionId) return
+    if (hasClientReportedBetaMasterComplete(trackingSessionId)) {
+      masterCompletionReportedRef.current = trackingSessionId
+      return
+    }
 
     void (async () => {
       const ok = await reportBetaMasterCompleted(

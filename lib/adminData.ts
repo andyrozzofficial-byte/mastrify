@@ -421,6 +421,10 @@ export async function fetchAdminOverview(): Promise<AdminOverview | { error: str
   }
 }
 
+/** Cap list reads — overview/analytics slice client-side; avoids unbounded table scans. */
+export const ADMIN_FEEDBACK_LIST_LIMIT = 500
+export const ADMIN_SUPPORT_LIST_LIMIT = 500
+
 export async function fetchAdminFeedback(): Promise<AdminFeedbackRow[] | { error: string }> {
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
@@ -430,6 +434,7 @@ export async function fetchAdminFeedback(): Promise<AdminFeedbackRow[] | { error
     .from(BETA_FEEDBACK_TABLE)
     .select(select)
     .order("created_at", { ascending: false })
+    .limit(ADMIN_FEEDBACK_LIST_LIMIT)
 
   if (error && isMissingFeedbackStageColumn(error.message)) {
     select = FEEDBACK_SELECT_WITHOUT_STAGE
@@ -437,6 +442,7 @@ export async function fetchAdminFeedback(): Promise<AdminFeedbackRow[] | { error
       .from(BETA_FEEDBACK_TABLE)
       .select(select)
       .order("created_at", { ascending: false })
+      .limit(ADMIN_FEEDBACK_LIST_LIMIT)
     data = retry.data
     error = retry.error
   }
@@ -499,6 +505,7 @@ export async function fetchAdminSupport(): Promise<AdminSupportRow[] | { error: 
     .from(SUPPORT_INBOX_TABLE)
     .select("*")
     .order("created_at", { ascending: false })
+    .limit(ADMIN_SUPPORT_LIST_LIMIT)
 
   if (error) return { error: error.message }
 
@@ -506,11 +513,18 @@ export async function fetchAdminSupport(): Promise<AdminSupportRow[] | { error: 
 }
 
 export async function fetchSupportTicket(id: string): Promise<AdminSupportRow | { error: string }> {
-  const rows = await fetchAdminSupport()
-  if ("error" in rows) return rows
-  const ticket = rows.find((r) => r.id === id)
-  if (!ticket) return { error: "Ticket not found" }
-  return ticket
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return { error: "Database unavailable" }
+
+  const { data, error } = await supabase
+    .from(SUPPORT_INBOX_TABLE)
+    .select("*")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (error) return { error: error.message }
+  if (!data) return { error: "Ticket not found" }
+  return mapSupportRow(data as Record<string, unknown>)
 }
 
 export async function createSupportItem(input: {

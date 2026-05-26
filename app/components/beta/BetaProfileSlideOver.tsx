@@ -1,7 +1,8 @@
 "use client"
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
-import { useCallback, useEffect, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import { perfTimeEnd, perfTimeStart } from "../../../lib/perfDebug"
 import { createPortal } from "react-dom"
 import type { BetaProfilePanelData } from "../../../lib/betaProfilePanel"
 import {
@@ -69,8 +70,10 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [panel, setPanel] = useState<BetaProfilePanelData | null>(null)
+  const skipRefreshRef = useRef(false)
 
   const loadPanel = useCallback(async () => {
+    perfTimeStart("beta-profile-panel-load")
     setLoading(true)
     setError(null)
     try {
@@ -94,6 +97,7 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
       setPanel(null)
     } finally {
       setLoading(false)
+      perfTimeEnd("beta-profile-panel-load")
     }
   }, [])
 
@@ -108,12 +112,18 @@ export default function BetaProfileSlideOver({ open, onClose }: Props) {
 
   useEffect(() => {
     const onRefresh = () => {
-      if (!open) return
+      if (!open || skipRefreshRef.current) return
       void loadPanel()
     }
     const onPanel = (event: Event) => {
       const detail = (event as CustomEvent<BetaProfilePanelData>).detail
-      if (detail) setPanel(detail)
+      if (detail) {
+        skipRefreshRef.current = true
+        setPanel(detail)
+        window.setTimeout(() => {
+          skipRefreshRef.current = false
+        }, 3000)
+      }
     }
     window.addEventListener(BETA_PROFILE_REFRESH_EVENT, onRefresh)
     window.addEventListener(BETA_PROFILE_PANEL_EVENT, onPanel)

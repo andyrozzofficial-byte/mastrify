@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { createContext, useCallback, useContext, useEffect, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import type { AdminNavBadges, AdminOverview } from "../../../lib/adminTypes"
 import type { AdminRole } from "../../../lib/adminRoles"
+import { perfTimeEnd, perfTimeStart } from "../../../lib/perfDebug"
 import { ADMIN_NAV, AdminNavLink } from "./admin-shared"
 import "./admin-mobile.css"
 
@@ -14,8 +15,24 @@ const defaultBadges: AdminNavBadges = { feedback: 0, support: 0 }
 
 const AdminBadgeContext = createContext<AdminNavBadges>(defaultBadges)
 
+type AdminOverviewContextValue = {
+  overview: AdminOverview | null
+  overviewLoading: boolean
+  overviewError: string | null
+}
+
+const AdminOverviewContext = createContext<AdminOverviewContextValue>({
+  overview: null,
+  overviewLoading: true,
+  overviewError: null,
+})
+
 export function useAdminBadges() {
   return useContext(AdminBadgeContext)
+}
+
+export function useAdminOverview() {
+  return useContext(AdminOverviewContext)
 }
 
 export default function AdminShell({ children }: Props) {
@@ -24,29 +41,47 @@ export default function AdminShell({ children }: Props) {
   const [auth, setAuth] = useState<"loading" | "login" | "ready">("loading")
   const [role, setRole] = useState<AdminRole | null>(null)
   const [badges, setBadges] = useState<AdminNavBadges>(defaultBadges)
+  const [overview, setOverview] = useState<AdminOverview | null>(null)
+  const [overviewLoading, setOverviewLoading] = useState(true)
+  const [overviewError, setOverviewError] = useState<string | null>(null)
   const [mobileNav, setMobileNav] = useState(false)
 
   const closeMobileNav = useCallback(() => setMobileNav(false), [])
 
   const checkAuth = useCallback(async () => {
+    setOverviewLoading(true)
+    setOverviewError(null)
     try {
-      const res = await fetch("/api/admin/overview", { cache: "no-store" })
-      if (res.status === 401) {
+      perfTimeStart("admin-shell-auth")
+      const me = await fetch("/api/admin/me", { cache: "no-store" })
+      if (me.status === 401) {
         setAuth("login")
         return
       }
-      if (!res.ok) {
+      const meJson = await me.json().catch(() => null)
+      if (!me.ok) {
         setAuth("login")
+        return
+      }
+      if (meJson?.role) setRole(meJson.role as AdminRole)
+
+      perfTimeStart("admin-shell-overview")
+      const res = await fetch("/api/admin/overview", { cache: "no-store" })
+      perfTimeEnd("admin-shell-overview")
+      if (!res.ok) {
+        setOverviewError((await res.json().catch(() => null))?.error ?? "Could not load overview")
+        setAuth("ready")
         return
       }
       const json = (await res.json()) as AdminOverview
       if (json.badges) setBadges(json.badges)
-      const me = await fetch("/api/admin/me", { cache: "no-store" })
-      const meJson = await me.json().catch(() => null)
-      if (me.ok && meJson?.role) setRole(meJson.role as AdminRole)
+      setOverview(json)
       setAuth("ready")
     } catch {
       setAuth("login")
+    } finally {
+      setOverviewLoading(false)
+      perfTimeEnd("admin-shell-auth")
     }
   }, [])
 
@@ -73,6 +108,11 @@ export default function AdminShell({ children }: Props) {
     }
   }, [mobileNav])
 
+  const overviewCtx = useMemo(
+    () => ({ overview, overviewLoading, overviewError }),
+    [overview, overviewLoading, overviewError],
+  )
+
   if (auth === "loading" || auth === "login") {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[#0F0F16] text-white/60">
@@ -82,6 +122,7 @@ export default function AdminShell({ children }: Props) {
   }
 
   return (
+    <AdminOverviewContext.Provider value={overviewCtx}>
     <AdminBadgeContext.Provider value={badges}>
       <div className="admin-shell min-h-[100dvh] bg-[#0F0F16] text-white">
         <header className="sticky top-0 z-50 border-b border-white/[0.12] bg-[#0F0F16]/95 backdrop-blur-md">
@@ -162,5 +203,6 @@ export default function AdminShell({ children }: Props) {
         </div>
       </div>
     </AdminBadgeContext.Provider>
+    </AdminOverviewContext.Provider>
   )
 }

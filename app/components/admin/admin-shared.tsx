@@ -1,5 +1,6 @@
 "use client"
 
+import { memo, useMemo } from "react"
 import Link from "next/link"
 import type {
   AdminFeedbackStatus,
@@ -415,7 +416,7 @@ export function AdminMobileCardList({ children }: { children: React.ReactNode })
 
 const RATING_CHART_BAR_MAX_PX = 120
 
-export function RatingDistributionChart({
+function RatingDistributionChartInner({
   title,
   items,
   emptyLabel = "No responses yet",
@@ -472,7 +473,9 @@ export function RatingDistributionChart({
   )
 }
 
-export function FunnelChart({ steps }: { steps: { step: string; count: number }[] }) {
+export const RatingDistributionChart = memo(RatingDistributionChartInner)
+
+function FunnelChartInner({ steps }: { steps: { step: string; count: number }[] }) {
   const safeSteps = steps ?? []
   const max = Math.max(1, ...(safeSteps.map((s) => s.count) ?? [0]))
   return (
@@ -498,7 +501,9 @@ export function FunnelChart({ steps }: { steps: { step: string; count: number }[
   )
 }
 
-export function BarChartCard({
+export const FunnelChart = memo(FunnelChartInner)
+
+function BarChartCardInner({
   title,
   items,
   empty = "No trend data yet",
@@ -540,6 +545,8 @@ export function BarChartCard({
   )
 }
 
+export const BarChartCard = memo(BarChartCardInner)
+
 function strokeFromChartColor(color: string): { stroke: string; fill: string } {
   if (color.includes("emerald")) {
     return { stroke: "#10b981", fill: "rgba(16,185,129,0.12)" }
@@ -550,7 +557,7 @@ function strokeFromChartColor(color: string): { stroke: string; fill: string } {
   return { stroke: "#7c3aed", fill: "rgba(124,58,237,0.12)" }
 }
 
-export function SparklineChart({
+function SparklineChartInner({
   title,
   points,
   dataKey,
@@ -650,6 +657,8 @@ export function SparklineChart({
     </AdminCard>
   )
 }
+
+export const SparklineChart = memo(SparklineChartInner)
 
 /** @deprecated */
 export function TrendChart({

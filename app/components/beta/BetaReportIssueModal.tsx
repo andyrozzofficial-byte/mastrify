@@ -127,8 +127,11 @@ export default function BetaReportIssueModal({ open, onClose }: Props) {
         return
       }
 
-      if (json?.panel) dispatchBetaProfilePanel(json.panel)
-      dispatchBetaProfileRefresh()
+      if (json?.panel) {
+        dispatchBetaProfilePanel(json.panel)
+      } else {
+        dispatchBetaProfileRefresh()
+      }
       setPointsEarned(Boolean(json?.pointsAwarded) && !json?.alreadyCounted)
       setSubmitted(true)
     } catch {

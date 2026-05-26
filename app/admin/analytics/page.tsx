@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 import type { AdminAnalyticsExtended } from "../../../lib/adminTypes"
+import { perfTimeEnd, perfTimeStart } from "../../../lib/perfDebug"
+import { AdminWhenVisible } from "../../components/admin/AdminWhenVisible"
 import {
   AdminPageHeader,
   BarChartCard,
@@ -16,8 +18,10 @@ export default function AdminAnalyticsPage() {
 
   useEffect(() => {
     void (async () => {
+      perfTimeStart("admin-analytics-load")
       const res = await fetch("/api/admin/analytics", { cache: "no-store" })
       const json = await res.json().catch(() => null)
+      perfTimeEnd("admin-analytics-load")
       if (!res.ok) {
         setError(json?.error ?? "Could not load analytics")
         return
@@ -72,6 +76,7 @@ export default function AdminAnalyticsPage() {
         />
       </div>
 
+      <AdminWhenVisible>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <FunnelChart steps={funnel} />
         <BarChartCard title="Genre distribution" items={genreDistribution} />
@@ -105,6 +110,7 @@ export default function AdminAnalyticsPage() {
           dataKey="masters"
         />
       </div>
+      </AdminWhenVisible>
     </div>
   )
 }

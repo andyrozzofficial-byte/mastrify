@@ -207,8 +207,11 @@ export async function reportBetaMasterCompleted(
     options.applyBetaUi(result.betaUi)
   }
 
-  await options?.refreshAccess?.({ silent: true })
-  dispatchBetaProfileRefresh()
+  const panelPushed = Boolean(result.panel)
+  if (!panelPushed) {
+    await options?.refreshAccess?.({ silent: true })
+    dispatchBetaProfileRefresh()
+  }
   return true
 }
 
@@ -224,7 +227,9 @@ export async function reportBetaMasterDownload(
   const result = await registerBetaMasterDownload(payload)
   if (!result.ok) return false
 
-  await options?.refreshAccess?.({ silent: true })
-  dispatchBetaProfileRefresh()
+  if (!result.panel) {
+    await options?.refreshAccess?.({ silent: true })
+    dispatchBetaProfileRefresh()
+  }
   return true
 }

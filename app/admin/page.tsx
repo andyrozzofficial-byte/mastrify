@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import type { AdminOverview } from "../../lib/adminTypes"
+import dynamic from "next/dynamic"
+import { useEffect } from "react"
 import { AdminActionCenter } from "../components/admin/AdminActionCenter"
-import { BetaDashboardSummaryPanels } from "../components/admin/BetaDashboardSummary"
+import { useAdminOverview } from "../components/admin/AdminShell"
+import { perfTimeEnd, perfTimeStart } from "../../lib/perfDebug"
 import {
   AdminPageHeader,
   AdminPanel,
@@ -16,6 +17,14 @@ import {
   SupportStatusBadge,
 } from "../components/admin/admin-shared"
 
+const BetaDashboardSummaryPanels = dynamic(
+  () =>
+    import("../components/admin/BetaDashboardSummary").then((m) => ({
+      default: m.BetaDashboardSummaryPanels,
+    })),
+  { ssr: false },
+)
+
 const activityLabels = {
   master: "Master",
   purchase: "Purchase",
@@ -24,26 +33,20 @@ const activityLabels = {
 } as const
 
 export default function AdminOverviewPage() {
-  const [data, setData] = useState<AdminOverview | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const { overview: data, overviewLoading, overviewError: error } = useAdminOverview()
 
   useEffect(() => {
-    void (async () => {
-      const res = await fetch("/api/admin/overview", { cache: "no-store" })
-      const json = await res.json().catch(() => null)
-      if (!res.ok) {
-        setError(json?.error ?? "Could not load overview")
-        return
-      }
-      setData(json as AdminOverview)
-    })()
-  }, [])
+    if (data) {
+      perfTimeStart("admin-dashboard-render")
+      perfTimeEnd("admin-dashboard-render")
+    }
+  }, [data])
 
   if (error) {
     return <p className="text-sm text-rose-600">{error}</p>
   }
 
-  if (!data) {
+  if (overviewLoading || !data) {
     return <p className="text-sm text-white/60">Loading dashboard…</p>
   }
 

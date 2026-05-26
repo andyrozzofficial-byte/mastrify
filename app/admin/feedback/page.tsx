@@ -2,6 +2,8 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { AdminWhenVisible } from "../../components/admin/AdminWhenVisible"
+import { perfTimeEnd, perfTimeStart } from "../../../lib/perfDebug"
 import type { AdminFeedbackAnalytics } from "../../../lib/adminFeedbackAnalytics"
 import type { ActionCenterIssue, RankedIssue } from "../../../lib/adminFeedbackActionCenter"
 import { feedbackSentiment, FEEDBACK_SENTIMENT_STYLES } from "../../../lib/adminFeedbackSentiment"
@@ -139,25 +141,45 @@ export default function AdminFeedbackPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<AdminFeedbackStatus | "">("")
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [chartsReady, setChartsReady] = useState(false)
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/admin/feedback", { cache: "no-store" })
-    const json = (await res.json().catch(() => null)) as FeedbackApiResponse | null
-    if (!res.ok) {
-      setError(json?.error ?? "Could not load feedback")
-      return
+    perfTimeStart("admin-feedback-load")
+    try {
+      const res = await fetch("/api/admin/feedback", { cache: "no-store" })
+      const json = (await res.json().catch(() => null)) as FeedbackApiResponse | null
+      if (!res.ok) {
+        setError(json?.error ?? "Could not load feedback")
+        return
+      }
+      setRows(json?.rows ?? [])
+      setAnalytics(json?.analytics ?? null)
+      setInsights(json?.insights ?? [])
+      setActionCenter(json?.actionCenter ?? [])
+      setIssueTiers(json?.issueTiers ?? null)
+      setError(null)
+    } finally {
+      perfTimeEnd("admin-feedback-load")
     }
-    setRows(json?.rows ?? [])
-    setAnalytics(json?.analytics ?? null)
-    setInsights(json?.insights ?? [])
-    setActionCenter(json?.actionCenter ?? [])
-    setIssueTiers(json?.issueTiers ?? null)
-    setError(null)
   }, [])
 
   useEffect(() => {
     void load()
   }, [load])
+
+  useEffect(() => {
+    if (!analytics) {
+      setChartsReady(false)
+      return
+    }
+    const enable = () => setChartsReady(true)
+    if (typeof requestIdleCallback !== "undefined") {
+      const id = requestIdleCallback(enable, { timeout: 1500 })
+      return () => cancelIdleCallback(id)
+    }
+    const t = window.setTimeout(enable, 0)
+    return () => window.clearTimeout(t)
+  }, [analytics])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -299,7 +321,8 @@ export default function AdminFeedbackPage() {
         <AdminEmpty message="No analytics data yet" />
       ) : null}
 
-      {analytics ? (
+      {analytics && chartsReady ? (
+        <AdminWhenVisible>
         <div className="admin-charts-grid mb-10 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5 xl:grid-cols-3">
           <FunnelChart
             steps={(analytics.stages?.dropOff ?? []).map((d) => ({ step: d.step, count: d.count }))}
@@ -345,6 +368,7 @@ export default function AdminFeedbackPage() {
             empty="No written survey answers yet"
           />
         </div>
+        </AdminWhenVisible>
       ) : null}
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
