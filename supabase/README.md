@@ -67,7 +67,9 @@ npm run db:beta-issues
 
 Or with Supabase CLI: `supabase db push` (includes `migrations/20260531120000_ensure_beta_reported_issues.sql`).
 
-`user_id` and optional `reporter_email` both store the normalized beta Insider email. `action_id` dedupes double-submits.
+`reporter_email` stores the beta Insider email (required). Optional `action_id` / `user_id` columns dedupe double-submits from the app.
+
+**If the app still says the table is missing:** the SQL has not been applied to your Supabase project yet — running the file locally does not change production until you paste it in the dashboard SQL Editor (or `npm run db:beta-issues` with `DATABASE_URL` set).
 
 ## Beta signup (`public.admin_customer_profiles`)
 
