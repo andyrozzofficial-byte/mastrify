@@ -1,5 +1,6 @@
 import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
 import type { BetaFeedbackPulseBody } from "./betaFeedbackPulseTypes"
+import type { BetaPostMasterQuickBody } from "./betaPostMasterFeedbackTypes"
 import { createMasterSessionId } from "./masterSessionId"
 
 /** PostgREST table: public.beta_master_feedback */
@@ -87,6 +88,66 @@ export function buildBetaFeedbackRow(body: BetaFeedbackPayload): BetaFeedbackIns
         : null,
     track_title: trackName,
     feedback_stage: "completed",
+  }
+}
+
+function useAgainScoreFromChoice(choice: string): number {
+  if (choice === "Yes") return 9
+  if (choice === "Maybe") return 5
+  return 2
+}
+
+export function buildBetaPostMasterQuickRow(
+  body: BetaPostMasterQuickBody,
+  contactEmail: string | null,
+): BetaFeedbackInsertRow {
+  const sessionId =
+    typeof body.sessionId === "string" && body.sessionId.trim()
+      ? body.sessionId.trim()
+      : createMasterSessionId()
+  const trackName =
+    typeof body.trackName === "string" && body.trackName.trim() ? body.trackName.trim() : null
+  const masteringStyle =
+    typeof body.masteringStyle === "string" && body.masteringStyle.trim()
+      ? body.masteringStyle.trim()
+      : "Unknown"
+
+  const responses: Record<string, unknown> = {
+    feedbackStage: "post_master_quick",
+    sessionId,
+    trackName,
+    masterRating: body.masterRating,
+    soundedGood: body.soundedGood.trim(),
+    couldImprove: body.couldImprove.trim(),
+    wouldUseAgain: body.wouldUseAgain,
+    recommendScore: body.masterRating,
+    useAgainScore: useAgainScoreFromChoice(body.wouldUseAgain),
+    additional: body.soundedGood.trim(),
+    oneChange: body.couldImprove.trim(),
+  }
+
+  return {
+    session_id: sessionId,
+    track_name: trackName,
+    track_duration: numOrNull(body.trackDuration),
+    mastering_style: masteringStyle,
+    stereo_width: intOrNull(body.stereoWidth),
+    low_end: intOrNull(body.lowEnd),
+    master_lufs:
+      body.masterLufs != null && Number.isFinite(body.masterLufs)
+        ? Number(Number(body.masterLufs).toFixed(2))
+        : null,
+    processing_time_ms: intOrNull(body.processingTimeMs),
+    responses,
+    contact_email: contactEmail,
+    contact_discord: null,
+    future_beta_contact: null,
+    master_object_key:
+      typeof body.masterObjectKey === "string" && body.masterObjectKey.trim()
+        ? body.masterObjectKey.trim()
+        : null,
+    track_title: trackName,
+    feedback_stage: "post_master_quick",
   }
 }
 

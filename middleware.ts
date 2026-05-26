@@ -16,7 +16,8 @@ function isAdminOrFeedbackApiBypass(pathname: string): boolean {
     path.startsWith("/api/admin") ||
     path === "/api/beta-feedback" ||
     path === "/api/beta/profile" ||
-    path === "/api/beta/profile/resume"
+    path === "/api/beta/profile/resume" ||
+    path === "/api/beta-feedback/quick"
   )
 }
 
@@ -105,6 +106,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/access") ||
     pathname.startsWith("/api/admin") ||
     pathname === "/api/beta-feedback" ||
+    pathname.startsWith("/api/beta-feedback/") ||
     pathname === "/api/beta/profile" ||
     pathname === "/api/beta/profile/resume" ||
     pathname === "/api/support/tickets"

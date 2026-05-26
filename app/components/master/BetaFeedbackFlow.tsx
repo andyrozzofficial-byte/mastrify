@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { readBetaFeedbackStatus, writeBetaFeedbackStatus } from "../../../lib/betaFeedbackStorage"
+import { readPostMasterFeedbackStatus } from "../../../lib/betaPostMasterStorage"
 import { createMasterSessionId } from "../../../lib/masterSessionId"
 import type { BetaFeedbackPayload, BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
 import {
@@ -134,11 +135,18 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
       setPhase("hidden")
       return
     }
+    const sessionId = sessionAnalytics.sessionId.trim()
+    if (sessionId && readPostMasterFeedbackStatus(sessionId) === "submitted") {
+      setPhase("hidden")
+      return
+    }
     const t = window.setTimeout(() => {
-      if (!readBetaFeedbackStatus()) setPhase("invite")
-    }, 2400)
+      if (readBetaFeedbackStatus()) return
+      if (sessionId && readPostMasterFeedbackStatus(sessionId) === "submitted") return
+      setPhase("invite")
+    }, 8000)
     return () => window.clearTimeout(t)
-  }, [engaged])
+  }, [engaged, sessionAnalytics.sessionId])
 
   const handleSkip = useCallback(() => {
     writeBetaFeedbackStatus("skipped")

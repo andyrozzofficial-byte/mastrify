@@ -40,6 +40,7 @@ import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import { useBetaMasteringGate } from "../../components/beta/BetaMasteringGateProvider"
 import BetaFeedbackFlow from "../../components/master/BetaFeedbackFlow"
 import BetaFeedbackPulse from "../../components/master/BetaFeedbackPulse"
+import BetaPostMasterFeedback from "../../components/master/BetaPostMasterFeedback"
 import { extractMasterLufs } from "../../../lib/extractMasterLufs"
 import { masteringStyleLabel } from "../../../lib/masterStyleLabels"
 import type { BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
@@ -143,6 +144,7 @@ export default function MasterResultClient() {
   const [deliverySending, setDeliverySending] = useState(false)
   const [deliveryError, setDeliveryError] = useState("")
   const [masterEngaged, setMasterEngaged] = useState(false)
+  const [postMasterDismissed, setPostMasterDismissed] = useState(false)
   const [showPreviewPulse, setShowPreviewPulse] = useState(false)
   const masteredListenAccumRef = useRef(0)
   const betaFeedbackOn = isBetaFeedbackEnabled()
@@ -964,6 +966,15 @@ export default function MasterResultClient() {
         ) : null}
       </motion.header>
 
+      {betaFeedbackOn && hasAccess && isPlayableMediaUrl(masteredPlayback.url) ? (
+        <BetaPostMasterFeedback
+          visible={!postMasterDismissed}
+          masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}
+          sessionAnalytics={feedbackSessionAnalytics}
+          onDismiss={() => setPostMasterDismissed(true)}
+        />
+      ) : null}
+
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1234,9 +1245,9 @@ export default function MasterResultClient() {
         </div>
       ) : null}
 
-      {betaFeedbackOn ? (
+      {betaFeedbackOn && hasAccess ? (
         <BetaFeedbackFlow
-          engaged={masterEngaged}
+          engaged={masterEngaged || isPlayableMediaUrl(masteredPlayback.url)}
           masterObjectKey={masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)}
           sessionAnalytics={feedbackSessionAnalytics}
         />

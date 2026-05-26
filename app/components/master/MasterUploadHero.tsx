@@ -5,6 +5,7 @@ import type { RefObject } from "react"
 import MarketingActionSlot from "../cinematic/MarketingActionSlot"
 import MarketingDesktopHero from "../cinematic/MarketingDesktopHero"
 import CinematicTrustRow from "../cinematic/CinematicTrustRow"
+import BetaExperienceBanner from "./BetaExperienceBanner"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import MasterUploadCard from "./MasterUploadCard"
 
@@ -59,12 +60,15 @@ export default function MasterUploadHero({
       <MasterFlowStepRail phase="upload" className="marketing-hero-step-rail justify-start" />
 
       <MarketingActionSlot>
-        <MasterUploadCard
-          file={file}
-          fileInputRef={fileInputRef}
-          onFileSelected={onFileSelected}
-          onContinue={onContinue}
-        />
+        <div className="flex w-full flex-col gap-3">
+          <BetaExperienceBanner />
+          <MasterUploadCard
+            file={file}
+            fileInputRef={fileInputRef}
+            onFileSelected={onFileSelected}
+            onContinue={onContinue}
+          />
+        </div>
       </MarketingActionSlot>
 
       <CinematicTrustRow items={FEATURES} />
