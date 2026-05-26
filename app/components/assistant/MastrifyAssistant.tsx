@@ -278,7 +278,7 @@ export default function MastrifyAssistant() {
   const fabCompact = isMobileViewport && pageScrolled && !open
 
   return (
-    <div className="pointer-events-none fixed bottom-[104px] right-4 z-[70] flex flex-col items-end max-md:max-w-[calc(100vw-2rem)] md:bottom-12 md:right-6">
+    <div className="pointer-events-none fixed bottom-[max(6.5rem,calc(6.5rem+env(safe-area-inset-bottom)))] right-[max(1.75rem,env(safe-area-inset-right))] z-[70] flex flex-col items-end max-md:max-w-[calc(100vw-3.5rem)] md:bottom-8 md:right-8">
       <AnimatePresence>
         {open ? (
           <motion.div

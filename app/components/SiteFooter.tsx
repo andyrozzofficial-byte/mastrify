@@ -26,7 +26,7 @@ const legal = [
 
 function FooterLinkList({ links }: { links: readonly { href: string; label: string }[] }) {
   return (
-    <ul className="footer-column-links mt-4 flex w-full flex-col gap-1 sm:mt-4 md:mt-6 md:gap-1.5">
+    <ul className="footer-column-links mt-4 flex w-full flex-col gap-1 sm:mt-4 md:mt-7 md:gap-1.5">
       {links.map(({ href, label }) => (
         <li key={href + label} className="w-full">
           <Link href={href} className="footer-tap-link">
@@ -106,7 +106,7 @@ function SocialLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-transparent text-muted-soft transition duration-300 active:scale-[0.96] hover:border-white/[0.1] hover:bg-white/[0.05] hover:text-white/82 hover:shadow-[0_0_18px_rgba(99,102,241,0.1)]"
+      className="footer-social-link flex h-9 w-9 items-center justify-center rounded-full border border-transparent active:scale-[0.96]"
     >
       {children}
     </a>
@@ -157,7 +157,7 @@ export default function SiteFooter() {
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:gap-4 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-start lg:gap-x-14 xl:gap-x-16">
+        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:gap-4 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-14">
           {/* Brand */}
           <motion.div
             className="footer-brand min-w-0 max-md:mx-auto max-md:flex max-md:w-full max-md:max-w-[18.5rem] max-md:flex-col max-md:items-center max-md:text-center lg:col-span-3 xl:col-span-3"
@@ -177,7 +177,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="footer-nav-columns w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-3 md:items-start md:justify-items-start md:gap-x-10 md:gap-y-0 md:max-w-[26rem] lg:col-span-3 lg:max-w-[27rem] lg:gap-x-12 xl:col-span-3 xl:max-w-[28rem]"
+            className="footer-nav-columns footer-nav-group w-full min-w-0 max-md:mx-auto max-md:max-w-[20.5rem] md:grid md:grid-cols-[repeat(3,minmax(0,1fr))] md:items-start md:justify-items-start md:gap-x-12 md:gap-y-0 md:max-w-[26rem] lg:col-span-3 lg:max-w-[27rem] lg:justify-self-center lg:gap-x-14 xl:col-span-3 xl:max-w-[28rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -192,7 +192,7 @@ export default function SiteFooter() {
 
           {/* Mastering CTA */}
           <motion.div
-            className="min-w-0 max-md:flex max-md:w-full max-md:justify-center lg:col-span-6 lg:pl-6 xl:col-span-6 xl:pl-8"
+            className="min-w-0 max-md:flex max-md:w-full max-md:justify-center lg:col-span-6 lg:pl-4 xl:col-span-6 xl:pl-6"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -233,33 +233,33 @@ export default function SiteFooter() {
 
         {/* Bottom metadata row */}
         <motion.div
-          className="footer-mobile-meta mt-4 flex flex-col gap-3 border-t border-white/[0.07] pt-4 max-md:mt-3 max-md:items-center max-md:gap-2 max-md:pt-3 md:mt-12 md:flex-row md:items-center md:justify-between md:gap-8 md:pt-8"
+          className="footer-mobile-meta mt-4 flex flex-col gap-3 border-t border-white/[0.07] pt-4 max-md:mt-3 max-md:items-center max-md:gap-2 max-md:pt-3 md:mt-12 md:grid md:grid-cols-[auto_auto_1fr] md:grid-rows-[auto_auto] md:items-center md:gap-x-3 md:pt-9"
           initial={reduce ? false : { opacity: 0 }}
           whileInView={reduce ? undefined : { opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.55, delay: 0.1, ease: EASE }}
         >
-          <p className="order-1 text-[11px] text-muted-soft max-md:w-full max-md:text-center md:order-none">
+          <p className="footer-copyright order-1 text-[11px] text-muted-soft max-md:w-full max-md:text-center md:col-start-1 md:row-start-1 md:justify-self-start">
             © {year} Mastrify
           </p>
 
-          <div className="footer-meta-cluster order-2 flex w-full flex-col items-center gap-1.5 md:contents">
-            <div className="flex items-center justify-center gap-0.5 md:order-none md:justify-end">
+          <div className="footer-meta-cluster order-2 flex w-full flex-col items-center gap-2 max-md:gap-2 md:contents">
+            <div className="footer-social-row flex items-center justify-center gap-2 md:col-start-2 md:row-start-1 md:justify-self-start md:pl-3">
               <SocialLink href={socialLinks[0].href} label={socialLinks[0].label}>
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden>
                   <rect x="3" y="3" width="18" height="18" rx="5" />
                   <circle cx="12" cy="12" r="3.5" />
                   <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
                 </svg>
               </SocialLink>
               <SocialLink href={socialLinks[1].href} label={socialLinks[1].label}>
-                <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.69V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 011.14.23V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.14-5.1v-7a8.16 8.16 0 004.45 1.33V7.95a5.7 5.7 0 01-4-.26z" />
                 </svg>
               </SocialLink>
             </div>
 
-            <p className="px-1 text-center text-[8px] font-normal uppercase leading-snug tracking-[0.2em] text-muted-faint sm:text-[9px] sm:tracking-[0.24em] md:order-none md:flex-1 md:px-4 md:leading-relaxed md:tracking-[0.26em]">
+            <p className="footer-lunov-credit px-1 text-center text-[8px] font-normal uppercase leading-snug tracking-[0.2em] text-muted-faint sm:text-[9px] sm:tracking-[0.24em] md:col-span-3 md:row-start-2 md:justify-self-center md:px-4 md:leading-relaxed md:tracking-[0.26em]">
               Designed &amp; engineered by{" "}
               <a
                 href="https://lunov.dev"
