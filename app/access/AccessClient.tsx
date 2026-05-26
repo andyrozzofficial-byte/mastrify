@@ -5,20 +5,35 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { FormEvent, useEffect, useRef, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import CinematicBackground from "../components/CinematicBackground"
+import { useBetaMasteringGateOptional } from "../components/beta/BetaMasteringGateProvider"
 import { safeAccessRedirect } from "../../lib/access"
+import type { BetaAccessJson } from "../../lib/betaClientAccess"
+import { accessFromBetaJson } from "../../lib/betaClientAccess"
 import { getStoredBetaEmail, setStoredBetaEmail } from "../../lib/betaSessionStorage"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
-type ProfileResponse = {
-  complete?: boolean
-  email?: string | null
+type ProfileResponse = BetaAccessJson & {
   profile?: { name: string | null } | null
+  error?: string
+}
+
+async function syncBetaSessionAfterSignup(
+  gate: ReturnType<typeof useBetaMasteringGateOptional>,
+  json: BetaAccessJson | null,
+  email: string,
+): Promise<void> {
+  setStoredBetaEmail(email)
+  gate?.applyBetaSession(json)
+  await gate?.refreshAccess({ silent: true })
 }
 
 export default function AccessClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const gate = useBetaMasteringGateOptional()
+  const applyBetaSession = gate?.applyBetaSession
+  const refreshAccess = gate?.refreshAccess
   const reduce = useReducedMotion()
   const next = safeAccessRedirect(searchParams.get("next"))
   const redirectStarted = useRef(false)
@@ -42,8 +57,10 @@ export default function AccessClient() {
         const res = await fetch("/api/beta/profile", { cache: "no-store", credentials: "include" })
         const json = (await res.json().catch(() => null)) as ProfileResponse | null
 
-        if (json?.complete) {
-          goToMaster(json.email)
+        if (accessFromBetaJson(json) || json?.complete) {
+          if (json) applyBetaSession?.(json)
+          await refreshAccess?.({ silent: true })
+          goToMaster(json?.email ?? undefined)
           return
         }
 
@@ -59,8 +76,10 @@ export default function AccessClient() {
             body: JSON.stringify({ email: storedEmail }),
           })
           const resumeJson = (await resumeRes.json().catch(() => null)) as ProfileResponse | null
-          if (resumeJson?.complete) {
-            goToMaster(resumeJson.email ?? storedEmail)
+          if (accessFromBetaJson(resumeJson) || resumeJson?.complete) {
+            if (resumeJson) applyBetaSession?.(resumeJson)
+            await refreshAccess?.({ silent: true })
+            goToMaster(resumeJson?.email ?? storedEmail)
             return
           }
           if (resumeJson?.email) setEmail(resumeJson.email)
@@ -73,7 +92,7 @@ export default function AccessClient() {
         if (!redirectStarted.current) setPhase("form")
       }
     })()
-  }, [next, router])
+  }, [next, router, applyBetaSession, refreshAccess])
 
   async function onProfileSubmit(e: FormEvent) {
     e.preventDefault()
@@ -87,12 +106,13 @@ export default function AccessClient() {
         credentials: "include",
         body: JSON.stringify({ email, name: name.trim() || null }),
       })
-      const json = await res.json().catch(() => null)
+      const json = (await res.json().catch(() => null)) as ProfileResponse | null
       if (!res.ok) {
         setError(json?.error ?? "Could not save your profile.")
         return
       }
-      setStoredBetaEmail(email)
+
+      await syncBetaSessionAfterSignup(gate, json, email)
       router.replace(next)
       router.refresh()
     } catch {

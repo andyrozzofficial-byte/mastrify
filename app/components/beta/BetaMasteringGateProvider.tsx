@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   createContext,
   useCallback,
@@ -11,32 +12,14 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import type { BetaAccessJson } from "../../../lib/betaClientAccess"
+import { accessFromBetaJson } from "../../../lib/betaClientAccess"
 import type { BetaMasteringUiState } from "../../../lib/betaPoints"
 import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
-
-type BetaAccessJson = {
-  isBeta?: boolean
-  isBetaUser?: boolean
-  hasMasteringAccess?: boolean
-  complete?: boolean
-  profileExists?: boolean
-  email?: string | null
-  betaUi?: BetaMasteringUiState | null
-}
 
 function logClientBetaAccess(message: string, detail?: Record<string, unknown>) {
   if (detail) console.log(`[beta-access] ${message}`, detail)
   else console.log(`[beta-access] ${message}`)
-}
-
-function accessFromJson(json: BetaAccessJson | null): boolean {
-  return Boolean(
-    json?.isBeta ??
-      json?.isBetaUser ??
-      json?.hasMasteringAccess ??
-      json?.complete ??
-      json?.profileExists,
-  )
 }
 
 type BetaMasteringGateContextValue = {
@@ -50,7 +33,9 @@ type BetaMasteringGateContextValue = {
   gateOpen: boolean
   openGate: () => void
   closeGate: () => void
-  refreshAccess: () => Promise<boolean>
+  /** Apply profile API JSON immediately (e.g. right after signup POST). */
+  applyBetaSession: (json: BetaAccessJson | null | undefined) => boolean
+  refreshAccess: (options?: { silent?: boolean }) => Promise<boolean>
   runIfAllowed: (action: () => void) => void
 }
 
@@ -69,6 +54,7 @@ export function useBetaMasteringGateOptional(): BetaMasteringGateContextValue | 
 }
 
 export function BetaMasteringGateProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
   const [isBetaUser, setIsBetaUser] = useState(false)
   const [betaUi, setBetaUi] = useState<BetaMasteringUiState | null>(null)
   const [checking, setChecking] = useState(true)
@@ -82,60 +68,85 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
     setBetaUi(granted ? ui : null)
   }, [])
 
-  const refreshAccess = useCallback(async (): Promise<boolean> => {
-    if (refreshInFlightRef.current) return refreshInFlightRef.current
+  const applyBetaSession = useCallback(
+    (json: BetaAccessJson | null | undefined): boolean => {
+      if (!accessFromBetaJson(json)) return false
+      logClientBetaAccess("beta session applied from API payload", { email: json?.email })
+      applyAccess(true, json?.betaUi ?? null)
+      setChecking(false)
+      return true
+    },
+    [applyAccess],
+  )
 
-    const run = async (): Promise<boolean> => {
-      setChecking(true)
-      try {
-        const res = await fetch("/api/beta/profile", { cache: "no-store", credentials: "include" })
-        const json = (await res.json().catch(() => null)) as BetaAccessJson | null
+  const refreshAccess = useCallback(
+    async (options?: { silent?: boolean }): Promise<boolean> => {
+      if (refreshInFlightRef.current) return refreshInFlightRef.current
 
-        if (accessFromJson(json)) {
-          logClientBetaAccess("beta access granted", { source: "profile-api", email: json?.email })
-          applyAccess(true, json?.betaUi ?? null)
-          return true
-        }
-
-        const storedEmail = getStoredBetaEmail()
-        if (storedEmail) {
-          logClientBetaAccess("restoring session from stored email", { email: storedEmail })
-          const resumeRes = await fetch("/api/beta/profile/resume", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+      const run = async (): Promise<boolean> => {
+        if (!options?.silent) setChecking(true)
+        try {
+          const res = await fetch("/api/beta/profile", {
+            cache: "no-store",
             credentials: "include",
-            body: JSON.stringify({ email: storedEmail }),
           })
-          const resumeJson = (await resumeRes.json().catch(() => null)) as BetaAccessJson | null
-          if (accessFromJson(resumeJson)) {
-            logClientBetaAccess("beta access granted", { source: "resume", email: resumeJson?.email })
-            applyAccess(true, resumeJson?.betaUi ?? null)
+          const json = (await res.json().catch(() => null)) as BetaAccessJson | null
+
+          if (accessFromBetaJson(json)) {
+            logClientBetaAccess("beta access granted", { source: "profile-api", email: json?.email })
+            applyAccess(true, json?.betaUi ?? null)
             return true
           }
+
+          const storedEmail = getStoredBetaEmail()
+          if (storedEmail) {
+            logClientBetaAccess("restoring session from stored email", { email: storedEmail })
+            const resumeRes = await fetch("/api/beta/profile/resume", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ email: storedEmail }),
+            })
+            const resumeJson = (await resumeRes.json().catch(() => null)) as BetaAccessJson | null
+            if (accessFromBetaJson(resumeJson)) {
+              logClientBetaAccess("beta access granted", { source: "resume", email: resumeJson?.email })
+              applyAccess(true, resumeJson?.betaUi ?? null)
+              return true
+            }
+          }
+
+          applyAccess(false, null)
+          return false
+        } catch {
+          applyAccess(false, null)
+          return false
+        } finally {
+          setChecking(false)
         }
-
-        applyAccess(false, null)
-        return false
-      } catch {
-        applyAccess(false, null)
-        return false
-      } finally {
-        setChecking(false)
       }
-    }
 
-    const promise = run()
-    refreshInFlightRef.current = promise
-    try {
-      return await promise
-    } finally {
-      refreshInFlightRef.current = null
-    }
-  }, [applyAccess])
+      const promise = run()
+      refreshInFlightRef.current = promise
+      try {
+        return await promise
+      } finally {
+        refreshInFlightRef.current = null
+      }
+    },
+    [applyAccess],
+  )
 
   useEffect(() => {
     void refreshAccess()
   }, [refreshAccess])
+
+  useEffect(() => {
+    if (!pathname?.startsWith("/master")) return
+    if (isBetaUserRef.current) return
+    const storedEmail = getStoredBetaEmail()
+    if (!storedEmail) return
+    void refreshAccess({ silent: true })
+  }, [pathname, refreshAccess])
 
   const openGate = useCallback(() => setGateOpen(true), [])
   const closeGate = useCallback(() => setGateOpen(false), [])
@@ -143,7 +154,7 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
   const ensureBetaAccess = useCallback(async (): Promise<boolean> => {
     if (isBetaUserRef.current) return true
     if (refreshInFlightRef.current) return refreshInFlightRef.current
-    return refreshAccess()
+    return refreshAccess({ silent: true })
   }, [refreshAccess])
 
   const runIfAllowed = useCallback(
@@ -171,10 +182,21 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
       gateOpen,
       openGate,
       closeGate,
+      applyBetaSession,
       refreshAccess,
       runIfAllowed,
     }),
-    [isBetaUser, checking, betaUi, gateOpen, openGate, closeGate, refreshAccess, runIfAllowed],
+    [
+      isBetaUser,
+      checking,
+      betaUi,
+      gateOpen,
+      openGate,
+      closeGate,
+      applyBetaSession,
+      refreshAccess,
+      runIfAllowed,
+    ],
   )
 
   return (
