@@ -75,6 +75,12 @@ export async function registerBetaMasterComplete(
     payload.email ?? getStoredBetaEmail(),
     payload.deliveryEmail,
   )
+  const deliveryEmail =
+    payload.deliveryEmail?.trim() && payload.deliveryEmail.includes("@")
+      ? payload.deliveryEmail.trim()
+      : email.includes("@")
+        ? email
+        : undefined
 
   if (PERF_DEBUG) {
     console.log("[beta-debug] master complete (client)", {
@@ -83,7 +89,7 @@ export async function registerBetaMasterComplete(
       payloadSessionId: payload.sessionId,
       objectKey: payload.objectKey ?? null,
       email: email.includes("@") ? email : null,
-      deliveryEmail: payload.deliveryEmail ?? null,
+      deliveryEmail: deliveryEmail ?? null,
       trackName: payload.trackName ?? null,
     })
   }
@@ -97,10 +103,7 @@ export async function registerBetaMasterComplete(
         sessionId,
         objectKey: payload.objectKey ?? null,
         email: email.includes("@") ? email : undefined,
-        deliveryEmail:
-          payload.deliveryEmail?.trim() && payload.deliveryEmail.includes("@")
-            ? payload.deliveryEmail.trim()
-            : undefined,
+        deliveryEmail,
         trackName: payload.trackName ?? null,
         masteringStyle: payload.masteringStyle ?? null,
         processingTimeMs: payload.processingTimeMs ?? null,
