@@ -946,8 +946,9 @@ export default function MasterResultClient() {
 
   const feedbackSessionAnalytics = useMemo((): BetaFeedbackSessionAnalytics => {
     const measuredLufs = extractMasterLufs(analysisAfter) ?? masterLufs
+    const stableSessionId = ensureSessionId()
     return {
-      sessionId: sessionId || "",
+      sessionId: stableSessionId,
       trackName,
       trackDuration: trackDurationSec,
       masteringStyle: masteringStyleLabel(stylePreset),
@@ -957,7 +958,7 @@ export default function MasterResultClient() {
       processingTimeMs,
     }
   }, [
-    sessionId,
+    ensureSessionId,
     trackName,
     trackDurationSec,
     stylePreset,
