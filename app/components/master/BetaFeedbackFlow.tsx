@@ -6,6 +6,7 @@ import { readBetaFeedbackStatus, writeBetaFeedbackStatus } from "../../../lib/be
 import { readPostMasterFeedbackStatus } from "../../../lib/betaPostMasterStorage"
 import { createMasterSessionId } from "../../../lib/masterSessionId"
 import type { BetaFeedbackPayload, BetaFeedbackSessionAnalytics } from "../../../lib/betaFeedbackTypes"
+import { PERF_DEBUG } from "../../../lib/perfDebug"
 import {
   emptyBetaFeedbackPayload,
   BETA_FEEDBACK_CONTACT_FIELDS,
@@ -181,6 +182,15 @@ export default function BetaFeedbackFlow({ engaged, masterObjectKey, sessionAnal
       lowEnd: Math.round(sessionAnalytics.lowEnd),
       masterLufs: sessionAnalytics.masterLufs,
       processingTimeMs: sessionAnalytics.processingTimeMs,
+    }
+
+    if (PERF_DEBUG) {
+      console.log("[beta-debug] feedback submit (client)", {
+        sessionIdSent: sessionId,
+        contactEmail: form.contactEmail ?? null,
+        cookieEmailFallback: "(server only)",
+        trackName,
+      })
     }
 
     const res = await fetch("/api/beta-feedback", {

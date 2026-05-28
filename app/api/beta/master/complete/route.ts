@@ -17,6 +17,7 @@ import {
   syncBetaProfileFromActivity,
 } from "../../../../../lib/betaUserData"
 import { getSupabaseEnvStatus } from "../../../../../lib/supabaseServer"
+import { PERF_DEBUG } from "../../../../../lib/perfDebug"
 
 export async function POST(request: Request) {
   if (!isBetaFeedbackEnabled()) {
@@ -45,11 +46,31 @@ export async function POST(request: Request) {
   const sessionId =
     resolveBetaMasterCompletionSessionId(body.sessionId, body.objectKey) || createMasterSessionId()
 
+  const sessionIdSource = body.sessionId?.trim()
+    ? "body.sessionId"
+    : body.objectKey?.trim()
+      ? "body.objectKey"
+      : "generated"
+
   const bodyEmail = getBetaReporterEmail(
     typeof body.email === "string" ? body.email : null,
     typeof body.deliveryEmail === "string" ? body.deliveryEmail : null,
   )
   const email = cookieEmail ?? (bodyEmail.includes("@") ? bodyEmail : null)
+
+  if (PERF_DEBUG) {
+    console.log("[beta-debug] master complete (server)", {
+      sessionIdResolved: sessionId,
+      sessionIdSource,
+      bodySessionId: body.sessionId ?? null,
+      objectKey: body.objectKey ?? null,
+      cookieEmail: cookieEmail ?? null,
+      bodyEmail: bodyEmail ?? null,
+      deliveryEmail: body.deliveryEmail ?? null,
+      finalEmail: email,
+      trackName: body.trackName ?? null,
+    })
+  }
 
   if (!email) {
     console.error("[beta-api] master complete: no email (cookie or body)", getSupabaseEnvStatus())

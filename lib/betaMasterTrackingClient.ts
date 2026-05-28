@@ -9,6 +9,7 @@ import {
   resolveBetaMasterCompletionSessionId,
 } from "./betaMasterTracking"
 import { markClientBetaMasterComplete, markClientBetaDownload } from "./betaTrackingStorage"
+import { PERF_DEBUG } from "./perfDebug"
 
 export type RegisterBetaMasterCompletePayload = {
   sessionId: string
@@ -68,17 +69,24 @@ export async function registerBetaMasterComplete(
   panel?: BetaProfilePanelData | null
   sessionId?: string
 }> {
-  const sessionId = resolveCompletionSessionId(payload)
+  const resolvedSid = resolveBetaMasterCompletionSessionId(payload.sessionId, payload.objectKey)
+  const sessionId = resolvedSid || createMasterSessionId()
   const email = getBetaReporterEmail(
     payload.email ?? getStoredBetaEmail(),
     payload.deliveryEmail,
   )
 
-  console.log("[beta] POST /api/beta/master/complete", {
-    sessionId,
-    email: email.includes("@") ? email : "(missing — cookie required)",
-    objectKey: payload.objectKey ?? null,
-  })
+  if (PERF_DEBUG) {
+    console.log("[beta-debug] master complete (client)", {
+      sessionIdSent: sessionId,
+      sessionIdSource: resolvedSid ? (payload.sessionId?.trim() ? "payload.sessionId" : "objectKey") : "generated",
+      payloadSessionId: payload.sessionId,
+      objectKey: payload.objectKey ?? null,
+      email: email.includes("@") ? email : null,
+      deliveryEmail: payload.deliveryEmail ?? null,
+      trackName: payload.trackName ?? null,
+    })
+  }
 
   try {
     const res = await fetch("/api/beta/master/complete", {
