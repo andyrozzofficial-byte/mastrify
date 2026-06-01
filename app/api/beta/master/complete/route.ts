@@ -89,7 +89,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 500 })
   }
 
-  const stats = result.alreadyCounted ? null : await buildBetaMasterCompleteStats(email)
+  const stats = result.created ? await buildBetaMasterCompleteStats(email) : null
+  if (result.created) {
+    const { invalidateBetaPanelCoreServerCache } = await import("../../../../../lib/betaPanelServerCache")
+    invalidateBetaPanelCoreServerCache(email)
+  }
   const dbStats = endDbRoute()
   const endpointMs = Date.now() - endpointStart
 

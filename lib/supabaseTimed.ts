@@ -2,6 +2,7 @@
 
 export type DbQueryRecord = {
   label: string
+  table: string | null
   caller: string
   durationMs: number
   rowEstimate: number | null
@@ -16,6 +17,11 @@ export type RouteDbStats = {
   queryCount: number
   lastAt: number
 }
+
+export const SUPABASE_TIMED_ENABLED =
+  process.env.MASTRIFY_PERF === "1" ||
+  process.env.NEXT_PUBLIC_MASTRIFY_PERF === "1" ||
+  process.env.NODE_ENV === "development"
 
 const MAX_QUERY_LOG = 800
 const queryLog: DbQueryRecord[] = []
@@ -70,6 +76,11 @@ function estimateRows<T>(result: T): number | null {
   return null
 }
 
+function slowLogLine(record: DbQueryRecord): string {
+  const op = record.label.includes(".") ? record.label : `${record.table ?? "db"}.${record.label}`
+  return `[supabase-slow] ${op} caller=${record.caller} rows=${record.rowEstimate ?? "?"} duration=${record.durationMs}ms`
+}
+
 function logQuery(record: DbQueryRecord): void {
   queryLog.push(record)
   if (queryLog.length > MAX_QUERY_LOG) queryLog.splice(0, queryLog.length - MAX_QUERY_LOG)
@@ -79,26 +90,28 @@ function logQuery(record: DbQueryRecord): void {
     activeRouteDbMs += record.durationMs
   }
 
-  const msg = `[db] ${record.label} ${record.durationMs}ms${record.rowEstimate != null ? ` (~${record.rowEstimate} rows)` : ""}${record.route ? ` route=${record.route}` : ""}`
+  if (!SUPABASE_TIMED_ENABLED) return
 
   if (record.durationMs > 1000) {
-    console.error(`${msg} SLOW`)
+    console.error(slowLogLine(record))
   } else if (record.durationMs > 200) {
-    console.warn(msg)
-  } else if (
-    process.env.NODE_ENV === "development" ||
-    process.env.MASTRIFY_PERF === "1" ||
-    process.env.MASTRIFY_DB_LOG === "1"
-  ) {
-    console.log(msg)
+    console.warn(slowLogLine(record))
+  } else if (process.env.MASTRIFY_DB_LOG === "1") {
+    console.log(
+      `[supabase] ${record.label} caller=${record.caller} rows=${record.rowEstimate ?? "?"} duration=${record.durationMs}ms`,
+    )
   }
 }
 
 export async function supabaseTimed<T>(
   label: string,
   fn: () => Promise<T>,
-  opts?: { caller?: string; rowEstimate?: number },
+  opts?: { caller?: string; rowEstimate?: number; table?: string },
 ): Promise<T> {
+  if (!SUPABASE_TIMED_ENABLED && !activeRoute) {
+    return fn()
+  }
+
   const start = Date.now()
   const caller = opts?.caller ?? label
   try {
@@ -106,6 +119,7 @@ export async function supabaseTimed<T>(
     const durationMs = Date.now() - start
     logQuery({
       label,
+      table: opts?.table ?? null,
       caller,
       durationMs,
       rowEstimate: opts?.rowEstimate ?? estimateRows(result),
@@ -117,6 +131,7 @@ export async function supabaseTimed<T>(
     const durationMs = Date.now() - start
     logQuery({
       label,
+      table: opts?.table ?? null,
       caller,
       durationMs,
       rowEstimate: opts?.rowEstimate ?? null,
@@ -131,11 +146,12 @@ export function getDbPerfReport() {
   const slowest = [...queryLog].sort((a, b) => b.durationMs - a.durationMs).slice(0, 25)
   const byLabel = new Map<string, { count: number; totalMs: number; maxMs: number }>()
   for (const q of queryLog) {
-    const cur = byLabel.get(q.label) ?? { count: 0, totalMs: 0, maxMs: 0 }
+    const key = q.table ? `${q.table}.${q.label}` : q.label
+    const cur = byLabel.get(key) ?? { count: 0, totalMs: 0, maxMs: 0 }
     cur.count += 1
     cur.totalMs += q.durationMs
     cur.maxMs = Math.max(cur.maxMs, q.durationMs)
-    byLabel.set(q.label, cur)
+    byLabel.set(key, cur)
   }
   const topQueries = [...byLabel.entries()]
     .map(([label, s]) => ({
@@ -172,6 +188,7 @@ export function getDbPerfReport() {
         cacheStats.hits + cacheStats.misses > 0
           ? Math.round((cacheStats.hits / (cacheStats.hits + cacheStats.misses)) * 1000) / 10
           : null,
+      perfEnabled: SUPABASE_TIMED_ENABLED,
     },
     slowestQueries: slowest,
     topQueriesByTotalTime: topQueries,

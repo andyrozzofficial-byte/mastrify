@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { safeAccessRedirect } from "../../../../../lib/access"
 import { betaProfileToJson, setBetaEmailCookieOnResponse } from "../../../../../lib/betaProfileResponse"
 import { verifyBetaMagicLinkToken } from "../../../../../lib/betaSession"
-import { getBetaMasteringUiStateForEmail, getBetaProfileStatus } from "../../../../../lib/betaUserData"
+import { buildBetaMasteringUiForEmailScoped, getBetaProfileStatus } from "../../../../../lib/betaUserData"
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No beta profile found" }, { status: 404 })
   }
 
-  const betaUi = await getBetaMasteringUiStateForEmail(verified.email)
+  const betaUi = await buildBetaMasteringUiForEmailScoped(verified.email)
   const response = NextResponse.json({
     ok: true,
     email: verified.email,

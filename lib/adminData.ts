@@ -513,11 +513,16 @@ async function fetchAdminFeedbackInner(): Promise<AdminFeedbackRow[] | { error: 
   if (!supabase) return { error: "Database unavailable" }
 
   let select = FEEDBACK_SELECT
-  let { data, error } = await supabase
-    .from(BETA_FEEDBACK_TABLE)
-    .select(select)
-    .order("created_at", { ascending: false })
-    .limit(ADMIN_FEEDBACK_LIST_LIMIT)
+  let { data, error } = await supabaseTimed(
+    "select",
+    () =>
+      supabase
+        .from(BETA_FEEDBACK_TABLE)
+        .select(select)
+        .order("created_at", { ascending: false })
+        .limit(ADMIN_FEEDBACK_LIST_LIMIT),
+    { caller: "fetchAdminFeedback", table: BETA_FEEDBACK_TABLE },
+  )
 
   if (error && isMissingFeedbackStageColumn(error.message)) {
     select = FEEDBACK_SELECT_WITHOUT_STAGE

@@ -60,6 +60,7 @@ import { findBetaProfileByEmail, upsertCustomerProfileRow } from "./betaProfileD
 import {
   countBetaDownloadsForEmail,
   fetchBetaMasterCompletionsForEmailFast,
+  fetchBetaMasterCompletionsTableForEmail,
   fetchCompletionsGroupedForEmails,
   type BetaMasterCompletionRow,
 } from "./betaMasterTracking"
@@ -278,27 +279,21 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
   if (!supabase) return
 
   const profile = await fetchBetaProfileByEmail(normalized)
-  const [feedback, support, jobsRes] = await Promise.all([
-    fetchAdminFeedback(),
-    fetchAdminSupport(),
-    fetchAdminJobs(),
-  ])
-  if (isFetchError(feedback) || isFetchError(support)) return
-  const jobs = isFetchError(jobsRes) ? [] : jobsRes
+  const [userFeedback, userSupport, completions, issueReportCount, creatorInviteCount] =
+    await Promise.all([
+      fetchAdminFeedbackForEmail(normalized),
+      fetchAdminSupportForEmail(normalized),
+      fetchBetaMasterCompletionsForEmailFast(normalized),
+      countBetaIssuesForEmail(normalized),
+      countCreatorInvitesForEmail(normalized),
+    ])
 
-  const userFeedback = feedback.filter((f) => f.contact_email?.toLowerCase() === normalized)
-  const userSupport = support.filter((s) => s.email.toLowerCase() === normalized)
-  const [completions, issueReportCount] = await Promise.all([
-    fetchBetaMasterCompletionsForEmail(normalized),
-    countBetaIssuesForEmail(normalized),
-  ])
-  const inviteMap = await buildCreatorInviteCountByReferrer()
   const counts = aggregateBetaActivityForEmail(
     normalized,
     userFeedback,
     userSupport,
-    jobs,
-    inviteMap.get(normalized) ?? 0,
+    [],
+    creatorInviteCount,
     countTrackedMasterCompletions(completions),
     issueReportCount,
     countFeedbackForPoints(userFeedback, completions),
@@ -592,26 +587,34 @@ export type BetaMasterCompleteStats = {
 /** Lightweight post-completion stats — scoped queries only. */
 export async function buildBetaMasterCompleteStats(
   email: string,
+  opts?: { completions?: BetaMasterCompletionRow[] },
 ): Promise<BetaMasterCompleteStats | null> {
   const normalized = normalizeBetaEmail(email)
   if (!normalized.includes("@")) return null
 
+  const completionsFetch = opts?.completions
+    ? Promise.resolve(opts.completions)
+    : supabaseTimed(
+        "select",
+        () => fetchBetaMasterCompletionsTableForEmail(normalized),
+        { caller: "buildBetaMasterCompleteStats", table: "beta_master_completions" },
+      )
+
   const [profileRow, feedbackMeta, completions, issueCount] = await Promise.all([
-      supabaseTimed("complete:profile", () => fetchBetaProfileByEmail(normalized), {
-        caller: "buildBetaMasterCompleteStats",
-      }),
-      supabaseTimed("complete:feedback-meta", () => fetchAdminFeedbackMetaForEmail(normalized), {
-        caller: "buildBetaMasterCompleteStats",
-      }),
-      supabaseTimed(
-        "complete:completions",
-        () => fetchBetaMasterCompletionsForEmailFast(normalized),
-        { caller: "buildBetaMasterCompleteStats" },
-      ),
-      supabaseTimed("complete:issues-count", () => countBetaIssuesForEmail(normalized), {
-        caller: "buildBetaMasterCompleteStats",
-      }),
-    ])
+    supabaseTimed("select", () => fetchBetaProfileByEmail(normalized), {
+      caller: "buildBetaMasterCompleteStats",
+      table: "admin_customer_profiles",
+    }),
+    supabaseTimed("select", () => fetchAdminFeedbackMetaForEmail(normalized), {
+      caller: "buildBetaMasterCompleteStats",
+      table: "beta_master_feedback",
+    }),
+    completionsFetch,
+    supabaseTimed("count", () => countBetaIssuesForEmail(normalized), {
+      caller: "buildBetaMasterCompleteStats",
+      table: "beta_reported_issues",
+    }),
+  ])
 
   if (!profileRow) return null
 
@@ -647,12 +650,8 @@ export async function buildBetaMasteringUiForEmailScoped(
   return stats?.betaUi ?? null
 }
 
-/** @deprecated Use fetchBetaUserProfileScoped — loads full admin tables. */
+/** @deprecated Use fetchBetaUserProfileScoped */
 export async function fetchBetaUserProfile(email: string): Promise<BetaUserProfile | { error: string }> {
-  console.warn(
-    "[beta-perf] DEPRECATED fetchBetaUserProfile called — use fetchBetaUserProfileScoped instead",
-    { email: normalizeBetaEmail(email) },
-  )
   return fetchBetaUserProfileScoped(email)
 }
 
@@ -902,6 +901,18 @@ async function fetchIssueCountsByEmail(): Promise<Map<string, number>> {
 
 /** Lightweight dashboard widgets — avoids fetchBetaUsers() and per-email N+1 queries. */
 export async function fetchBetaDashboardSummary(): Promise<BetaDashboardSummary | { error: string }> {
+  const { getCachedBetaDashboardSummary, setCachedBetaDashboardSummary } = await import(
+    "./betaDashboardSummaryCache"
+  )
+  const cached = getCachedBetaDashboardSummary()
+  if (cached) return cached
+
+  const summary = await fetchBetaDashboardSummaryUncached()
+  if (!("error" in summary)) setCachedBetaDashboardSummary(summary)
+  return summary
+}
+
+async function fetchBetaDashboardSummaryUncached(): Promise<BetaDashboardSummary | { error: string }> {
   const profiles = await fetchBetaProfileRows()
   const [feedback, support, issueCounts] = await Promise.all([
     fetchAdminFeedback(),
@@ -1181,6 +1192,12 @@ export async function fetchBetaProfilePanelCoreForEmail(
   const normalized = normalizeBetaEmail(email)
   if (!normalized.includes("@")) return { error: "Valid email required" }
 
+  const { getCachedBetaPanelCoreServer, setCachedBetaPanelCoreServer } = await import(
+    "./betaPanelServerCache"
+  )
+  const cached = getCachedBetaPanelCoreServer(normalized)
+  if (cached) return { ok: true, panel: cached }
+
   const profileRow = await panelTimedAsync("profile query", () => fetchBetaProfileByEmail(normalized))
   if (!profileRow) return { error: "Profile not found" }
 
@@ -1246,7 +1263,9 @@ export async function fetchBetaProfilePanelCoreForEmail(
     supportIssues: [],
   }
 
-  return { ok: true, panel: buildBetaProfilePanelData(panelProfile) }
+  const panel = buildBetaProfilePanelData(panelProfile)
+  setCachedBetaPanelCoreServer(normalized, panel)
+  return { ok: true, panel }
 }
 
 /** Timeline + refined active days — load after panel opens. */

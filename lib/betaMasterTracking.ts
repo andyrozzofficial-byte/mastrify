@@ -267,6 +267,17 @@ export async function fetchBetaMasterCompletionsForEmailFast(
   return mergeCompletionRows(tableRows, pipelineRows)
 }
 
+/** Table-only completions (single query — skips pipeline fallback). */
+export async function fetchBetaMasterCompletionsTableForEmail(
+  email: string,
+): Promise<BetaMasterCompletionRow[]> {
+  return supabaseTimed(
+    "select",
+    () => fetchCompletionsTableRows(email),
+    { caller: "fetchBetaMasterCompletionsTableForEmail", table: BETA_MASTER_COMPLETIONS_TABLE },
+  )
+}
+
 /** Merged completions from dedicated table + pipeline fallback (deduped by session_id). */
 export async function fetchBetaMasterCompletionsForEmail(
   email: string,
@@ -374,7 +385,7 @@ export type RecordBetaMasterCompletionInput = {
 }
 
 export type RecordBetaMasterCompletionResult =
-  | { ok: true; created: true; alreadyCounted: false }
+  | { ok: true; created: true; alreadyCounted: false; completionRow: BetaMasterCompletionRow }
   | { ok: true; created: false; alreadyCounted: true }
   | { error: string }
 
@@ -500,7 +511,17 @@ export async function recordBetaMasterCompletion(
       }
     }
     logBeta("master completed", { sessionId, email, tableWriteOk, pipelineOk })
-    return { ok: true, created: true, alreadyCounted: false }
+    const completionRow: BetaMasterCompletionRow = {
+      session_id: sessionId,
+      email,
+      track_name: row.track_name,
+      mastering_style: row.mastering_style,
+      processing_time_ms: row.processing_time_ms,
+      master_lufs: row.master_lufs,
+      completed_at: completedAt,
+      created_at: completedAt,
+    }
+    return { ok: true, created: true, alreadyCounted: false, completionRow }
   }
 
   if (!tableWriteOk) {
@@ -511,7 +532,17 @@ export async function recordBetaMasterCompletion(
   }
 
   logBeta("master completed", { sessionId, email, tableWriteOk, pipelineAsync: true })
-  return { ok: true, created: true, alreadyCounted: false }
+  const completionRow: BetaMasterCompletionRow = {
+    session_id: sessionId,
+    email,
+    track_name: row.track_name,
+    mastering_style: row.mastering_style,
+    processing_time_ms: row.processing_time_ms,
+    master_lufs: row.master_lufs,
+    completed_at: completedAt,
+    created_at: completedAt,
+  }
+  return { ok: true, created: true, alreadyCounted: false, completionRow }
 }
 
 export type RecordBetaMasterDownloadInput = {
