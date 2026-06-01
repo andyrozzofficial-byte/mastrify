@@ -18,7 +18,7 @@ function isAdminOrFeedbackApiBypass(pathname: string): boolean {
     path === "/api/beta-feedback" ||
     path === "/api/beta/profile" ||
     path === "/api/beta/profile/resume" ||
-    path === "/api/beta/profile/panel" ||
+    path.startsWith("/api/beta/profile/panel") ||
     path.startsWith("/api/beta/session/") ||
     path === "/api/beta-feedback/quick" ||
     path === "/api/beta/issues" ||
@@ -101,7 +101,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/api/beta-feedback" ||
     pathname === "/api/beta/profile" ||
     pathname === "/api/beta/profile/resume" ||
-    pathname === "/api/beta/profile/panel" ||
+    pathname.startsWith("/api/beta/profile/panel") ||
     pathname.startsWith("/api/beta/session/") ||
     pathname === "/api/beta/issues" ||
     pathname === "/api/beta/master/complete" ||
@@ -122,7 +122,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/beta-feedback/") ||
     pathname === "/api/beta/profile" ||
     pathname === "/api/beta/profile/resume" ||
-    pathname === "/api/beta/profile/panel" ||
+    pathname.startsWith("/api/beta/profile/panel") ||
     pathname.startsWith("/api/beta/session/") ||
     pathname === "/api/beta/issues" ||
     pathname === "/api/beta/master/complete" ||

@@ -8,7 +8,7 @@ import {
 } from "../../../../../lib/betaMasterTracking"
 import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
 import {
-  fetchBetaProfilePanelForEmail,
+  fetchBetaProfilePanelCoreForEmail,
 } from "../../../../../lib/betaUserData"
 
 export async function POST(request: Request) {
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 500 })
   }
 
-  const panelResult = await fetchBetaProfilePanelForEmail(email)
+  const panelResult = await fetchBetaProfilePanelCoreForEmail(email)
 
   return NextResponse.json({
     ok: true,

@@ -14,6 +14,23 @@ export type BetaProfilePanelDiscountItem = {
   pointsRequired: number
 }
 
+/** Secondary panel payload (timeline + refined active days). */
+export type BetaProfilePanelSecondary = {
+  recentActivity: BetaProfilePanelActivityItem[]
+  activity: Pick<BetaProfilePanelData["activity"], "activeDays">
+}
+
+export function mergeBetaProfilePanelSecondary(
+  panel: BetaProfilePanelData,
+  secondary: BetaProfilePanelSecondary,
+): BetaProfilePanelData {
+  return {
+    ...panel,
+    activity: { ...panel.activity, ...secondary.activity },
+    recentActivity: secondary.recentActivity,
+  }
+}
+
 export type BetaProfilePanelData = {
   profile: {
     name: string | null
@@ -73,7 +90,9 @@ function panelActivityLabel(event: BetaTimelineEvent): string {
   return event.label
 }
 
-function mapRecentActivity(timeline: BetaTimelineEvent[]): BetaProfilePanelActivityItem[] {
+export function mapRecentActivityFromTimeline(
+  timeline: BetaTimelineEvent[],
+): BetaProfilePanelActivityItem[] {
   return timeline
     .filter((e) => e.type !== "upload")
     .slice(0, 10)
@@ -127,7 +146,7 @@ export function buildBetaProfilePanelData(profile: BetaUserProfile): BetaProfile
       discountCodes,
       adminCodes: extractAdminDiscountCodes(profile.adminNotes),
     },
-    recentActivity: mapRecentActivity(profile.timeline),
+    recentActivity: mapRecentActivityFromTimeline(profile.timeline),
     earnWays: BETA_EARN_WAYS,
   }
 }

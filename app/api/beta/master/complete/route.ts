@@ -12,7 +12,7 @@ import { getBetaReporterEmail } from "../../../../../lib/betaReporterEmail"
 import { createMasterSessionId } from "../../../../../lib/masterSessionId"
 import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
 import {
-  fetchBetaProfilePanelForEmail,
+  fetchBetaProfilePanelCoreForEmail,
   getBetaMasteringUiStateForEmail,
 } from "../../../../../lib/betaUserData"
 import { getSupabaseEnvStatus } from "../../../../../lib/supabaseServer"
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
   })
 
   const betaUi = await getBetaMasteringUiStateForEmail(email)
-  const panelResult = await fetchBetaProfilePanelForEmail(email)
+  const panelResult = await fetchBetaProfilePanelCoreForEmail(email)
 
   return NextResponse.json({
     ok: true,

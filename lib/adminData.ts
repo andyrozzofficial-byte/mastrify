@@ -460,6 +460,48 @@ export async function fetchAdminFeedback(): Promise<AdminFeedbackRow[] | { error
   return (data ?? []).map((row) => mapAdminFeedbackRow(row as BetaFeedbackDbRow))
 }
 
+/** Lightweight feedback rows for panel rank/points (no full survey payload). */
+export async function fetchAdminFeedbackMetaForEmail(
+  email: string,
+): Promise<Pick<AdminFeedbackRow, "id" | "session_id" | "created_at" | "admin_notes">[]> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return []
+
+  const normalized = email.trim().toLowerCase()
+  if (!normalized.includes("@")) return []
+
+  const { data, error } = await supabase
+    .from(BETA_FEEDBACK_TABLE)
+    .select("id, session_id, created_at, admin_notes")
+    .eq("contact_email", normalized)
+    .order("created_at", { ascending: false })
+    .limit(100)
+
+  if (error) return []
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    session_id: row.session_id ?? null,
+    created_at: String(row.created_at),
+    admin_notes: row.admin_notes ?? null,
+  }))
+}
+
+/** Activity timestamps only — for active-day counts without full row payloads. */
+export async function fetchAdminFeedbackDatesForEmail(email: string): Promise<string[]> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return []
+  const normalized = email.trim().toLowerCase()
+  if (!normalized.includes("@")) return []
+  const { data, error } = await supabase
+    .from(BETA_FEEDBACK_TABLE)
+    .select("created_at")
+    .eq("contact_email", normalized)
+    .order("created_at", { ascending: false })
+    .limit(100)
+  if (error) return []
+  return (data ?? []).map((r) => String(r.created_at))
+}
+
 /** Scoped feedback rows for one beta user (panel / profile) — avoids loading the full admin list. */
 export async function fetchAdminFeedbackForEmail(email: string): Promise<AdminFeedbackRow[]> {
   const supabase = createSupabaseServerClient()
@@ -583,6 +625,22 @@ export async function fetchAdminSupport(): Promise<AdminSupportRow[] | { error: 
   if (error) return { error: error.message }
 
   return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
+}
+
+/** Support ticket timestamps only — for active-day counts. */
+export async function fetchAdminSupportDatesForEmail(email: string): Promise<string[]> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return []
+  const normalized = email.trim().toLowerCase()
+  if (!normalized.includes("@")) return []
+  const { data, error } = await supabase
+    .from(SUPPORT_INBOX_TABLE)
+    .select("created_at")
+    .eq("email", normalized)
+    .order("created_at", { ascending: false })
+    .limit(50)
+  if (error) return []
+  return (data ?? []).map((r) => String(r.created_at))
 }
 
 /** Scoped support rows for one beta user — avoids loading the full support inbox. */

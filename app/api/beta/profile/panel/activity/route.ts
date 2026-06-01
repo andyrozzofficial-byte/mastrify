@@ -1,8 +1,8 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { normalizeBetaEmail } from "../../../../../lib/betaAccess"
-import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
-import { fetchBetaProfilePanelCoreForEmail } from "../../../../../lib/betaUserData"
+import { normalizeBetaEmail } from "../../../../../../lib/betaAccess"
+import { resolveBetaEmailFromCookies } from "../../../../../../lib/betaSession"
+import { fetchBetaProfilePanelSecondaryForEmail } from "../../../../../../lib/betaUserData"
 
 async function resolvePanelEmail(
   cookieEmail: string | null,
@@ -11,21 +11,6 @@ async function resolvePanelEmail(
   if (cookieEmail) return cookieEmail
   const normalized = typeof bodyEmail === "string" ? normalizeBetaEmail(bodyEmail) : ""
   return normalized.includes("@") ? normalized : null
-}
-
-export async function GET() {
-  const store = await cookies()
-  const email = await resolveBetaEmailFromCookies(store)
-  if (!email) {
-    return NextResponse.json({ error: "Not signed in" }, { status: 401 })
-  }
-
-  const result = await fetchBetaProfilePanelCoreForEmail(email)
-  if ("error" in result) {
-    return NextResponse.json({ error: result.error }, { status: 500 })
-  }
-
-  return NextResponse.json({ ok: true, panel: result.panel, partial: true })
 }
 
 export async function POST(request: Request) {
@@ -37,7 +22,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as { email?: string }
     bodyEmail = body.email
   } catch {
-    /* GET-style panel load without body */
+    /* optional body */
   }
 
   const email = await resolvePanelEmail(cookieEmail, bodyEmail)
@@ -45,10 +30,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Beta email required" }, { status: 401 })
   }
 
-  const result = await fetchBetaProfilePanelCoreForEmail(email)
+  const result = await fetchBetaProfilePanelSecondaryForEmail(email)
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, panel: result.panel, partial: true })
+  return NextResponse.json({ ok: true, secondary: result.secondary })
 }

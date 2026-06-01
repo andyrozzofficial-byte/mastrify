@@ -37,13 +37,24 @@ import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
 import {
   CUSTOMER_PROFILES_TABLE,
   fetchAdminFeedback,
+  fetchAdminFeedbackDatesForEmail,
   fetchAdminFeedbackForEmail,
+  fetchAdminFeedbackMetaForEmail,
   fetchAdminJobs,
   fetchAdminSupport,
+  fetchAdminSupportDatesForEmail,
   fetchAdminSupportForEmail,
   MASTERED_EXPORTS_TABLE,
   PIPELINE_EVENTS_TABLE,
 } from "./adminData"
+import { panelTimedAsync, panelTimedSync } from "./betaPanelPerf"
+import {
+  buildBetaProfilePanelData,
+  mapRecentActivityFromTimeline,
+  mergeBetaProfilePanelSecondary,
+  type BetaProfilePanelData,
+  type BetaProfilePanelSecondary,
+} from "./betaProfilePanel"
 import { findBetaProfileByEmail, upsertCustomerProfileRow } from "./betaProfileDb"
 import {
   countBetaDownloadsForEmail,
@@ -52,7 +63,6 @@ import {
   type BetaMasterCompletionRow,
 } from "./betaMasterTracking"
 import { countBetaIssuesForEmail, fetchBetaIssuesForEmail } from "./betaIssues"
-import { buildBetaProfilePanelData, type BetaProfilePanelData } from "./betaProfilePanel"
 import { createSupabaseServerClient } from "./supabaseServer"
 import { formatSupabaseTableError } from "./supabaseSchemaErrors"
 
@@ -200,6 +210,64 @@ async function buildCreatorInviteCountByReferrer(): Promise<Map<string, number>>
     map.set(ref, (map.get(ref) ?? 0) + 1)
   }
   return map
+}
+
+/** Scoped invite count for one referrer (panel core — no full notes scan). */
+async function countCreatorInvitesForEmail(email: string): Promise<number> {
+  const normalized = normalizeBetaEmail(email)
+  if (!normalized.includes("@")) return 0
+
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return 0
+
+  const { count, error } = await supabase
+    .from(CUSTOMER_PROFILES_TABLE)
+    .select("email", { count: "exact", head: true })
+    .ilike("notes", `%referred_by:${normalized}%`)
+
+  if (error) return 0
+  return count ?? 0
+}
+
+function feedbackMetaAsRows(
+  email: string,
+  meta: Awaited<ReturnType<typeof fetchAdminFeedbackMetaForEmail>>,
+): AdminFeedbackRow[] {
+  return meta.map((m) => ({
+    id: m.id,
+    created_at: m.created_at,
+    updated_at: m.created_at,
+    status: "open",
+    session_id: m.session_id,
+    track_name: null,
+    track_duration: null,
+    mastering_style: null,
+    contact_email: email,
+    contact_discord: null,
+    recommend_score: 0,
+    use_again_score: 0,
+    ease_rating: 0,
+    genre: "",
+    role: "",
+    release_ready: "",
+    admin_notes: m.admin_notes,
+    processing_time_ms: null,
+    master_lufs: null,
+    stereo_width: null,
+    low_end: null,
+    survey: {},
+    feedback_stage: "completed",
+  }))
+}
+
+function activeDaysFromTimestamps(
+  profileRow: BetaProfileRow | null,
+  timestamps: string[],
+): number {
+  const activityDates = new Set<string>()
+  for (const iso of timestamps) activityDates.add(dateKey(iso))
+  if (profileRow?.beta_signed_up_at) activityDates.add(dateKey(profileRow.beta_signed_up_at))
+  return activityDates.size
 }
 
 export async function syncBetaProfileFromActivity(email: string): Promise<void> {
@@ -1054,38 +1122,102 @@ export async function touchBetaProfileFromFeedback(
   await upsertCustomerProfileRow(body, supabase)
 }
 
-/** Panel data for one user — scoped queries only (no full admin table scans). */
-export async function fetchBetaProfilePanelForEmail(
+/** Critical panel stats (points, rank, level, masters) — no heavy lists. */
+export async function fetchBetaProfilePanelCoreForEmail(
   email: string,
 ): Promise<{ ok: true; panel: BetaProfilePanelData } | { error: string }> {
   const normalized = normalizeBetaEmail(email)
   if (!normalized.includes("@")) return { error: "Valid email required" }
 
-  const [profileRow, userFeedback, userSupport, completions, issueCount, downloadCount, reportedIssues] =
-    await Promise.all([
-      fetchBetaProfileByEmail(normalized),
-      fetchAdminFeedbackForEmail(normalized),
-      fetchAdminSupportForEmail(normalized),
-      fetchBetaMasterCompletionsForEmailFast(normalized),
-      countBetaIssuesForEmail(normalized),
-      countBetaDownloadsForEmail(normalized),
-      fetchBetaIssuesForEmail(normalized),
-    ])
-
+  const profileRow = await panelTimedAsync("profile query", () => fetchBetaProfileByEmail(normalized))
   if (!profileRow) return { error: "Profile not found" }
 
+  const [
+    feedbackMeta,
+    feedbackDates,
+    supportDates,
+    completions,
+    issueCount,
+    downloadCount,
+    creatorInviteCount,
+  ] = await Promise.all([
+    panelTimedAsync("feedback query", () => fetchAdminFeedbackMetaForEmail(normalized)),
+    panelTimedAsync("feedback dates query", () => fetchAdminFeedbackDatesForEmail(normalized)),
+    panelTimedAsync("support dates query", () => fetchAdminSupportDatesForEmail(normalized)),
+    panelTimedAsync("completions query", () => fetchBetaMasterCompletionsForEmailFast(normalized)),
+    panelTimedAsync("issues count query", () => countBetaIssuesForEmail(normalized)),
+    panelTimedAsync("downloads query", () => countBetaDownloadsForEmail(normalized)),
+    panelTimedAsync("invites query", () => countCreatorInvitesForEmail(normalized)),
+  ])
+
+  const userFeedback = panelTimedSync("rank calculation", () =>
+    feedbackMetaAsRows(normalized, feedbackMeta),
+  )
   const userJobs: AdminJobRow[] = []
   const list = buildListRow(
     normalized,
     profileRow,
     userFeedback,
-    userSupport,
+    [],
     userJobs,
-    0,
+    creatorInviteCount,
     completions,
     issueCount,
   )
 
+  const activeDays = activeDaysFromTimestamps(profileRow, [
+    ...feedbackDates,
+    ...supportDates,
+    ...completions.map((c) => c.completed_at),
+  ])
+
+  const panelProfile: BetaUserProfile = {
+    ...list,
+    issueReportCount: issueCount,
+    uploadCount: 0,
+    downloadCount,
+    avgLufs: null,
+    avgProcessingMs: null,
+    activeDays,
+    totalUsageEvents: feedbackMeta.length + supportDates.length + downloadCount,
+    betaApproved: profileRow.beta_approved ?? false,
+    adminNotes: profileRow.notes ?? null,
+    badges: [],
+    timeline: [],
+    feedback: [],
+    support: [],
+    sessions: [],
+    positiveTags: [],
+    issueTags: [],
+    missingFeatures: [],
+    featureRequests: [],
+    issuesReported: [],
+    recommendTrend: [],
+    supportIssues: [],
+  }
+
+  return { ok: true, panel: buildBetaProfilePanelData(panelProfile) }
+}
+
+/** Timeline + refined active days — load after panel opens. */
+export async function fetchBetaProfilePanelSecondaryForEmail(
+  email: string,
+): Promise<{ ok: true; secondary: BetaProfilePanelSecondary } | { error: string }> {
+  const normalized = normalizeBetaEmail(email)
+  if (!normalized.includes("@")) return { error: "Valid email required" }
+
+  const profileRow = await panelTimedAsync("profile query (secondary)", () =>
+    fetchBetaProfileByEmail(normalized),
+  )
+
+  const [userFeedback, userSupport, completions, reportedIssues] = await Promise.all([
+    panelTimedAsync("feedback query", () => fetchAdminFeedbackForEmail(normalized)),
+    panelTimedAsync("support query", () => fetchAdminSupportForEmail(normalized)),
+    panelTimedAsync("completions query", () => fetchBetaMasterCompletionsForEmailFast(normalized)),
+    panelTimedAsync("issues query", () => fetchBetaIssuesForEmail(normalized)),
+  ])
+
+  const userJobs: AdminJobRow[] = []
   const activityDates = new Set<string>()
   for (const iso of [
     ...userFeedback.map((f) => f.created_at),
@@ -1095,16 +1227,10 @@ export async function fetchBetaProfilePanelForEmail(
   ]) {
     activityDates.add(dateKey(iso))
   }
-  if (profileRow.beta_signed_up_at) activityDates.add(dateKey(profileRow.beta_signed_up_at))
-
-  const sessions = [
-    ...new Set(
-      userFeedback.map((f) => f.session_id).filter((sid): sid is string => Boolean(sid?.trim())),
-    ),
-  ]
+  if (profileRow?.beta_signed_up_at) activityDates.add(dateKey(profileRow.beta_signed_up_at))
 
   const timeline = buildBetaTimeline({
-    signupAt: profileRow.beta_signed_up_at ?? null,
+    signupAt: profileRow?.beta_signed_up_at ?? null,
     uploads: [],
     userFeedback,
     userJobs,
@@ -1118,32 +1244,27 @@ export async function fetchBetaProfilePanelForEmail(
     })),
   })
 
-  const panelProfile: BetaUserProfile = {
-    ...list,
-    issueReportCount: issueCount,
-    uploadCount: 0,
-    downloadCount,
-    avgLufs: null,
-    avgProcessingMs: null,
-    activeDays: activityDates.size,
-    totalUsageEvents: userFeedback.length + userSupport.length + downloadCount,
-    betaApproved: profileRow.beta_approved ?? false,
-    adminNotes: profileRow.notes ?? null,
-    badges: [],
-    timeline,
-    feedback: userFeedback,
-    support: userSupport,
-    sessions,
-    positiveTags: [],
-    issueTags: [],
-    missingFeatures: [],
-    featureRequests: [],
-    issuesReported: reportedIssues.map((i) => i.title),
-    recommendTrend: [],
-    supportIssues: [],
+  return {
+    ok: true,
+    secondary: {
+      recentActivity: mapRecentActivityFromTimeline(timeline),
+      activity: { activeDays: activityDates.size },
+    },
   }
+}
 
-  return { ok: true, panel: buildBetaProfilePanelData(panelProfile) }
+/** Full panel (core + secondary) — used by write paths that return an updated panel. */
+export async function fetchBetaProfilePanelForEmail(
+  email: string,
+): Promise<{ ok: true; panel: BetaProfilePanelData } | { error: string }> {
+  const core = await fetchBetaProfilePanelCoreForEmail(email)
+  if ("error" in core) return core
+  const secondary = await fetchBetaProfilePanelSecondaryForEmail(email)
+  if ("error" in secondary) return { ok: true, panel: core.panel }
+  return {
+    ok: true,
+    panel: mergeBetaProfilePanelSecondary(core.panel, secondary.secondary),
+  }
 }
 
 export async function getBetaProfileStatus(
