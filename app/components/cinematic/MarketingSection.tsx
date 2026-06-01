@@ -34,7 +34,7 @@ export default function MarketingSection({
         afterHero ? "section-after-hero" : "section-rhythm",
         afterHero && tightAfterHero ? "section-after-hero--tight" : "",
         compact ? "section-rhythm--compact" : "",
-        bordered ? "border-t border-white/[0.05]" : "",
+        bordered ? "border-t border-white/[0.03]" : "",
         className,
       ]
         .filter(Boolean)

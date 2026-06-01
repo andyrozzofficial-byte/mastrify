@@ -43,10 +43,10 @@ export default function LandingHeroAtmosphere({
           efficient ? "blur-xl" : "blur-2xl"
         } ${
           mobileGlowBoost || compact
-            ? "bg-[radial-gradient(circle,rgba(139,92,246,0.26)_0%,rgba(79,70,229,0.1)_42%,transparent_70%)]"
-            : "bg-[radial-gradient(circle,rgba(139,92,246,0.2)_0%,rgba(79,70,229,0.08)_40%,transparent_68%)]"
+            ? "bg-[radial-gradient(circle,rgba(139,92,246,0.18)_0%,rgba(79,70,229,0.07)_42%,transparent_70%)]"
+            : "bg-[radial-gradient(circle,rgba(139,92,246,0.14)_0%,rgba(79,70,229,0.06)_40%,transparent_68%)]"
         }`}
-        style={reduce ? { opacity: 0.58 } : undefined}
+        style={reduce ? { opacity: efficient ? 0.42 : 0.58 } : efficient ? { opacity: 0.49 } : undefined}
       />
       {!efficient ? (
         <div

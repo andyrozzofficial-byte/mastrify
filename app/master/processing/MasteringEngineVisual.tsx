@@ -56,8 +56,8 @@ export default function MasteringEngineVisual({ activeStep, className, efficient
       {/* Depth layers — parallax glow */}
       {efficient ? (
         <div
-          className="engine-halo-breathe pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.24)_0%,rgba(79,70,229,0.08)_45%,transparent_65%)] blur-2xl"
-          style={reduceMotion ? { opacity: 0.52 } : undefined}
+          className="engine-halo-breathe pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.17)_0%,rgba(79,70,229,0.06)_45%,transparent_65%)] blur-xl"
+          style={{ opacity: reduceMotion ? 0.42 : 0.49 }}
         />
       ) : (
         <>
@@ -78,27 +78,28 @@ export default function MasteringEngineVisual({ activeStep, className, efficient
         </>
       )}
 
-      {/* Low-end ripples */}
-      {bassRipples.map((i) => (
-        <motion.div
-          key={`bass-${i}`}
-          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full border border-indigo-400/20"
-          style={{ width: "72%", height: "72%", marginLeft: "-36%", marginTop: "-36%" }}
-          animate={
-            reduceMotion
-              ? { opacity: 0.12 * profile.bass }
-              : efficient
-                ? { opacity: [0.08, 0.18 * profile.bass, 0.08] }
-                : {
-                    scale: [0.92 + i * 0.04, 1.02 + profile.bass * 0.08, 0.92 + i * 0.04],
-                    opacity: [0.08, 0.22 * profile.bass, 0.08],
-                  }
-          }
-          transition={{ duration: 3.6 + i * 0.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
-        />
-      ))}
+      {/* Low-end ripples — hidden in marketing efficient mode (neon rings) */}
+      {!efficient
+        ? bassRipples.map((i) => (
+            <motion.div
+              key={`bass-${i}`}
+              className="pointer-events-none absolute left-1/2 top-1/2 rounded-full border border-indigo-400/20"
+              style={{ width: "72%", height: "72%", marginLeft: "-36%", marginTop: "-36%" }}
+              animate={
+                reduceMotion
+                  ? { opacity: 0.12 * profile.bass }
+                  : {
+                      scale: [0.92 + i * 0.04, 1.02 + profile.bass * 0.08, 0.92 + i * 0.04],
+                      opacity: [0.08, 0.22 * profile.bass, 0.08],
+                    }
+              }
+              transition={{ duration: 3.6 + i * 0.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
+            />
+          ))
+        : null}
 
       {/* Stereo field arcs */}
+      {!efficient ? (
       <motion.div
         className="pointer-events-none absolute inset-[6%]"
         animate={{ opacity: 0.35 + profile.stereo * 0.45, scaleX: 0.88 + profile.stereo * 0.14 }}
@@ -109,8 +110,10 @@ export default function MasteringEngineVisual({ activeStep, className, efficient
           <ellipse cx="100" cy="100" rx="62" ry="32" stroke="rgba(167,139,250,0.18)" strokeWidth="0.5" strokeDasharray="3 8" />
         </svg>
       </motion.div>
+      ) : null}
 
-      {/* Spectral arcs — outer */}
+      {/* Spectral arcs — outer (hidden in marketing efficient mode) */}
+      {!efficient ? (
       <motion.svg
         className={`absolute inset-0 h-full w-full ${efficient && !reduceMotion ? "engine-ring-spin-cw" : ""}`}
         viewBox="0 0 200 200"
@@ -138,8 +141,10 @@ export default function MasteringEngineVisual({ activeStep, className, efficient
         <path d="M100 12 A88 88 0 0 1 182 72" stroke="url(#specArcB)" strokeWidth="2.2" strokeLinecap="round" opacity="0.75" />
         <path d="M182 128 A88 88 0 0 1 100 188" stroke="url(#specArcA)" strokeWidth="1.4" strokeLinecap="round" opacity="0.4" />
       </motion.svg>
+      ) : null}
 
       {/* Counter-rotating inner ring */}
+      {!efficient ? (
       <motion.svg
         className={`absolute inset-[12%] m-auto h-[76%] w-[76%] ${efficient && !reduceMotion ? "engine-ring-spin-ccw" : ""}`}
         viewBox="0 0 200 200"
@@ -155,6 +160,7 @@ export default function MasteringEngineVisual({ activeStep, className, efficient
         <circle cx="100" cy="100" r="70" stroke="rgba(167,139,250,0.2)" strokeWidth="0.75" strokeDasharray="2 12" />
         <path d="M100 30 A70 70 0 0 0 48 148" stroke="rgba(56,189,248,0.35)" strokeWidth="1.25" strokeLinecap="round" />
       </motion.svg>
+      ) : null}
 
       {/* Particles */}
       {particles.map((p) => (
@@ -205,8 +211,8 @@ export default function MasteringEngineVisual({ activeStep, className, efficient
             ...(efficient
               ? {
                   boxShadow: profile.tighten
-                    ? "0 0 44px rgba(99,102,241,0.16), inset 0 0 28px rgba(0,0,0,0.5)"
-                    : "0 0 52px rgba(139,92,246,0.14), inset 0 0 26px rgba(0,0,0,0.48)",
+                    ? "0 0 28px rgba(99,102,241,0.11), inset 0 0 28px rgba(0,0,0,0.5)"
+                    : "0 0 34px rgba(139,92,246,0.1), inset 0 0 26px rgba(0,0,0,0.48)",
                 }
               : {}),
           }}
