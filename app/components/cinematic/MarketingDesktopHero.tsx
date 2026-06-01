@@ -14,6 +14,8 @@ type Props = {
   engineStep?: number
   /** Landing: static orb + no enter animations — prevents scroll compositing jank */
   scrollSafe?: boolean
+  /** Master flow: no orb column, tighter copy column */
+  workstation?: boolean
 }
 
 /**
@@ -24,11 +26,12 @@ export default function MarketingDesktopHero({
   variant = "marketing",
   engineStep: engineStepProp,
   scrollSafe = false,
+  workstation = false,
 }: Props) {
   const reduce = useReducedMotion()
   const isProduct = variant === "product"
   const engineStep = engineStepProp ?? (isProduct ? 2 : 2)
-  const useEnter = !reduce && !scrollSafe
+  const useEnter = !reduce && !scrollSafe && !workstation
 
   return (
     <section
@@ -36,16 +39,19 @@ export default function MarketingDesktopHero({
         "marketing-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12",
         isProduct ? "marketing-hero-shell--product product-flow-page-bottom" : "",
         scrollSafe ? "marketing-hero-shell--scroll-safe" : "",
+        workstation ? "marketing-hero-shell--workstation" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <div
-        className={`pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)] ${
-          scrollSafe ? "opacity-55" : "marketing-ambient-pulse"
-        }`}
-        aria-hidden
-      />
+      {!workstation ? (
+        <div
+          className={`pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)] ${
+            scrollSafe ? "opacity-55" : "marketing-ambient-pulse"
+          }`}
+          aria-hidden
+        />
+      ) : null}
 
       <div
         className={[
@@ -68,7 +74,7 @@ export default function MarketingDesktopHero({
           {children}
         </div>
 
-        <OrbScene activeStep={engineStep} scrollSafe={scrollSafe} />
+        {workstation ? null : <OrbScene activeStep={engineStep} scrollSafe={scrollSafe} />}
       </div>
     </section>
   )

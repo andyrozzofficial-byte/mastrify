@@ -35,31 +35,29 @@ export default function MasterUploadHero({
   continueLoading = false,
 }: Props) {
   return (
-    <MarketingDesktopHero variant="product">
-      <span className="hero-eyebrow-pill">Spatial mastering engine</span>
+    <MarketingDesktopHero variant="product" workstation>
+      <span className="hero-eyebrow-pill">Mastering session</span>
 
       <h1 className="marketing-hero-title">
-        Release-ready masters
-        <span className="marketing-hero-title-accent">with musical depth</span>
+        Upload your mix
+        <span className="marketing-hero-title-accent marketing-hero-title-accent--workstation">
+          and configure your master
+        </span>
       </h1>
 
       <p className="hero-lead lg:mx-0">
-        Hand your mix to an intelligent mastering engine that listens with restraint — shaping loudness, space, and tone
-        while preserving what makes your music feel alive.
+        Drop in a stereo mix, set loudness and tone, then render a release-ready master — with dynamics and space kept
+        intact.
       </p>
 
       <ul className="marketing-hero-bullets">
         <li className="flex gap-2.5">
-          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
-          Perceptual processing tuned to your mix, not a one-size chain
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-white/45" aria-hidden />
+          Perceptual chain tuned to your material, not a preset bake-off
         </li>
         <li className="flex gap-2.5">
-          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
-          Style and loudness goals you control before the final render
-        </li>
-        <li className="flex gap-2.5 max-lg:hidden">
-          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
-          The same cinematic engine that powers processing and results
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-white/35" aria-hidden />
+          Style, loudness, width, and clarity controls before render
         </li>
       </ul>
 

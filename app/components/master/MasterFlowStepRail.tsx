@@ -27,71 +27,49 @@ export default function MasterFlowStepRail({ phase, className = "" }: Props) {
 
   return (
     <motion.div
-      className={`flex w-full max-w-md items-center justify-center ${className}`}
+      className={`flex w-full max-w-sm items-center justify-center ${className}`}
       role="group"
       aria-label="Mastering progress"
-      initial={reduce ? false : { opacity: 0, y: 8 }}
+      initial={reduce ? false : { opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.55, ease: EASE }}
+      transition={{ duration: 0.4, ease: EASE }}
     >
       {STEPS.map((label, i) => (
-        <motion.div key={label} className="contents">
+        <div key={label} className="contents">
           {i > 0 ? (
-            <div className="relative mx-1 h-px min-w-[2rem] flex-1 max-w-[4.5rem] sm:mx-1.5" aria-hidden>
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                animate={
-                  reduce
-                    ? undefined
-                    : {
-                        opacity: active >= i ? [0.35, 0.65, 0.35] : 0.22,
-                      }
-                }
-                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-              />
+            <div className="relative mx-1 h-px min-w-[1.75rem] flex-1 max-w-[3.5rem] sm:mx-1.5" aria-hidden>
+              <div className="absolute inset-0 bg-white/[0.08]" />
               {active >= i ? (
                 <motion.div
-                  className="absolute inset-y-0 left-0 h-full rounded-full bg-gradient-to-r from-violet-500/40 to-cyan-400/30"
+                  className="absolute inset-y-0 left-0 h-full rounded-full bg-violet-500/45"
                   initial={{ width: "0%" }}
                   animate={{ width: "100%" }}
-                  transition={{ duration: 0.6, ease: EASE }}
+                  transition={{ duration: 0.45, ease: EASE }}
                 />
               ) : null}
             </div>
           ) : null}
-          <div className="flex w-[4.5rem] shrink-0 flex-col items-center sm:w-[5rem]">
-            <motion.span
-              className={`relative flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-semibold sm:h-[2.35rem] sm:w-[2.35rem] sm:text-xs ${
+          <div className="flex w-[4rem] shrink-0 flex-col items-center sm:w-[4.25rem]">
+            <span
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-semibold sm:h-[2.1rem] sm:w-[2.1rem] sm:text-xs ${
                 i < active
-                  ? "bg-violet-600/25 text-violet-200/80 ring-1 ring-violet-400/25"
+                  ? "bg-violet-600/20 text-violet-100/80 ring-1 ring-violet-400/20"
                   : i === active
-                    ? "bg-gradient-to-b from-violet-500/95 to-indigo-700/95 text-white ring-1 ring-white/10"
-                    : "border border-white/[0.08] bg-black/40 text-white/60"
+                    ? "bg-violet-600 text-white ring-1 ring-white/10"
+                    : "border border-white/[0.08] bg-black/35 text-white/55"
               }`}
-              animate={
-                reduce || i !== active
-                  ? undefined
-                  : {
-                      boxShadow: [
-                        "0 0 0 rgba(139,92,246,0)",
-                        "0 0 18px rgba(139,92,246,0.35)",
-                        "0 0 0 rgba(139,92,246,0)",
-                      ],
-                    }
-              }
-              transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
             >
               {i + 1}
-            </motion.span>
+            </span>
             <span
-              className={`mt-2 text-center text-[8px] font-medium uppercase tracking-[0.22em] sm:text-[9px] ${
-                i === active ? "text-violet-200/75" : i < active ? "text-white/70" : "text-white/58"
+              className={`mt-1.5 text-center text-[8px] font-medium uppercase tracking-[0.18em] sm:text-[9px] ${
+                i === active ? "text-white/72" : i < active ? "text-white/58" : "text-white/45"
               }`}
             >
               {label}
             </span>
           </div>
-        </motion.div>
+        </div>
       ))}
     </motion.div>
   )

@@ -58,7 +58,7 @@ function UploadStepView({
   }, [masterState.file])
 
   return (
-    <CinematicPageShell showBottomFade>
+    <CinematicPageShell workstation>
         <MasterUploadHero
           file={masterState.file}
           stepRailPhase="upload"

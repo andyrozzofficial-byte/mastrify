@@ -14,6 +14,8 @@ type Props = {
   innerClassName?: string
   /** Landing: minimal layers, no page ambient pulse, scroll-safe overflow */
   scrollSafe?: boolean
+  /** Master flow: flat background, no page ambient, no enter animation */
+  workstation?: boolean
 }
 
 /** Canonical marketing page shell — matches homepage root structure. */
@@ -22,23 +24,30 @@ export default function MarketingPageFrame({
   showBottomFade = false,
   innerClassName = "",
   scrollSafe = false,
+  workstation = false,
 }: Props) {
   const reduce = useReducedMotion()
   useMarketingScrollPause()
 
   const enterClass =
-    scrollSafe || reduce ? "" : "marketing-page-root--enter"
+    scrollSafe || reduce || workstation ? "" : "marketing-page-root--enter"
 
   return (
     <div
       className={`marketing-page-root relative min-h-0 text-white ${enterClass} ${
-        scrollSafe ? "marketing-page-root--scroll-safe overflow-x-clip" : "min-h-screen overflow-x-clip"
+        scrollSafe
+          ? "marketing-page-root--scroll-safe overflow-x-clip"
+          : "min-h-screen overflow-x-clip"
       }`}
     >
-      <CinematicBackground intensity="strong" marketingLite gradientOnly />
-      {scrollSafe ? null : <MarketingPageAmbient />}
+      <CinematicBackground
+        intensity={workstation ? "subtle" : "strong"}
+        marketingLite
+        gradientOnly
+      />
+      {scrollSafe || workstation ? null : <MarketingPageAmbient className="marketing-page-ambient" />}
 
-      {showBottomFade ? (
+      {showBottomFade && !workstation ? (
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-violet-950/[0.08] to-transparent"
           aria-hidden

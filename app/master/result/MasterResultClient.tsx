@@ -1027,10 +1027,7 @@ export default function MasterResultClient() {
                 ))}
               </motion.div>
             ) : null}
-            <div
-              className="mx-auto mt-2.5 h-px w-12 bg-gradient-to-r from-transparent via-violet-400/35 to-transparent sm:w-14"
-              aria-hidden
-            />
+            <div className="mx-auto mt-2.5 h-px w-12 bg-white/15 sm:w-14" aria-hidden />
             <p className="mx-auto mt-2.5 max-w-lg text-[13px] leading-snug text-white/68 sm:text-[14px]">
               Smart mastering tuned for punch, clarity, and your loudness goal.
             </p>
@@ -1108,7 +1105,7 @@ export default function MasterResultClient() {
                   onClick={() => selectSource("original")}
                   className={`min-h-[44px] rounded-lg py-2.5 text-[11px] font-semibold transition-all duration-200 active:scale-[0.98] sm:min-h-0 sm:py-2.5 sm:text-xs ${
                     selectedSource === "original"
-                      ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.11)] ring-1 ring-white/[0.07]"
+                      ? "bg-violet-600 text-white ring-1 ring-white/[0.08]"
                       : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/88"
                   }`}
                 >
@@ -1119,7 +1116,7 @@ export default function MasterResultClient() {
                   onClick={() => selectSource("mastered")}
                   className={`min-h-[44px] rounded-lg py-2.5 text-[11px] font-semibold transition-all duration-200 active:scale-[0.98] sm:min-h-0 sm:py-2.5 sm:text-xs ${
                     selectedSource === "mastered"
-                      ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.11)] ring-1 ring-white/[0.07]"
+                      ? "bg-violet-600 text-white ring-1 ring-white/[0.08]"
                       : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/88"
                   }`}
                 >
@@ -1154,7 +1151,7 @@ export default function MasterResultClient() {
                 <button
                   type="button"
                   onClick={togglePlayPause}
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600/95 to-indigo-700/95 text-white shadow-[0_0_12px_rgba(99,102,241,0.12),0_6px_16px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.05] hover:shadow-[0_0_14px_rgba(99,102,241,0.14)] active:scale-[0.97] sm:h-12 sm:w-12"
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white ring-1 ring-white/[0.08] transition-colors duration-200 hover:bg-violet-500 active:scale-[0.98] sm:h-12 sm:w-12"
                   aria-label={isPlaying ? "Pause" : "Play"}
                 >
                   {isPlaying ? (
@@ -1185,7 +1182,7 @@ export default function MasterResultClient() {
                   </div>
                   <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-white/[0.07]">
                     <motion.div
-                      className="h-full rounded-full bg-gradient-to-r from-violet-400/75 to-sky-500/55"
+                      className="h-full rounded-full bg-violet-500/85"
                       style={{ width: `${playProgress}%` }}
                     />
                   </div>
@@ -1248,12 +1245,12 @@ export default function MasterResultClient() {
             <button
               type="button"
               onClick={handleDownloadMaster}
-              className="relative z-30 inline-flex min-h-[56px] w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[16px] font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.16),0_12px_32px_rgba(0,0,0,0.42)] ring-1 ring-white/[0.1] transition-all duration-200 hover:brightness-[1.06] active:scale-[0.99]"
+              className="relative z-30 inline-flex min-h-[56px] w-full items-center justify-center rounded-xl bg-violet-700 px-7 text-[16px] font-semibold text-white ring-1 ring-white/[0.1] transition-colors duration-200 hover:bg-violet-600 active:scale-[0.99]"
             >
               Download Master
             </button>
           ) : (
-            <div className="inline-flex min-h-[56px] w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[16px] font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.16)] ring-1 ring-white/[0.1]">
+            <div className="inline-flex min-h-[56px] w-full items-center justify-center rounded-xl bg-violet-700 px-7 text-[16px] font-semibold text-white ring-1 ring-white/[0.1]">
               Check your inbox
             </div>
           )}
@@ -1286,7 +1283,7 @@ export default function MasterResultClient() {
       {betaFeedbackOn && isBetaUser ? <BetaReportIssueSection className="master-result-report-issue" /> : null}
 
       {deliveryOpen && !deliverySent ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/72 px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md min-[430px]:px-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] min-[430px]:px-5">
           <motion.div
             initial={{ opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1322,7 +1319,7 @@ export default function MasterResultClient() {
                 type="button"
                 onClick={handleEmailDelivery}
                 disabled={deliverySending}
-                className="inline-flex min-h-[46px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-5 text-sm font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-[46px] w-full flex-1 items-center justify-center rounded-xl bg-violet-700 px-5 text-sm font-semibold text-white transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {deliverySending ? "Sending…" : "Email my master"}
               </button>

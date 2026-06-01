@@ -50,29 +50,19 @@ export default function BetaMasterStatusCard({
   return (
     <motion.div
       className={`beta-status-card-root relative w-full ${className}`}
-      initial={reduce ? false : { opacity: 0, y: 6 }}
+      initial={reduce ? false : { opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: EASE }}
+      transition={{ duration: 0.35, ease: EASE }}
     >
-      <div
-        className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/10 via-transparent to-cyan-500/5 opacity-35 blur-[2px]"
-        aria-hidden
-      />
-
       <div
         className={`product-surface-card relative overflow-hidden px-[14px] py-[14px] sm:px-5 ${
           isResult ? "sm:py-5" : "sm:py-4"
         }`}
       >
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(124,58,237,0.06),transparent_70%)]"
-          aria-hidden
-        />
-
         <div className="relative space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.24em] text-violet-200/80 sm:text-[10px]">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.24em] text-white/55 sm:text-[10px]">
                 Private beta
               </p>
               <span
@@ -85,7 +75,7 @@ export default function BetaMasterStatusCard({
 
           {!isResult ? (
             <div className="space-y-1">
-              <p className="text-[13px] font-semibold leading-snug text-white/94 sm:text-[14px]">
+              <p className="text-[13px] font-semibold leading-snug text-white/92 sm:text-[14px]">
                 You&apos;re helping shape Mastrify.
               </p>
               <p className="text-[11px] leading-relaxed text-white/50 sm:text-[12px]">
@@ -121,7 +111,7 @@ export default function BetaMasterStatusCard({
               aria-label={progressTitle}
             >
               <div
-                className="h-full rounded-full bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-400 shadow-[0_0_12px_rgba(139,92,246,0.35)] transition-[width] duration-500"
+                className="h-full rounded-full bg-violet-500 transition-[width] duration-500"
                 style={{ width: `${Math.min(100, Math.max(0, progressPct))}%` }}
               />
             </div>
@@ -146,8 +136,8 @@ export default function BetaMasterStatusCard({
             </div>
           ) : null}
 
-          <div className="rounded-lg border border-violet-400/15 bg-violet-500/[0.06] px-3 py-2.5 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-200/70 sm:text-[10px]">
+          <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2.5 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55 sm:text-[10px]">
               Next reward
             </p>
             <p className="mt-1 text-[13px] font-semibold leading-snug text-white/90 sm:text-[13px]">

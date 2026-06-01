@@ -2,7 +2,7 @@
 
 import { useRef } from "react"
 import { motion } from "framer-motion"
-import CinematicBackground from "../CinematicBackground"
+import CinematicPageShell from "../cinematic/CinematicPageShell"
 import { useBetaMasteringGate } from "../beta/BetaMasteringGateProvider"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import MasterStylePresetPicker from "./MasterStylePresetPicker"
@@ -41,7 +41,7 @@ function ThinSlider({
         max={100}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-0.5 w-full cursor-pointer appearance-none rounded-full bg-white/[0.07] accent-purple-500 transition [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(192,132,252,0.45),0_0_4px_rgba(34,211,238,0.12)] [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:shadow-[0_0_8px_rgba(192,132,252,0.45)]"
+        className="h-0.5 w-full cursor-pointer appearance-none rounded-full bg-white/[0.07] accent-purple-500 transition [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white"
       />
       <div className="space-y-0.5">
         <p className="text-[10px] leading-snug text-white/45">{description}</p>
@@ -97,8 +97,7 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
 
   if (needsFileReconnect) {
     return (
-      <div className="relative text-white">
-        <CinematicBackground />
+      <CinematicPageShell workstation>
         <div className="page-container relative flex max-w-md flex-col items-center justify-center gap-5 py-12 text-center">
           <MasterFlowStepRail phase="settings" className="mb-2" />
           <input
@@ -122,7 +121,7 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
           <button
             type="button"
             onClick={() => reconnectInputRef.current?.click()}
-            className="rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-lg ring-1 ring-white/10 transition hover:brightness-110"
+            className="rounded-xl bg-violet-700 px-6 py-3 text-sm font-semibold text-white ring-1 ring-white/10 transition hover:bg-violet-600"
           >
             Choose audio file
           </button>
@@ -130,7 +129,7 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
             Start over from upload
           </button>
         </div>
-      </div>
+      </CinematicPageShell>
     )
   }
 
@@ -146,21 +145,15 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
   }
 
   return (
-    <div className="relative text-white">
-      <CinematicBackground />
+    <CinematicPageShell workstation>
       <div className="page-container product-flow-page-bottom relative w-full pt-5 md:pt-6">
         <div className="product-form-column w-full max-w-[720px]">
         <MasterFlowStepRail phase="settings" className="mb-6 justify-center" />
         <div className="relative">
-          <div
-            className="pointer-events-none absolute left-1/2 top-[28%] z-0 h-[min(420px,90vw)] w-[min(680px,120%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_55%_42%_at_50%_50%,rgba(124,58,237,0.11),rgba(88,28,135,0.032)_50%,transparent_72%)] blur-3xl"
-            aria-hidden
-          />
-
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="product-surface-card relative z-10 overflow-hidden p-6 ring-1 ring-purple-500/8 md:p-8 md:pb-7"
+            className="product-surface-card relative z-10 overflow-hidden p-6 ring-1 ring-white/[0.08] md:p-8 md:pb-7"
           >
             <button
               type="button"
@@ -206,7 +199,7 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
                         onClick={() => setTargetLufs(o.lufs)}
                         className={`rounded-xl border px-2.5 py-2 text-left transition md:px-3 md:py-2.5 ${
                           active
-                            ? "border-purple-400/50 bg-purple-500/[0.12] text-white shadow-[0_0_14px_rgba(147,51,234,0.14)] ring-1 ring-purple-400/20"
+                            ? "border-violet-400/35 bg-violet-500/[0.1] text-white ring-1 ring-violet-400/15"
                             : "border-white/[0.06] bg-black/20 text-white/75 hover:border-white/[0.1] hover:bg-white/[0.03]"
                         }`}
                       >
@@ -265,7 +258,7 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
                     onContinue()
                   })
                 }
-                className="w-full rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] py-3 text-[13px] font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,0.3),0_14px_44px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 transition hover:brightness-110 md:text-sm"
+                className="w-full rounded-xl bg-violet-700 py-3 text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-violet-600 md:text-sm"
               >
                 Start mastering
               </button>
@@ -281,6 +274,6 @@ export default function MasterSettingsStep({ file, onContinue, onBack }: MasterS
         </div>
         </div>
       </div>
-    </div>
+    </CinematicPageShell>
   )
 }

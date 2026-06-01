@@ -548,7 +548,7 @@ function StylePresetCard({
         whileTap={{ scale: 0.96 }}
         animate={
           active
-            ? { scale: 1.02, boxShadow: "0 0 24px rgba(124,58,237,0.12)" }
+            ? { scale: 1.01, boxShadow: "0 0 0 rgba(0,0,0,0)" }
             : { scale: 1, boxShadow: "0 0 0px rgba(0,0,0,0)" }
         }
         transition={{ type: "spring", stiffness: 400, damping: 26 }}
@@ -567,7 +567,7 @@ function StylePresetCard({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className={`pointer-events-none absolute inset-0 rounded-2xl ${preset.accent.activeAura}`}
+              className={`pointer-events-none absolute inset-0 rounded-2xl master-preset-card--active-aura ${preset.accent.activeAura}`}
               aria-hidden
             />
           ) : null}
@@ -575,7 +575,7 @@ function StylePresetCard({
 
         <motion.span
           className={`relative mt-0.5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br sm:h-[3.75rem] sm:w-[3.75rem] ${preset.accent.iconBg} text-white ring-1 ${preset.accent.iconRing} transition-shadow duration-300 ${
-            active ? preset.accent.glow : "group-hover:shadow-[0_0_22px_rgba(255,255,255,0.07)]"
+            active ? "ring-violet-400/25" : ""
           }`}
           {...iconAnim}
         >
