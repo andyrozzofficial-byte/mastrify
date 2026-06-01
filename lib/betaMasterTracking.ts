@@ -56,6 +56,105 @@ async function fetchCompletionsTableRows(email: string): Promise<BetaMasterCompl
   }))
 }
 
+const COMPLETION_SELECT =
+  "session_id, email, track_name, mastering_style, processing_time_ms, master_lufs, completed_at, created_at"
+
+function mapCompletionTableRow(row: Record<string, unknown>): BetaMasterCompletionRow {
+  return {
+    session_id: String(row.session_id),
+    email: String(row.email),
+    track_name: (row.track_name as string | null) ?? null,
+    mastering_style: (row.mastering_style as string | null) ?? null,
+    processing_time_ms:
+      row.processing_time_ms != null ? Number(row.processing_time_ms) : null,
+    master_lufs: row.master_lufs != null ? Number(row.master_lufs) : null,
+    completed_at: String(row.completed_at),
+    created_at: String(row.created_at ?? row.completed_at),
+  }
+}
+
+function mergeCompletionsByEmail(
+  target: Map<string, BetaMasterCompletionRow[]>,
+  email: string,
+  rows: BetaMasterCompletionRow[],
+) {
+  const normalized = normalizeBetaEmail(email)
+  if (!normalized.includes("@")) return
+  const bySession = new Map<string, BetaMasterCompletionRow>()
+  for (const row of target.get(normalized) ?? []) {
+    if (row.session_id) bySession.set(row.session_id, row)
+  }
+  for (const row of rows) {
+    if (!row.session_id) continue
+    if (!bySession.has(row.session_id)) bySession.set(row.session_id, row)
+  }
+  target.set(normalized, [...bySession.values()].sort((a, b) => b.completed_at.localeCompare(a.completed_at)))
+}
+
+/**
+ * Batch load completions for many emails (admin beta-users list). No per-email backfill.
+ */
+export async function fetchCompletionsGroupedForEmails(
+  emails: string[],
+): Promise<Map<string, BetaMasterCompletionRow[]>> {
+  const normalizedEmails = [
+    ...new Set(
+      emails.map((e) => normalizeBetaEmail(e)).filter((e) => e.includes("@")),
+    ),
+  ]
+  const grouped = new Map<string, BetaMasterCompletionRow[]>()
+  for (const email of normalizedEmails) grouped.set(email, [])
+  if (normalizedEmails.length === 0) return grouped
+
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return grouped
+
+  const { data: tableRows, error: tableErr } = await supabase
+    .from(BETA_MASTER_COMPLETIONS_TABLE)
+    .select(COMPLETION_SELECT)
+    .in("email", normalizedEmails)
+    .order("completed_at", { ascending: false })
+    .limit(5000)
+
+  if (!tableErr) {
+    for (const row of tableRows ?? []) {
+      const mapped = mapCompletionTableRow(row as Record<string, unknown>)
+      mergeCompletionsByEmail(grouped, mapped.email, [mapped])
+    }
+  } else if (!/does not exist|42P01/i.test(tableErr.message)) {
+    console.warn("[beta] batch completions table fetch failed:", tableErr.message)
+  }
+
+  const { data: pipelineRows, error: pipeErr } = await supabase
+    .from(PIPELINE_EVENTS_TABLE)
+    .select("session_id, created_at, track_name, user_email")
+    .eq("event_type", PIPELINE_EVENT_MASTER_COMPLETE)
+    .in("user_email", normalizedEmails)
+    .order("created_at", { ascending: false })
+    .limit(5000)
+
+  if (!pipeErr) {
+    for (const row of pipelineRows ?? []) {
+      if (!row.session_id || !row.user_email) continue
+      const mapped: BetaMasterCompletionRow = {
+        session_id: String(row.session_id),
+        email: normalizeBetaEmail(String(row.user_email)),
+        track_name: row.track_name ?? null,
+        mastering_style: null,
+        processing_time_ms: null,
+        master_lufs: null,
+        completed_at: String(row.created_at),
+        created_at: String(row.created_at),
+      }
+      mergeCompletionsByEmail(grouped, mapped.email, [mapped])
+    }
+  } else if (!/does not exist|42P01/i.test(pipeErr.message)) {
+    console.warn("[beta] batch pipeline master_complete fetch failed:", pipeErr.message)
+  }
+
+  return grouped
+}
+
 async function fetchPipelineMasterCompleteRows(email: string): Promise<BetaMasterCompletionRow[]> {
   const supabase = createSupabaseServerClient()
   if (!supabase) return []
@@ -144,6 +243,29 @@ export async function backfillMasterCompletionsFromFeedback(email: string): Prom
   return created
 }
 
+function mergeCompletionRows(
+  tableRows: BetaMasterCompletionRow[],
+  pipelineRows: BetaMasterCompletionRow[],
+): BetaMasterCompletionRow[] {
+  const bySession = new Map<string, BetaMasterCompletionRow>()
+  for (const row of [...tableRows, ...pipelineRows]) {
+    if (!row.session_id) continue
+    if (!bySession.has(row.session_id)) bySession.set(row.session_id, row)
+  }
+  return [...bySession.values()].sort((a, b) => b.completed_at.localeCompare(a.completed_at))
+}
+
+/** Merged completions without feedback backfill (fast reads for panel / APIs). */
+export async function fetchBetaMasterCompletionsForEmailFast(
+  email: string,
+): Promise<BetaMasterCompletionRow[]> {
+  const [tableRows, pipelineRows] = await Promise.all([
+    fetchCompletionsTableRows(email),
+    fetchPipelineMasterCompleteRows(email),
+  ])
+  return mergeCompletionRows(tableRows, pipelineRows)
+}
+
 /** Merged completions from dedicated table + pipeline fallback (deduped by session_id). */
 export async function fetchBetaMasterCompletionsForEmail(
   email: string,
@@ -154,12 +276,7 @@ export async function fetchBetaMasterCompletionsForEmail(
     fetchCompletionsTableRows(email),
     fetchPipelineMasterCompleteRows(email),
   ])
-  const bySession = new Map<string, BetaMasterCompletionRow>()
-  for (const row of [...tableRows, ...pipelineRows]) {
-    if (!row.session_id) continue
-    if (!bySession.has(row.session_id)) bySession.set(row.session_id, row)
-  }
-  return [...bySession.values()].sort((a, b) => b.completed_at.localeCompare(a.completed_at))
+  return mergeCompletionRows(tableRows, pipelineRows)
 }
 
 export async function countBetaMastersForEmail(email: string): Promise<number> {

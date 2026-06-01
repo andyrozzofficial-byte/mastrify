@@ -21,6 +21,16 @@ import dynamic from "next/dynamic"
 
 const BETA_PROFILE_FETCH_TIMEOUT_MS = 12_000
 
+/** Routes that need beta session checks — skip profile API on marketing/landing pages. */
+const BETA_GATE_ROUTE_PREFIXES = ["/master", "/analyze", "/access", "/flow"] as const
+
+function isBetaGateRoute(pathname: string | null): boolean {
+  if (!pathname) return false
+  return BETA_GATE_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  )
+}
+
 const BetaProfileSlideOver = dynamic(() => import("./BetaProfileSlideOver"), { ssr: false })
 
 function logClientBetaAccess(message: string, detail?: Record<string, unknown>) {
@@ -159,19 +169,25 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
   )
 
   useEffect(() => {
+    if (!isBetaGateRoute(pathname)) {
+      setChecking(false)
+      return
+    }
     void refreshAccess()
-  }, [refreshAccess])
+  }, [refreshAccess, pathname])
 
   useEffect(() => {
     const onFocus = () => {
+      if (!isBetaGateRoute(pathname)) return
       if (isBetaUserRef.current) return
       void refreshAccess({ silent: true })
     }
     window.addEventListener("focus", onFocus)
     return () => window.removeEventListener("focus", onFocus)
-  }, [refreshAccess])
+  }, [refreshAccess, pathname])
 
   useEffect(() => {
+    if (!isBetaGateRoute(pathname)) return
     if (!pathname?.startsWith("/master")) return
     if (isBetaUserRef.current) return
     const storedEmail = getStoredBetaEmail()

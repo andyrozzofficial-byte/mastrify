@@ -460,6 +460,38 @@ export async function fetchAdminFeedback(): Promise<AdminFeedbackRow[] | { error
   return (data ?? []).map((row) => mapAdminFeedbackRow(row as BetaFeedbackDbRow))
 }
 
+/** Scoped feedback rows for one beta user (panel / profile) — avoids loading the full admin list. */
+export async function fetchAdminFeedbackForEmail(email: string): Promise<AdminFeedbackRow[]> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return []
+
+  const normalized = email.trim().toLowerCase()
+  if (!normalized.includes("@")) return []
+
+  let select = FEEDBACK_SELECT
+  let { data, error } = await supabase
+    .from(BETA_FEEDBACK_TABLE)
+    .select(select)
+    .eq("contact_email", normalized)
+    .order("created_at", { ascending: false })
+    .limit(100)
+
+  if (error && isMissingFeedbackStageColumn(error.message)) {
+    select = FEEDBACK_SELECT_WITHOUT_STAGE
+    const retry = await supabase
+      .from(BETA_FEEDBACK_TABLE)
+      .select(select)
+      .eq("contact_email", normalized)
+      .order("created_at", { ascending: false })
+      .limit(100)
+    data = retry.data
+    error = retry.error
+  }
+
+  if (error) return []
+  return (data ?? []).map((row) => mapAdminFeedbackRow(row as BetaFeedbackDbRow))
+}
+
 export async function fetchAdminFeedbackPaginated(
   page = 1,
 ): Promise<AdminPaginated<AdminFeedbackRow> | { error: string }> {
@@ -550,6 +582,25 @@ export async function fetchAdminSupport(): Promise<AdminSupportRow[] | { error: 
 
   if (error) return { error: error.message }
 
+  return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
+}
+
+/** Scoped support rows for one beta user — avoids loading the full support inbox. */
+export async function fetchAdminSupportForEmail(email: string): Promise<AdminSupportRow[]> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return []
+
+  const normalized = email.trim().toLowerCase()
+  if (!normalized.includes("@")) return []
+
+  const { data, error } = await supabase
+    .from(SUPPORT_INBOX_TABLE)
+    .select("*")
+    .eq("email", normalized)
+    .order("created_at", { ascending: false })
+    .limit(50)
+
+  if (error) return []
   return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
 }
 

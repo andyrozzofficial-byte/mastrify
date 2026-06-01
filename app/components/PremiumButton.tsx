@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import type { ComponentProps, MouseEvent } from "react"
-import { useBetaMasteringGate } from "./beta/BetaMasteringGateProvider"
+import { useBetaMasteringGateOptional } from "./beta/BetaMasteringGateProvider"
 
 type Variant = "primary" | "secondary"
 
@@ -27,13 +27,18 @@ export default function PremiumButton({
   onClick,
   ...props
 }: Props) {
-  const { hasAccess, checking, openGate } = useBetaMasteringGate()
+  const gate = useBetaMasteringGateOptional()
+  const hasAccess = gate?.hasAccess ?? false
+  const checking = gate?.checking ?? false
 
   function handleClick(e: MouseEvent<HTMLAnchorElement>) {
     onClick?.(e)
     if (!gateMastering || e.defaultPrevented || checking || hasAccess) return
     e.preventDefault()
-    openGate()
+    if (gate?.openGate) gate.openGate()
+    else if (typeof props.href === "string") {
+      window.location.assign(props.href)
+    }
   }
 
   return (

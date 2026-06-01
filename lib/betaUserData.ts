@@ -37,15 +37,18 @@ import type { BetaFeedbackPayload } from "./betaFeedbackTypes"
 import {
   CUSTOMER_PROFILES_TABLE,
   fetchAdminFeedback,
+  fetchAdminFeedbackForEmail,
   fetchAdminJobs,
   fetchAdminSupport,
+  fetchAdminSupportForEmail,
   MASTERED_EXPORTS_TABLE,
   PIPELINE_EVENTS_TABLE,
 } from "./adminData"
 import { findBetaProfileByEmail, upsertCustomerProfileRow } from "./betaProfileDb"
 import {
   countBetaDownloadsForEmail,
-  fetchBetaMasterCompletionsForEmail,
+  fetchBetaMasterCompletionsForEmailFast,
+  fetchCompletionsGroupedForEmails,
   type BetaMasterCompletionRow,
 } from "./betaMasterTracking"
 import { countBetaIssuesForEmail, fetchBetaIssuesForEmail } from "./betaIssues"
@@ -570,19 +573,11 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
     supportByEmail.set(e, list)
   }
 
-  const inviteMap = await buildCreatorInviteCountByReferrer()
-  const completionsByEmail = new Map<string, BetaMasterCompletionRow[]>()
-  const issueCountByEmail = new Map<string, number>()
-  await Promise.all(
-    emails.map(async (email) => {
-      const [completions, issueCount] = await Promise.all([
-        fetchBetaMasterCompletionsForEmail(email),
-        countBetaIssuesForEmail(email),
-      ])
-      completionsByEmail.set(email, completions)
-      issueCountByEmail.set(email, issueCount)
-    }),
-  )
+  const [inviteMap, completionsByEmail, issueCountByEmail] = await Promise.all([
+    buildCreatorInviteCountByReferrer(),
+    fetchCompletionsGroupedForEmails(emails),
+    fetchIssueCountsByEmail(),
+  ])
 
   const rows = emails.map((email) =>
     buildListRow(
@@ -928,7 +923,6 @@ export async function updateBetaProfileAdmin(
       error: formatSupabaseTableError(CUSTOMER_PROFILES_TABLE, error.message, error.code),
     }
   }
-  await syncBetaProfileFromActivity(normalized)
   const refreshed = await fetchBetaProfileByEmail(normalized)
   const displayRank = newRank ? betaRankLabel(newRank) : betaRankLabel(refreshed?.beta_rank)
   return { ok: true, betaRank: displayRank }
@@ -1057,21 +1051,99 @@ export async function touchBetaProfileFromFeedback(
   if (g && g !== "Unknown") body.genre = g
   if (d) body.daw = d
 
-  if (!body.genre && !body.daw) {
-    await syncBetaProfileFromActivity(normalized)
-    return
-  }
-
-  await supabase.from(CUSTOMER_PROFILES_TABLE).upsert(body, { onConflict: "email" })
-  await syncBetaProfileFromActivity(normalized)
+  await upsertCustomerProfileRow(body, supabase)
 }
 
+/** Panel data for one user — scoped queries only (no full admin table scans). */
 export async function fetchBetaProfilePanelForEmail(
   email: string,
 ): Promise<{ ok: true; panel: BetaProfilePanelData } | { error: string }> {
-  const profile = await fetchBetaUserProfile(email)
-  if (isFetchError(profile)) return profile
-  return { ok: true, panel: buildBetaProfilePanelData(profile) }
+  const normalized = normalizeBetaEmail(email)
+  if (!normalized.includes("@")) return { error: "Valid email required" }
+
+  const [profileRow, userFeedback, userSupport, completions, issueCount, downloadCount, reportedIssues] =
+    await Promise.all([
+      fetchBetaProfileByEmail(normalized),
+      fetchAdminFeedbackForEmail(normalized),
+      fetchAdminSupportForEmail(normalized),
+      fetchBetaMasterCompletionsForEmailFast(normalized),
+      countBetaIssuesForEmail(normalized),
+      countBetaDownloadsForEmail(normalized),
+      fetchBetaIssuesForEmail(normalized),
+    ])
+
+  if (!profileRow) return { error: "Profile not found" }
+
+  const userJobs: AdminJobRow[] = []
+  const list = buildListRow(
+    normalized,
+    profileRow,
+    userFeedback,
+    userSupport,
+    userJobs,
+    0,
+    completions,
+    issueCount,
+  )
+
+  const activityDates = new Set<string>()
+  for (const iso of [
+    ...userFeedback.map((f) => f.created_at),
+    ...userSupport.map((s) => s.created_at),
+    ...completions.map((c) => c.completed_at),
+    ...reportedIssues.map((i) => i.created_at),
+  ]) {
+    activityDates.add(dateKey(iso))
+  }
+  if (profileRow.beta_signed_up_at) activityDates.add(dateKey(profileRow.beta_signed_up_at))
+
+  const sessions = [
+    ...new Set(
+      userFeedback.map((f) => f.session_id).filter((sid): sid is string => Boolean(sid?.trim())),
+    ),
+  ]
+
+  const timeline = buildBetaTimeline({
+    signupAt: profileRow.beta_signed_up_at ?? null,
+    uploads: [],
+    userFeedback,
+    userJobs,
+    userSupport,
+    exports: [],
+    completions,
+    issues: reportedIssues.map((i) => ({
+      id: i.id,
+      title: i.title,
+      created_at: i.created_at,
+    })),
+  })
+
+  const panelProfile: BetaUserProfile = {
+    ...list,
+    issueReportCount: issueCount,
+    uploadCount: 0,
+    downloadCount,
+    avgLufs: null,
+    avgProcessingMs: null,
+    activeDays: activityDates.size,
+    totalUsageEvents: userFeedback.length + userSupport.length + downloadCount,
+    betaApproved: profileRow.beta_approved ?? false,
+    adminNotes: profileRow.notes ?? null,
+    badges: [],
+    timeline,
+    feedback: userFeedback,
+    support: userSupport,
+    sessions,
+    positiveTags: [],
+    issueTags: [],
+    missingFeatures: [],
+    featureRequests: [],
+    issuesReported: reportedIssues.map((i) => i.title),
+    recommendTrend: [],
+    supportIssues: [],
+  }
+
+  return { ok: true, panel: buildBetaProfilePanelData(panelProfile) }
 }
 
 export async function getBetaProfileStatus(

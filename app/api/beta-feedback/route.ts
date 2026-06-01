@@ -15,7 +15,7 @@ import {
   getSupabaseKeySource,
   getSupabaseUrl,
 } from "../../../lib/supabaseServer"
-import { syncBetaProfileFromActivity, touchBetaProfileFromFeedback } from "../../../lib/betaUserData"
+import { touchBetaProfileFromFeedback } from "../../../lib/betaUserData"
 import { PERF_DEBUG } from "../../../lib/perfDebug"
 
 function logBeta(message: string, detail?: unknown) {
@@ -117,7 +117,6 @@ export async function POST(request: Request) {
       const store = await cookies()
       const cookieEmail = (await resolveBetaEmailFromCookies(store)) || null
       const profileEmail = body.contactEmail?.trim() || cookieEmail
-      if (profileEmail) await syncBetaProfileFromActivity(profileEmail)
       return NextResponse.json({
         ok: true,
         success: true,
@@ -185,7 +184,6 @@ export async function POST(request: Request) {
     }
 
     await touchBetaProfileFromFeedback(profileEmail, body.genre, daw)
-    if (profileEmail) await syncBetaProfileFromActivity(profileEmail)
 
     return NextResponse.json({
       ok: true,

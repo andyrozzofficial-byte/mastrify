@@ -7,7 +7,6 @@ import { normalizeBetaEmail } from "../../../../lib/betaAccess"
 import { resolveBetaEmailFromCookies } from "../../../../lib/betaSession"
 import {
   fetchBetaProfilePanelForEmail,
-  syncBetaProfileFromActivity,
 } from "../../../../lib/betaUserData"
 
 export async function POST(request: Request) {
@@ -109,10 +108,6 @@ export async function POST(request: Request) {
 
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 })
-  }
-
-  if (result.created) {
-    await syncBetaProfileFromActivity(email)
   }
 
   const panelResult = await fetchBetaProfilePanelForEmail(email)

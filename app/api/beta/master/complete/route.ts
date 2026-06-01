@@ -14,7 +14,6 @@ import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
 import {
   fetchBetaProfilePanelForEmail,
   getBetaMasteringUiStateForEmail,
-  syncBetaProfileFromActivity,
 } from "../../../../../lib/betaUserData"
 import { getSupabaseEnvStatus } from "../../../../../lib/supabaseServer"
 import { PERF_DEBUG } from "../../../../../lib/perfDebug"
@@ -103,10 +102,6 @@ export async function POST(request: Request) {
       error: result.error,
     })
     return NextResponse.json({ error: result.error }, { status: 500 })
-  }
-
-  if (result.created) {
-    await syncBetaProfileFromActivity(email)
   }
 
   const completionsAfter = await fetchBetaMasterCompletionsForEmail(email)
