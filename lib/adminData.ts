@@ -25,6 +25,7 @@ import {
 import { BETA_FEEDBACK_TABLE } from "./betaFeedbackDb"
 import { isBetaFeedbackStage, type BetaFeedbackStage } from "./betaFeedbackPulseTypes"
 import { createSupabaseServerClient } from "./supabaseServer"
+import { supabaseTimed } from "./supabaseTimed"
 import { buildAdminActionCenter } from "./adminFeedbackActionCenter"
 import { buildSupportActionSignals, mergeActionCenterItems } from "./adminSupportSignals"
 import { mapSupportRow } from "./supportTickets"
@@ -172,7 +173,12 @@ async function fetchExportsSince(iso: string | null) {
   return { data: data ?? [], error: null }
 }
 
-async function syncJobsFromFeedback(): Promise<void> {
+/** Manual/cron job sync — never call from GET/read paths. */
+export async function syncJobsFromFeedbackForAdmin(): Promise<{ synced: number } | { error: string }> {
+  return supabaseTimed("syncJobsFromFeedback", syncJobsFromFeedbackInner, { caller: "adminData" })
+}
+
+async function syncJobsFromFeedbackInner(): Promise<{ synced: number } | { error: string }> {
   const supabase = createSupabaseServerClient()
   if (!supabase) return
 
@@ -213,8 +219,11 @@ async function syncJobsFromFeedback(): Promise<void> {
     })
 
   if (rows.length > 0) {
-    await supabase.from(MASTER_JOBS_TABLE).upsert(rows, { onConflict: "id" })
+    const { error: upsertErr } = await supabase.from(MASTER_JOBS_TABLE).upsert(rows, { onConflict: "id" })
+    if (upsertErr) return { error: upsertErr.message }
+    return { synced: rows.length }
   }
+  return { synced: 0 }
 }
 
 export async function computeAdminKpis(): Promise<AdminKpis | { error: string }> {
@@ -289,7 +298,69 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
   }
 }
 
+export const ADMIN_SUPPORT_SELECT =
+  "id, created_at, updated_at, resolved_at, email, name, subject, message, status, priority, source, admin_notes, category, session_context, thread"
+
+const MASTER_JOB_SELECT =
+  "id, created_at, updated_at, session_id, track_name, user_email, status, processing_time_ms, master_lufs, mastering_style, error_log, source"
+
+export async function fetchAdminBadges(): Promise<
+  { feedback: number; support: number } | { error: string }
+> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return { error: "Database unavailable" }
+
+  const [feedbackNew, supportOpen, supportWaiting] = await Promise.all([
+    supabaseTimed(
+      "badges:feedback-new-count",
+      async () =>
+        supabase
+          .from(BETA_FEEDBACK_TABLE)
+          .select("id", { count: "exact", head: true })
+          .eq("status", "new"),
+      { caller: "fetchAdminBadges" },
+    ),
+    supabaseTimed(
+      "badges:support-open-count",
+      async () =>
+        supabase
+          .from(SUPPORT_INBOX_TABLE)
+          .select("id", { count: "exact", head: true })
+          .eq("status", "open"),
+      { caller: "fetchAdminBadges" },
+    ),
+    supabaseTimed(
+      "badges:support-waiting-count",
+      async () =>
+        supabase
+          .from(SUPPORT_INBOX_TABLE)
+          .select("id", { count: "exact", head: true })
+          .eq("status", "waiting_for_customer"),
+      { caller: "fetchAdminBadges" },
+    ),
+  ])
+
+  if (feedbackNew.error) return { error: feedbackNew.error.message }
+  if (supportOpen.error) return { error: supportOpen.error.message }
+  if (supportWaiting.error) return { error: supportWaiting.error.message }
+
+  return {
+    feedback: feedbackNew.count ?? 0,
+    support: (supportOpen.count ?? 0) + (supportWaiting.count ?? 0),
+  }
+}
+
 export async function fetchAdminOverview(): Promise<AdminOverview | { error: string }> {
+  const { getCachedAdminOverview, setCachedAdminOverview } = await import("./adminOverviewCache")
+  const cached = getCachedAdminOverview()
+  if (cached) return cached
+
+  const overview = await fetchAdminOverviewUncached()
+  if (!("error" in overview)) setCachedAdminOverview(overview)
+  return overview
+}
+
+async function fetchAdminOverviewUncached(): Promise<AdminOverview | { error: string }> {
   const kpis = await computeAdminKpis()
   if ("error" in kpis) return kpis
 
@@ -434,6 +505,10 @@ export const ADMIN_FEEDBACK_LIST_LIMIT = 500
 export const ADMIN_SUPPORT_LIST_LIMIT = 500
 
 export async function fetchAdminFeedback(): Promise<AdminFeedbackRow[] | { error: string }> {
+  return supabaseTimed("fetchAdminFeedback", fetchAdminFeedbackInner, { caller: "adminData" })
+}
+
+async function fetchAdminFeedbackInner(): Promise<AdminFeedbackRow[] | { error: string }> {
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
@@ -613,17 +688,40 @@ export async function updateFeedbackItem(
 }
 
 export async function fetchAdminSupport(): Promise<AdminSupportRow[] | { error: string }> {
+  return supabaseTimed("fetchAdminSupport", fetchAdminSupportInner, { caller: "adminData" })
+}
+
+async function fetchAdminSupportInner(): Promise<AdminSupportRow[] | { error: string }> {
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
   const { data, error } = await supabase
     .from(SUPPORT_INBOX_TABLE)
-    .select("*")
+    .select(ADMIN_SUPPORT_SELECT)
     .order("created_at", { ascending: false })
     .limit(ADMIN_SUPPORT_LIST_LIMIT)
 
   if (error) return { error: error.message }
 
+  return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
+}
+
+/** Scoped support rows for one beta user — avoids loading the full support inbox. */
+export async function fetchAdminSupportForEmail(email: string): Promise<AdminSupportRow[]> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return []
+
+  const normalized = email.trim().toLowerCase()
+  if (!normalized.includes("@")) return []
+
+  const { data, error } = await supabase
+    .from(SUPPORT_INBOX_TABLE)
+    .select(ADMIN_SUPPORT_SELECT)
+    .eq("email", normalized)
+    .order("created_at", { ascending: false })
+    .limit(50)
+
+  if (error) return []
   return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
 }
 
@@ -643,25 +741,6 @@ export async function fetchAdminSupportDatesForEmail(email: string): Promise<str
   return (data ?? []).map((r) => String(r.created_at))
 }
 
-/** Scoped support rows for one beta user — avoids loading the full support inbox. */
-export async function fetchAdminSupportForEmail(email: string): Promise<AdminSupportRow[]> {
-  const supabase = createSupabaseServerClient()
-  if (!supabase) return []
-
-  const normalized = email.trim().toLowerCase()
-  if (!normalized.includes("@")) return []
-
-  const { data, error } = await supabase
-    .from(SUPPORT_INBOX_TABLE)
-    .select("*")
-    .eq("email", normalized)
-    .order("created_at", { ascending: false })
-    .limit(50)
-
-  if (error) return []
-  return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
-}
-
 export async function fetchAdminSupportPaginated(
   page = 1,
 ): Promise<AdminPaginated<AdminSupportRow> | { error: string }> {
@@ -671,7 +750,7 @@ export async function fetchAdminSupportPaginated(
   const { from, to } = adminPageRange(page)
   const { data, error, count } = await supabase
     .from(SUPPORT_INBOX_TABLE)
-    .select("*", { count: "exact" })
+    .select(ADMIN_SUPPORT_SELECT, { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to)
 
@@ -690,7 +769,7 @@ export async function fetchSupportTicket(id: string): Promise<AdminSupportRow | 
 
   const { data, error } = await supabase
     .from(SUPPORT_INBOX_TABLE)
-    .select("*")
+    .select(ADMIN_SUPPORT_SELECT)
     .eq("id", id)
     .maybeSingle()
 
@@ -946,16 +1025,19 @@ export async function updateCustomerProfile(
 }
 
 export async function fetchAdminJobs(): Promise<AdminJobRow[] | { error: string }> {
-  await syncJobsFromFeedback()
-
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const { data, error } = await supabase
-    .from(MASTER_JOBS_TABLE)
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(1000)
+  const { data, error } = await supabaseTimed(
+    "fetchAdminJobs",
+    async () =>
+      supabase
+        .from(MASTER_JOBS_TABLE)
+        .select(MASTER_JOB_SELECT)
+        .order("created_at", { ascending: false })
+        .limit(1000),
+    { caller: "adminData" },
+  )
 
   if (error?.code === "42P01") {
     const feedback = await fetchAdminFeedback()
@@ -997,17 +1079,20 @@ export async function fetchAdminJobs(): Promise<AdminJobRow[] | { error: string 
 export async function fetchAdminJobsPaginated(
   page = 1,
 ): Promise<AdminPaginated<AdminJobRow> | { error: string }> {
-  await syncJobsFromFeedback()
-
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
   const { from, to } = adminPageRange(page)
-  const { data, error, count } = await supabase
-    .from(MASTER_JOBS_TABLE)
-    .select("*", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to)
+  const { data, error, count } = await supabaseTimed(
+    "fetchAdminJobsPaginated",
+    async () =>
+      supabase
+        .from(MASTER_JOBS_TABLE)
+        .select(MASTER_JOB_SELECT, { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, to),
+    { caller: "adminData" },
+  )
 
   if (error?.code === "42P01") {
     const all = await fetchAdminJobs()

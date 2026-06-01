@@ -65,6 +65,21 @@ export default function AdminShell({ children }: Props) {
       }
       if (meJson?.role) setRole(meJson.role as AdminRole)
 
+      perfTimeStart("admin-shell-badges")
+      const badgesRes = await fetch("/api/admin/badges", { cache: "no-store" })
+      perfTimeEnd("admin-shell-badges")
+      if (badgesRes.ok) {
+        const badgesJson = (await badgesRes.json().catch(() => null)) as {
+          badges?: { feedback: number; support: number }
+        } | null
+        if (badgesJson?.badges) {
+          setBadges({
+            feedback: badgesJson.badges.feedback,
+            support: badgesJson.badges.support,
+          })
+        }
+      }
+
       perfTimeStart("admin-shell-overview")
       const res = await fetch("/api/admin/overview", { cache: "no-store" })
       perfTimeEnd("admin-shell-overview")

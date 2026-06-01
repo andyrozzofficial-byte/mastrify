@@ -2,6 +2,7 @@ import { MASTERED_EXPORTS_TABLE, PIPELINE_EVENTS_TABLE } from "./adminData"
 import { normalizeBetaEmail } from "./betaAccess"
 import { BETA_FEEDBACK_TABLE } from "./betaFeedbackDb"
 import { createSupabaseServerClient } from "./supabaseServer"
+import { supabaseTimed } from "./supabaseTimed"
 
 export const BETA_MASTER_COMPLETIONS_TABLE = "beta_master_completions"
 export const PIPELINE_EVENT_MASTER_COMPLETE = "master_complete"
@@ -377,18 +378,31 @@ export type RecordBetaMasterCompletionResult =
   | { ok: true; created: false; alreadyCounted: true }
   | { error: string }
 
+export type RecordBetaMasterCompletionOptions = {
+  /** Skip pre-check reads; rely on insert / conflict handling (fewer queries). */
+  fastPath?: boolean
+  /** Write pipeline event without blocking the response. */
+  pipelineAsync?: boolean
+}
+
 export async function recordBetaMasterCompletion(
   input: RecordBetaMasterCompletionInput,
+  options?: RecordBetaMasterCompletionOptions,
 ): Promise<RecordBetaMasterCompletionResult> {
+  const fastPath = options?.fastPath ?? true
+  const pipelineAsync = options?.pipelineAsync ?? true
+
   const sessionId = resolveBetaMasterCompletionSessionId(input.sessionId, input.objectKey)
   const email = normalizeBetaEmail(input.email)
   if (!sessionId) return { error: "session_id required" }
   if (!email.includes("@")) return { error: "email required" }
 
-  const alreadyCounted = await isBetaMasterSessionCompleted(sessionId, email)
-  if (alreadyCounted) {
-    logBeta("master already counted", { sessionId, email })
-    return { ok: true, created: false, alreadyCounted: true }
+  if (!fastPath) {
+    const alreadyCounted = await isBetaMasterSessionCompleted(sessionId, email)
+    if (alreadyCounted) {
+      logBeta("master already counted", { sessionId, email })
+      return { ok: true, created: false, alreadyCounted: true }
+    }
   }
 
   const supabase = createSupabaseServerClient()
@@ -410,9 +424,21 @@ export async function recordBetaMasterCompletion(
   }
 
   let tableWriteOk = false
-  const { error } = await supabase.from(BETA_MASTER_COMPLETIONS_TABLE).insert(row)
+  let alreadyCounted = false
+
+  const { error } = await supabaseTimed(
+    "complete:insert",
+    () => supabase.from(BETA_MASTER_COMPLETIONS_TABLE).insert(row),
+    { caller: "recordBetaMasterCompletion" },
+  )
+
   if (error) {
     if (/duplicate|unique/i.test(error.message)) {
+      alreadyCounted = true
+      if (!fastPath) {
+        logBeta("master already counted", { sessionId, email })
+        return { ok: true, created: false, alreadyCounted: true }
+      }
       const { data: existing } = await supabase
         .from(BETA_MASTER_COMPLETIONS_TABLE)
         .select("email")
@@ -445,27 +471,46 @@ export async function recordBetaMasterCompletion(
         sessionId,
         email,
       })
-    } else if (!tableWriteOk) {
+    } else if (!tableWriteOk && !alreadyCounted) {
       logBeta("completions table insert failed", { message: error.message, sessionId, email })
     }
   } else {
     tableWriteOk = true
   }
 
-  const pipelineOk = await writePipelineMasterComplete({
-    email,
-    sessionId,
-    trackName: input.trackName,
-  })
+  if (alreadyCounted && !tableWriteOk) {
+    return { ok: true, created: false, alreadyCounted: true }
+  }
 
-  if (!tableWriteOk && !pipelineOk) {
+  const pipelineWrite = () =>
+    writePipelineMasterComplete({
+      email,
+      sessionId,
+      trackName: input.trackName,
+    })
+
+  if (pipelineAsync) {
+    void pipelineWrite().catch(() => undefined)
+  } else {
+    const pipelineOk = await pipelineWrite()
+    if (!tableWriteOk && !pipelineOk) {
+      return {
+        error:
+          "Could not record master completion. Apply supabase/migrations/20260528120000_beta_master_completions.sql or check pipeline events table.",
+      }
+    }
+    logBeta("master completed", { sessionId, email, tableWriteOk, pipelineOk })
+    return { ok: true, created: true, alreadyCounted: false }
+  }
+
+  if (!tableWriteOk) {
     return {
       error:
-        "Could not record master completion. Apply supabase/migrations/20260528120000_beta_master_completions.sql or check pipeline events table.",
+        "Could not record master completion. Apply supabase/migrations/20260528120000_beta_master_completions.sql.",
     }
   }
 
-  logBeta("master completed", { sessionId, email, tableWriteOk, pipelineOk })
+  logBeta("master completed", { sessionId, email, tableWriteOk, pipelineAsync: true })
   return { ok: true, created: true, alreadyCounted: false }
 }
 

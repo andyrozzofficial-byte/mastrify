@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 
+export { supabaseTimed, beginDbRoute, endDbRoute } from "./supabaseTimed"
+
 const DEFAULT_SUPABASE_URL = "https://wyuxkmrnzqvlqshlqfiw.supabase.co"
 
 /** Server-side Supabase URL (public project URL). */

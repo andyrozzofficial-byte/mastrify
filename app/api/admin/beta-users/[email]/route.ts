@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAdminApi } from "../../../../../lib/adminApi"
 import { isBetaUserRank } from "../../../../../lib/betaAccess"
 import { getBetaInvitePayload } from "../../../../../lib/betaEngagement"
-import { fetchBetaUserProfile, updateBetaProfileAdmin } from "../../../../../lib/betaUserData"
+import { fetchBetaUserProfileScoped, updateBetaProfileAdmin } from "../../../../../lib/betaUserData"
 
 type Params = { params: Promise<{ email: string }> }
 
@@ -11,7 +11,7 @@ export async function GET(_request: Request, { params }: Params) {
   if (auth.error) return auth.error
 
   const { email } = await params
-  const profile = await fetchBetaUserProfile(decodeURIComponent(email))
+  const profile = await fetchBetaUserProfileScoped(decodeURIComponent(email))
   if ("error" in profile) {
     return NextResponse.json({ error: profile.error }, { status: 500 })
   }

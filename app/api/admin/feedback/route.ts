@@ -7,33 +7,32 @@ import {
 } from "../../../../lib/adminFeedbackActionCenter"
 import { buildAdminFeedbackInsights } from "../../../../lib/adminFeedbackInsights"
 import {
+  ADMIN_FEEDBACK_LIST_LIMIT,
   fetchAdminFeedback,
-  fetchAdminFeedbackPaginated,
   updateFeedbackItem,
 } from "../../../../lib/adminData"
-import { parseAdminPage } from "../../../../lib/adminPagination"
+import { parseAdminPage, ADMIN_PAGE_SIZE, buildAdminPaginationMeta } from "../../../../lib/adminPagination"
 import { isAdminFeedbackStatus } from "../../../../lib/adminTypes"
+import { invalidateAdminOverviewCache } from "../../../../lib/adminOverviewCache"
 
 export async function GET(request: Request) {
   const auth = await requireAdminApi("/api/admin/feedback")
   if (auth.error) return auth.error
 
   const page = parseAdminPage(new URL(request.url).searchParams)
-  const [listed, analyticsRows] = await Promise.all([
-    fetchAdminFeedbackPaginated(page),
-    fetchAdminFeedback(),
-  ])
+  const analyticsRows = await fetchAdminFeedback()
 
-  if ("error" in listed) {
-    return NextResponse.json({ error: listed.error }, { status: 500 })
-  }
   if ("error" in analyticsRows) {
     return NextResponse.json({ error: analyticsRows.error }, { status: 500 })
   }
 
+  const total = analyticsRows.length
+  const from = (page - 1) * ADMIN_PAGE_SIZE
+  const rows = analyticsRows.slice(from, from + ADMIN_PAGE_SIZE)
+
   return NextResponse.json({
-    rows: listed.rows,
-    pagination: listed.pagination,
+    rows,
+    pagination: buildAdminPaginationMeta(Math.min(total, ADMIN_FEEDBACK_LIST_LIMIT), page),
     analytics: buildAdminFeedbackAnalytics(analyticsRows),
     insights: buildAdminFeedbackInsights(analyticsRows),
     actionCenter: buildAdminActionCenter(analyticsRows),
@@ -66,5 +65,6 @@ export async function PATCH(request: Request) {
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 })
   }
+  invalidateAdminOverviewCache()
   return NextResponse.json({ ok: true })
 }

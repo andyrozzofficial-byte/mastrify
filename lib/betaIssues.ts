@@ -50,11 +50,14 @@ function mapRow(row: Record<string, unknown>): BetaReportedIssueRow {
   }
 }
 
+const BETA_ISSUES_SELECT =
+  "id, action_id, user_id, reporter_email, title, description, expected_result, screenshot_url, priority, status, created_at, updated_at, session_id"
+
 function ownerFilter(supabase: ReturnType<typeof createSupabaseServerClient>, email: string) {
   const e = normalizeBetaEmail(email)
   return supabase!
     .from(BETA_REPORTED_ISSUES_TABLE)
-    .select("*")
+    .select(BETA_ISSUES_SELECT)
     .or(`user_id.eq.${e},reporter_email.eq.${e}`)
 }
 
@@ -130,7 +133,7 @@ export async function fetchAllBetaIssues(): Promise<BetaReportedIssueRow[] | { e
 
   const { data, error } = await supabase
     .from(BETA_REPORTED_ISSUES_TABLE)
-    .select("*")
+    .select(BETA_ISSUES_SELECT)
     .order("created_at", { ascending: false })
     .limit(500)
 
@@ -153,7 +156,7 @@ export async function fetchBetaIssuesPaginated(
   const { from, to } = adminPageRange(page)
   const { data, error, count } = await supabase
     .from(BETA_REPORTED_ISSUES_TABLE)
-    .select("*", { count: "exact" })
+    .select(BETA_ISSUES_SELECT, { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to)
 
