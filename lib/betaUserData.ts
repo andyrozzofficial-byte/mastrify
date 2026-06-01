@@ -518,6 +518,23 @@ export async function getBetaMasteringUiStateForEmail(
   })
 }
 
+/** Fast beta UI for gate/signup — single profile row, no admin-wide aggregates. */
+export async function buildBetaUiForEmail(email: string): Promise<BetaMasteringUiState | null> {
+  const normalized = normalizeBetaEmail(email)
+  if (!normalized.includes("@")) return null
+
+  const profile = await fetchBetaProfileByEmail(normalized)
+  if (!profile) return null
+
+  const rank = effectiveBetaRank(profile.beta_rank, 0)
+  return buildBetaMasteringUiState({
+    betaRank: betaRankLabel(rank),
+    betaPoints: 0,
+    rankProgress: buildBetaRankProgress(0),
+    rewardStatus: rewardStatusForRank(rank),
+  })
+}
+
 export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: string }> {
   const [feedback, support, jobsRes, profiles] = await Promise.all([
     fetchAdminFeedback(),
@@ -957,12 +974,6 @@ export async function registerBetaOnboarding(input: {
       return { error: touchResult.error }
     }
 
-    try {
-      await syncBetaProfileFromActivity(email)
-    } catch (syncErr) {
-      console.error("[beta] sync profile activity failed:", syncErr)
-    }
-
     return { ok: true, existing: true }
   }
 
@@ -978,12 +989,6 @@ export async function registerBetaOnboarding(input: {
   if ("error" in upsertResult) {
     console.error("[beta] create profile failed:", upsertResult.error)
     return { error: upsertResult.error }
-  }
-
-  try {
-    await syncBetaProfileFromActivity(email)
-  } catch (syncErr) {
-    console.error("[beta] sync profile activity failed:", syncErr)
   }
 
   return { ok: true, existing: false }

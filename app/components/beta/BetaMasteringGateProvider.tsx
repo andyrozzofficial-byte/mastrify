@@ -16,7 +16,10 @@ import type { BetaAccessJson } from "../../../lib/betaClientAccess"
 import { accessFromBetaJson } from "../../../lib/betaClientAccess"
 import type { BetaMasteringUiState } from "../../../lib/betaPoints"
 import { getStoredBetaEmail, setStoredBetaEmail } from "../../../lib/betaSessionStorage"
+import { fetchJsonWithTimeout } from "../../../lib/fetchWithTimeout"
 import dynamic from "next/dynamic"
+
+const BETA_PROFILE_FETCH_TIMEOUT_MS = 12_000
 
 const BetaProfileSlideOver = dynamic(() => import("./BetaProfileSlideOver"), { ssr: false })
 
@@ -93,11 +96,13 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
       const run = async (): Promise<boolean> => {
         if (!options?.silent) setChecking(true)
         try {
-          const res = await fetch("/api/beta/profile", {
+          logClientBetaAccess("refreshAccess: GET /api/beta/profile")
+          const { res, json } = await fetchJsonWithTimeout<BetaAccessJson>("/api/beta/profile", {
             cache: "no-store",
             credentials: "include",
+            timeoutMs: BETA_PROFILE_FETCH_TIMEOUT_MS,
           })
-          const json = (await res.json().catch(() => null)) as BetaAccessJson | null
+          logClientBetaAccess("refreshAccess: profile response", { status: res.status, ok: res.ok })
 
           if (accessFromBetaJson(json)) {
             logClientBetaAccess("beta access granted", { source: "profile-api", email: json?.email })
@@ -109,13 +114,20 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
           const storedEmail = getStoredBetaEmail()
           if (storedEmail) {
             logClientBetaAccess("restoring session from stored email", { email: storedEmail })
-            const resumeRes = await fetch("/api/beta/profile/resume", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({ email: storedEmail }),
+            const { res: resumeRes, json: resumeJson } = await fetchJsonWithTimeout<BetaAccessJson>(
+              "/api/beta/profile/resume",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ email: storedEmail }),
+                timeoutMs: BETA_PROFILE_FETCH_TIMEOUT_MS,
+              },
+            )
+            logClientBetaAccess("refreshAccess: resume response", {
+              status: resumeRes.status,
+              ok: resumeRes.ok,
             })
-            const resumeJson = (await resumeRes.json().catch(() => null)) as BetaAccessJson | null
             if (accessFromBetaJson(resumeJson)) {
               logClientBetaAccess("beta access granted", { source: "resume", email: resumeJson?.email })
               if (resumeJson?.email) setStoredBetaEmail(resumeJson.email)
@@ -126,7 +138,8 @@ export function BetaMasteringGateProvider({ children }: { children: ReactNode })
 
           applyAccess(false, null)
           return false
-        } catch {
+        } catch (err) {
+          console.warn("[beta-access] refreshAccess failed", err)
           applyAccess(false, null)
           return false
         } finally {

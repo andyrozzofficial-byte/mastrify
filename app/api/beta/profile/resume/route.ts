@@ -5,7 +5,7 @@ import { resolveBetaEmailFromCookies } from "../../../../../lib/betaSession"
 import { ACCESS_COOKIE_NAME } from "../../../../../lib/access"
 import { betaProfileToJson, setBetaEmailCookieOnResponse } from "../../../../../lib/betaProfileResponse"
 import { resolveBetaUserAccess } from "../../../../../lib/betaUserAccess"
-import { getBetaMasteringUiStateForEmail, getBetaProfileStatus } from "../../../../../lib/betaUserData"
+import { buildBetaUiForEmail, getBetaProfileStatus } from "../../../../../lib/betaUserData"
 
 export async function POST(request: Request) {
   let body: { email?: string }
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     profileExists: access.profileExists || Boolean(status.profile),
     email: normalized,
     profile: status.profile ? betaProfileToJson(status.profile) : null,
-    betaUi: isBeta ? await getBetaMasteringUiStateForEmail(normalized) : null,
+    betaUi: isBeta ? await buildBetaUiForEmail(normalized) : null,
   }
 
   if (!isBeta) {

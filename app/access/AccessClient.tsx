@@ -10,8 +10,15 @@ import { safeAccessRedirect } from "../../lib/access"
 import type { BetaAccessJson } from "../../lib/betaClientAccess"
 import { accessFromBetaJson } from "../../lib/betaClientAccess"
 import { getStoredBetaEmail, setStoredBetaEmail } from "../../lib/betaSessionStorage"
+import { fetchJsonWithTimeout, messageFromFetchError } from "../../lib/fetchWithTimeout"
 
 const EASE = [0.22, 1, 0.36, 1] as const
+const BETA_FETCH_TIMEOUT_MS = 12_000
+
+function logBetaSignup(step: string, detail?: Record<string, unknown>) {
+  if (detail) console.log(`[beta-signup] ${step}`, detail)
+  else console.log(`[beta-signup] ${step}`)
+}
 
 type ProfileResponse = BetaAccessJson & {
   profile?: { name: string | null } | null
@@ -26,9 +33,33 @@ async function syncBetaSessionAfterSignup(
   json: BetaAccessJson | null,
   email: string,
 ): Promise<void> {
+  logBetaSignup("sync session after signup", { email })
   setStoredBetaEmail(email)
-  gate?.applyBetaSession(json)
-  await gate?.refreshAccess({ silent: true })
+
+  const applied = gate?.applyBetaSession(json) ?? false
+  logBetaSignup("applyBetaSession", { applied, hasJson: Boolean(json) })
+
+  if (applied) {
+    logBetaSignup("skip blocking refresh — POST payload already granted access")
+    void gate
+      ?.refreshAccess({ silent: true })
+      .then((ok) => logBetaSignup("background refresh finished", { ok }))
+      .catch((err) => console.warn("[beta-signup] background refresh failed", err))
+    return
+  }
+
+  logBetaSignup("refreshAccess (fallback)")
+  try {
+    const ok = await Promise.race([
+      gate?.refreshAccess({ silent: true }) ?? Promise.resolve(false),
+      new Promise<boolean>((_, reject) =>
+        setTimeout(() => reject(new Error("Session refresh timed out")), BETA_FETCH_TIMEOUT_MS),
+      ),
+    ])
+    logBetaSignup("refreshAccess done", { ok })
+  } catch (err) {
+    console.warn("[beta-signup] refreshAccess failed (non-fatal)", err)
+  }
 }
 
 export default function AccessClient() {
@@ -68,12 +99,17 @@ export default function AccessClient() {
       }
 
       try {
-        const res = await fetch("/api/beta/profile", { cache: "no-store", credentials: "include" })
-        const json = (await res.json().catch(() => null)) as ProfileResponse | null
+        logBetaSignup("initial profile GET")
+        const { res, json } = await fetchJsonWithTimeout<ProfileResponse>("/api/beta/profile", {
+          cache: "no-store",
+          credentials: "include",
+          timeoutMs: BETA_FETCH_TIMEOUT_MS,
+        })
+        logBetaSignup("initial profile GET response", { status: res.status, ok: res.ok })
 
         if (accessFromBetaJson(json) || json?.complete) {
           if (json) applyBetaSession?.(json)
-          await refreshAccess?.({ silent: true })
+          void refreshAccess?.({ silent: true })
           goToMaster(json?.email ?? undefined)
           return
         }
@@ -83,23 +119,29 @@ export default function AccessClient() {
 
         const storedEmail = getStoredBetaEmail()
         if (storedEmail) {
-          const resumeRes = await fetch("/api/beta/profile/resume", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ email: storedEmail }),
-          })
-          const resumeJson = (await resumeRes.json().catch(() => null)) as ProfileResponse | null
+          logBetaSignup("resume POST", { email: storedEmail })
+          const { res: resumeRes, json: resumeJson } = await fetchJsonWithTimeout<ProfileResponse>(
+            "/api/beta/profile/resume",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ email: storedEmail }),
+              timeoutMs: BETA_FETCH_TIMEOUT_MS,
+            },
+          )
+          logBetaSignup("resume response", { status: resumeRes.status })
           if (accessFromBetaJson(resumeJson) || resumeJson?.complete) {
             if (resumeJson) applyBetaSession?.(resumeJson)
-            await refreshAccess?.({ silent: true })
+            void refreshAccess?.({ silent: true })
             goToMaster(resumeJson?.email ?? storedEmail)
             return
           }
           if (resumeJson?.email) setEmail(resumeJson.email)
           if (resumeJson?.profile?.name) setName(resumeJson.profile.name)
         }
-      } catch {
+      } catch (err) {
+        console.warn("[beta-signup] initial session check failed", err)
         const storedEmail = getStoredBetaEmail()
         if (storedEmail) setEmail(storedEmail)
       } finally {
@@ -112,26 +154,50 @@ export default function AccessClient() {
     e.preventDefault()
     setError(null)
     setLoading(true)
+    logBetaSignup("Starting beta signup (Join Beta submit)")
 
     try {
-      const res = await fetch("/api/beta/profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, name: name.trim() || null }),
+      const payload = { email: email.trim(), name: name.trim() || null }
+      logBetaSignup("POST /api/beta/profile", { email: payload.email })
+
+      const { res, json } = await fetchJsonWithTimeout<ProfileResponse & { debugError?: string }>(
+        "/api/beta/profile",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+          timeoutMs: BETA_FETCH_TIMEOUT_MS,
+        },
+      )
+
+      logBetaSignup("POST /api/beta/profile response", {
+        status: res.status,
+        ok: res.ok,
+        error: json?.error ?? null,
+        debugError: json?.debugError ?? null,
+        isBeta: json?.isBeta ?? json?.isBetaUser ?? null,
       })
-      const json = (await res.json().catch(() => null)) as ProfileResponse | null
+
       if (!res.ok) {
-        setError(json?.error ?? "We couldn't create your profile right now. Please try again.")
+        const detail = json?.debugError || json?.error
+        setError(
+          detail ??
+            "We couldn't create your profile right now. Please try again.",
+        )
         return
       }
 
-      await syncBetaSessionAfterSignup(gate, json, email)
+      logBetaSignup("Signup success — syncing session")
+      await syncBetaSessionAfterSignup(gate, json, payload.email)
+      logBetaSignup("Navigating to master", { next })
       router.replace(next)
       router.refresh()
-    } catch {
-      setError("We couldn't create your profile right now. Please try again.")
+    } catch (err) {
+      console.error("[beta-signup] Beta signup failed:", err)
+      setError(messageFromFetchError(err, "We couldn't create your profile right now. Please try again."))
     } finally {
+      logBetaSignup("Signup flow finished — clearing loading")
       setLoading(false)
     }
   }
@@ -140,19 +206,20 @@ export default function AccessClient() {
     e.preventDefault()
     setError(null)
     setLoading(true)
+    logBetaSignup("magic link submit", { email: email.trim() })
 
     try {
-      const res = await fetch("/api/beta/session/magic", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, next }),
-      })
-      const json = (await res.json().catch(() => null)) as {
+      const { res, json } = await fetchJsonWithTimeout<{
         ok?: boolean
         profileExists?: boolean
         error?: string
         devSignInUrl?: string
-      } | null
+      }>("/api/beta/session/magic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, next }),
+        timeoutMs: BETA_FETCH_TIMEOUT_MS,
+      })
 
       if (!res.ok) {
         if (json?.devSignInUrl && process.env.NODE_ENV !== "production") {
@@ -169,8 +236,9 @@ export default function AccessClient() {
 
       setStoredBetaEmail(email)
       setPhase("magic-sent")
-    } catch {
-      setError("Something went wrong. Please try again.")
+    } catch (err) {
+      console.error("[beta-signup] magic link failed:", err)
+      setError(messageFromFetchError(err, "Something went wrong. Please try again."))
     } finally {
       setLoading(false)
     }

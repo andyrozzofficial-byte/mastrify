@@ -7,7 +7,7 @@ import { ACCESS_COOKIE_NAME } from "../../../../lib/access"
 import { betaProfileToJson, setBetaEmailCookieOnResponse } from "../../../../lib/betaProfileResponse"
 import { resolveBetaUserAccess } from "../../../../lib/betaUserAccess"
 import {
-  getBetaMasteringUiStateForEmail,
+  buildBetaUiForEmail,
   getBetaProfileStatus,
   registerBetaOnboarding,
 } from "../../../../lib/betaUserData"
@@ -64,7 +64,7 @@ export async function GET() {
   const normalized = access.email ?? cookieEmail!
   const status = await getBetaProfileStatus(normalized)
   const isBeta = resolveIsBeta(access, status)
-  const betaUi = isBeta ? await getBetaMasteringUiStateForEmail(normalized) : null
+  const betaUi = isBeta ? await buildBetaUiForEmail(normalized) : null
 
   return NextResponse.json({
     complete: status.complete,
@@ -120,15 +120,16 @@ export async function POST(request: Request) {
 
     const result = await registerBetaOnboarding({ email: normalized, name: name || null })
     if ("error" in result) {
+      console.error("[beta-api] registerBetaOnboarding failed:", result.error, getSupabaseEnvStatus())
       throw new Error(result.error)
     }
 
-    console.log("[beta-api] success:", result)
+    console.log("[beta-api] signup success:", result, getSupabaseEnvStatus())
 
     const status = await getBetaProfileStatus(normalized)
     let betaUi = null
     try {
-      betaUi = await getBetaMasteringUiStateForEmail(normalized)
+      betaUi = await buildBetaUiForEmail(normalized)
     } catch (uiErr) {
       console.error("[beta-api] betaUi load failed (non-fatal):", uiErr)
     }
