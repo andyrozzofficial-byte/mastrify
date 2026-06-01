@@ -3,7 +3,7 @@
 .master-result-shell {
   box-sizing: border-box;
   width: 100%;
-  max-width: 42rem;
+  max-width: var(--layout-form-max, 42rem);
   margin-inline: auto;
   padding-top: 1.25rem;
 }
@@ -23,9 +23,9 @@
 
 .master-result-insider {
   width: 100%;
-  max-width: 28rem;
+  max-width: var(--layout-action-max, 28rem);
   margin-inline: auto;
-  margin-top: 2rem;
+  margin-top: calc(2rem * var(--layout-v-scale, 1));
 }
 
 @media (min-width: 768px) {
@@ -83,9 +83,9 @@
 
 .master-result-download {
   width: 100%;
-  max-width: 28rem;
+  max-width: var(--layout-action-max, 28rem);
   margin-inline: auto;
-  margin-top: 2.5rem;
+  margin-top: calc(2.5rem * var(--layout-v-scale, 1));
 }
 
 @media (min-width: 768px) {

@@ -29,11 +29,11 @@ export default function MarketingPageAmbient({ variant = "hero", className = "" 
   return (
     <>
       <div
-        className={`pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_8%,rgba(99,102,241,0.12),transparent_58%),radial-gradient(ellipse_50%_40%_at_85%_75%,rgba(34,211,238,0.05),transparent_50%)] ${pulse} ${className}`}
+        className={`pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_8%,rgba(99,102,241,0.12),transparent_58%),radial-gradient(ellipse_50%_40%_at_85%_75%,rgba(34,211,238,0.05),transparent_50%)] marketing-page-ambient-layer ${pulse} ${className}`}
         aria-hidden
       />
       <div
-        className={`pointer-events-none absolute left-1/2 top-[10%] h-[min(420px,55vw)] w-[min(560px,82vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.06] max-md:opacity-90 max-md:blur-2xl md:blur-3xl ${pulse}`}
+        className={`marketing-page-ambient-blur pointer-events-none absolute left-1/2 top-[10%] h-[min(420px,55vw)] w-[min(560px,82vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.06] max-md:opacity-90 max-md:blur-2xl md:blur-3xl ${pulse}`}
         aria-hidden
       />
     </>

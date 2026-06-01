@@ -1,13 +1,5 @@
 /* Master flow — workstation density, fewer GPU layers (scoped via .master-workstation-root) */
 
-.master-workstation-root {
-  --master-workspace-max: 36rem;
-  --master-content-max: 52rem;
-  --product-form-max: var(--master-workspace-max);
-  --mkt-content-max: var(--master-content-max);
-  --mkt-action-width: var(--master-workspace-max);
-}
-
 /* Page shell — hide extra ambient blurs */
 .master-workstation-root .marketing-page-ambient,
 .master-workstation-root .product-processing-view__ambient,
@@ -17,12 +9,12 @@
 }
 
 .master-workstation-root .product-flow-page-bottom {
-  padding-bottom: 2.5rem;
+  padding-bottom: calc(2.5rem * var(--layout-v-scale, 1));
 }
 
 @media (min-width: 768px) {
   .master-workstation-root .product-flow-page-bottom {
-    padding-bottom: 3rem;
+    padding-bottom: calc(3rem * var(--layout-v-scale, 1));
   }
 }
 
@@ -50,9 +42,8 @@
   .master-workstation-root .marketing-hero-shell--workstation .marketing-hero-lockup {
     grid-template-columns: minmax(0, 1fr);
     width: 100%;
-    max-width: var(--master-workspace-max);
     margin-inline: auto;
-    gap: 1.5rem;
+    gap: calc(1.5rem * var(--layout-v-scale, 1));
   }
 
   .master-workstation-root .marketing-hero-shell--workstation .marketing-hero-copy {
@@ -61,8 +52,8 @@
   }
 
   .master-workstation-root .marketing-hero-shell--workstation.page-hero-pad {
-    padding-top: 2.5rem;
-    padding-bottom: 1.5rem;
+    padding-top: calc(2.5rem * var(--layout-v-scale, 1));
+    padding-bottom: calc(1.5rem * var(--layout-v-scale, 1));
   }
 }
 
@@ -75,38 +66,6 @@
   -webkit-background-clip: unset;
   background-clip: unset;
   color: rgba(196, 181, 253, 0.88);
-}
-
-/* Processing — tighter stage, smaller orb */
-.master-workstation-root .product-processing-view--workstation {
-  min-height: min(72vh, 720px);
-}
-
-.master-workstation-root .product-processing-view--workstation .product-processing-header__copy {
-  max-width: 34rem;
-}
-
-.master-workstation-root .product-processing-view--workstation .product-processing-stage {
-  max-width: 28rem;
-  margin-top: 1rem;
-}
-
-.master-workstation-root .product-processing-view--workstation .cinematic-orb-center--flow {
-  max-width: min(10.5rem, 42vw);
-}
-
-.master-workstation-root .product-processing-view--workstation .hero-engine-orb-cage {
-  width: min(10.5rem, 42vw);
-  margin-inline: auto;
-}
-
-.master-workstation-root .product-processing-view--workstation .cinematic-waveform-slot {
-  max-width: 100%;
-  margin-top: 1rem;
-}
-
-.master-workstation-root .product-processing-view--workstation .product-processing-card {
-  max-width: 100%;
 }
 
 /* Preset cards — no neon halos */

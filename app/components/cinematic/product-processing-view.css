@@ -63,7 +63,7 @@
 
 .product-processing-header__copy {
   width: 100%;
-  max-width: 42rem;
+  max-width: min(42rem, 100%);
 }
 
 .product-processing-stage {
@@ -72,7 +72,7 @@
   z-index: 10;
   display: flex;
   width: 100%;
-  max-width: 52rem;
+  max-width: var(--layout-processing-stage-max, 52rem);
   flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
@@ -123,7 +123,7 @@
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 28rem;
+  max-width: var(--layout-processing-card-max, 32rem);
   margin-inline: auto;
   margin-top: 0.5rem;
   min-width: 0;
@@ -133,7 +133,7 @@
 
 @media (min-width: 768px) {
   .product-processing-card {
-    max-width: 32rem;
+    max-width: var(--layout-processing-card-max, 32rem);
     margin-top: 1rem;
     padding-bottom: 3rem;
   }
