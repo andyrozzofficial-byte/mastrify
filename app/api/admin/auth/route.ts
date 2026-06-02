@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { ADMIN_COOKIE_NAME, createAdminToken } from "../../../../lib/admin"
+import { ADMIN_COOKIE_NAME, createAdminToken, getAdminSecret } from "../../../../lib/admin"
 import { ADMIN_ROLE_COOKIE, defaultAdminRole } from "../../../../lib/adminRoles"
 
 export async function POST(request: Request) {
@@ -27,7 +27,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Invalid password" }, { status: 401 })
     }
 
-    const token = await createAdminToken(adminPassword)
+    // Token must be signed with the same secret used for verification.
+    // If `MASTRIFY_ADMIN_SECRET` is set, we verify against it (not the password).
+    const token = await createAdminToken(getAdminSecret())
     const response = NextResponse.json({ success: true, ok: true })
     response.cookies.set(ADMIN_COOKIE_NAME, token, {
       httpOnly: true,
