@@ -162,7 +162,8 @@ export async function fetchBetaIssuesPaginated(
 
   if (error) {
     if (isTableMissingError(error.message)) {
-      return { error: BETA_REPORTED_ISSUES_SETUP_HINT }
+      // Admin should render empty state if the table hasn't been created yet.
+      return { rows: [], pagination: buildAdminPaginationMeta(0, page) }
     }
     return { error: error.message }
   }
