@@ -59,7 +59,7 @@ export default function Landing() {
       </div>
 
       <section className="section-after-hero relative z-10">
-        <div className="page-container landing-close-footer marketing-section-tight relative z-10 pt-5 md:pt-16 lg:pt-8">
+        <div className="page-container landing-close-footer marketing-section-tight relative z-10 pt-5 md:pt-12 lg:pt-8">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-200/45">Before you master</p>
             <h2 className="mt-3 text-[1.5rem] font-semibold tracking-[-0.02em] text-white/92 sm:text-[1.75rem]">
@@ -73,7 +73,6 @@ export default function Landing() {
               Run a free mix analysis
             </PremiumButton>
           </div>
-
         </div>
       </section>
     </MarketingPageFrame>

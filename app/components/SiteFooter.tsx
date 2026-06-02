@@ -4,7 +4,6 @@ import { motion, useReducedMotion } from "framer-motion"
 import { usePathname } from "next/navigation"
 import { useState, type ReactNode } from "react"
 import Link from "next/link"
-import PremiumButton from "./PremiumButton"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -87,17 +86,17 @@ function FooterLinksDesktop({ columns }: { columns: FooterLinkColumn[] }) {
   return (
     <nav
       aria-label="Footer navigation"
-      className="footer-links-grid hidden w-max min-w-0 md:grid md:items-center"
+      className="footer-links-grid hidden w-full min-w-0 md:grid md:items-center"
       style={{
-        gridTemplateColumns: "140px 140px 140px",
-        columnGap: "48px",
+        gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",
+        columnGap: "clamp(2rem, 5vw, 4.5rem)",
         rowGap: "18px",
       }}
     >
       {columns.map((column) => (
         <h3
           key={`heading-${column.title}`}
-          className={`m-0 whitespace-nowrap text-center ${FOOTER_LINKS_HEADING_CLASS}`}
+          className={`m-0 whitespace-nowrap ${FOOTER_LINKS_HEADING_CLASS}`}
         >
           {column.title}
         </h3>
@@ -109,11 +108,10 @@ function FooterLinksDesktop({ columns }: { columns: FooterLinkColumn[] }) {
           return (
             <div
               key={`${column.title}-row-${rowIndex}`}
-              className="flex min-h-[2.5rem] w-[140px] items-center justify-start"
-              style={{ whiteSpace: "nowrap" }}
+              className="flex min-h-[2.5rem] items-center justify-start"
             >
               {link ? (
-                <Link href={link.href} className="footer-tap-link whitespace-nowrap" style={{ whiteSpace: "nowrap" }}>
+                <Link href={link.href} className="footer-tap-link whitespace-nowrap">
                   {link.label}
                 </Link>
               ) : null}
@@ -171,12 +169,7 @@ export default function SiteFooter() {
   const reduce = useReducedMotion()
   const pathname = usePathname()
   const onAnalyze = pathname === "/analyze"
-  const onLanding = pathname === "/" || pathname === "/landing"
-  const footerTopClass = onAnalyze
-    ? "max-md:pt-4 sm:pt-6 lg:pt-[2.25rem]"
-    : onLanding
-      ? "max-md:pt-6 sm:pt-8 lg:pt-[3.1rem]"
-      : "max-md:pt-5 sm:pt-7 lg:pt-[2.25rem]"
+  const footerTopClass = onAnalyze ? "max-md:pt-3 sm:pt-5 lg:pt-[1.5rem]" : "lg:pt-[1.5rem]"
   const year = new Date().getFullYear()
 
   return (
@@ -189,16 +182,15 @@ export default function SiteFooter() {
       ) : null}
 
       <motion.div
-        className={`footer-shell relative mx-auto w-full px-4 pb-[max(1rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 sm:pb-8 md:px-10 md:pt-10 md:pb-9 ${footerTopClass}`}
+        className={`footer-shell relative mx-auto w-full px-4 pb-[max(1rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 sm:pb-8 md:px-10 md:pt-7 md:pb-9 ${footerTopClass}`}
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:gap-4 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-start lg:gap-x-14 xl:gap-x-20 2xl:gap-x-24">
-          {/* Brand */}
+        <motion.div className="footer-site-grid grid min-w-0 items-start gap-8 max-md:gap-6 max-md:justify-items-center max-md:text-center md:gap-10 lg:grid-cols-12 lg:gap-x-16 xl:gap-x-20 2xl:gap-x-24">
           <motion.div
-            className="footer-brand min-w-0 max-md:mx-auto max-md:flex max-md:w-full max-md:max-w-[18.5rem] max-md:flex-col max-md:items-center max-md:text-center lg:col-span-3 xl:col-span-3"
+            className="footer-brand min-w-0 max-md:mx-auto max-md:flex max-md:w-full max-md:max-w-[18.5rem] max-md:flex-col max-md:items-center max-md:text-center lg:col-span-4 xl:col-span-4"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -207,15 +199,14 @@ export default function SiteFooter() {
             <Link href="/" className="inline-flex items-center justify-center max-md:w-full">
               <span className="text-[18px] font-semibold tracking-[-0.02em] text-white/92">Mastrify</span>
             </Link>
-            <p className="footer-brand-copy mt-2.5 max-w-[16.5rem] text-[13.5px] leading-[1.55] text-muted max-md:mt-2 max-md:mx-auto max-md:text-center max-md:leading-[1.5] sm:mt-3 md:mt-4 md:text-left lg:max-w-[15.5rem] md:text-[14.5px] md:leading-[1.7] xl:max-w-[18rem]">
+            <p className="footer-brand-copy mt-2.5 max-w-[18rem] text-[13.5px] leading-[1.55] text-muted max-md:mx-auto max-md:text-center md:text-left lg:max-w-[16rem] md:text-[14.5px] md:leading-[1.7] xl:max-w-[19rem]">
               Intelligent mastering for music that deserves its full emotional weight — release-ready, without the
               noise.
             </p>
           </motion.div>
 
-          {/* Navigation */}
           <motion.div
-            className="min-w-0 w-full max-md:mx-auto max-md:max-w-[20.5rem] lg:col-span-3 lg:justify-self-center"
+            className="min-w-0 w-full max-md:mx-auto max-md:max-w-[20.5rem] lg:col-span-8 lg:justify-self-end xl:col-span-8"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -223,51 +214,20 @@ export default function SiteFooter() {
           >
             <FooterLinksSection />
           </motion.div>
-
-          {/* Mastering CTA */}
-          <motion.div
-            className="min-w-0 max-md:flex max-md:w-full max-md:justify-center lg:col-span-6 lg:pl-4 xl:col-span-6 xl:pl-6"
-            initial={reduce ? false : { opacity: 0, y: 10 }}
-            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.08, ease: EASE }}
-          >
-            <motion.div
-              className={`footer-cta-card w-full ${onAnalyze ? "footer-cta-card--analyze" : ""}`}
-            >
-              <div className="relative flex h-full flex-col justify-center">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/58">Release ready</p>
-                <h2 className="mt-2 text-[1.15rem] font-semibold tracking-[-0.02em] text-white/92 sm:mt-2.5 sm:text-[1.3rem] lg:text-[1.35rem]">
-                  Ready to master your track?
-                </h2>
-                <p className="mt-2 max-w-[22rem] text-[12px] leading-relaxed text-muted sm:mt-2.5 sm:text-[13px] lg:text-[13.5px]">
-                  Studio-grade loudness and tone — pay when your export is ready.
-                </p>
-                <PremiumButton
-                  href="/master"
-                  gateMastering
-                  className="mt-4 min-h-[46px] w-full px-7 text-[13px] min-[430px]:w-auto min-[430px]:min-w-[13rem] min-[430px]:px-8 sm:mt-5 lg:mt-7"
-                >
-                  Start mastering
-                </PremiumButton>
-              </div>
-            </motion.div>
-          </motion.div>
         </motion.div>
 
-        {/* Bottom metadata row */}
         <motion.div
-          className="footer-mobile-meta mt-4 flex flex-col gap-3 border-t border-white/[0.07] pt-4 max-md:mt-3 max-md:items-center max-md:gap-2 max-md:pt-3 md:mt-12 md:pt-9"
+          className="footer-mobile-meta mt-6 flex flex-col gap-3 border-t border-white/[0.07] pt-5 max-md:mt-5 max-md:items-center max-md:gap-2 max-md:pt-4 md:mt-8 md:pt-6"
           initial={reduce ? false : { opacity: 0 }}
           whileInView={reduce ? undefined : { opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.55, delay: 0.1, ease: EASE }}
         >
-          <div className="footer-bottom-start flex w-full flex-col items-center gap-2 max-md:gap-2 md:flex-row md:items-center md:justify-start md:gap-3">
-            <p className="footer-copyright text-[11px] text-muted-soft max-md:text-center">
+          <div className="footer-bottom-start flex w-full flex-col items-center gap-2 max-md:gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
+            <p className="footer-copyright text-[11px] text-muted-soft max-md:text-center md:text-left">
               © {year} Mastrify
             </p>
-            <div className="footer-social-row flex items-center justify-center gap-2.5">
+            <div className="footer-social-row flex items-center justify-center gap-2.5 md:justify-end">
               <SocialLink href={socialLinks[0].href} label={socialLinks[0].label}>
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden>
                   <rect x="3" y="3" width="18" height="18" rx="5" />
@@ -283,19 +243,15 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          <p className="footer-lunov-credit w-full px-1 text-center text-[8px] font-normal uppercase leading-snug tracking-[0.2em] text-muted-faint sm:text-[9px] sm:tracking-[0.24em] md:px-4 md:leading-relaxed md:tracking-[0.26em]">
+          <p className="footer-lunov-credit w-full px-1 text-center text-[8px] font-normal uppercase leading-snug tracking-[0.2em] text-muted-faint sm:text-[9px] sm:tracking-[0.24em] md:px-0 md:text-left md:leading-relaxed md:tracking-[0.26em]">
             Designed &amp; engineered by{" "}
             <a
               href="https://lunov.dev"
               target="_blank"
               rel="noopener noreferrer"
-              className="group/lunov relative inline tracking-[0.2em] text-label transition duration-500 hover:text-violet-200/78"
+              className="text-label transition duration-300 hover:text-violet-200/78"
             >
-              <span
-                className="pointer-events-none absolute -inset-x-2 -inset-y-1 rounded-md opacity-0 blur-md transition duration-500 group-hover/lunov:bg-violet-500/[0.1] group-hover/lunov:opacity-100"
-                aria-hidden
-              />
-              <span className="relative">Lunov</span>
+              Lunov
             </a>
           </p>
         </motion.div>

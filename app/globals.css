@@ -1484,7 +1484,8 @@ body {
       -webkit-tap-highlight-color: transparent;
     }
   }
-  .footer-cta-card {
+  .footer-cta-card,
+  .site-final-cta-card {
     position: relative;
     overflow: hidden;
     width: 100%;
@@ -1493,49 +1494,23 @@ body {
     border-radius: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.09);
     background: linear-gradient(165deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.38) 100%);
-    padding: 0.875rem 0.9375rem;
+    padding: 1.125rem 1.375rem;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.07),
       0 22px 52px rgba(0, 0, 0, 0.38);
     backdrop-filter: blur(14px);
   }
-  @media (min-width: 430px) {
-    .footer-cta-card {
-      padding: 1.125rem 1.25rem;
-    }
+
+  .site-final-cta-card {
+    min-height: 0;
+    padding: 1.25rem 1.5rem;
   }
-  @media (min-width: 640px) {
-    .footer-cta-card {
-      padding: 1.25rem 1.375rem;
-    }
-  }
+
   @media (min-width: 768px) {
-    .footer-cta-card {
-      padding: 1.5rem 1.625rem;
+    .site-final-cta-card {
+      padding: 1.5rem 1.75rem;
     }
   }
-  @media (min-width: 1024px) {
-    .footer-cta-card {
-      min-height: 13.5rem;
-      padding: 1.75rem 2rem;
-      border-radius: 1.125rem;
-    }
-  }
-  /* Analyze results — footer CTA sits in a darker pocket so the card reads naturally */
-  .footer-cta-card--analyze {
-    border-color: rgba(255, 255, 255, 0.1);
-    background: linear-gradient(
-      165deg,
-      rgba(255, 255, 255, 0.035) 0%,
-      rgba(0, 0, 0, 0.55) 52%,
-      rgba(0, 0, 0, 0.62) 100%
-    );
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.06),
-      0 0 0 1px rgba(0, 0, 0, 0.4),
-      0 24px 56px rgba(0, 0, 0, 0.52);
-  }
-}
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1618,4 +1593,6 @@ body {
     transform: scale(1.02);
     box-shadow: 0 20px 60px rgba(139,92,246,0.7);
   }
+}
+
 }

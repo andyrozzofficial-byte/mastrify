@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 import MotionModeClass from "./MotionModeClass"
 import MastrifyAssistant from "./assistant/MastrifyAssistant"
+import MarketingFinalCtaSection from "./MarketingFinalCtaSection"
 import SiteFooter from "./SiteFooter"
 import SiteHeader from "./SiteHeader"
 
@@ -37,6 +38,7 @@ export default function SiteChrome({ children, showAdminNav = false }: SiteChrom
       <MotionModeClass />
       <SiteHeader showAdminNav={showAdminNav} />
       <main className="site-overflow-guard flex flex-1 flex-col">{children}</main>
+      <MarketingFinalCtaSection />
       <SiteFooter />
       <MastrifyAssistant />
     </>

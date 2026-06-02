@@ -362,6 +362,18 @@
 }
 
 @media (min-width: 1280px) {
+  .footer-shell {
+    max-width: var(--layout-content-max);
+  }
+
+  .marketing-final-cta .page-container {
+    max-width: var(--layout-content-max);
+  }
+
+  .site-final-cta-card {
+    max-width: 36rem;
+  }
+
   .master-result-shell,
   .product-result-center {
     max-width: var(--layout-form-max);
@@ -374,10 +386,6 @@
 
   .trust-band {
     max-width: var(--layout-interior-max);
-  }
-
-  .footer-shell {
-    max-width: var(--layout-content-max);
   }
 }
 
