@@ -203,3 +203,20 @@ html.marketing-scroll-active .product-processing-view__glow {
     transform: none;
   }
 }
+
+/* Passive pages: remove idle loops + ambient motion (keep hover/interaction). */
+html.motion-passive .marketing-page-root--enter,
+html.motion-passive .marketing-hero-lockup--enter,
+html.motion-passive .marketing-hero-copy--enter,
+html.motion-passive .marketing-ambient-pulse,
+html.motion-passive .engine-halo-breathe,
+html.motion-passive .engine-ring-spin-cw,
+html.motion-passive .engine-ring-spin-ccw,
+html.motion-passive .marketing-wave-backdrop,
+html.motion-passive .stage-progress-shimmer,
+html.motion-passive .stage-row-active-glow,
+html.motion-passive .stage-active-scale,
+html.motion-passive .stage-active-dot,
+html.motion-passive .landing-particle-drift {
+  animation: none !important;
+}

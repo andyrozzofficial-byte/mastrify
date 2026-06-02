@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
+import MotionModeClass from "./MotionModeClass"
 import MastrifyAssistant from "./assistant/MastrifyAssistant"
 import SiteFooter from "./SiteFooter"
 import SiteHeader from "./SiteHeader"
@@ -23,11 +24,17 @@ export default function SiteChrome({ children, showAdminNav = false }: SiteChrom
   const minimal = isMinimalRoute(pathname)
 
   if (minimal) {
-    return <main className="site-overflow-guard flex min-h-[100dvh] flex-1 flex-col">{children}</main>
+    return (
+      <>
+        <MotionModeClass />
+        <main className="site-overflow-guard flex min-h-[100dvh] flex-1 flex-col">{children}</main>
+      </>
+    )
   }
 
   return (
     <>
+      <MotionModeClass />
       <SiteHeader showAdminNav={showAdminNav} />
       <main className="site-overflow-guard flex flex-1 flex-col">{children}</main>
       <SiteFooter />

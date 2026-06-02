@@ -41,10 +41,19 @@ export default function HeroEngineOrb({
 
   const rootClass = `hero-engine-orb-root relative isolate mx-auto w-full max-w-full min-w-0 px-2 py-2 max-md:mb-0 sm:px-3 sm:py-3 md:px-4 md:py-4 lg:px-0 lg:py-0 ${className}`
 
+  const workflowMotion =
+    (pathname === "/analyze" || pathname?.startsWith("/analyze/") || false) ||
+    (pathname === "/master" || pathname?.startsWith("/master/") || false) ||
+    (pathname === "/flow" || pathname?.startsWith("/flow/") || false) ||
+    (pathname === "/flow-v2" || pathname?.startsWith("/flow-v2/") || false)
+
+  // Passive pages: keep orb presence but avoid continuous motion.
+  const efficientVisuals = scrollSafe || !workflowMotion
+
   const orbContent = (
     <div className="hero-engine-orb-cage relative mx-auto w-full min-w-0 overflow-hidden">
       <div className="hero-orb-radial-mobile pointer-events-none absolute inset-0 z-0 lg:hidden" aria-hidden />
-      {!scrollSafe ? (
+      {!efficientVisuals ? (
         <LandingHeroAtmosphere
           compact={compactAtmosphere}
           mobileGlowBoost={mobileGlowBoost || compactAtmosphere}
@@ -53,14 +62,14 @@ export default function HeroEngineOrb({
       ) : null}
       <div className="hero-engine-orb-stage relative z-[1] aspect-square w-full max-w-full overflow-hidden">
         <HeroWaveBackdrop
-          efficient={scrollSafe}
+          efficient={efficientVisuals}
           heightClass="h-[34%] md:h-[40%]"
           className={scrollSafe ? "opacity-[0.16] md:opacity-[0.2]" : "opacity-[0.18] md:opacity-[0.22]"}
         />
         <MasteringEngineVisual
           key={orbKey}
           activeStep={activeStep}
-          efficient={scrollSafe}
+          efficient={efficientVisuals}
           className="marketing-engine-visual relative z-[1] mx-auto"
         />
       </div>
