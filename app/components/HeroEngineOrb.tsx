@@ -8,6 +8,7 @@ import HeroWaveBackdrop from "./HeroWaveBackdrop"
 import LandingHeroAtmosphere from "./LandingHeroAtmosphere"
 import MasteringEngineVisual from "../master/processing/MasteringEngineVisual"
 import OrbScene from "./cinematic/OrbScene"
+import { usePerfDebugFlags } from "./perf/usePerfDebugFlags"
 
 type Props = {
   activeStep: number
@@ -33,6 +34,7 @@ export default function HeroEngineOrb({
 }: Props) {
   const reduce = useReducedMotion()
   const pathname = usePathname()
+  const perf = usePerfDebugFlags()
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
@@ -56,10 +58,11 @@ export default function HeroEngineOrb({
 
   const passive = mode === "passive" || (mode === "auto" && autoPassive)
   const active = mode === "active" || (mode === "auto" && workflowMotion && !autoPassive)
+  const disableAnimations = perf.disableOrbAnimations
 
   // Efficiency is only for scroll-safe rendering; passive must keep premium appearance.
   const efficientVisuals = scrollSafe
-  const staticVisual = passive && !active
+  const staticVisual = disableAnimations || (passive && !active)
   // Even when premium-appearance is preserved, passive mode must be fully idle (no rAF loops).
   const idleBackdrop = efficientVisuals || staticVisual
 

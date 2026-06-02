@@ -9,6 +9,7 @@ import CinematicOrbCenter from "../../components/cinematic/CinematicOrbCenter"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 import ProcessingStageList, { PROCESSING_STEPS } from "./ProcessingStageList"
 import "../../components/cinematic/product-processing-view.css"
+import { usePerfDebugFlags } from "../../components/perf/usePerfDebugFlags"
 import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
@@ -53,6 +54,7 @@ export default function MasterProcessingPage() {
   const pathname = usePathname()
   const onMasterRoot = pathname === "/master" || pathname === "/master/"
   const reduce = useReducedMotion()
+  const perf = usePerfDebugFlags()
   const { isBeta, checking, refreshAccess, applyBetaSession } = useBetaMasteringGate()
   const {
     masterState,
@@ -340,6 +342,7 @@ export default function MasterProcessingPage() {
                 audioSrc={masterState.file ?? file ?? audioUrl}
                 activeStep={activeStep}
                 height={72}
+                enabled={!perf.disableWaveforms}
                 className="shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_8px_24px_rgba(0,0,0,0.32)]"
               />
             </motion.div>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { useReducedMotion } from "framer-motion"
 import WaveformCanvas from "./WaveformCanvas"
 import { useWaveformData } from "./useWaveformData"
+import { useInViewport } from "../../../lib/useInViewport"
 import "./cinematic-waveform.css"
 
 const PREVIEW_START = 60
@@ -26,6 +27,7 @@ export type CinematicWaveformProps = {
   windowDurationSec?: number
   isMobileMastered?: boolean
   interactive?: boolean
+  enabled?: boolean
   onSeek?: (progress: number) => void
   height?: number
   className?: string
@@ -44,6 +46,7 @@ export default function CinematicWaveform({
   windowDurationSec,
   isMobileMastered = false,
   interactive = false,
+  enabled = true,
   onSeek,
   height = mode === "processing" ? 72 : 88,
   className = "",
@@ -52,6 +55,8 @@ export default function CinematicWaveform({
   const [hoverProgress, setHoverProgress] = useState<number | null>(null)
   const scanRef = useRef(0)
   const [scanProgress, setScanProgress] = useState(0)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const inView = useInViewport(rootRef, { rootMargin: "240px", enabled })
 
   const window = useMemo(() => {
     if (mode === "processing") {
@@ -78,7 +83,7 @@ export default function CinematicWaveform({
   })
 
   useEffect(() => {
-    if (mode !== "processing" || reduceMotion) return
+    if (mode !== "processing" || reduceMotion || !enabled || !inView) return
     let raf = 0
     let last = 0
     const tick = () => {
@@ -94,7 +99,7 @@ export default function CinematicWaveform({
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [mode, activeStep, reduceMotion])
+  }, [mode, activeStep, reduceMotion, enabled, inView])
 
   const displayProgress =
     mode === "processing"
@@ -137,6 +142,7 @@ export default function CinematicWaveform({
 
   return (
     <div
+      ref={rootRef}
       className={`cinematic-waveform-root relative overflow-hidden rounded-lg bg-gradient-to-b from-white/[0.035] to-black/[0.28] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.06] ${className}`}
       onPointerMove={interactive ? handlePointer : undefined}
       onPointerDown={interactive ? handlePointer : undefined}
@@ -170,6 +176,7 @@ export default function CinematicWaveform({
         activeStep={activeStep}
         variant={variant}
         reducedMotion={Boolean(reduceMotion)}
+        enabled={enabled && inView}
         height={height}
         className="relative z-[1] block w-full max-w-full px-2 py-2 sm:px-3 sm:py-2.5"
       />

@@ -19,6 +19,7 @@ export type WaveformCanvasRenderProps = {
   activeStep?: number
   variant?: "original" | "mastered"
   reducedMotion: boolean
+  enabled?: boolean
   className?: string
   height?: number
 }
@@ -162,6 +163,7 @@ export default function WaveformCanvas({
   activeStep = 0,
   variant = "mastered",
   reducedMotion,
+  enabled = true,
   className,
   height = 88,
 }: WaveformCanvasRenderProps) {
@@ -215,6 +217,7 @@ export default function WaveformCanvas({
   }
 
   useEffect(() => {
+    if (!enabled) return
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
@@ -553,7 +556,7 @@ export default function WaveformCanvas({
       ro?.disconnect()
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
     }
-  }, [height, reducedMotion])
+  }, [height, reducedMotion, enabled])
 
   return (
     <div ref={containerRef} className={`cinematic-waveform-canvas-host ${className ?? ""}`} style={{ height }}>

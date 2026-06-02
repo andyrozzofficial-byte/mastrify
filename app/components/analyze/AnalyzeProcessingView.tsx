@@ -6,6 +6,7 @@ import CinematicOrbCenter from "../cinematic/CinematicOrbCenter"
 import CinematicWaveform from "../audio/CinematicWaveform"
 import AnalysisStageList from "./AnalysisStageList"
 import "../cinematic/product-processing-view.css"
+import { usePerfDebugFlags } from "../perf/usePerfDebugFlags"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -18,6 +19,7 @@ type Props = {
 export default function AnalyzeProcessingView({ activeStep, file, fileName }: Props) {
   const reduce = useReducedMotion()
   const orbStep = Math.min(activeStep, 4)
+  const perf = usePerfDebugFlags()
 
   const audioUrl = useMemo(() => {
     if (!file) return null
@@ -71,6 +73,7 @@ export default function AnalyzeProcessingView({ activeStep, file, fileName }: Pr
               audioSrc={file ?? audioUrl}
               activeStep={orbStep}
               height={76}
+              enabled={!perf.disableWaveforms}
               className="shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_rgba(0,0,0,0.35)]"
             />
           </motion.div>
