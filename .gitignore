@@ -48,3 +48,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.chrome-prof/
+.npm-cache/
+.pw-browsers/
+perf-verify*.json
+scripts/perf-verify.mjs
+AI-Mastering_copy/
