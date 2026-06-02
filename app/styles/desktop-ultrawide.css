@@ -323,42 +323,7 @@
   }
 }
 
-@media (min-width: 1600px) {
-  .product-processing-view:not(.product-processing-view--workstation) {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    grid-template-rows: auto auto;
-    column-gap: 2.75rem;
-    row-gap: 1.25rem;
-    align-items: start;
-  }
-
-  .product-processing-view:not(.product-processing-view--workstation) .product-processing-header {
-    grid-column: 1 / -1;
-  }
-
-  .product-processing-view:not(.product-processing-view--workstation) .product-processing-stage {
-    grid-column: 1;
-    grid-row: 2;
-    margin-top: 0;
-    max-width: none;
-    justify-self: stretch;
-  }
-
-  .product-processing-view:not(.product-processing-view--workstation) .product-processing-card {
-    grid-column: 2;
-    grid-row: 2;
-    margin-top: 0;
-    max-width: none;
-    align-self: center;
-    padding-bottom: 1.75rem;
-  }
-
-  .product-processing-view:not(.product-processing-view--workstation) .product-processing-footnote {
-    grid-column: 1 / -1;
-    margin-top: 1rem;
-  }
-}
+/* Processing views stay stacked/centered on ultrawide (no split columns). */
 
 @media (min-width: 1280px) {
   .footer-shell {
@@ -388,31 +353,4 @@
   }
 }
 
-/* Master flow — hide glow pools only; inherit premium cards + layout width */
-@media (min-width: 1280px) {
-  .master-workstation-root .product-processing-view--workstation {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    grid-template-rows: auto auto;
-    column-gap: 2.5rem;
-    row-gap: 1.25rem;
-    align-items: start;
-  }
-
-  .master-workstation-root .product-processing-view--workstation .product-processing-header {
-    grid-column: 1 / -1;
-  }
-
-  .master-workstation-root .product-processing-view--workstation .product-processing-stage {
-    grid-column: 1;
-    max-width: none;
-    margin-top: 0;
-  }
-
-  .master-workstation-root .product-processing-view--workstation .product-processing-card {
-    grid-column: 2;
-    max-width: none;
-    margin-top: 0;
-    align-self: center;
-  }
-}
+/* Master flow — hide glow pools only; layout stays stacked for processing views. */
