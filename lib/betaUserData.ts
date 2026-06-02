@@ -681,11 +681,12 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
   ])
 
   if (isFetchError(feedback)) return feedback
-  if (isFetchError(support)) return support
+  const supportError = isFetchError(support) ? support.error : null
   const jobs = isFetchError(jobsRes) ? [] : jobsRes
+  const supportRows = isFetchError(support) ? [] : support
 
   const profileByEmail = new Map(profiles.map((p) => [p.email, p]))
-  const emails = collectEmails(profiles, feedback, support)
+  const emails = collectEmails(profiles, feedback, supportRows)
 
   const feedbackByEmail = new Map<string, AdminFeedbackRow[]>()
   for (const row of feedback) {
@@ -700,7 +701,7 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
   }
 
   const supportByEmail = new Map<string, AdminSupportRow[]>()
-  for (const row of support) {
+  for (const row of supportRows) {
     const e = row.email.trim().toLowerCase()
     const list = supportByEmail.get(e) ?? []
     list.push(row)
@@ -726,6 +727,7 @@ export async function fetchBetaUsers(): Promise<BetaUserListRow[] | { error: str
     ),
   )
 
+  if (supportError) console.error("[admin-beta-users] support inbox unavailable", supportError)
   return rows.sort((a, b) => {
     if (b.betaPoints !== a.betaPoints) return b.betaPoints - a.betaPoints
     if (b.engagementScore !== a.engagementScore) return b.engagementScore - a.engagementScore
@@ -921,7 +923,8 @@ async function fetchBetaDashboardSummaryUncached(): Promise<BetaDashboardSummary
   ])
 
   if (isFetchError(feedback)) return feedback
-  if (isFetchError(support)) return support
+  const supportError = isFetchError(support) ? support.error : null
+  const supportRows = isFetchError(support) ? [] : support
 
   const feedbackByEmail = new Map<string, { count: number; sessions: Set<string>; dates: string[] }>()
   for (const row of feedback) {
@@ -935,12 +938,12 @@ async function fetchBetaDashboardSummaryUncached(): Promise<BetaDashboardSummary
   }
 
   const supportByEmail = new Map<string, number>()
-  for (const row of support) {
+  for (const row of supportRows) {
     const email = row.email.trim().toLowerCase()
     supportByEmail.set(email, (supportByEmail.get(email) ?? 0) + 1)
   }
 
-  const emails = collectEmails(profiles, feedback, support)
+  const emails = collectEmails(profiles, feedback, supportRows)
   const profileByEmail = new Map(profiles.map((p) => [p.email, p]))
 
   const users: SummaryUserRow[] = emails.map((email) => {
@@ -1009,6 +1012,7 @@ async function fetchBetaDashboardSummaryUncached(): Promise<BetaDashboardSummary
       issueReportCount: u.issueReportCount,
     }))
 
+  if (supportError) console.error("[admin-beta-summary] support inbox unavailable", supportError)
   return { mostActive, recentSignups, topFeedbackContributors, topIssueReporters }
 }
 

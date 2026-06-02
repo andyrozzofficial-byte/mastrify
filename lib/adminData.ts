@@ -390,10 +390,13 @@ async function fetchAdminOverviewUncached(): Promise<AdminOverview | { error: st
   ])
 
   if (isFetchError(feedbackResult)) return feedbackResult
-  if (isFetchError(supportResult)) return supportResult
+  const supportResultError = isFetchError(supportResult) ? supportResult.error : null
+  if (supportResultError) {
+    console.error("[admin-overview] support dependency failed, continuing overview", supportResultError)
+  }
 
   const feedback = feedbackResult
-  const support = supportResult
+  const support = isFetchError(supportResult) ? [] : supportResult
 
   const recommendScores = feedback
     .map((r) => r.recommend_score)
@@ -505,6 +508,7 @@ async function fetchAdminOverviewUncached(): Promise<AdminOverview | { error: st
 
   return {
     ...kpis,
+    error: supportResultError ?? undefined,
     feedbackTotal: feedback.length,
     feedbackNew,
     supportTotal: support.length,
