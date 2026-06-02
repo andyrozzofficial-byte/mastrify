@@ -1400,7 +1400,7 @@ body {
     }
   }
   .footer-shell {
-    max-width: 1200px;
+    max-width: var(--layout-content-max, 1200px);
     min-width: 0;
     overflow-x: clip;
   }

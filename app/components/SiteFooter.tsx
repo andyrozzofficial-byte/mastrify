@@ -173,10 +173,10 @@ export default function SiteFooter() {
   const onAnalyze = pathname === "/analyze"
   const onLanding = pathname === "/" || pathname === "/landing"
   const footerTopClass = onAnalyze
-    ? "max-md:pt-5 sm:pt-7 lg:pt-[3.25rem]"
+    ? "max-md:pt-4 sm:pt-6 lg:pt-[2.25rem]"
     : onLanding
-      ? "max-md:pt-8 sm:pt-10 lg:pt-[5rem]"
-      : "max-md:pt-6 sm:pt-8 lg:pt-[3.25rem]"
+      ? "max-md:pt-6 sm:pt-8 lg:pt-[3.1rem]"
+      : "max-md:pt-5 sm:pt-7 lg:pt-[2.25rem]"
   const year = new Date().getFullYear()
 
   return (
@@ -187,31 +187,15 @@ export default function SiteFooter() {
           aria-hidden
         />
       ) : null}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/28 to-transparent"
-        aria-hidden
-      />
-      <motion.div
-        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-violet-500/[0.06] to-transparent"
-        aria-hidden
-        animate={reduce ? undefined : { opacity: [0.5, 0.8, 0.5] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_50%_100%,rgba(88,28,135,0.09),transparent_58%)]"
-        aria-hidden
-        animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-      />
 
       <motion.div
-        className={`footer-shell relative mx-auto w-full px-4 pb-[max(1rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 sm:pb-10 md:px-10 md:pt-14 md:pb-12 ${footerTopClass}`}
+        className={`footer-shell relative mx-auto w-full px-4 pb-[max(1rem,env(safe-area-inset-bottom))] min-[430px]:px-5 sm:px-6 sm:pb-8 md:px-10 md:pt-10 md:pb-9 ${footerTopClass}`}
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-48px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:gap-4 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-start lg:gap-x-14 xl:gap-x-16">
+        <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 max-md:gap-4 max-md:justify-items-center max-md:text-center sm:gap-7 md:gap-12 md:text-left md:justify-items-start lg:grid-cols-12 lg:items-start lg:gap-x-14 xl:gap-x-20 2xl:gap-x-24">
           {/* Brand */}
           <motion.div
             className="footer-brand min-w-0 max-md:mx-auto max-md:flex max-md:w-full max-md:max-w-[18.5rem] max-md:flex-col max-md:items-center max-md:text-center lg:col-span-3 xl:col-span-3"
@@ -221,9 +205,9 @@ export default function SiteFooter() {
             transition={{ duration: 0.6, ease: EASE }}
           >
             <Link href="/" className="inline-flex items-center justify-center max-md:w-full">
-              <span className="text-[17px] font-semibold tracking-[-0.02em] text-white/92">Mastrify</span>
+              <span className="text-[18px] font-semibold tracking-[-0.02em] text-white/92">Mastrify</span>
             </Link>
-            <p className="footer-brand-copy mt-2.5 max-w-[16.5rem] text-[13px] leading-[1.55] text-muted max-md:mt-2 max-md:mx-auto max-md:text-center max-md:leading-[1.5] sm:mt-3 md:mt-4 md:text-left lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
+            <p className="footer-brand-copy mt-2.5 max-w-[16.5rem] text-[13.5px] leading-[1.55] text-muted max-md:mt-2 max-md:mx-auto max-md:text-center max-md:leading-[1.5] sm:mt-3 md:mt-4 md:text-left lg:max-w-[15.5rem] md:text-[14.5px] md:leading-[1.7] xl:max-w-[18rem]">
               Intelligent mastering for music that deserves its full emotional weight — release-ready, without the
               noise.
             </p>
@@ -249,18 +233,8 @@ export default function SiteFooter() {
             transition={{ duration: 0.6, delay: 0.08, ease: EASE }}
           >
             <motion.div
-              className={`footer-cta-card lg:max-w-[26.5rem] lg:ml-auto lg:mr-1 xl:max-w-[28rem] xl:mr-2 ${onAnalyze ? "footer-cta-card--analyze" : ""}`}
+              className={`footer-cta-card w-full ${onAnalyze ? "footer-cta-card--analyze" : ""}`}
             >
-              <motion.div
-                className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-violet-600/[0.1] blur-2xl"
-                aria-hidden
-                animate={reduce ? undefined : { opacity: [0.35, 0.62, 0.35] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <div
-                className="pointer-events-none absolute bottom-0 left-1/4 h-20 w-2/3 rounded-full bg-violet-500/[0.03] blur-2xl"
-                aria-hidden
-              />
               <div className="relative flex h-full flex-col justify-center">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/58">Release ready</p>
                 <h2 className="mt-2 text-[1.15rem] font-semibold tracking-[-0.02em] text-white/92 sm:mt-2.5 sm:text-[1.3rem] lg:text-[1.35rem]">
