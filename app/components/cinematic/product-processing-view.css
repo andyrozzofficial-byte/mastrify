@@ -10,6 +10,17 @@
   overflow-x: clip;
 }
 
+/* Hard guard: processing views must never become split/grid layouts. */
+@media (min-width: 1024px) {
+  .product-processing-view,
+  .product-processing-view--workstation {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+  }
+}
+
 @supports not (overflow: clip) {
   .product-processing-view {
     overflow-x: hidden;
