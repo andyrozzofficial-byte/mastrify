@@ -508,7 +508,6 @@ async function fetchAdminOverviewUncached(): Promise<AdminOverview | { error: st
 
   return {
     ...kpis,
-    error: supportResultError ?? undefined,
     feedbackTotal: feedback.length,
     feedbackNew,
     supportTotal: support.length,
@@ -949,7 +948,8 @@ export async function fetchAdminCustomers(): Promise<AdminCustomerRow[] | { erro
   if (isFetchError(feedback)) return feedback
 
   const support = await fetchAdminSupport()
-  if (isFetchError(support)) return support
+  const supportError = isFetchError(support) ? support.error : null
+  const supportRows = isFetchError(support) ? [] : support
 
   const exports = await fetchExportsSince(null)
   const supabase = createSupabaseServerClient()
@@ -999,7 +999,7 @@ export async function fetchAdminCustomers(): Promise<AdminCustomerRow[] | { erro
     }
   }
 
-  for (const row of support) {
+  for (const row of supportRows) {
     const email = row.email.trim().toLowerCase()
     const profile = profileByEmail.get(email)
     const existing = map.get(email)
@@ -1022,6 +1022,9 @@ export async function fetchAdminCustomers(): Promise<AdminCustomerRow[] | { erro
     }
   }
 
+  if (supportError) {
+    console.error("[admin-customers] support inbox unavailable", supportError)
+  }
   for (const [email, count] of exportsByEmail) {
     if (!map.has(email)) {
       const profile = profileByEmail.get(email)
@@ -1051,7 +1054,8 @@ export async function fetchCustomerProfile(email: string): Promise<AdminCustomer
   const feedback = await fetchAdminFeedback()
   if (isFetchError(feedback)) return feedback
   const support = await fetchAdminSupport()
-  if (isFetchError(support)) return support
+  const supportError = isFetchError(support) ? support.error : null
+  const supportRows = isFetchError(support) ? [] : support
 
   const supabase = createSupabaseServerClient()
   let notes: string | null = null
@@ -1076,7 +1080,7 @@ export async function fetchCustomerProfile(email: string): Promise<AdminCustomer
   if (exportCount > 0) purchased = true
 
   const userFeedback = feedback.filter((f) => f.contact_email?.toLowerCase() === normalized)
-  const userSupport = support.filter((s) => s.email.toLowerCase() === normalized)
+  const userSupport = supportRows.filter((s) => s.email.toLowerCase() === normalized)
   const sessions = [...new Set(userFeedback.map((f) => f.session_id).filter((s): s is string => Boolean(s)))]
 
   const lastActivity = [

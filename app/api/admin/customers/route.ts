@@ -8,7 +8,8 @@ export async function GET() {
 
   const data = await fetchAdminCustomers()
   if ("error" in data) {
-    return NextResponse.json({ error: data.error }, { status: 500 })
+    console.error("[admin-api] customers failed", data.error)
+    return NextResponse.json({ error: data.error, rows: [] }, { status: 200 })
   }
   return NextResponse.json({ rows: data })
 }
