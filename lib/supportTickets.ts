@@ -10,6 +10,18 @@ function isMissingSupportNameColumn(message: string): boolean {
   return /admin_support_inbox/i.test(message) && /\bname\b/i.test(message) && /does not exist/i.test(message)
 }
 
+function missingSupportInboxColumn(message: string): string | null {
+  const match = message.match(/column\s+admin_support_inbox\.(\w+)\s+does not exist/i)
+  return match?.[1] ?? null
+}
+
+function stripSupportInsertColumn(row: Record<string, unknown>, column: string): Record<string, unknown> {
+  if (!(column in row)) return row
+  const next = { ...row }
+  delete next[column]
+  return next
+}
+
 function newThreadId(): string {
   return crypto.randomUUID()
 }
@@ -121,16 +133,20 @@ export async function createPublicSupportTicket(input: {
     priority: priorityForCategory(category),
   }
 
-  let { data, error } = await supabase
-    .from(SUPPORT_INBOX_TABLE)
-    .insert([{ ...baseRow, name: input.name?.trim() || null }])
-    .select("id")
-    .single()
+  let row: Record<string, unknown> = { ...baseRow, name: input.name?.trim() || null }
+  let data: { id: string } | null = null
+  let error: { message: string } | null = null
 
-  if (error && isMissingSupportNameColumn(error.message)) {
-    const retry = await supabase.from(SUPPORT_INBOX_TABLE).insert([baseRow]).select("id").single()
-    data = retry.data
-    error = retry.error
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await supabase.from(SUPPORT_INBOX_TABLE).insert([row]).select("id").single()
+    data = res.data as { id: string } | null
+    error = res.error
+    if (!error) break
+    const missing = missingSupportInboxColumn(error.message)
+    if (!missing) break
+    const nextRow = stripSupportInsertColumn(row, missing)
+    if (nextRow === row) break
+    row = nextRow
   }
 
   if (error) return { error: error.message }

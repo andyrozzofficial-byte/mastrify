@@ -8,7 +8,8 @@ export async function GET() {
 
   const data = await fetchBetaUsers()
   if ("error" in data) {
-    return NextResponse.json({ error: data.error }, { status: 500 })
+    console.error("[admin-api] beta-users failed", data.error)
+    return NextResponse.json({ error: data.error, rows: [] }, { status: 200 })
   }
   const sample = data[0]
   if (sample) {

@@ -8,7 +8,14 @@ export async function GET() {
 
   const summary = await fetchBetaDashboardSummary()
   if ("error" in summary) {
-    return NextResponse.json({ error: summary.error }, { status: 500 })
+    console.error("[admin-api] beta-users/summary failed", summary.error)
+    return NextResponse.json(
+      {
+        error: summary.error,
+        summary: { mostActive: [], recentSignups: [], topFeedbackContributors: [], topIssueReporters: [] },
+      },
+      { status: 200 },
+    )
   }
   return NextResponse.json({ summary })
 }

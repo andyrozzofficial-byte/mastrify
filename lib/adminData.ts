@@ -301,10 +301,24 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
 export const ADMIN_SUPPORT_SELECT =
   "id, created_at, updated_at, resolved_at, email, name, subject, message, status, priority, source, admin_notes, category, session_context, thread"
 
-const ADMIN_SUPPORT_SELECT_WITHOUT_NAME = ADMIN_SUPPORT_SELECT.replace(", name", "")
+function missingSupportInboxColumn(message: string): string | null {
+  const match = message.match(/column\s+admin_support_inbox\.(\w+)\s+does not exist/i)
+  return match?.[1] ?? null
+}
 
-function isMissingSupportNameColumn(message: string): boolean {
-  return /admin_support_inbox/i.test(message) && /\bname\b/i.test(message) && /does not exist/i.test(message)
+function removeSelectColumn(select: string, column: string): string {
+  const needle = `, ${column}`
+  if (select.includes(needle)) return select.replace(needle, "")
+  const prefixNeedle = `${column}, `
+  if (select.includes(prefixNeedle)) return select.replace(prefixNeedle, "")
+  return select
+}
+
+function stripSupportInsertColumn(row: Record<string, unknown>, column: string): Record<string, unknown> {
+  if (!(column in row)) return row
+  const next = { ...row }
+  delete next[column]
+  return next
 }
 
 const MASTER_JOB_SELECT =
@@ -707,21 +721,23 @@ async function fetchAdminSupportInner(): Promise<AdminSupportRow[] | { error: st
   if (!supabase) return { error: "Database unavailable" }
 
   let select = ADMIN_SUPPORT_SELECT
-  let { data, error } = await supabase
-    .from(SUPPORT_INBOX_TABLE)
-    .select(select)
-    .order("created_at", { ascending: false })
-    .limit(ADMIN_SUPPORT_LIST_LIMIT)
+  let data: unknown[] | null = null
+  let error: { message: string } | null = null
 
-  if (error && isMissingSupportNameColumn(error.message)) {
-    select = ADMIN_SUPPORT_SELECT_WITHOUT_NAME
-    const retry = await supabase
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await supabase
       .from(SUPPORT_INBOX_TABLE)
       .select(select)
       .order("created_at", { ascending: false })
       .limit(ADMIN_SUPPORT_LIST_LIMIT)
-    data = retry.data
-    error = retry.error
+    data = res.data as unknown[] | null
+    error = res.error
+    if (!error) break
+    const missing = missingSupportInboxColumn(error.message)
+    if (!missing) break
+    const nextSelect = removeSelectColumn(select, missing)
+    if (nextSelect === select) break
+    select = nextSelect
   }
 
   if (error) return { error: error.message }
@@ -738,23 +754,24 @@ export async function fetchAdminSupportForEmail(email: string): Promise<AdminSup
   if (!normalized.includes("@")) return []
 
   let select = ADMIN_SUPPORT_SELECT
-  let { data, error } = await supabase
-    .from(SUPPORT_INBOX_TABLE)
-    .select(select)
-    .eq("email", normalized)
-    .order("created_at", { ascending: false })
-    .limit(50)
+  let data: unknown[] | null = null
+  let error: { message: string } | null = null
 
-  if (error && isMissingSupportNameColumn(error.message)) {
-    select = ADMIN_SUPPORT_SELECT_WITHOUT_NAME
-    const retry = await supabase
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await supabase
       .from(SUPPORT_INBOX_TABLE)
       .select(select)
       .eq("email", normalized)
       .order("created_at", { ascending: false })
       .limit(50)
-    data = retry.data
-    error = retry.error
+    data = res.data as unknown[] | null
+    error = res.error
+    if (!error) break
+    const missing = missingSupportInboxColumn(error.message)
+    if (!missing) break
+    const nextSelect = removeSelectColumn(select, missing)
+    if (nextSelect === select) break
+    select = nextSelect
   }
 
   if (error) return []
@@ -785,22 +802,25 @@ export async function fetchAdminSupportPaginated(
 
   const { from, to } = adminPageRange(page)
   let select = ADMIN_SUPPORT_SELECT
-  let { data, error, count } = await supabase
-    .from(SUPPORT_INBOX_TABLE)
-    .select(select, { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to)
+  let data: unknown[] | null = null
+  let error: { message: string } | null = null
+  let count: number | null = null
 
-  if (error && isMissingSupportNameColumn(error.message)) {
-    select = ADMIN_SUPPORT_SELECT_WITHOUT_NAME
-    const retry = await supabase
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await supabase
       .from(SUPPORT_INBOX_TABLE)
       .select(select, { count: "exact" })
       .order("created_at", { ascending: false })
       .range(from, to)
-    data = retry.data
-    error = retry.error
-    count = retry.count
+    data = res.data as unknown[] | null
+    error = res.error
+    count = res.count
+    if (!error) break
+    const missing = missingSupportInboxColumn(error.message)
+    if (!missing) break
+    const nextSelect = removeSelectColumn(select, missing)
+    if (nextSelect === select) break
+    select = nextSelect
   }
 
   if (error) return { error: error.message }
@@ -817,21 +837,23 @@ export async function fetchSupportTicket(id: string): Promise<AdminSupportRow | 
   if (!supabase) return { error: "Database unavailable" }
 
   let select = ADMIN_SUPPORT_SELECT
-  let { data, error } = await supabase
-    .from(SUPPORT_INBOX_TABLE)
-    .select(select)
-    .eq("id", id)
-    .maybeSingle()
+  let data: Record<string, unknown> | null = null
+  let error: { message: string } | null = null
 
-  if (error && isMissingSupportNameColumn(error.message)) {
-    select = ADMIN_SUPPORT_SELECT_WITHOUT_NAME
-    const retry = await supabase
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await supabase
       .from(SUPPORT_INBOX_TABLE)
       .select(select)
       .eq("id", id)
       .maybeSingle()
-    data = retry.data
-    error = retry.error
+    data = (res.data as Record<string, unknown> | null) ?? null
+    error = res.error
+    if (!error) break
+    const missing = missingSupportInboxColumn(error.message)
+    if (!missing) break
+    const nextSelect = removeSelectColumn(select, missing)
+    if (nextSelect === select) break
+    select = nextSelect
   }
 
   if (error) return { error: error.message }
@@ -868,16 +890,20 @@ export async function createSupportItem(input: {
     thread,
   }
 
-  let { data, error } = await supabase
-    .from(SUPPORT_INBOX_TABLE)
-    .insert([{ ...baseRow, name: input.name?.trim() || null }])
-    .select("id")
-    .single()
+  let row: Record<string, unknown> = { ...baseRow, name: input.name?.trim() || null }
+  let data: { id: string } | null = null
+  let error: { message: string } | null = null
 
-  if (error && isMissingSupportNameColumn(error.message)) {
-    const retry = await supabase.from(SUPPORT_INBOX_TABLE).insert([baseRow]).select("id").single()
-    data = retry.data
-    error = retry.error
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await supabase.from(SUPPORT_INBOX_TABLE).insert([row]).select("id").single()
+    data = res.data as { id: string } | null
+    error = res.error
+    if (!error) break
+    const missing = missingSupportInboxColumn(error.message)
+    if (!missing) break
+    const nextRow = stripSupportInsertColumn(row, missing)
+    if (nextRow === row) break
+    row = nextRow
   }
 
   if (error) return { error: error.message }

@@ -8,7 +8,9 @@ export async function GET() {
 
   const data = await fetchAdminAnalytics()
   if ("error" in data) {
-    return NextResponse.json({ error: data.error }, { status: 500 })
+    console.error("[admin-api] analytics failed", data.error)
+    // Never white-screen admin: return safe empty analytics payload.
+    return NextResponse.json({ error: data.error, series: [], totals: {}, points: [] }, { status: 200 })
   }
   return NextResponse.json(data)
 }
