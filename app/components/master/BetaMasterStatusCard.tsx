@@ -75,30 +75,30 @@ export default function BetaMasterStatusCard({
 
           {!isResult ? (
             <div className="space-y-1">
-              <p className="text-[13px] font-semibold leading-snug text-white/92 sm:text-[14px]">
+              <p className="text-[14px] font-semibold leading-snug text-white/92 sm:text-[16px]">
                 You&apos;re helping shape Mastrify.
               </p>
-              <p className="text-[11px] leading-relaxed text-white/50 sm:text-[12px]">
+              <p className="text-[12px] leading-relaxed text-white/55 sm:text-[15px] sm:leading-relaxed">
                 Every master and feedback helps improve Mastrify.
               </p>
             </div>
           ) : null}
 
-          <div className="space-y-2.5 rounded-xl border border-white/[0.08] bg-black/25 px-3.5 py-3 sm:px-3.5 sm:py-3">
+          <div className="space-y-2.5 rounded-xl border border-white/[0.08] bg-black/25 px-3.5 py-3 sm:px-4 sm:py-3.5">
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50 sm:text-[10px]">
                 {progressTitle}
               </p>
               <div className="text-right">
                 <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-white/42">Points</p>
-                <p className="text-[15px] font-bold tabular-nums text-violet-100 sm:text-[13px]">
+                <p className="text-[17px] font-bold tabular-nums text-violet-100 sm:text-[18px]">
                   {points}
                 </p>
               </div>
             </div>
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-[11px] text-white/52">Progress</p>
-              <p className="shrink-0 text-[12px] font-medium tabular-nums text-white/78 sm:text-[12px]">
+              <p className="shrink-0 text-[13px] font-semibold tabular-nums text-white/82 sm:text-[13px]">
                 {progressLabel}
               </p>
             </div>
@@ -122,13 +122,15 @@ export default function BetaMasterStatusCard({
               <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/38 sm:text-[10px]">
                 Ways to earn
               </p>
-              <ul className="mt-1.5 grid gap-1 sm:grid-cols-2">
+              <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
                 {earnWays.map((way) => (
                   <li
                     key={way.label}
-                    className="flex items-center gap-2 text-[10px] text-white/55 sm:text-[11px]"
+                    className="flex items-center gap-2 text-[11px] text-white/60 sm:text-[12px]"
                   >
-                    <span className="shrink-0 font-semibold tabular-nums text-violet-200/75">{way.points}</span>
+                    <span className="shrink-0 text-[12px] font-bold tabular-nums text-violet-200/85 sm:text-[13px]">
+                      {way.points}
+                    </span>
                     <span>{way.label}</span>
                   </li>
                 ))}
@@ -140,12 +142,12 @@ export default function BetaMasterStatusCard({
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55 sm:text-[10px]">
               Next reward
             </p>
-            <p className="mt-1 text-[13px] font-semibold leading-snug text-white/90 sm:text-[13px]">
+            <p className="mt-1 text-[14px] font-semibold leading-snug text-white/90 sm:text-[15px]">
               <span aria-hidden>🎁 </span>
               {nextReward}
             </p>
             {nextRewardDetail ? (
-              <p className="mt-1 text-[12px] leading-snug text-white/58">{nextRewardDetail}</p>
+              <p className="mt-1 text-[12px] leading-snug text-white/58 sm:text-[13px]">{nextRewardDetail}</p>
             ) : null}
           </div>
         </div>
