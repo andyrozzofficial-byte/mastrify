@@ -233,10 +233,19 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
   const today = startOfTodayIso()
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [feedbackRes, eventsRes, jobsRes, exportsRes] = await Promise.all([
+  // KPI reads must fail independently; do not fail the entire overview when one table is unavailable.
+  const logKpiFailure = (kpi: string, message: string) => {
+    console.error(`[admin-kpi] ${kpi} query failed`, message)
+  }
+
+  // Use the same sources as Analytics + Master Jobs where possible:
+  // - uploadsToday: admin_pipeline_events upload events (analytics funnel), else master_jobs created today, else feedback rows today
+  // - mastersCompletedToday: master_jobs status=complete created today (master jobs), else feedback rows today
+  // - paidDownloadsToday/revenueToday: mastered_exports today (existing exports source)
+  const [feedbackRes, eventsRes, jobsTodayRes, jobsCompleteTodayRes, exportsRes] = await Promise.all([
     supabase
       .from(BETA_FEEDBACK_TABLE)
-      .select("id, created_at, session_id, responses")
+      .select("id, created_at, session_id")
       .gte("created_at", today)
       .limit(2000),
     supabase
@@ -249,43 +258,64 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
       .select("id, status, created_at")
       .gte("created_at", today)
       .limit(2000),
+    supabase
+      .from(MASTER_JOBS_TABLE)
+      .select("id", { count: "exact", head: true })
+      .eq("status", "complete")
+      .gte("created_at", today),
     fetchExportsSince(today),
   ])
 
+  const feedbackTodayCount =
+    feedbackRes.error && feedbackRes.error.message.includes("does not exist")
+      ? 0
+      : feedbackRes.data?.length ?? 0
   if (feedbackRes.error && !feedbackRes.error.message.includes("does not exist")) {
-    return { error: feedbackRes.error.message }
+    logKpiFailure("feedback-today", feedbackRes.error.message)
   }
 
-  const uploadsFromEvents =
-    eventsRes.data?.filter((e) => e.event_type === "upload").length ?? 0
-  const feedbackToday = feedbackRes.data ?? []
-  const uploadsToday = Math.max(uploadsFromEvents, feedbackToday.length, jobsRes.data?.length ?? 0)
+  const uploadsFromEvents = eventsRes.data?.filter((e) => e.event_type === "upload").length ?? 0
+  if (eventsRes.error) logKpiFailure("uploads-events-today", eventsRes.error.message)
 
-  const mastersCompletedToday = feedbackToday.length
+  const jobsTodayCount = jobsTodayRes.data?.length ?? 0
+  if (jobsTodayRes.error) logKpiFailure("jobs-today", jobsTodayRes.error.message)
+
+  const uploadsToday = Math.max(uploadsFromEvents, jobsTodayCount, feedbackTodayCount)
+
+  const mastersCompletedToday =
+    jobsCompleteTodayRes.error
+      ? feedbackTodayCount
+      : jobsCompleteTodayRes.count ?? feedbackTodayCount
+  if (jobsCompleteTodayRes.error) logKpiFailure("masters-completed-today", jobsCompleteTodayRes.error.message)
 
   const paidDownloadsToday = exportsRes.data.length
   const revenueToday = exportsRes.data.reduce(
     (sum, row) => sum + (row.amount_cents != null ? row.amount_cents / 100 : EXPORT_PRICE_USD),
     0,
   )
+  if (exportsRes.error) logKpiFailure("exports-today", String(exportsRes.error))
 
   const conversionRate =
     uploadsToday > 0 ? Math.round((paidDownloadsToday / uploadsToday) * 1000) / 10 : null
 
-  const { data: weekFeedback } = await supabase
+  const weekFeedbackRes = await supabase
     .from(BETA_FEEDBACK_TABLE)
     .select("session_id")
     .gte("created_at", weekAgo)
     .limit(5000)
-
+  if (weekFeedbackRes.error) logKpiFailure("active-users-7d", weekFeedbackRes.error.message)
   const activeUsers = new Set(
-    (weekFeedback ?? []).map((r) => r.session_id).filter((s): s is string => Boolean(s)),
+    (weekFeedbackRes.data ?? []).map((r) => r.session_id).filter((s): s is string => Boolean(s)),
   ).size
 
-  const failedJobs =
-    jobsRes.data?.filter((j) => j.status === "failed").length ??
-    (await supabase.from(MASTER_JOBS_TABLE).select("id").eq("status", "failed")).data?.length ??
-    0
+  let failedJobs = 0
+  if (jobsTodayRes.data) {
+    failedJobs = jobsTodayRes.data.filter((j) => j.status === "failed").length
+  } else {
+    const fallbackFailed = await supabase.from(MASTER_JOBS_TABLE).select("id").eq("status", "failed")
+    if (fallbackFailed.error) logKpiFailure("failed-jobs", fallbackFailed.error.message)
+    failedJobs = fallbackFailed.data?.length ?? 0
+  }
 
   return {
     uploadsToday,
