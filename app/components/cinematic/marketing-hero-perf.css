@@ -88,7 +88,7 @@
     box-shadow: 0 0 0 rgba(139, 92, 246, 0);
   }
   50% {
-    box-shadow: 0 0 24px rgba(99, 102, 241, 0.08);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.05);
   }
 }
 

@@ -1,9 +1,15 @@
-import { MASTERED_EXPORTS_TABLE, PIPELINE_EVENTS_TABLE } from "./adminData"
+import {
+  MASTERED_EXPORTS_TABLE,
+  MASTER_JOBS_TABLE,
+  PIPELINE_EVENTS_TABLE,
+} from "./adminData"
+import { statsDebug } from "./statsDebug"
 import { normalizeBetaEmail } from "./betaAccess"
 import { BETA_FEEDBACK_TABLE } from "./betaFeedbackDb"
 import { createSupabaseServerClient } from "./supabaseServer"
 import { supabaseTimed } from "./supabaseTimed"
 
+/** Canonical completed masters — one row per session_id (PK). All completion counts read from here. */
 export const BETA_MASTER_COMPLETIONS_TABLE = "beta_master_completions"
 export const PIPELINE_EVENT_MASTER_COMPLETE = "master_complete"
 export const PIPELINE_EVENT_DOWNLOAD = "download"
@@ -93,7 +99,7 @@ function mergeCompletionsByEmail(
 }
 
 /**
- * Batch load completions for many emails (admin beta-users list). No per-email backfill.
+ * Batch load completions for many emails (admin beta-users list). Table only — canonical source.
  */
 export async function fetchCompletionsGroupedForEmails(
   emails: string[],
@@ -124,33 +130,6 @@ export async function fetchCompletionsGroupedForEmails(
     }
   } else if (!/does not exist|42P01/i.test(tableErr.message)) {
     console.warn("[beta] batch completions table fetch failed:", tableErr.message)
-  }
-
-  const { data: pipelineRows, error: pipeErr } = await supabase
-    .from(PIPELINE_EVENTS_TABLE)
-    .select("session_id, created_at, track_name, user_email")
-    .eq("event_type", PIPELINE_EVENT_MASTER_COMPLETE)
-    .in("user_email", normalizedEmails)
-    .order("created_at", { ascending: false })
-    .limit(5000)
-
-  if (!pipeErr) {
-    for (const row of pipelineRows ?? []) {
-      if (!row.session_id || !row.user_email) continue
-      const mapped: BetaMasterCompletionRow = {
-        session_id: String(row.session_id),
-        email: normalizeBetaEmail(String(row.user_email)),
-        track_name: row.track_name ?? null,
-        mastering_style: null,
-        processing_time_ms: null,
-        master_lufs: null,
-        completed_at: String(row.created_at),
-        created_at: String(row.created_at),
-      }
-      mergeCompletionsByEmail(grouped, mapped.email, [mapped])
-    }
-  } else if (!/does not exist|42P01/i.test(pipeErr.message)) {
-    console.warn("[beta] batch pipeline master_complete fetch failed:", pipeErr.message)
   }
 
   return grouped
@@ -292,7 +271,7 @@ export async function fetchBetaMasterCompletionsForEmail(
 }
 
 export async function countBetaMastersForEmail(email: string): Promise<number> {
-  const rows = await fetchBetaMasterCompletionsForEmail(email)
+  const rows = await fetchBetaMasterCompletionsTableForEmail(email)
   return rows.length
 }
 
@@ -315,17 +294,68 @@ export async function isBetaMasterSessionCompleted(
     .eq("email", normalized)
     .maybeSingle()
 
-  if (!error && data?.session_id) return true
+  return !error && Boolean(data?.session_id)
+}
 
-  const { data: pipe } = await supabase
-    .from(PIPELINE_EVENTS_TABLE)
-    .select("session_id")
-    .eq("event_type", PIPELINE_EVENT_MASTER_COMPLETE)
-    .eq("session_id", sid)
-    .eq("user_email", normalized)
+/** Mirror completion into admin_master_jobs (not counted for KPIs). Idempotent on session_id. */
+async function upsertAdminMasterJobFromCompletion(input: {
+  sessionId: string
+  email: string
+  trackName?: string | null
+  masteringStyle?: string | null
+  processingTimeMs?: number | null
+  masterLufs?: number | null
+  completedAt: string
+}): Promise<"created" | "updated" | "skipped"> {
+  const supabase = createSupabaseServerClient()
+  if (!supabase) return "skipped"
+
+  const { data: existing } = await supabase
+    .from(MASTER_JOBS_TABLE)
+    .select("id")
+    .eq("session_id", input.sessionId)
     .maybeSingle()
 
-  return Boolean(pipe?.session_id)
+  const fields = {
+    session_id: input.sessionId,
+    user_email: normalizeBetaEmail(input.email),
+    track_name: input.trackName?.trim() || null,
+    status: "complete",
+    processing_time_ms:
+      input.processingTimeMs != null && Number.isFinite(input.processingTimeMs)
+        ? Math.max(0, Math.round(input.processingTimeMs))
+        : null,
+    master_lufs:
+      input.masterLufs != null && Number.isFinite(input.masterLufs) ? input.masterLufs : null,
+    mastering_style: input.masteringStyle?.trim() || null,
+    error_log: null,
+    source: "beta_completion",
+    updated_at: input.completedAt,
+  }
+
+  if (existing?.id) {
+    const { error } = await supabase.from(MASTER_JOBS_TABLE).update(fields).eq("id", existing.id)
+    if (error) logBeta("admin_master_jobs update failed", { message: error.message })
+    else statsDebug("admin master job mirrored", { sessionId: input.sessionId, action: "updated" })
+    return error ? "skipped" : "updated"
+  }
+
+  const { error } = await supabase.from(MASTER_JOBS_TABLE).insert({
+    ...fields,
+    created_at: input.completedAt,
+  })
+
+  if (error) {
+    if (/unique|duplicate/i.test(error.message)) {
+      statsDebug("admin master job mirrored (insert race)", { sessionId: input.sessionId })
+      return "updated"
+    }
+    logBeta("admin_master_jobs insert failed", { message: error.message })
+    return "skipped"
+  }
+
+  statsDebug("admin master job mirrored", { sessionId: input.sessionId, action: "created" })
+  return "created"
 }
 
 async function writePipelineMasterComplete(input: {
@@ -336,18 +366,43 @@ async function writePipelineMasterComplete(input: {
   const supabase = createSupabaseServerClient()
   if (!supabase) return false
 
+  const normalized = normalizeBetaEmail(input.email)
+  const { data: existing } = await supabase
+    .from(PIPELINE_EVENTS_TABLE)
+    .select("id")
+    .eq("event_type", PIPELINE_EVENT_MASTER_COMPLETE)
+    .eq("session_id", input.sessionId)
+    .eq("user_email", normalized)
+    .maybeSingle()
+
+  if (existing?.id) {
+    statsDebug("pipeline master_complete skipped (exists)", {
+      sessionId: input.sessionId,
+      email: normalized,
+    })
+    return true
+  }
+
   const { error } = await supabase.from(PIPELINE_EVENTS_TABLE).insert({
     session_id: input.sessionId,
     event_type: PIPELINE_EVENT_MASTER_COMPLETE,
-    user_email: normalizeBetaEmail(input.email),
+    user_email: normalized,
     track_name: input.trackName?.trim() || null,
     metadata: {},
   })
 
   if (error) {
+    if (/duplicate|unique/i.test(error.message)) {
+      statsDebug("pipeline master_complete skipped (race duplicate)", {
+        sessionId: input.sessionId,
+        email: normalized,
+      })
+      return true
+    }
     logBeta("pipeline master_complete write failed", { message: error.message })
     return false
   }
+  statsDebug("pipeline master_complete written", { sessionId: input.sessionId, email: normalized })
   return true
 }
 
@@ -359,15 +414,27 @@ async function writePipelineDownload(input: {
   const supabase = createSupabaseServerClient()
   if (!supabase) return false
 
+  const normalized = normalizeBetaEmail(input.email)
+  const { data: existing } = await supabase
+    .from(PIPELINE_EVENTS_TABLE)
+    .select("id")
+    .eq("event_type", PIPELINE_EVENT_DOWNLOAD)
+    .eq("session_id", input.sessionId)
+    .eq("user_email", normalized)
+    .maybeSingle()
+
+  if (existing?.id) return true
+
   const { error } = await supabase.from(PIPELINE_EVENTS_TABLE).insert({
     session_id: input.sessionId,
     event_type: PIPELINE_EVENT_DOWNLOAD,
-    user_email: normalizeBetaEmail(input.email),
+    user_email: normalized,
     track_name: input.trackTitle?.trim() || null,
     metadata: {},
   })
 
   if (error) {
+    if (/duplicate|unique/i.test(error.message)) return true
     logBeta("pipeline download write failed", { message: error.message })
     return false
   }
@@ -390,17 +457,56 @@ export type RecordBetaMasterCompletionResult =
   | { error: string }
 
 export type RecordBetaMasterCompletionOptions = {
-  /** Skip pre-check reads; rely on insert / conflict handling (fewer queries). */
+  /** @deprecated Ignored — completion is always idempotent via beta_master_completions PK. */
   fastPath?: boolean
   /** Write pipeline event without blocking the response. */
   pipelineAsync?: boolean
+}
+
+async function mirrorCompletionSideEffects(input: {
+  sessionId: string
+  email: string
+  trackName?: string | null
+  masteringStyle?: string | null
+  processingTimeMs?: number | null
+  masterLufs?: number | null
+  completedAt: string
+  created: boolean
+  pipelineAsync: boolean
+}): Promise<void> {
+  await upsertAdminMasterJobFromCompletion({
+    sessionId: input.sessionId,
+    email: input.email,
+    trackName: input.trackName,
+    masteringStyle: input.masteringStyle,
+    processingTimeMs: input.processingTimeMs,
+    masterLufs: input.masterLufs,
+    completedAt: input.completedAt,
+  })
+
+  if (!input.created) return
+
+  const pipelineWrite = () =>
+    writePipelineMasterComplete({
+      email: input.email,
+      sessionId: input.sessionId,
+      trackName: input.trackName,
+    })
+
+  if (input.pipelineAsync) {
+    void pipelineWrite().catch(() => undefined)
+  } else {
+    await pipelineWrite()
+  }
+
+  const { invalidateAdminOverviewCache } = await import("./adminOverviewCache")
+  invalidateAdminOverviewCache("beta_master_completion")
 }
 
 export async function recordBetaMasterCompletion(
   input: RecordBetaMasterCompletionInput,
   options?: RecordBetaMasterCompletionOptions,
 ): Promise<RecordBetaMasterCompletionResult> {
-  const fastPath = options?.fastPath ?? true
   const pipelineAsync = options?.pipelineAsync ?? true
 
   const sessionId = resolveBetaMasterCompletionSessionId(input.sessionId, input.objectKey)
@@ -408,12 +514,25 @@ export async function recordBetaMasterCompletion(
   if (!sessionId) return { error: "session_id required" }
   if (!email.includes("@")) return { error: "email required" }
 
-  if (!fastPath) {
-    const alreadyCounted = await isBetaMasterSessionCompleted(sessionId, email)
-    if (alreadyCounted) {
-      logBeta("master already counted", { sessionId, email })
-      return { ok: true, created: false, alreadyCounted: true }
-    }
+  statsDebug("master complete request", { sessionId, email })
+
+  const alreadyCounted = await isBetaMasterSessionCompleted(sessionId, email)
+  if (alreadyCounted) {
+    statsDebug("master completed event skipped (idempotent)", { sessionId, email })
+    logBeta("master already counted", { sessionId, email })
+    const completedAt = new Date().toISOString()
+    await mirrorCompletionSideEffects({
+      sessionId,
+      email,
+      trackName: input.trackName,
+      masteringStyle: input.masteringStyle,
+      processingTimeMs: input.processingTimeMs,
+      masterLufs: input.masterLufs,
+      completedAt,
+      created: false,
+      pipelineAsync,
+    })
+    return { ok: true, created: false, alreadyCounted: true }
   }
 
   const supabase = createSupabaseServerClient()
@@ -434,9 +553,6 @@ export async function recordBetaMasterCompletion(
     completed_at: completedAt,
   }
 
-  let tableWriteOk = false
-  let alreadyCounted = false
-
   const { error } = await supabaseTimed(
     "complete:insert",
     () => supabase.from(BETA_MASTER_COMPLETIONS_TABLE).insert(row),
@@ -445,18 +561,25 @@ export async function recordBetaMasterCompletion(
 
   if (error) {
     if (/duplicate|unique/i.test(error.message)) {
-      alreadyCounted = true
-      if (!fastPath) {
-        logBeta("master already counted", { sessionId, email })
-        return { ok: true, created: false, alreadyCounted: true }
-      }
       const { data: existing } = await supabase
         .from(BETA_MASTER_COMPLETIONS_TABLE)
         .select("email")
         .eq("session_id", sessionId)
         .maybeSingle()
       if (existing?.email && normalizeBetaEmail(String(existing.email)) === email) {
+        statsDebug("master completed event skipped (insert race)", { sessionId, email })
         logBeta("master already counted", { sessionId, email })
+        await mirrorCompletionSideEffects({
+          sessionId,
+          email,
+          trackName: row.track_name,
+          masteringStyle: row.mastering_style,
+          processingTimeMs: row.processing_time_ms,
+          masterLufs: row.master_lufs,
+          completedAt,
+          created: false,
+          pipelineAsync,
+        })
         return { ok: true, created: false, alreadyCounted: true }
       }
       logBeta("completions session_id conflict — retrying with email-scoped id", {
@@ -469,69 +592,65 @@ export async function recordBetaMasterCompletion(
         ...row,
         session_id: scopedSessionId,
       })
-      if (!retry.error) {
-        tableWriteOk = true
-        logBeta("master completed (scoped session_id)", { sessionId: scopedSessionId, email })
-      } else if (/duplicate|unique/i.test(retry.error.message)) {
-        return { ok: true, created: false, alreadyCounted: true }
-      } else {
+      if (retry.error) {
+        if (/duplicate|unique/i.test(retry.error.message)) {
+          await mirrorCompletionSideEffects({
+            sessionId,
+            email,
+            trackName: row.track_name,
+            masteringStyle: row.mastering_style,
+            processingTimeMs: row.processing_time_ms,
+            masterLufs: row.master_lufs,
+            completedAt,
+            created: false,
+            pipelineAsync,
+          })
+          return { ok: true, created: false, alreadyCounted: true }
+        }
         logBeta("completions scoped insert failed", { message: retry.error.message, email })
+        return { error: retry.error.message }
       }
-    } else if (/does not exist|42P01/i.test(error.message)) {
+      statsDebug("master completed event recorded (scoped session)", {
+        sessionId: scopedSessionId,
+        email,
+      })
+      await mirrorCompletionSideEffects({
+        sessionId: scopedSessionId,
+        email,
+        trackName: row.track_name,
+        masteringStyle: row.mastering_style,
+        processingTimeMs: row.processing_time_ms,
+        masterLufs: row.master_lufs,
+        completedAt,
+        created: true,
+        pipelineAsync,
+      })
+      const completionRow: BetaMasterCompletionRow = {
+        session_id: scopedSessionId,
+        email,
+        track_name: row.track_name,
+        mastering_style: row.mastering_style,
+        processing_time_ms: row.processing_time_ms,
+        master_lufs: row.master_lufs,
+        completed_at: completedAt,
+        created_at: completedAt,
+      }
+      return { ok: true, created: true, alreadyCounted: false, completionRow }
+    }
+    if (/does not exist|42P01/i.test(error.message)) {
       logBeta("completions table missing — apply beta_master_completions migration", {
         sessionId,
         email,
       })
-    } else if (!tableWriteOk && !alreadyCounted) {
+    } else {
       logBeta("completions table insert failed", { message: error.message, sessionId, email })
     }
-  } else {
-    tableWriteOk = true
+    return { error: error.message }
   }
 
-  if (alreadyCounted && !tableWriteOk) {
-    return { ok: true, created: false, alreadyCounted: true }
-  }
+  statsDebug("master completed event recorded", { sessionId, email, created: true })
+  logBeta("master completed", { sessionId, email, tableWriteOk: true, pipelineAsync })
 
-  const pipelineWrite = () =>
-    writePipelineMasterComplete({
-      email,
-      sessionId,
-      trackName: input.trackName,
-    })
-
-  if (pipelineAsync) {
-    void pipelineWrite().catch(() => undefined)
-  } else {
-    const pipelineOk = await pipelineWrite()
-    if (!tableWriteOk && !pipelineOk) {
-      return {
-        error:
-          "Could not record master completion. Apply supabase/migrations/20260528120000_beta_master_completions.sql or check pipeline events table.",
-      }
-    }
-    logBeta("master completed", { sessionId, email, tableWriteOk, pipelineOk })
-    const completionRow: BetaMasterCompletionRow = {
-      session_id: sessionId,
-      email,
-      track_name: row.track_name,
-      mastering_style: row.mastering_style,
-      processing_time_ms: row.processing_time_ms,
-      master_lufs: row.master_lufs,
-      completed_at: completedAt,
-      created_at: completedAt,
-    }
-    return { ok: true, created: true, alreadyCounted: false, completionRow }
-  }
-
-  if (!tableWriteOk) {
-    return {
-      error:
-        "Could not record master completion. Apply supabase/migrations/20260528120000_beta_master_completions.sql.",
-    }
-  }
-
-  logBeta("master completed", { sessionId, email, tableWriteOk, pipelineAsync: true })
   const completionRow: BetaMasterCompletionRow = {
     session_id: sessionId,
     email,
@@ -542,6 +661,19 @@ export async function recordBetaMasterCompletion(
     completed_at: completedAt,
     created_at: completedAt,
   }
+
+  await mirrorCompletionSideEffects({
+    sessionId,
+    email,
+    trackName: row.track_name,
+    masteringStyle: row.mastering_style,
+    processingTimeMs: row.processing_time_ms,
+    masterLufs: row.master_lufs,
+    completedAt,
+    created: true,
+    pipelineAsync,
+  })
+
   return { ok: true, created: true, alreadyCounted: false, completionRow }
 }
 
@@ -633,7 +765,11 @@ export async function recordBetaMasterDownload(
     exportOk = true
   } else {
     exportError = exportRes.error.message
-    if (!/does not exist|42P01/i.test(exportRes.error.message)) {
+    if (/duplicate|unique/i.test(exportRes.error.message)) {
+      statsDebug("mastered_exports insert skipped (idempotent)", { email, objectKey })
+      exportOk = true
+      exportError = null
+    } else if (!/does not exist|42P01/i.test(exportRes.error.message)) {
       logBeta("mastered_exports insert failed", { message: exportRes.error.message })
     }
   }

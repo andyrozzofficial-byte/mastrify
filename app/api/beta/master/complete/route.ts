@@ -13,6 +13,7 @@ import { buildBetaMasterCompleteStats } from "../../../../../lib/betaUserData"
 import { beginDbRoute, endDbRoute } from "../../../../../lib/supabaseTimed"
 import { getSupabaseEnvStatus } from "../../../../../lib/supabaseServer"
 import { PERF_DEBUG } from "../../../../../lib/perfDebug"
+import { statsDebug } from "../../../../../lib/statsDebug"
 
 export async function POST(request: Request) {
   beginDbRoute("POST /api/beta/master/complete")
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
       processingTimeMs: body.processingTimeMs,
       masterLufs: body.masterLufs,
     },
-    { fastPath: true, pipelineAsync: true },
+    { pipelineAsync: true },
   )
 
   if ("error" in result) {
@@ -96,6 +97,14 @@ export async function POST(request: Request) {
   }
   const dbStats = endDbRoute()
   const endpointMs = Date.now() - endpointStart
+
+  statsDebug("POST /api/beta/master/complete", {
+    email,
+    sessionId,
+    created: result.created,
+    alreadyCounted: result.alreadyCounted,
+    endpointMs,
+  })
 
   console.log("[beta-api] master complete timing", {
     email,

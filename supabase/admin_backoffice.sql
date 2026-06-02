@@ -37,6 +37,9 @@ create table if not exists public.admin_master_jobs (
 create index if not exists admin_master_jobs_created_at_idx on public.admin_master_jobs (created_at desc);
 create index if not exists admin_master_jobs_status_idx on public.admin_master_jobs (status);
 create index if not exists admin_master_jobs_session_id_idx on public.admin_master_jobs (session_id);
+create unique index if not exists admin_master_jobs_session_id_uidx
+  on public.admin_master_jobs (session_id)
+  where session_id is not null;
 
 -- Pipeline funnel events (optional ingestion; admin aggregates existing data too)
 create table if not exists public.admin_pipeline_events (
@@ -74,6 +77,8 @@ create table if not exists public.mastered_exports (
 );
 
 create index if not exists mastered_exports_created_at_idx on public.mastered_exports (created_at desc);
+create unique index if not exists mastered_exports_email_object_key_uidx
+  on public.mastered_exports (email, object_key);
 
 alter table public.admin_master_jobs enable row level security;
 alter table public.admin_pipeline_events enable row level security;

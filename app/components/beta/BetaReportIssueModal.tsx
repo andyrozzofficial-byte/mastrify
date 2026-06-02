@@ -10,6 +10,7 @@ import {
 } from "../../../lib/betaIssueTypes"
 import { dispatchBetaProfilePanel, dispatchBetaProfileRefresh } from "../../../lib/betaMasterTrackingClient"
 import { getStoredBetaEmail } from "../../../lib/betaSessionStorage"
+import { MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
 import type { BetaProfilePanelData } from "../../../lib/betaProfilePanel"
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -38,6 +39,7 @@ export default function BetaReportIssueModal({ open, onClose }: Props) {
   const [submitted, setSubmitted] = useState(false)
   const [pointsEarned, setPointsEarned] = useState(false)
   const actionIdRef = useRef("")
+  const submitLockRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -67,6 +69,7 @@ export default function BetaReportIssueModal({ open, onClose }: Props) {
   }, [open, onClose, submitting])
 
   const handleSubmit = useCallback(async () => {
+    if (submitLockRef.current || submitting || submitted) return
     const trimmedTitle = title.trim()
     const trimmedDesc = description.trim()
     if (trimmedTitle.length < 3) {
@@ -78,6 +81,7 @@ export default function BetaReportIssueModal({ open, onClose }: Props) {
       return
     }
 
+    submitLockRef.current = true
     setSubmitting(true)
     setError("")
 
@@ -100,7 +104,9 @@ export default function BetaReportIssueModal({ open, onClose }: Props) {
       email: email ?? undefined,
       hasScreenshot: Boolean(screenshot),
     }
-    console.log("[issue-client] payload", payload)
+    if (MASTRIFY_CLIENT_PIPELINE_DEBUG) {
+      console.log("[issue-client] payload", payload)
+    }
 
     try {
       const res = await fetch("/api/beta/issues", {
@@ -137,9 +143,10 @@ export default function BetaReportIssueModal({ open, onClose }: Props) {
     } catch {
       setError("Something went wrong. Please try again.")
     } finally {
+      submitLockRef.current = false
       setSubmitting(false)
     }
-  }, [title, description, expectedResult, priority, screenshot])
+  }, [title, description, expectedResult, priority, screenshot, submitting, submitted])
 
   if (!portalReady || !open) return null
 

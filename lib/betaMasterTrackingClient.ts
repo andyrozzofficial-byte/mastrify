@@ -8,8 +8,14 @@ import {
   resolveBetaDownloadObjectKey,
   resolveBetaMasterCompletionSessionId,
 } from "./betaMasterTracking"
-import { markClientBetaMasterComplete, markClientBetaDownload } from "./betaTrackingStorage"
-import { PERF_DEBUG } from "./perfDebug"
+import { coalesceBetaMasterComplete, coalesceBetaMasterDownload } from "./betaClientInFlight"
+import {
+  hasClientReportedBetaDownload,
+  hasClientReportedBetaMasterComplete,
+  markClientBetaMasterComplete,
+  markClientBetaDownload,
+} from "./betaTrackingStorage"
+import { MASTRIFY_CLIENT_PIPELINE_DEBUG } from "./mastrifyDebug"
 
 export type RegisterBetaMasterCompletePayload = {
   sessionId: string
@@ -31,7 +37,7 @@ export type RegisterBetaMasterDownloadPayload = {
 }
 
 function logBeta(message: string) {
-  console.log(`[beta] ${message}`)
+  if (MASTRIFY_CLIENT_PIPELINE_DEBUG) console.log(`[beta] ${message}`)
 }
 
 export const BETA_PROFILE_REFRESH_EVENT = "mastrify:beta-profile-refresh"
@@ -82,7 +88,7 @@ export async function registerBetaMasterComplete(
         ? email
         : undefined
 
-  if (PERF_DEBUG) {
+  if (MASTRIFY_CLIENT_PIPELINE_DEBUG) {
     console.log("[beta-debug] master complete (client)", {
       sessionIdSent: sessionId,
       sessionIdSource: resolvedSid ? (payload.sessionId?.trim() ? "payload.sessionId" : "objectKey") : "generated",
@@ -94,6 +100,12 @@ export async function registerBetaMasterComplete(
     })
   }
 
+  if (hasClientReportedBetaMasterComplete(sessionId)) {
+    logBeta("master already counted (client guard)")
+    return { ok: true, alreadyCounted: true, created: false, sessionId }
+  }
+
+  return coalesceBetaMasterComplete(sessionId, async () => {
   try {
     const res = await fetch("/api/beta/master/complete", {
       method: "POST",
@@ -144,6 +156,7 @@ export async function registerBetaMasterComplete(
     console.warn("[beta] master complete request failed", err)
     return { ok: false, sessionId }
   }
+  })
 }
 
 export async function registerBetaMasterDownload(
@@ -161,6 +174,13 @@ export async function registerBetaMasterDownload(
     return { ok: false }
   }
 
+  const dedupeKey = sessionId ? `session:${sessionId}` : `export:${objectKey}:${email}`
+  if (sessionId && hasClientReportedBetaDownload(sessionId)) {
+    logBeta("download already counted (client guard)")
+    return { ok: true, alreadyCounted: true }
+  }
+
+  return coalesceBetaMasterDownload(dedupeKey, async () => {
   try {
     const res = await fetch("/api/beta/master/download", {
       method: "POST",
@@ -199,6 +219,7 @@ export async function registerBetaMasterDownload(
     console.warn("[beta] download register request failed", err)
     return { ok: false }
   }
+  })
 }
 
 /** Call once when a mastered file is ready — not on download or feedback. */

@@ -64,6 +64,7 @@ import {
   fetchCompletionsGroupedForEmails,
   type BetaMasterCompletionRow,
 } from "./betaMasterTracking"
+import { countDistinctCanonicalCompletions } from "./canonicalMasterStats"
 import { countBetaIssuesForEmail, fetchBetaIssuesForEmail } from "./betaIssues"
 import { createSupabaseServerClient } from "./supabaseServer"
 import { formatSupabaseTableError } from "./supabaseSchemaErrors"
@@ -121,58 +122,6 @@ function tagCountsFromArrays(arrays: string[][]): BetaUserTagCount[] {
   return [...counts.entries()]
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count)
-}
-
-/** Distinct sessions from beta_master_completions + pipeline (used for Insider points). */
-function countTrackedMasterCompletions(completions: BetaMasterCompletionRow[]): number {
-  const sessions = new Set(
-    completions.map((c) => c.session_id).filter((sid): sid is string => Boolean(sid?.trim())),
-  )
-  return sessions.size
-}
-
-/**
- * Admin display count — completions, completed jobs, and feedback sessions (legacy parity).
- */
-function countAdminDisplayMasters(
-  completions: BetaMasterCompletionRow[],
-  userJobs: AdminJobRow[] = [],
-  email = "",
-  userFeedback: AdminFeedbackRow[] = [],
-): number {
-  const sessions = new Set(
-    completions.map((c) => c.session_id).filter((sid): sid is string => Boolean(sid?.trim())),
-  )
-  let count = sessions.size
-  const normalized = email.trim().toLowerCase()
-  if (!normalized.includes("@")) return count
-
-  for (const job of userJobs) {
-    if (job.status !== "complete") continue
-    if (job.user_email?.trim().toLowerCase() !== normalized) continue
-    const sid = job.session_id?.trim()
-    if (sid) {
-      if (sessions.has(sid)) continue
-      sessions.add(sid)
-      count++
-      continue
-    }
-    count++
-  }
-
-  for (const fb of userFeedback) {
-    if (fb.contact_email?.trim().toLowerCase() !== normalized) continue
-    const sid = fb.session_id?.trim()
-    if (sid) {
-      if (sessions.has(sid)) continue
-      sessions.add(sid)
-      count++
-      continue
-    }
-    count++
-  }
-
-  return count
 }
 
 /** Feedback rows that should not also earn a separate feedback point when a master completion exists. */
@@ -294,7 +243,7 @@ export async function syncBetaProfileFromActivity(email: string): Promise<void> 
     userSupport,
     [],
     creatorInviteCount,
-    countTrackedMasterCompletions(completions),
+    countDistinctCanonicalCompletions(completions),
     issueReportCount,
     countFeedbackForPoints(userFeedback, completions),
   )
@@ -521,8 +470,7 @@ function buildListRow(
 
   const soundedOff = userFeedback.flatMap((f) => f.survey.soundedOff ?? [])
   const styles = userFeedback.map((f) => f.mastering_style)
-  const trackedMasterCount = countTrackedMasterCompletions(completions)
-  const masterCount = countAdminDisplayMasters(completions, jobs, email, userFeedback)
+  const masterCount = countDistinctCanonicalCompletions(completions)
   const feedbackCountForPoints = countFeedbackForPoints(userFeedback, completions)
   const activeDaySet = new Set<string>()
   for (const iso of lastTimes) activeDaySet.add(dateKey(iso))
@@ -541,7 +489,7 @@ function buildListRow(
     userSupport,
     jobs,
     creatorInviteCount,
-    trackedMasterCount,
+    masterCount,
     issueReportCount,
     feedbackCountForPoints,
   )
@@ -637,7 +585,7 @@ export async function buildBetaMasterCompleteStats(
       rankProgress: list.rankProgress,
       rewardStatus: list.rewardStatus,
     }),
-    masterCount: countTrackedMasterCompletions(completions),
+    masterCount: countDistinctCanonicalCompletions(completions),
     completionsCount: completions.length,
   }
 }

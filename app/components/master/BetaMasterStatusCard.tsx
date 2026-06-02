@@ -39,10 +39,13 @@ export default function BetaMasterStatusCard({
   if (checking || !isBeta) return null
 
   const rankLabel = betaUi?.rankLabel ?? "Explorer"
-  const points = betaUi?.points ?? 0
+  const points = Number.isFinite(betaUi?.points) ? Math.max(0, betaUi?.points ?? 0) : 0
   const progressTitle = betaUi?.progressTitle ?? "INSIDER PROGRESS"
   const progressLabel = betaUi?.progressLabel ?? "—"
-  const progressPct = betaUi?.progressPct ?? 0
+  const rawProgressPct = betaUi?.progressPct ?? 0
+  const progressPct = Number.isFinite(rawProgressPct)
+    ? Math.min(100, Math.max(0, rawProgressPct))
+    : 0
   const nextReward = betaUi?.nextReward ?? "10% discount code"
   const nextRewardDetail = betaUi?.nextRewardDetail
   const earnWays = betaUi?.earnWays ?? []

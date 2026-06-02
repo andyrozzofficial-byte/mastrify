@@ -68,7 +68,9 @@ export async function POST(request: Request) {
     email: bodyEmail || cookieEmail || undefined,
     hasScreenshot: Boolean(screenshotFile),
   }
-  console.log("[issue-api] incoming", incomingLog)
+  if (process.env.NODE_ENV === "development" || process.env.MASTRIFY_ISSUE_DEBUG === "1") {
+    console.log("[issue-api] incoming", incomingLog)
+  }
 
   const email =
     cookieEmail ?? (bodyEmail.includes("@") ? normalizeBetaEmail(bodyEmail) : null)
@@ -104,7 +106,9 @@ export async function POST(request: Request) {
     priority,
   })
 
-  console.log("[issue-api] result", result)
+  if (process.env.NODE_ENV === "development" || process.env.MASTRIFY_ISSUE_DEBUG === "1") {
+    console.log("[issue-api] result", result)
+  }
 
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 })

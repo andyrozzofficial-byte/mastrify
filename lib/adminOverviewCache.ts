@@ -1,4 +1,5 @@
 import type { AdminOverview } from "./adminTypes"
+import { statsDebug } from "./statsDebug"
 import { recordCacheHit, recordCacheMiss } from "./supabaseTimed"
 
 const CACHE_TTL_MS = 45_000
@@ -25,6 +26,8 @@ export function setCachedAdminOverview(data: AdminOverview): void {
   cache = { data, at: Date.now() }
 }
 
-export function invalidateAdminOverviewCache(): void {
+export function invalidateAdminOverviewCache(reason?: string): void {
+  const hadCache = Boolean(cache)
   cache = null
+  statsDebug("admin overview cache invalidated", { hadCache, reason: reason ?? "unspecified" })
 }

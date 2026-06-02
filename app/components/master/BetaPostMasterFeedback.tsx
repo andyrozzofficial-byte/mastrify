@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import {
   BETA_IMPROVEMENT_OPTIONS,
@@ -40,6 +40,7 @@ export default function BetaPostMasterFeedback({
   const [wouldUseAgain, setWouldUseAgain] = useState<string>("Yes")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const submitLockRef = useRef(false)
 
   const sessionId = sessionAnalytics.sessionId
 
@@ -67,10 +68,16 @@ export default function BetaPostMasterFeedback({
   )
 
   const handleSubmit = useCallback(async () => {
+    if (submitLockRef.current || submitting) return
+    if (readPostMasterFeedbackStatus(sessionId) === "submitted") {
+      dismiss("submitted")
+      return
+    }
     if (likedFeatures.length === 0 || improvements.length === 0) {
       setError("Select at least one option in each section.")
       return
     }
+    submitLockRef.current = true
     setSubmitting(true)
     setError("")
     try {
@@ -100,15 +107,18 @@ export default function BetaPostMasterFeedback({
         setError(typeof json?.error === "string" ? json.error : "Could not send feedback.")
         return
       }
+      writePostMasterFeedbackStatus(sessionId, "submitted")
       dismiss("submitted")
     } catch {
       setError("Something went wrong. Please try again.")
     } finally {
+      submitLockRef.current = false
       setSubmitting(false)
     }
   }, [
     dismiss,
     improvements,
+    submitting,
     likedFeatures,
     masterObjectKey,
     masterRating,

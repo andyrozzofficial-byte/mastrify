@@ -4,6 +4,10 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Premium violet glow scale (~45% softer than prior neon defaults) */
+  --mastrify-glow-violet-a: rgba(139, 92, 246, 0.1);
+  --mastrify-glow-violet-b: rgba(139, 92, 246, 0.16);
+  --mastrify-glow-indigo: rgba(99, 102, 241, 0.11);
 
   /* Cinematic muted text — readable on dark without breaking restraint */
   --text-muted-faint: rgba(210, 214, 228, 0.44);
@@ -483,7 +487,7 @@ body {
     background-color: rgba(0, 0, 0, 0.28);
   }
   .cinematic-upload-card-glow {
-    opacity: 0.45;
+    opacity: 0.28;
   }
   .cinematic-upload-card-panel,
   .marketing-panel-card {
@@ -522,8 +526,8 @@ body {
     }
   }
   .marketing-upload-dropzone.is-dragging {
-    border-color: rgba(167, 139, 250, 0.3);
-    background: rgba(46, 16, 101, 0.1);
+    border-color: rgba(167, 139, 250, 0.24);
+    background: rgba(46, 16, 101, 0.08);
   }
   .marketing-upload-actions {
     position: relative;
@@ -553,8 +557,8 @@ body {
   .marketing-upload-btn-primary {
     background: linear-gradient(
       to bottom,
-      rgba(109, 76, 190, 0.9),
-      rgba(55, 48, 107, 0.93),
+      rgba(102, 78, 168, 0.88),
+      rgba(52, 48, 98, 0.92),
       rgba(26, 21, 40, 0.96)
     );
     color: #fff;
@@ -562,7 +566,7 @@ body {
       inset 0 1px 0 rgba(255, 255, 255, 0.1),
       inset 0 -1px 0 rgba(0, 0, 0, 0.22),
       0 12px 32px rgba(0, 0, 0, 0.42),
-      0 0 14px rgba(67, 56, 120, 0.065);
+      0 0 12px rgba(67, 56, 120, 0.038);
     border: 1px solid rgba(46, 38, 72, 0.45);
   }
   .marketing-upload-btn-secondary {
@@ -1182,12 +1186,12 @@ body {
     border-radius: 9999px;
     background: radial-gradient(
       circle at 50% 46%,
-      rgba(99, 102, 241, 0.2) 0%,
-      rgba(79, 70, 229, 0.08) 40%,
+      rgba(99, 102, 241, 0.12) 0%,
+      rgba(79, 70, 229, 0.05) 40%,
       rgba(5, 5, 8, 0) 72%
     );
-    filter: blur(32px);
-    opacity: 0.78;
+    filter: blur(28px);
+    opacity: 0.68;
   }
   @media (min-width: 768px) {
     .hero-orb-radial-mobile {
@@ -1383,7 +1387,7 @@ body {
   @media (hover: hover) {
     .trust-daw-item:hover .trust-daw-label {
       color: rgba(255, 255, 255, 0.72);
-      text-shadow: 0 0 18px rgba(139, 92, 246, 0.18);
+      text-shadow: 0 0 14px var(--mastrify-glow-violet-a);
     }
   }
   .landing-close-footer {
@@ -1556,10 +1560,10 @@ body {
 
 @keyframes softGlow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.12);
+    box-shadow: 0 0 18px var(--mastrify-glow-violet-a);
   }
   50% {
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.18);
+    box-shadow: 0 0 32px var(--mastrify-glow-violet-b);
   }
 }
 
@@ -1587,11 +1591,11 @@ body {
 @keyframes pulseGlow {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 10px 40px rgba(139,92,246,0.35);
+    box-shadow: 0 10px 36px rgba(139, 92, 246, 0.2);
   }
   50% {
     transform: scale(1.02);
-    box-shadow: 0 20px 60px rgba(139,92,246,0.7);
+    box-shadow: 0 18px 52px rgba(139, 92, 246, 0.38);
   }
 }
 

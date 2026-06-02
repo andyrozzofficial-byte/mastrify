@@ -163,16 +163,18 @@ export function buildBetaRankProgress(points: number): BetaRankProgress {
   const nextRank = idx < RANK_ORDER.length - 1 ? RANK_ORDER[idx + 1]! : null
   const currentThreshold = BETA_RANK_THRESHOLDS[rank]
   const nextThreshold = nextRank ? BETA_RANK_THRESHOLDS[nextRank] : null
-  const pointsInTier = points - currentThreshold
-  const span = nextThreshold != null ? nextThreshold - currentThreshold : 1
-  const pointsToNext = nextThreshold != null ? Math.max(0, nextThreshold - points) : null
-  const progressPct =
-    nextThreshold != null ? Math.min(100, Math.round((pointsInTier / span) * 100)) : 100
+  const safePoints = Number.isFinite(points) ? Math.max(0, points) : 0
+  const pointsInTier = safePoints - currentThreshold
+  const span = nextThreshold != null ? Math.max(1, nextThreshold - currentThreshold) : 1
+  const pointsToNext = nextThreshold != null ? Math.max(0, nextThreshold - safePoints) : null
+  let progressPct =
+    nextThreshold != null ? Math.min(100, Math.max(0, Math.round((pointsInTier / span) * 100))) : 100
+  if (!Number.isFinite(progressPct)) progressPct = 0
 
   return {
     rank,
     rankLabel,
-    points,
+    points: safePoints,
     nextRank,
     nextRankLabel: nextRank ? betaRankLabel(nextRank) : null,
     pointsInTier,
@@ -183,24 +185,30 @@ export function buildBetaRankProgress(points: number): BetaRankProgress {
 }
 
 export function buildBetaMilestoneProgress(points: number): BetaMilestoneProgress {
-  const next = BETA_REWARD_MILESTONES.find((m) => points < m.points)
+  const safePoints = Number.isFinite(points) ? Math.max(0, points) : 0
+  const next = BETA_REWARD_MILESTONES.find((m) => safePoints < m.points)
   const prevThreshold =
     next != null
       ? (BETA_REWARD_MILESTONES[BETA_REWARD_MILESTONES.indexOf(next) - 1]?.points ?? 0)
       : BETA_REWARD_MILESTONES[BETA_REWARD_MILESTONES.length - 1]!.points
 
-  const span = next != null ? next.points - prevThreshold : 1
-  const progressPct =
-    next != null ? Math.min(100, Math.round(((points - prevThreshold) / span) * 100)) : 100
+  const span = next != null ? Math.max(1, next.points - prevThreshold) : 1
+  let progressPct =
+    next != null
+      ? Math.min(100, Math.max(0, Math.round(((safePoints - prevThreshold) / span) * 100)))
+      : 100
+  if (!Number.isFinite(progressPct)) progressPct = 0
 
   const progressTitle = next
     ? `${betaRankLabel(next.rank).toUpperCase()} PROGRESS`
     : "ALL REWARDS UNLOCKED"
 
-  const progressLabel = next ? `${points} / ${next.points} points` : `${points} points`
+  const progressLabel = next
+    ? `${safePoints} / ${next.points} points`
+    : `${safePoints} points`
 
   return {
-    points,
+    points: safePoints,
     progressTitle,
     progressLabel,
     progressPct,
@@ -242,7 +250,8 @@ export function buildBetaMasteringUiState(input: {
   rankProgress: BetaRankProgress
   rewardStatus: string
 }): BetaMasteringUiState {
-  const milestone = buildBetaMilestoneProgress(input.betaPoints)
+  const safePoints = Number.isFinite(input.betaPoints) ? Math.max(0, input.betaPoints) : 0
+  const milestone = buildBetaMilestoneProgress(safePoints)
   const navLabel = input.rankProgress.rank === "explorer" ? "Beta Member" : input.betaRank
 
   const nextReward = milestone.nextMilestonePoints
@@ -252,10 +261,12 @@ export function buildBetaMasteringUiState(input: {
   return {
     rankLabel: input.betaRank,
     navLabel,
-    points: input.betaPoints,
+    points: safePoints,
     progressTitle: milestone.progressTitle,
     progressLabel: milestone.progressLabel,
-    progressPct: milestone.progressPct,
+    progressPct: Number.isFinite(milestone.progressPct)
+      ? Math.min(100, Math.max(0, milestone.progressPct))
+      : 0,
     nextReward,
     nextRewardDetail: milestone.nextRewardDetail,
     earnWays: BETA_EARN_WAYS,

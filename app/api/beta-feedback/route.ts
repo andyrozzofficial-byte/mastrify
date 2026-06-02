@@ -5,6 +5,7 @@ import { isBetaFeedbackEnabled } from "../../../lib/betaFeedbackFeature"
 import {
   BETA_FEEDBACK_TABLE,
   buildBetaFeedbackRow,
+  findBetaFeedbackIdBySessionId,
   insertBetaFeedbackRow,
   sanitizeBetaFeedbackInsert,
 } from "../../../lib/betaFeedbackDb"
@@ -18,7 +19,11 @@ import {
 import { touchBetaProfileFromFeedback } from "../../../lib/betaUserData"
 import { PERF_DEBUG } from "../../../lib/perfDebug"
 
+const BETA_FEEDBACK_SERVER_LOG =
+  process.env.NODE_ENV === "development" || process.env.MASTRIFY_BETA_FEEDBACK_DEBUG === "1"
+
 function logBeta(message: string, detail?: unknown) {
+  if (!BETA_FEEDBACK_SERVER_LOG) return
   if (detail !== undefined) console.log(`[beta-feedback] ${message}`, detail)
   else console.log(`[beta-feedback] ${message}`)
 }
@@ -67,7 +72,7 @@ function apiError(
 }
 
 export async function POST(request: Request) {
-  console.log("[beta-feedback] POST reached")
+  logBeta("POST reached")
 
   if (!isBetaFeedbackEnabled()) {
     return NextResponse.json({ error: "Beta feedback is disabled" }, { status: 404 })
@@ -106,13 +111,8 @@ export async function POST(request: Request) {
 
   const sessionId = row.session_id?.trim()
   if (sessionId) {
-    const { data: existingFeedback } = await supabase
-      .from(BETA_FEEDBACK_TABLE)
-      .select("id")
-      .eq("session_id", sessionId)
-      .maybeSingle()
-
-    if (existingFeedback?.id) {
+    const existingId = await findBetaFeedbackIdBySessionId(supabase, sessionId)
+    if (existingId) {
       logBeta("feedback already counted for session", { sessionId })
       const store = await cookies()
       const cookieEmail = (await resolveBetaEmailFromCookies(store)) || null
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         ok: true,
         success: true,
-        id: existingFeedback.id,
+        id: existingId,
         alreadyCounted: true,
       })
     }
@@ -145,6 +145,18 @@ export async function POST(request: Request) {
     })
 
     if (insertResult.error) {
+      if (sessionId && /duplicate|unique/i.test(insertResult.error.message)) {
+        const existingId = await findBetaFeedbackIdBySessionId(supabase, sessionId)
+        if (existingId) {
+          logBeta("feedback already counted for session (insert race)", { sessionId })
+          return NextResponse.json({
+            ok: true,
+            success: true,
+            id: existingId,
+            alreadyCounted: true,
+          })
+        }
+      }
       logBetaError("insert failed", insertResult.error)
       return NextResponse.json(
         {

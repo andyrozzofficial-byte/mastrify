@@ -424,3 +424,19 @@ export function betaFeedbackErrorForClient(error: { code?: string; message?: str
     tableMissing,
   }
 }
+
+/** One feedback row per mastering session when session_id is set. */
+export async function findBetaFeedbackIdBySessionId(
+  supabase: SupabaseClient,
+  sessionId: string,
+): Promise<string | null> {
+  const sid = sessionId.trim()
+  if (!sid) return null
+  const { data, error } = await supabase
+    .from(BETA_FEEDBACK_TABLE)
+    .select("id")
+    .eq("session_id", sid)
+    .maybeSingle()
+  if (error || !data?.id) return null
+  return String(data.id)
+}

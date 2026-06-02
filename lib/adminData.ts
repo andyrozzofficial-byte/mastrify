@@ -35,6 +35,8 @@ import {
   buildAdminPaginationMeta,
   type AdminPaginationMeta,
 } from "./adminPagination"
+import { countCanonicalMastersCompletedSince } from "./canonicalMasterStats"
+import { statsDebug } from "./statsDebug"
 
 export type AdminPaginated<T> = { rows: T[]; pagination: AdminPaginationMeta }
 
@@ -43,6 +45,7 @@ export const MASTER_JOBS_TABLE = "admin_master_jobs"
 export const PIPELINE_EVENTS_TABLE = "admin_pipeline_events"
 export const CUSTOMER_PROFILES_TABLE = "admin_customer_profiles"
 export const MASTERED_EXPORTS_TABLE = "mastered_exports"
+export const PIPELINE_EVENT_MASTER_COMPLETE = "master_complete"
 
 const EXPORT_PRICE_USD = 9
 
@@ -240,9 +243,10 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
 
   // Use the same sources as Analytics + Master Jobs where possible:
   // - uploadsToday: admin_pipeline_events upload events (analytics funnel), else master_jobs created today, else feedback rows today
-  // - mastersCompletedToday: master_jobs status=complete created today (master jobs), else feedback rows today
+  // - mastersCompletedToday: CANONICAL — beta_master_completions.completed_at >= today (see canonicalMasterStats.ts)
   // - paidDownloadsToday/revenueToday: mastered_exports today (existing exports source)
-  const [feedbackRes, eventsRes, jobsTodayRes, jobsCompleteTodayRes, exportsRes] = await Promise.all([
+  const [feedbackRes, eventsRes, jobsTodayRes, exportsRes, canonicalMastersCompletedToday] =
+    await Promise.all([
     supabase
       .from(BETA_FEEDBACK_TABLE)
       .select("id, created_at, session_id")
@@ -258,12 +262,8 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
       .select("id, status, created_at")
       .gte("created_at", today)
       .limit(2000),
-    supabase
-      .from(MASTER_JOBS_TABLE)
-      .select("id", { count: "exact", head: true })
-      .eq("status", "complete")
-      .gte("created_at", today),
     fetchExportsSince(today),
+    countCanonicalMastersCompletedSince(today),
   ])
 
   const feedbackTodayCount =
@@ -282,11 +282,18 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
 
   const uploadsToday = Math.max(uploadsFromEvents, jobsTodayCount, feedbackTodayCount)
 
-  const mastersCompletedToday =
-    jobsCompleteTodayRes.error
-      ? feedbackTodayCount
-      : jobsCompleteTodayRes.count ?? feedbackTodayCount
-  if (jobsCompleteTodayRes.error) logKpiFailure("masters-completed-today", jobsCompleteTodayRes.error.message)
+  const pipelineMasterCompleteToday =
+    eventsRes.data?.filter((e) => e.event_type === PIPELINE_EVENT_MASTER_COMPLETE).length ?? 0
+  const jobsCompleteTodayCount =
+    jobsTodayRes.data?.filter((j) => j.status === "complete").length ?? 0
+
+  statsDebug("admin kpi masters completed today", {
+    canonical: canonicalMastersCompletedToday,
+    enrichment: {
+      pipelineMasterCompleteToday,
+      jobsCompleteTodayCount,
+    },
+  })
 
   const paidDownloadsToday = exportsRes.data.length
   const revenueToday = exportsRes.data.reduce(
@@ -319,7 +326,7 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
 
   return {
     uploadsToday,
-    mastersCompletedToday,
+    mastersCompletedToday: canonicalMastersCompletedToday,
     paidDownloadsToday,
     revenueToday: Math.round(revenueToday * 100) / 100,
     conversionRate,

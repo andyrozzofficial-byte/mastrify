@@ -5,6 +5,7 @@ import { resolveBetaEmailFromCookies } from "../../../../lib/betaSession"
 import { isBetaFeedbackEnabled } from "../../../../lib/betaFeedbackFeature"
 import {
   buildBetaPostMasterQuickRow,
+  findBetaFeedbackIdBySessionId,
   insertBetaFeedbackRow,
   sanitizeBetaFeedbackInsert,
 } from "../../../../lib/betaFeedbackDb"
@@ -108,9 +109,33 @@ export async function POST(request: Request) {
   }
 
   const row = sanitizeBetaFeedbackInsert(buildBetaPostMasterQuickRow(validated.data, contactEmail))
+  const sessionId = row.session_id?.trim()
+  if (sessionId) {
+    const existingId = await findBetaFeedbackIdBySessionId(supabase, sessionId)
+    if (existingId) {
+      return NextResponse.json({
+        ok: true,
+        success: true,
+        id: existingId,
+        alreadyCounted: true,
+      })
+    }
+  }
+
   const insertResult = await insertBetaFeedbackRow(supabase, row, { selectId: false })
 
   if (insertResult.error) {
+    if (sessionId && /duplicate|unique/i.test(insertResult.error.message)) {
+      const existingId = await findBetaFeedbackIdBySessionId(supabase, sessionId)
+      if (existingId) {
+        return NextResponse.json({
+          ok: true,
+          success: true,
+          id: existingId,
+          alreadyCounted: true,
+        })
+      }
+    }
     return NextResponse.json({ error: insertResult.error.message }, { status: 500 })
   }
 
