@@ -60,6 +60,8 @@ export default function HeroEngineOrb({
   // Efficiency is only for scroll-safe rendering; passive must keep premium appearance.
   const efficientVisuals = scrollSafe
   const staticVisual = passive && !active
+  // Even when premium-appearance is preserved, passive mode must be fully idle (no rAF loops).
+  const idleBackdrop = efficientVisuals || staticVisual
 
   const orbContent = (
     <div className="hero-engine-orb-cage relative mx-auto w-full min-w-0 overflow-hidden">
@@ -73,7 +75,7 @@ export default function HeroEngineOrb({
       ) : null}
       <div className="hero-engine-orb-stage relative z-[1] aspect-square w-full max-w-full overflow-hidden">
         <HeroWaveBackdrop
-          efficient={efficientVisuals}
+          efficient={idleBackdrop}
           heightClass="h-[34%] md:h-[40%]"
           className={scrollSafe ? "opacity-[0.16] md:opacity-[0.2]" : "opacity-[0.18] md:opacity-[0.22]"}
         />

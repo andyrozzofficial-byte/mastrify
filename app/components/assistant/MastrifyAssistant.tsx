@@ -124,6 +124,7 @@ export default function MastrifyAssistant() {
   const master = useMasterSession()
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const scrollRafRef = useRef<number | null>(null)
 
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
@@ -181,10 +182,28 @@ export default function MastrifyAssistant() {
   }, [])
 
   useEffect(() => {
-    const onScroll = () => setPageScrolled(window.scrollY > 40)
-    onScroll()
+    const read = () => {
+      const next = window.scrollY > 40
+      setPageScrolled((prev) => (prev === next ? prev : next))
+    }
+
+    const onScroll = () => {
+      if (scrollRafRef.current != null) return
+      scrollRafRef.current = window.requestAnimationFrame(() => {
+        scrollRafRef.current = null
+        read()
+      })
+    }
+
+    read()
     window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      if (scrollRafRef.current != null) {
+        cancelAnimationFrame(scrollRafRef.current)
+        scrollRafRef.current = null
+      }
+    }
   }, [])
 
   useEffect(() => {

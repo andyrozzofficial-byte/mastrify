@@ -80,10 +80,16 @@ export default function CinematicWaveform({
   useEffect(() => {
     if (mode !== "processing" || reduceMotion) return
     let raf = 0
+    let last = 0
     const tick = () => {
       scanRef.current += 0.0022 + activeStep * 0.00035
       if (scanRef.current > 1) scanRef.current = 0
-      setScanProgress(scanRef.current)
+      // Reduce React state churn: update at ~30fps.
+      const now = performance.now()
+      if (now - last > 33) {
+        last = now
+        setScanProgress(scanRef.current)
+      }
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)

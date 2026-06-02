@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import AdminShortcut from "./AdminShortcut"
 import GatedMasterNavLink from "./beta/GatedMasterNavLink"
 import JoinBetaNavLink from "./beta/JoinBetaNavLink"
@@ -34,13 +34,32 @@ type SiteHeaderProps = {
 export default function SiteHeader({ showAdminNav = false }: SiteHeaderProps) {
   const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
+  const rafRef = useRef<number | null>(null)
   const { isAdmin } = useAdminNavSession(showAdminNav)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 6)
-    onScroll()
+    const read = () => {
+      const next = window.scrollY > 6
+      setScrolled((prev) => (prev === next ? prev : next))
+    }
+
+    const onScroll = () => {
+      if (rafRef.current != null) return
+      rafRef.current = window.requestAnimationFrame(() => {
+        rafRef.current = null
+        read()
+      })
+    }
+
+    read()
     window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
+    }
   }, [])
 
   return (
