@@ -47,8 +47,15 @@ export default function HeroEngineOrb({
     (pathname === "/flow" || pathname?.startsWith("/flow/") || false) ||
     (pathname === "/flow-v2" || pathname?.startsWith("/flow-v2/") || false)
 
-  // Passive pages: keep orb presence but avoid continuous motion.
-  const efficientVisuals = scrollSafe || !workflowMotion
+  // Passive pages: keep orb presence but avoid continuous motion + rAF loops entirely.
+  const staticOrb =
+    pathname === "/" ||
+    pathname === "/landing" ||
+    pathname === "/how-it-works" ||
+    pathname === "/pricing" ||
+    pathname === "/analyze"
+
+  const efficientVisuals = scrollSafe || staticOrb || !workflowMotion
 
   const orbContent = (
     <div className="hero-engine-orb-cage relative mx-auto w-full min-w-0 overflow-hidden">
@@ -70,13 +77,14 @@ export default function HeroEngineOrb({
           key={orbKey}
           activeStep={activeStep}
           efficient={efficientVisuals}
+          static={staticOrb}
           className="marketing-engine-visual relative z-[1] mx-auto"
         />
       </div>
     </div>
   )
 
-  if (scrollSafe) {
+  if (scrollSafe || staticOrb) {
     return <div className={rootClass}>{orbContent}</div>
   }
 

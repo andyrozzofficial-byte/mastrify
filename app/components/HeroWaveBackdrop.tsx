@@ -41,7 +41,8 @@ export default function HeroWaveBackdrop({
   const heights = efficient ? HERO_WAVE_BAR_HEIGHTS_LITE : HERO_WAVE_BAR_HEIGHTS
 
   useEffect(() => {
-    if (!mounted || reduce) return
+    // Efficient path must be fully static: no per-frame requestAnimationFrame loops.
+    if (!mounted || reduce || efficient) return
 
     let raf = 0
     const start = performance.now()
@@ -62,7 +63,7 @@ export default function HeroWaveBackdrop({
 
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [mounted, reduce, heights.length])
+  }, [mounted, reduce, efficient, heights.length])
 
   return (
     <div

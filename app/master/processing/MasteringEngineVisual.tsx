@@ -24,9 +24,16 @@ type Props = {
   className?: string
   /** Marketing heroes: fewer layers, no animated blurs/shadows */
   efficient?: boolean
+  /** Passive pages: render completely static (no looping motion / rAF). */
+  static?: boolean
 }
 
-export default function MasteringEngineVisual({ activeStep, className, efficient = false }: Props) {
+export default function MasteringEngineVisual({
+  activeStep,
+  className,
+  efficient = false,
+  static: staticVisual = false,
+}: Props) {
   const reduceMotion = useReducedMotion()
   const step = Math.min(Math.max(activeStep, 0), STAGE_PROFILES.length - 1)
   const profile = STAGE_PROFILES[step]
@@ -44,6 +51,66 @@ export default function MasteringEngineVisual({ activeStep, className, efficient
     ],
     []
   )
+
+  if (staticVisual) {
+    return (
+      <div
+        className={`relative mx-auto aspect-square w-full max-w-full max-lg:max-w-[min(11.5rem,calc(100vw-2.5rem))] lg:w-[min(20rem,88vw)] lg:max-w-[22rem] xl:max-w-[24rem] ${className ?? ""}`}
+        aria-hidden
+      >
+        <div
+          className="engine-halo-breathe pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.17)_0%,rgba(79,70,229,0.06)_45%,transparent_65%)] blur-xl"
+          style={{ opacity: 0.49 }}
+        />
+
+        <div className="absolute inset-[18%] flex items-center justify-center">
+          <div
+            className="relative h-full w-full rounded-full p-[2px]"
+            style={{
+              background:
+                "linear-gradient(145deg, rgba(167,139,250,0.55) 0%, rgba(99,102,241,0.35) 42%, rgba(56,189,248,0.45) 100%)",
+              boxShadow: profile.tighten
+                ? "0 0 28px rgba(99,102,241,0.11), inset 0 0 28px rgba(0,0,0,0.5)"
+                : "0 0 34px rgba(139,92,246,0.1), inset 0 0 26px rgba(0,0,0,0.48)",
+            }}
+          >
+            <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#050508]/96">
+              <div
+                className="pointer-events-none absolute inset-0 bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(196,181,253,0.08)_40deg,transparent_80deg,rgba(125,211,252,0.06)_140deg,transparent_200deg)]"
+                aria-hidden
+              />
+
+              <svg className="relative z-[1] h-[42%] w-[42%]" viewBox="0 0 48 48" fill="none">
+                <defs>
+                  <linearGradient id="waveGradStatic" x1="0%" y1="50%" x2="100%" y2="50%">
+                    <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.4" />
+                    <stop offset="50%" stopColor="#f5f3ff" stopOpacity="0.95" />
+                    <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.55" />
+                  </linearGradient>
+                </defs>
+                {waveformPaths.map((d, i) => (
+                  <path
+                    key={i}
+                    d={d}
+                    stroke="url(#waveGradStatic)"
+                    strokeWidth={i === 0 ? 2.2 : 1.2}
+                    strokeLinecap="round"
+                    opacity={i === 0 ? 0.9 : 0.35}
+                  />
+                ))}
+              </svg>
+
+              <div
+                className="absolute left-1/2 top-1/2 z-[2] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.55),0_0_40px_rgba(167,139,250,0.45)]"
+                style={{ opacity: 0.92 }}
+              />
+              <div className="absolute left-1/2 top-1/2 z-[1] h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full ring-1 ring-violet-300/30 opacity-45" />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <motion.div

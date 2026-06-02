@@ -8,7 +8,7 @@ import PremiumButton from "../components/PremiumButton"
 
 export default function Landing() {
   return (
-    <MarketingPageFrame scrollSafe>
+    <MarketingPageFrame>
       <MarketingDesktopHero variant="marketing">
         <span className="hero-eyebrow-pill">Intelligent mastering engine</span>
 
