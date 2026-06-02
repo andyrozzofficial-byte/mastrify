@@ -7,6 +7,13 @@ import {
   type AdminPaginationMeta,
 } from "./adminPagination"
 import { ingestDebug, ingestError, requireServiceRoleForAdminTable } from "./adminIngestDebug"
+import {
+  isTableMissingError,
+  MAX_SCHEMA_DRIFT_ATTEMPTS,
+  parseMissingColumn,
+  removeSelectColumn,
+  stripRowColumn,
+} from "./schemaColumnDrift"
 import { createSupabaseServerClient, getSupabaseKeySource } from "./supabaseServer"
 
 export type BetaIssuesPaginated = {
@@ -19,15 +26,6 @@ const SCREENSHOT_BUCKET = "beta-issue-screenshots"
 
 export const BETA_REPORTED_ISSUES_SETUP_HINT =
   "beta_reported_issues table missing — open Supabase SQL Editor, run supabase/beta_reported_issues.sql, wait ~10s, then redeploy"
-
-function isTableMissingError(message: string): boolean {
-  return /does not exist|42P01|schema cache/i.test(message)
-}
-
-function parseMissingColumn(message: string): string | null {
-  const m = message.match(/column "([^"]+)" (?:of relation .+ )?does not exist/i)
-  return m?.[1] ?? null
-}
 
 function mapRow(row: Record<string, unknown>): BetaReportedIssueRow {
   const priority = String(row.priority ?? "medium")
@@ -51,15 +49,39 @@ function mapRow(row: Record<string, unknown>): BetaReportedIssueRow {
   }
 }
 
-const BETA_ISSUES_SELECT =
+export const BETA_ISSUES_SELECT =
   "id, action_id, user_id, reporter_email, title, description, expected_result, screenshot_url, priority, status, created_at, updated_at, session_id"
 
-function ownerFilter(supabase: ReturnType<typeof createSupabaseServerClient>, email: string) {
-  const e = normalizeBetaEmail(email)
-  return supabase!
-    .from(BETA_REPORTED_ISSUES_TABLE)
-    .select(BETA_ISSUES_SELECT)
-    .or(`user_id.eq.${e},reporter_email.eq.${e}`)
+async function queryBetaIssuesWithSelectDrift<T>(
+  route: string,
+  run: (select: string) => Promise<{ data: T | null; error: { message: string } | null; count?: number | null }>,
+): Promise<{ data: T | null; error: { message: string } | null; count?: number | null; select: string }> {
+  let select = BETA_ISSUES_SELECT
+  let last: { data: T | null; error: { message: string } | null; count?: number | null } = {
+    data: null,
+    error: null,
+  }
+
+  for (let attempt = 0; attempt < MAX_SCHEMA_DRIFT_ATTEMPTS; attempt++) {
+    last = await run(select)
+    if (!last.error) return { ...last, select }
+    const missing = parseMissingColumn(last.error.message, BETA_REPORTED_ISSUES_TABLE)
+    if (!missing) break
+    const next = removeSelectColumn(select, missing)
+    if (next === select) break
+    select = next
+  }
+
+  if (last.error) {
+    ingestError(route, {
+      stage: "query",
+      table: BETA_REPORTED_ISSUES_TABLE,
+      message: last.error.message,
+      select,
+    })
+  }
+
+  return { ...last, select }
 }
 
 async function insertIssueRow(
@@ -68,9 +90,8 @@ async function insertIssueRow(
   selectId: boolean,
 ): Promise<{ data: { id: string } | null; error: { message: string } | null }> {
   let payload = { ...record }
-  const maxAttempts = 8
 
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+  for (let attempt = 0; attempt < MAX_SCHEMA_DRIFT_ATTEMPTS; attempt++) {
     const query = supabase.from(BETA_REPORTED_ISSUES_TABLE).insert(payload)
     const result = selectId ? await query.select("id").single() : await query
 
@@ -86,9 +107,9 @@ async function insertIssueRow(
       return { data: null, error: { message: result.error.message } }
     }
 
-    const missing = parseMissingColumn(result.error.message)
+    const missing = parseMissingColumn(result.error.message, BETA_REPORTED_ISSUES_TABLE)
     if (missing && missing in payload) {
-      delete payload[missing]
+      payload = stripRowColumn(payload, missing)
       continue
     }
 
@@ -102,12 +123,21 @@ export async function fetchBetaIssuesForEmail(email: string): Promise<BetaReport
   const supabase = createSupabaseServerClient()
   if (!supabase) return []
 
-  const { data, error } = await ownerFilter(supabase, email)
-    .order("created_at", { ascending: false })
-    .limit(200)
+  const e = normalizeBetaEmail(email)
+  const { data, error } = await queryBetaIssuesWithSelectDrift("fetchBetaIssuesForEmail", async (select) => {
+    const res = await supabase
+      .from(BETA_REPORTED_ISSUES_TABLE)
+      .select(select)
+      .or(`user_id.eq.${e},reporter_email.eq.${e}`)
+      .order("created_at", { ascending: false })
+      .limit(200)
+    return { data: res.data, error: res.error }
+  })
 
   if (error) {
-    if (isTableMissingError(error.message)) return []
+    if (isTableMissingError(error.message)) {
+      ingestError("fetchBetaIssuesForEmail", { stage: "query", error: BETA_REPORTED_ISSUES_SETUP_HINT })
+    }
     return []
   }
 
@@ -124,7 +154,14 @@ export async function countBetaIssuesForEmail(email: string): Promise<number> {
     .select("id", { count: "exact", head: true })
     .or(`user_id.eq.${e},reporter_email.eq.${e}`)
 
-  if (error) return 0
+  if (error) {
+    ingestError("countBetaIssuesForEmail", {
+      stage: "query",
+      table: BETA_REPORTED_ISSUES_TABLE,
+      message: error.message,
+    })
+    return 0
+  }
   return count ?? 0
 }
 
@@ -132,11 +169,14 @@ export async function fetchAllBetaIssues(): Promise<BetaReportedIssueRow[] | { e
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const { data, error } = await supabase
-    .from(BETA_REPORTED_ISSUES_TABLE)
-    .select(BETA_ISSUES_SELECT)
-    .order("created_at", { ascending: false })
-    .limit(500)
+  const { data, error } = await queryBetaIssuesWithSelectDrift("fetchAllBetaIssues", async (select) => {
+    const res = await supabase
+      .from(BETA_REPORTED_ISSUES_TABLE)
+      .select(select)
+      .order("created_at", { ascending: false })
+      .limit(500)
+    return { data: res.data, error: res.error }
+  })
 
   if (error) {
     if (isTableMissingError(error.message)) {
@@ -158,19 +198,19 @@ export async function fetchBetaIssuesPaginated(
   if (!supabase) return { error: "Database unavailable" }
 
   const { from, to } = adminPageRange(page)
-  const { data, error, count } = await supabase
-    .from(BETA_REPORTED_ISSUES_TABLE)
-    .select(BETA_ISSUES_SELECT, { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to)
+  const { data, error, count } = await queryBetaIssuesWithSelectDrift(
+    "GET /api/admin/issues",
+    async (select) => {
+      const res = await supabase
+        .from(BETA_REPORTED_ISSUES_TABLE)
+        .select(select, { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, to)
+      return { data: res.data, error: res.error, count: res.count }
+    },
+  )
 
   if (error) {
-    ingestError("GET /api/admin/issues", {
-      stage: "query",
-      table: BETA_REPORTED_ISSUES_TABLE,
-      message: error.message,
-      tableMissing: isTableMissingError(error.message),
-    })
     if (isTableMissingError(error.message)) {
       return {
         error: `${BETA_REPORTED_ISSUES_SETUP_HINT} (${error.message})`,
@@ -342,9 +382,9 @@ export async function updateBetaIssueStatus(
   for (let attempt = 0; attempt < 3; attempt++) {
     const { error } = await supabase.from(BETA_REPORTED_ISSUES_TABLE).update(body).eq("id", id)
     if (!error) return { ok: true }
-    const missing = parseMissingColumn(error.message)
+    const missing = parseMissingColumn(error.message, BETA_REPORTED_ISSUES_TABLE)
     if (missing && missing in body) {
-      delete body[missing]
+      body = stripRowColumn(body, missing)
       if (Object.keys(body).length === 0) body = { status }
       continue
     }

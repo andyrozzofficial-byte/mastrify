@@ -37,6 +37,12 @@ import {
 } from "./adminPagination"
 import { countCanonicalMastersCompletedSince } from "./canonicalMasterStats"
 import { ingestDebug, ingestError, requireServiceRoleForAdminTable } from "./adminIngestDebug"
+import {
+  MAX_SCHEMA_DRIFT_ATTEMPTS,
+  parseMissingColumn,
+  removeSelectColumn,
+  stripRowColumn,
+} from "./schemaColumnDrift"
 import { statsDebug } from "./statsDebug"
 
 export type AdminPaginated<T> = { rows: T[]; pagination: AdminPaginationMeta }
@@ -340,23 +346,11 @@ export const ADMIN_SUPPORT_SELECT =
   "id, created_at, updated_at, resolved_at, email, name, subject, message, status, priority, source, admin_notes, category, session_context, thread"
 
 function missingSupportInboxColumn(message: string): string | null {
-  const match = message.match(/column\s+admin_support_inbox\.(\w+)\s+does not exist/i)
-  return match?.[1] ?? null
-}
-
-function removeSelectColumn(select: string, column: string): string {
-  const needle = `, ${column}`
-  if (select.includes(needle)) return select.replace(needle, "")
-  const prefixNeedle = `${column}, `
-  if (select.includes(prefixNeedle)) return select.replace(prefixNeedle, "")
-  return select
+  return parseMissingColumn(message, SUPPORT_INBOX_TABLE)
 }
 
 function stripSupportInsertColumn(row: Record<string, unknown>, column: string): Record<string, unknown> {
-  if (!(column in row)) return row
-  const next = { ...row }
-  delete next[column]
-  return next
+  return stripRowColumn(row, column)
 }
 
 const MASTER_JOB_SELECT =
@@ -768,7 +762,7 @@ async function fetchAdminSupportInner(): Promise<AdminSupportRow[] | { error: st
   let data: unknown[] | null = null
   let error: { message: string } | null = null
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_SCHEMA_DRIFT_ATTEMPTS; attempt++) {
     const res = await supabase
       .from(SUPPORT_INBOX_TABLE)
       .select(select)
@@ -815,7 +809,7 @@ export async function fetchAdminSupportForEmail(email: string): Promise<AdminSup
   let data: unknown[] | null = null
   let error: { message: string } | null = null
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_SCHEMA_DRIFT_ATTEMPTS; attempt++) {
     const res = await supabase
       .from(SUPPORT_INBOX_TABLE)
       .select(select)
@@ -832,7 +826,15 @@ export async function fetchAdminSupportForEmail(email: string): Promise<AdminSup
     select = nextSelect
   }
 
-  if (error) return []
+  if (error) {
+    ingestError("fetchAdminSupportForEmail", {
+      stage: "query",
+      table: SUPPORT_INBOX_TABLE,
+      message: error.message,
+      email: normalized,
+    })
+    return []
+  }
   return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
 }
 
@@ -864,7 +866,7 @@ export async function fetchAdminSupportPaginated(
   let error: { message: string } | null = null
   let count: number | null = null
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_SCHEMA_DRIFT_ATTEMPTS; attempt++) {
     const res = await supabase
       .from(SUPPORT_INBOX_TABLE)
       .select(select, { count: "exact" })
@@ -898,7 +900,7 @@ export async function fetchSupportTicket(id: string): Promise<AdminSupportRow | 
   let data: Record<string, unknown> | null = null
   let error: { message: string } | null = null
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_SCHEMA_DRIFT_ATTEMPTS; attempt++) {
     const res = await supabase
       .from(SUPPORT_INBOX_TABLE)
       .select(select)
@@ -952,7 +954,7 @@ export async function createSupportItem(input: {
   let data: { id: string } | null = null
   let error: { message: string } | null = null
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_SCHEMA_DRIFT_ATTEMPTS; attempt++) {
     const res = await supabase.from(SUPPORT_INBOX_TABLE).insert([row]).select("id").single()
     data = res.data as { id: string } | null
     error = res.error
@@ -965,6 +967,7 @@ export async function createSupportItem(input: {
   }
 
   if (error) return { error: error.message }
+  if (!data?.id) return { error: "Support ticket created but no id returned" }
   return { id: data.id }
 }
 

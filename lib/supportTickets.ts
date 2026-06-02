@@ -1,26 +1,23 @@
 import type { AdminSupportPriority, AdminSupportStatus } from "./adminTypes"
 import { isAdminSupportPriority, isAdminSupportStatus } from "./adminTypes"
 import { ingestDebug, ingestError } from "./adminIngestDebug"
+import {
+  MAX_SCHEMA_DRIFT_ATTEMPTS,
+  parseMissingColumn,
+  stripRowColumn,
+} from "./schemaColumnDrift"
 import { createSupabaseServerClient, getSupabaseKeySource } from "./supabaseServer"
-
-const SUPPORT_INBOX_TABLE = "admin_support_inbox"
 import type { SupportSessionContext, SupportThreadMessage, SupportTicketCategory } from "./supportTypes"
 import { categoryLabel, isSupportTicketCategory } from "./supportTypes"
 
-function isMissingSupportNameColumn(message: string): boolean {
-  return /admin_support_inbox/i.test(message) && /\bname\b/i.test(message) && /does not exist/i.test(message)
-}
+const SUPPORT_INBOX_TABLE = "admin_support_inbox"
 
 function missingSupportInboxColumn(message: string): string | null {
-  const match = message.match(/column\s+admin_support_inbox\.(\w+)\s+does not exist/i)
-  return match?.[1] ?? null
+  return parseMissingColumn(message, SUPPORT_INBOX_TABLE)
 }
 
 function stripSupportInsertColumn(row: Record<string, unknown>, column: string): Record<string, unknown> {
-  if (!(column in row)) return row
-  const next = { ...row }
-  delete next[column]
-  return next
+  return stripRowColumn(row, column)
 }
 
 function newThreadId(): string {
@@ -150,7 +147,7 @@ export async function createPublicSupportTicket(input: {
   let data: { id: string } | null = null
   let error: { message: string } | null = null
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_SCHEMA_DRIFT_ATTEMPTS; attempt++) {
     const res = await supabase.from(SUPPORT_INBOX_TABLE).insert([row]).select("id").single()
     data = res.data as { id: string } | null
     error = res.error

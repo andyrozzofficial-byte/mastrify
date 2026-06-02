@@ -19,6 +19,7 @@ create table if not exists public.beta_reported_issues (
 -- 2) App dedupe / admin columns (optional on older DBs)
 alter table public.beta_reported_issues add column if not exists action_id text;
 alter table public.beta_reported_issues add column if not exists user_id text;
+alter table public.beta_reported_issues add column if not exists session_id text;
 alter table public.beta_reported_issues add column if not exists updated_at timestamptz not null default now();
 
 -- Keep reporter_email and user_id in sync
@@ -57,6 +58,9 @@ create index if not exists idx_beta_reported_issues_status
 
 create index if not exists beta_reported_issues_created_at_idx
   on public.beta_reported_issues (created_at desc);
+
+create index if not exists beta_reported_issues_session_id_idx
+  on public.beta_reported_issues (session_id);
 
 create unique index if not exists beta_reported_issues_action_id_key
   on public.beta_reported_issues (action_id)
