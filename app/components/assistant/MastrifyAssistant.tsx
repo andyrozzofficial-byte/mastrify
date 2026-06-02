@@ -475,15 +475,15 @@ export default function MastrifyAssistant() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open Mastrify Assistant"
-          className={`pointer-events-auto inline-flex items-center justify-center rounded-full border border-white/[0.1] bg-gradient-to-b from-violet-700/88 via-indigo-800/90 to-slate-900/94 font-semibold text-white/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),inset_0_-1px_0_rgba(0,0,0,0.2),0_8px_24px_rgba(0,0,0,0.48)] ring-1 ring-violet-950/25 transition hover:border-white/[0.14] hover:brightness-[1.02] active:scale-[0.98] ${
+          className={`pointer-events-auto inline-flex items-center justify-center rounded-full border border-white/[0.1] bg-white/[0.035] font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_24px_rgba(0,0,0,0.32)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white active:scale-[0.98] ${
             fabCompact
-              ? "h-14 w-14 p-0 md:h-auto md:w-auto md:gap-2 md:px-4 md:py-2.5 md:text-[12px]"
-              : "h-[58px] max-h-[60px] gap-2 px-4 py-2.5 text-[12px] md:h-auto md:max-h-none"
+              ? "h-12 w-12 p-0 md:h-auto md:w-auto md:gap-2 md:px-3.5 md:py-2 md:text-[12px]"
+              : "h-[52px] max-h-[54px] gap-2 px-3.5 py-2 text-[12px] md:h-auto md:max-h-none"
           }`}
           whileTap={reduce ? undefined : { scale: 0.98 }}
         >
           <span
-            className="h-2 w-2 shrink-0 rounded-full bg-emerald-400/90 shadow-[0_0_5px_rgba(52,211,153,0.4)] md:h-1.5 md:w-1.5"
+            className="h-2 w-2 shrink-0 rounded-full bg-violet-300/70 md:h-1.5 md:w-1.5"
             aria-hidden
           />
           <span className={fabCompact ? "sr-only md:not-sr-only md:inline" : "inline"}>Mastrify Assistant</span>

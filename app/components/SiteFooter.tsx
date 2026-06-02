@@ -198,7 +198,7 @@ export default function SiteFooter() {
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_50%_100%,rgba(88,28,135,0.09),transparent_58%),radial-gradient(ellipse_40%_35%_at_85%_30%,rgba(34,211,238,0.035),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_50%_100%,rgba(88,28,135,0.09),transparent_58%)]"
         aria-hidden
         animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
@@ -258,7 +258,7 @@ export default function SiteFooter() {
                 transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
               />
               <div
-                className="pointer-events-none absolute bottom-0 left-1/4 h-20 w-2/3 rounded-full bg-cyan-500/[0.04] blur-2xl"
+                className="pointer-events-none absolute bottom-0 left-1/4 h-20 w-2/3 rounded-full bg-violet-500/[0.03] blur-2xl"
                 aria-hidden
               />
               <div className="relative flex h-full flex-col justify-center">
