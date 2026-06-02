@@ -3,9 +3,7 @@
 import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 import MotionModeClass from "./MotionModeClass"
-import MastrifyAssistant from "./assistant/MastrifyAssistant"
 import MarketingFinalCtaSection from "./MarketingFinalCtaSection"
-import { usePerfDebugFlags } from "./perf/usePerfDebugFlags"
 import SiteFooter from "./SiteFooter"
 import SiteHeader from "./SiteHeader"
 
@@ -24,7 +22,6 @@ type SiteChromeProps = {
 export default function SiteChrome({ children, showAdminNav = false }: SiteChromeProps) {
   const pathname = usePathname()
   const minimal = isMinimalRoute(pathname)
-  const perf = usePerfDebugFlags()
 
   if (minimal) {
     return (
@@ -42,7 +39,6 @@ export default function SiteChrome({ children, showAdminNav = false }: SiteChrom
       <main className="site-overflow-guard flex flex-1 flex-col">{children}</main>
       <MarketingFinalCtaSection />
       <SiteFooter />
-      {perf.disableAssistant ? null : <MastrifyAssistant />}
     </>
   )
 }
