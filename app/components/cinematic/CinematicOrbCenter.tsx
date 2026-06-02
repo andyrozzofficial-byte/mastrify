@@ -22,7 +22,7 @@ export default function CinematicOrbCenter({ activeStep, className = "" }: Props
         reduce ? "" : "cinematic-orb-center--enter"
       } ${className}`.trim()}
     >
-      <HeroEngineOrb activeStep={activeStep} compactAtmosphere className="mx-auto w-full" />
+      <HeroEngineOrb activeStep={activeStep} compactAtmosphere className="mx-auto w-full" mode="active" />
     </div>
   )
 }

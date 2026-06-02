@@ -9,7 +9,7 @@ import PremiumButton from "../components/PremiumButton"
 export default function Landing() {
   return (
     <MarketingPageFrame>
-      <MarketingDesktopHero variant="marketing">
+      <MarketingDesktopHero variant="marketing" orbMode="passive">
         <span className="hero-eyebrow-pill">Intelligent mastering engine</span>
 
         <h1 className="marketing-hero-title">

@@ -30,7 +30,7 @@ export default function AnalyzeUploadHero({
   onScanClick,
 }: Props) {
   return (
-    <MarketingDesktopHero variant="product">
+    <MarketingDesktopHero variant="product" orbMode="passive">
       <span className="hero-eyebrow-pill">Perceptual mix intelligence</span>
 
       <h1 className="marketing-hero-title">

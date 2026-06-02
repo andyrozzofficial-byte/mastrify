@@ -164,7 +164,7 @@ export default function HowItWorksClient() {
 
   return (
     <MarketingPageFrame>
-      <MarketingDesktopHero variant="marketing">
+      <MarketingDesktopHero variant="marketing" orbMode="passive">
         <span className="hero-eyebrow-pill">Intelligent mastering</span>
 
         <h1 className="marketing-hero-title">

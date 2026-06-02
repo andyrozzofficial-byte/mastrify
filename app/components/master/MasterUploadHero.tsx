@@ -34,8 +34,9 @@ export default function MasterUploadHero({
   onContinue,
   continueLoading = false,
 }: Props) {
+  const orbMode = continueLoading ? "active" : "passive"
   return (
-    <MarketingDesktopHero variant="product">
+    <MarketingDesktopHero variant="product" orbMode={orbMode}>
       <span className="hero-eyebrow-pill">Spatial mastering engine</span>
 
       <h1 className="marketing-hero-title">

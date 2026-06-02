@@ -16,6 +16,8 @@ type Props = {
   className?: string
   /** Landing: lighter layers + scroll-safe overflow — still animated */
   scrollSafe?: boolean
+  /** Controls orb animation vs static render (and avoids reduced variants on passive). */
+  mode?: "auto" | "passive" | "active"
 }
 
 /**
@@ -27,6 +29,7 @@ export default function HeroEngineOrb({
   mobileGlowBoost = false,
   className = "",
   scrollSafe = false,
+  mode = "auto",
 }: Props) {
   const reduce = useReducedMotion()
   const pathname = usePathname()
@@ -47,15 +50,16 @@ export default function HeroEngineOrb({
     (pathname === "/flow" || pathname?.startsWith("/flow/") || false) ||
     (pathname === "/flow-v2" || pathname?.startsWith("/flow-v2/") || false)
 
-  // Passive pages: keep orb presence but avoid continuous motion + rAF loops entirely.
-  const staticOrb =
-    pathname === "/" ||
-    pathname === "/landing" ||
-    pathname === "/how-it-works" ||
-    pathname === "/pricing" ||
-    pathname === "/analyze"
+  // Passive pages: visible but fully static (no looping motion / rAF).
+  const autoPassive =
+    pathname === "/" || pathname === "/landing" || pathname === "/how-it-works" || pathname === "/pricing"
 
-  const efficientVisuals = scrollSafe || staticOrb || !workflowMotion
+  const passive = mode === "passive" || (mode === "auto" && autoPassive)
+  const active = mode === "active" || (mode === "auto" && workflowMotion && !autoPassive)
+
+  // Efficiency is only for scroll-safe rendering; passive must keep premium appearance.
+  const efficientVisuals = scrollSafe
+  const staticVisual = passive && !active
 
   const orbContent = (
     <div className="hero-engine-orb-cage relative mx-auto w-full min-w-0 overflow-hidden">
@@ -77,14 +81,14 @@ export default function HeroEngineOrb({
           key={orbKey}
           activeStep={activeStep}
           efficient={efficientVisuals}
-          static={staticOrb}
+          static={staticVisual}
           className="marketing-engine-visual relative z-[1] mx-auto"
         />
       </div>
     </div>
   )
 
-  if (scrollSafe || staticOrb) {
+  if (scrollSafe || staticVisual) {
     return <div className={rootClass}>{orbContent}</div>
   }
 

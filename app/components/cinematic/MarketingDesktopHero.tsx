@@ -16,6 +16,8 @@ type Props = {
   scrollSafe?: boolean
   /** Master flow: no orb column, tighter copy column */
   workstation?: boolean
+  /** Orb motion/appearance mode for this hero. */
+  orbMode?: "auto" | "passive" | "active"
 }
 
 /**
@@ -27,6 +29,7 @@ export default function MarketingDesktopHero({
   engineStep: engineStepProp,
   scrollSafe = false,
   workstation = false,
+  orbMode = "auto",
 }: Props) {
   const reduce = useReducedMotion()
   const isProduct = variant === "product"
@@ -74,7 +77,7 @@ export default function MarketingDesktopHero({
           {children}
         </div>
 
-        {workstation ? null : <OrbScene activeStep={engineStep} scrollSafe={scrollSafe} />}
+        {workstation ? null : <OrbScene activeStep={engineStep} scrollSafe={scrollSafe} orbMode={orbMode} />}
       </div>
     </section>
   )
