@@ -36,6 +36,7 @@ import {
   type AdminPaginationMeta,
 } from "./adminPagination"
 import { countCanonicalMastersCompletedSince } from "./canonicalMasterStats"
+import { ingestDebug, ingestError, requireServiceRoleForAdminTable } from "./adminIngestDebug"
 import { statsDebug } from "./statsDebug"
 
 export type AdminPaginated<T> = { rows: T[]; pagination: AdminPaginationMeta }
@@ -757,6 +758,9 @@ export async function fetchAdminSupport(): Promise<AdminSupportRow[] | { error: 
 }
 
 async function fetchAdminSupportInner(): Promise<AdminSupportRow[] | { error: string }> {
+  const roleCheck = requireServiceRoleForAdminTable("GET /api/admin/support")
+  if (!roleCheck.ok) return { error: roleCheck.error }
+
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
@@ -780,9 +784,23 @@ async function fetchAdminSupportInner(): Promise<AdminSupportRow[] | { error: st
     select = nextSelect
   }
 
-  if (error) return { error: error.message }
+  if (error) {
+    ingestError("GET /api/admin/support", {
+      stage: "query",
+      table: SUPPORT_INBOX_TABLE,
+      message: error.message,
+      select,
+    })
+    return { error: error.message }
+  }
 
-  return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
+  const rows = (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
+  ingestDebug("GET /api/admin/support", {
+    stage: "query_ok",
+    table: SUPPORT_INBOX_TABLE,
+    count: rows.length,
+  })
+  return rows
 }
 
 /** Scoped support rows for one beta user — avoids loading the full support inbox. */

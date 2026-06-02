@@ -50,6 +50,12 @@ export default function AdminIssuesPage() {
     const json = await res.json().catch(() => null)
     if (!res.ok) {
       setError(json?.error ?? "Could not load issues")
+      setRows([])
+      return
+    }
+    if (json?.error) {
+      setError(String(json.error))
+      setRows([])
       return
     }
     setRows(json?.rows ?? [])

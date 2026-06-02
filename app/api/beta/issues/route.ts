@@ -8,6 +8,8 @@ import { resolveBetaEmailFromCookies } from "../../../../lib/betaSession"
 import {
   fetchBetaProfilePanelCoreForEmail,
 } from "../../../../lib/betaUserData"
+import { ingestDebug, ingestError } from "../../../../lib/adminIngestDebug"
+import { getSupabaseKeySource } from "../../../../lib/supabaseServer"
 
 export async function POST(request: Request) {
   if (!isBetaFeedbackEnabled()) {
@@ -68,14 +70,23 @@ export async function POST(request: Request) {
     email: bodyEmail || cookieEmail || undefined,
     hasScreenshot: Boolean(screenshotFile),
   }
-  if (process.env.NODE_ENV === "development" || process.env.MASTRIFY_ISSUE_DEBUG === "1") {
-    console.log("[issue-api] incoming", incomingLog)
-  }
+  ingestDebug("POST /api/beta/issues", {
+    stage: "incoming",
+    ...incomingLog,
+    cookieEmail: cookieEmail ?? null,
+    keySource: getSupabaseKeySource(),
+  })
 
   const email =
     cookieEmail ?? (bodyEmail.includes("@") ? normalizeBetaEmail(bodyEmail) : null)
 
   if (!email) {
+    ingestError("POST /api/beta/issues", {
+      stage: "auth",
+      status: 401,
+      cookieEmail: cookieEmail ?? null,
+      bodyEmail: bodyEmail || null,
+    })
     return NextResponse.json({ error: "Beta email required" }, { status: 401 })
   }
   if (!actionId) {
@@ -106,13 +117,18 @@ export async function POST(request: Request) {
     priority,
   })
 
-  if (process.env.NODE_ENV === "development" || process.env.MASTRIFY_ISSUE_DEBUG === "1") {
-    console.log("[issue-api] result", result)
-  }
-
   if ("error" in result) {
+    ingestError("POST /api/beta/issues", { stage: "insert", error: result.error, email, actionId })
     return NextResponse.json({ error: result.error }, { status: 500 })
   }
+
+  ingestDebug("POST /api/beta/issues", {
+    stage: "ok",
+    id: result.id,
+    created: result.created,
+    alreadyCounted: result.alreadyCounted,
+    email,
+  })
 
   const panelResult = await fetchBetaProfilePanelCoreForEmail(email)
 

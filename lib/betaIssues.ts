@@ -6,6 +6,7 @@ import {
   buildAdminPaginationMeta,
   type AdminPaginationMeta,
 } from "./adminPagination"
+import { ingestDebug, ingestError, requireServiceRoleForAdminTable } from "./adminIngestDebug"
 import { createSupabaseServerClient, getSupabaseKeySource } from "./supabaseServer"
 
 export type BetaIssuesPaginated = {
@@ -150,6 +151,9 @@ export async function fetchAllBetaIssues(): Promise<BetaReportedIssueRow[] | { e
 export async function fetchBetaIssuesPaginated(
   page = 1,
 ): Promise<BetaIssuesPaginated | { error: string }> {
+  const roleCheck = requireServiceRoleForAdminTable("GET /api/admin/issues")
+  if (!roleCheck.ok) return { error: roleCheck.error }
+
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
@@ -161,14 +165,28 @@ export async function fetchBetaIssuesPaginated(
     .range(from, to)
 
   if (error) {
+    ingestError("GET /api/admin/issues", {
+      stage: "query",
+      table: BETA_REPORTED_ISSUES_TABLE,
+      message: error.message,
+      tableMissing: isTableMissingError(error.message),
+    })
     if (isTableMissingError(error.message)) {
-      // Admin should render empty state if the table hasn't been created yet.
-      return { rows: [], pagination: buildAdminPaginationMeta(0, page) }
+      return {
+        error: `${BETA_REPORTED_ISSUES_SETUP_HINT} (${error.message})`,
+      }
     }
     return { error: error.message }
   }
 
   const rows = (data ?? []).map((row) => mapRow(row as Record<string, unknown>))
+  ingestDebug("GET /api/admin/issues", {
+    stage: "query_ok",
+    table: BETA_REPORTED_ISSUES_TABLE,
+    count: rows.length,
+    total: count ?? rows.length,
+    page,
+  })
   return {
     rows,
     pagination: buildAdminPaginationMeta(count ?? rows.length, page),
@@ -222,6 +240,14 @@ export type CreateBetaIssueResult =
 export async function createBetaReportedIssue(
   input: CreateBetaIssueInput,
 ): Promise<CreateBetaIssueResult> {
+  ingestDebug("POST /api/beta/issues", {
+    stage: "create",
+    table: BETA_REPORTED_ISSUES_TABLE,
+    actionId: input.actionId,
+    userId: input.userId,
+    keySource: getSupabaseKeySource(),
+  })
+
   const actionId = input.actionId.trim()
   const userId = normalizeBetaEmail(input.userId)
   const title = input.title.trim()
@@ -268,7 +294,12 @@ export async function createBetaReportedIssue(
   const { data, error } = await insertIssueRow(supabase, row, canRead)
 
   if (error) {
-    console.error("[issue-db]", error)
+    ingestError("POST /api/beta/issues", {
+      stage: "insert",
+      table: BETA_REPORTED_ISSUES_TABLE,
+      message: error.message,
+      actionId,
+    })
     if (isTableMissingError(error.message)) {
       return { error: BETA_REPORTED_ISSUES_SETUP_HINT }
     }
@@ -289,6 +320,12 @@ export async function createBetaReportedIssue(
   }
 
   const id = data?.id ?? actionId
+  ingestDebug("POST /api/beta/issues", {
+    stage: "create_ok",
+    table: BETA_REPORTED_ISSUES_TABLE,
+    id,
+    keySource: getSupabaseKeySource(),
+  })
   return { ok: true, id, created: true, alreadyCounted: false }
 }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { ingestDebug, ingestError } from "../../../../lib/adminIngestDebug"
 import { createPublicSupportTicket } from "../../../../lib/supportTickets"
 import type { SupportSessionContext } from "../../../../lib/supportTypes"
 import { isSupportTicketCategory } from "../../../../lib/supportTypes"
@@ -34,6 +35,14 @@ export async function POST(request: Request) {
   const sessionContext =
     body.sessionContext && typeof body.sessionContext === "object" ? body.sessionContext : null
 
+  ingestDebug("POST /api/support/tickets", {
+    stage: "incoming",
+    email,
+    category,
+    messageLength: message.length,
+    hasSessionContext: Boolean(sessionContext),
+  })
+
   const result = await createPublicSupportTicket({
     email,
     name: body.name,
@@ -43,8 +52,10 @@ export async function POST(request: Request) {
   })
 
   if ("error" in result) {
+    ingestError("POST /api/support/tickets", { stage: "handler", error: result.error })
     return NextResponse.json({ error: result.error }, { status: 500 })
   }
 
+  ingestDebug("POST /api/support/tickets", { stage: "ok", id: result.id })
   return NextResponse.json({ ok: true, id: result.id })
 }

@@ -1,6 +1,7 @@
 import type { AdminSupportPriority, AdminSupportStatus } from "./adminTypes"
 import { isAdminSupportPriority, isAdminSupportStatus } from "./adminTypes"
-import { createSupabaseServerClient } from "./supabaseServer"
+import { ingestDebug, ingestError } from "./adminIngestDebug"
+import { createSupabaseServerClient, getSupabaseKeySource } from "./supabaseServer"
 
 const SUPPORT_INBOX_TABLE = "admin_support_inbox"
 import type { SupportSessionContext, SupportThreadMessage, SupportTicketCategory } from "./supportTypes"
@@ -104,7 +105,10 @@ export async function createPublicSupportTicket(input: {
   sessionContext?: SupportSessionContext | null
 }): Promise<{ id: string } | { error: string }> {
   const supabase = createSupabaseServerClient()
-  if (!supabase) return { error: "Support is temporarily unavailable" }
+  if (!supabase) {
+    ingestError("POST /api/support/tickets", { stage: "client", reason: "no_supabase_client" })
+    return { error: "Support is temporarily unavailable" }
+  }
 
   const email = input.email.trim()
   const message = input.message.trim()
@@ -120,6 +124,15 @@ export async function createPublicSupportTicket(input: {
   ]
 
   const subject = `${categoryLabel(category)} — ${ctx.trackName?.trim() || "Mastrify support"}`
+
+  ingestDebug("POST /api/support/tickets", {
+    stage: "insert",
+    table: SUPPORT_INBOX_TABLE,
+    email,
+    category,
+    keySource: getSupabaseKeySource(),
+    messageLength: message.length,
+  })
 
   const baseRow: Record<string, unknown> = {
     email,
@@ -149,7 +162,22 @@ export async function createPublicSupportTicket(input: {
     row = nextRow
   }
 
-  if (error) return { error: error.message }
+  if (error) {
+    ingestError("POST /api/support/tickets", {
+      stage: "insert",
+      table: SUPPORT_INBOX_TABLE,
+      message: error.message,
+      keySource: getSupabaseKeySource(),
+    })
+    return { error: error.message }
+  }
+  ingestDebug("POST /api/support/tickets", {
+    stage: "insert_ok",
+    table: SUPPORT_INBOX_TABLE,
+    id: data?.id ?? null,
+    keySource: getSupabaseKeySource(),
+  })
+  if (!data?.id) return { error: "Support ticket created but no id returned" }
   return { id: data.id }
 }
 

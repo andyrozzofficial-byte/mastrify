@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server"
 import { requireAdminApi } from "../../../../lib/adminApi"
+import { ingestDebug, ingestError } from "../../../../lib/adminIngestDebug"
 import { createSupportItem, fetchAdminSupport, updateSupportItem } from "../../../../lib/adminData"
 import { isAdminSupportPriority, isAdminSupportStatus } from "../../../../lib/adminTypes"
 
 export async function GET() {
   const auth = await requireAdminApi("/api/admin/support")
-  if (auth.error) return auth.error
+  if (auth.error) {
+    ingestError("GET /api/admin/support", { stage: "auth", status: 401 })
+    return auth.error
+  }
+
+  ingestDebug("GET /api/admin/support", { stage: "auth_ok", role: auth.role })
 
   const data = await fetchAdminSupport()
   if ("error" in data) {
-    console.error("[admin-api] support failed", data.error)
-    return NextResponse.json({ error: data.error, rows: [] }, { status: 200 })
+    ingestError("GET /api/admin/support", { stage: "query", error: data.error })
+    return NextResponse.json({ error: data.error, rows: [] }, { status: 503 })
   }
-  return NextResponse.json({ rows: data })
+  return NextResponse.json({ rows: data, count: data.length })
 }
 
 export async function POST(request: Request) {
