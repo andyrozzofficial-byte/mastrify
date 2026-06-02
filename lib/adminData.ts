@@ -301,6 +301,12 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
 export const ADMIN_SUPPORT_SELECT =
   "id, created_at, updated_at, resolved_at, email, name, subject, message, status, priority, source, admin_notes, category, session_context, thread"
 
+const ADMIN_SUPPORT_SELECT_WITHOUT_NAME = ADMIN_SUPPORT_SELECT.replace(", name", "")
+
+function isMissingSupportNameColumn(message: string): boolean {
+  return /admin_support_inbox/i.test(message) && /\bname\b/i.test(message) && /does not exist/i.test(message)
+}
+
 const MASTER_JOB_SELECT =
   "id, created_at, updated_at, session_id, track_name, user_email, status, processing_time_ms, master_lufs, mastering_style, error_log, source"
 
@@ -700,11 +706,23 @@ async function fetchAdminSupportInner(): Promise<AdminSupportRow[] | { error: st
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const { data, error } = await supabase
+  let select = ADMIN_SUPPORT_SELECT
+  let { data, error } = await supabase
     .from(SUPPORT_INBOX_TABLE)
-    .select(ADMIN_SUPPORT_SELECT)
+    .select(select)
     .order("created_at", { ascending: false })
     .limit(ADMIN_SUPPORT_LIST_LIMIT)
+
+  if (error && isMissingSupportNameColumn(error.message)) {
+    select = ADMIN_SUPPORT_SELECT_WITHOUT_NAME
+    const retry = await supabase
+      .from(SUPPORT_INBOX_TABLE)
+      .select(select)
+      .order("created_at", { ascending: false })
+      .limit(ADMIN_SUPPORT_LIST_LIMIT)
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) return { error: error.message }
 
@@ -719,12 +737,25 @@ export async function fetchAdminSupportForEmail(email: string): Promise<AdminSup
   const normalized = email.trim().toLowerCase()
   if (!normalized.includes("@")) return []
 
-  const { data, error } = await supabase
+  let select = ADMIN_SUPPORT_SELECT
+  let { data, error } = await supabase
     .from(SUPPORT_INBOX_TABLE)
-    .select(ADMIN_SUPPORT_SELECT)
+    .select(select)
     .eq("email", normalized)
     .order("created_at", { ascending: false })
     .limit(50)
+
+  if (error && isMissingSupportNameColumn(error.message)) {
+    select = ADMIN_SUPPORT_SELECT_WITHOUT_NAME
+    const retry = await supabase
+      .from(SUPPORT_INBOX_TABLE)
+      .select(select)
+      .eq("email", normalized)
+      .order("created_at", { ascending: false })
+      .limit(50)
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) return []
   return (data ?? []).map((row) => mapSupportRow(row as Record<string, unknown>))
@@ -753,11 +784,24 @@ export async function fetchAdminSupportPaginated(
   if (!supabase) return { error: "Database unavailable" }
 
   const { from, to } = adminPageRange(page)
-  const { data, error, count } = await supabase
+  let select = ADMIN_SUPPORT_SELECT
+  let { data, error, count } = await supabase
     .from(SUPPORT_INBOX_TABLE)
-    .select(ADMIN_SUPPORT_SELECT, { count: "exact" })
+    .select(select, { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to)
+
+  if (error && isMissingSupportNameColumn(error.message)) {
+    select = ADMIN_SUPPORT_SELECT_WITHOUT_NAME
+    const retry = await supabase
+      .from(SUPPORT_INBOX_TABLE)
+      .select(select, { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to)
+    data = retry.data
+    error = retry.error
+    count = retry.count
+  }
 
   if (error) return { error: error.message }
 
@@ -772,11 +816,23 @@ export async function fetchSupportTicket(id: string): Promise<AdminSupportRow | 
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const { data, error } = await supabase
+  let select = ADMIN_SUPPORT_SELECT
+  let { data, error } = await supabase
     .from(SUPPORT_INBOX_TABLE)
-    .select(ADMIN_SUPPORT_SELECT)
+    .select(select)
     .eq("id", id)
     .maybeSingle()
+
+  if (error && isMissingSupportNameColumn(error.message)) {
+    select = ADMIN_SUPPORT_SELECT_WITHOUT_NAME
+    const retry = await supabase
+      .from(SUPPORT_INBOX_TABLE)
+      .select(select)
+      .eq("id", id)
+      .maybeSingle()
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) return { error: error.message }
   if (!data) return { error: "Ticket not found" }
@@ -800,24 +856,29 @@ export async function createSupportItem(input: {
   const message = input.message.trim()
   const thread = [{ id: crypto.randomUUID(), author: "user" as const, body: message, created_at: createdAt }]
 
-  const { data, error } = await supabase
+  const baseRow: Record<string, unknown> = {
+    email: input.email.trim(),
+    subject: input.subject?.trim() || null,
+    message,
+    source: input.source?.trim() || "manual",
+    status: "open",
+    priority: input.priority ?? "medium",
+    category: input.category ?? null,
+    session_context: input.session_context ?? {},
+    thread,
+  }
+
+  let { data, error } = await supabase
     .from(SUPPORT_INBOX_TABLE)
-    .insert([
-      {
-        email: input.email.trim(),
-        name: input.name?.trim() || null,
-        subject: input.subject?.trim() || null,
-        message,
-        source: input.source?.trim() || "manual",
-        status: "open",
-        priority: input.priority ?? "medium",
-        category: input.category ?? null,
-        session_context: input.session_context ?? {},
-        thread,
-      },
-    ])
+    .insert([{ ...baseRow, name: input.name?.trim() || null }])
     .select("id")
     .single()
+
+  if (error && isMissingSupportNameColumn(error.message)) {
+    const retry = await supabase.from(SUPPORT_INBOX_TABLE).insert([baseRow]).select("id").single()
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) return { error: error.message }
   return { id: data.id }

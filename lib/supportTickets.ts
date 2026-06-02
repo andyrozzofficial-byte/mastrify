@@ -6,6 +6,10 @@ const SUPPORT_INBOX_TABLE = "admin_support_inbox"
 import type { SupportSessionContext, SupportThreadMessage, SupportTicketCategory } from "./supportTypes"
 import { categoryLabel, isSupportTicketCategory } from "./supportTypes"
 
+function isMissingSupportNameColumn(message: string): boolean {
+  return /admin_support_inbox/i.test(message) && /\bname\b/i.test(message) && /does not exist/i.test(message)
+}
+
 function newThreadId(): string {
   return crypto.randomUUID()
 }
@@ -105,24 +109,29 @@ export async function createPublicSupportTicket(input: {
 
   const subject = `${categoryLabel(category)} — ${ctx.trackName?.trim() || "Mastrify support"}`
 
-  const { data, error } = await supabase
+  const baseRow: Record<string, unknown> = {
+    email,
+    subject,
+    message: fullMessage,
+    category,
+    session_context: ctx,
+    thread,
+    source: "help_center",
+    status: "open",
+    priority: priorityForCategory(category),
+  }
+
+  let { data, error } = await supabase
     .from(SUPPORT_INBOX_TABLE)
-    .insert([
-      {
-        email,
-        name: input.name?.trim() || null,
-        subject,
-        message: fullMessage,
-        category,
-        session_context: ctx,
-        thread,
-        source: "help_center",
-        status: "open",
-        priority: priorityForCategory(category),
-      },
-    ])
+    .insert([{ ...baseRow, name: input.name?.trim() || null }])
     .select("id")
     .single()
+
+  if (error && isMissingSupportNameColumn(error.message)) {
+    const retry = await supabase.from(SUPPORT_INBOX_TABLE).insert([baseRow]).select("id").single()
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) return { error: error.message }
   return { id: data.id }

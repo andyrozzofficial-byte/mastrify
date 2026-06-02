@@ -16,7 +16,33 @@ export async function GET() {
     console.log(`[admin-api] overview ${Date.now() - t0}ms`, dbStats)
   }
   if ("error" in data) {
-    return NextResponse.json({ error: data.error }, { status: 500 })
+    console.error("[admin-api] overview failed", data.error, dbStats)
+    // Never white-screen admin: return a safe partial payload.
+    return NextResponse.json(
+      {
+        error: data.error,
+        uploadsToday: 0,
+        mastersCompletedToday: 0,
+        paidDownloadsToday: 0,
+        revenueToday: 0,
+        conversionRate: null,
+        activeUsers: 0,
+        failedJobs: 0,
+        feedbackTotal: 0,
+        feedbackNew: 0,
+        supportTotal: 0,
+        supportOpen: 0,
+        avgRecommendScore: null,
+        badges: { feedback: 0, support: 0 },
+        recentFeedback: [],
+        recentSupport: [],
+        recentMasters: [],
+        recentPurchases: [],
+        recentActivity: [],
+        actionCenter: [],
+      },
+      { status: 200 },
+    )
   }
   return NextResponse.json(data)
 }
