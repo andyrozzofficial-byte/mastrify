@@ -90,7 +90,7 @@ export function mapSupportRow(row: Record<string, unknown>) {
     priority: normalizeSupportPriority(row.priority),
     source: row.source ? String(row.source) : "manual",
     admin_notes: row.admin_notes ? String(row.admin_notes) : null,
-    category: row.category ? String(row.category) : null,
+    category: row.category ? String(row.category) : "general",
     session_context: (row.session_context as SupportSessionContext) ?? {},
     thread: parseThread(row.thread),
   }

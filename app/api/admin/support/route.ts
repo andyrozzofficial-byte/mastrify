@@ -9,7 +9,8 @@ export async function GET() {
 
   const data = await fetchAdminSupport()
   if ("error" in data) {
-    return NextResponse.json({ error: data.error }, { status: 500 })
+    console.error("[admin-api] support failed", data.error)
+    return NextResponse.json({ error: data.error, rows: [] }, { status: 200 })
   }
   return NextResponse.json({ rows: data })
 }
