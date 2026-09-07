@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors"
 import multer from "multer"
+import rateLimit from "express-rate-limit"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -9,8 +10,18 @@ import { masterTrack, measureIntegratedLufsEbur128 } from "./master.js"
 import { serializeMasterAnalysisForJson } from "./masterAnalysisPayload.js"
 import { serializeMasteringInsightsForJson } from "./masterInsightsPayload.js"
 import { MASTRIFY_LUFS_TRACE as LUFS_TRACE, MASTRIFY_PIPELINE_DEBUG as PIPELINE_DEBUG } from "./mastrifyDebug.js"
-import { persistMasterExport } from "./supabaseStorage.js"
+import {
+  persistMasterExport,
+  createMasterPlaybackSignedUrl,
+  createPreviewPlaybackSignedUrl,
+  isSupabaseStorageConfigured,
+  uploadMasterPreviewMp3,
+  safeUnlink,
+  signedUrlExpiresAt,
+} from "./supabaseStorage.js"
 import { deliverMasterExportEmail } from "./masteredExportDelivery.js"
+import { generateMasterPreviewMp3, previewFileNameForMaster } from "./masterPreview.js"
+import { verifyPaidCheckoutForObjectKey } from "./stripeCheckout.js"
 import ffmpegPath from "ffmpeg-static"
 import ffprobeStatic from "ffprobe-static"
 
@@ -29,8 +40,48 @@ const __dirname = path.dirname(__filename)
 
 const app = express()
 
-app.use(cors())
-app.use(express.json())
+const ALLOWED_CORS_ORIGINS = new Set([
+  "https://www.mastrify.com",
+  "https://mastrify.com",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+])
+
+function isAllowedCorsOrigin(origin) {
+  if (!origin) return true
+  if (ALLOWED_CORS_ORIGINS.has(origin)) return true
+  if (/^https:\/\/[\w-]+\.vercel\.app$/.test(origin)) return true
+  return false
+}
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (isAllowedCorsOrigin(origin)) {
+        callback(null, true)
+        return
+      }
+      callback(new Error("Not allowed by CORS"))
+    },
+  }),
+)
+app.use(express.json({ limit: "1mb" }))
+
+const uploadRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many upload requests. Please try again later." },
+})
+
+const deliverRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 25,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many delivery requests. Please try again later." },
+})
 
 // Entry: Railway with Root Directory "server" runs `npm start` → `node server.js` (this file).
 // Not used for deploy: AI-Mastering_copy submodule server/ (legacy copy; use this server/ only).
@@ -50,6 +101,7 @@ app.get("/debug-version", (req, res) => {
 // absolute paths
 const uploadsDir = "/tmp/uploads"
 const mastersDir = "/tmp/masters"
+const mastersPrivateDir = "/tmp/masters-private"
 
 // Ensure dirs at cold boot (Railway /tmp is often empty).
 try {
@@ -60,12 +112,12 @@ try {
   if (!fs.existsSync(mastersDir)) {
     fs.mkdirSync(mastersDir, { recursive: true })
   }
+  if (!fs.existsSync(mastersPrivateDir)) {
+    fs.mkdirSync(mastersPrivateDir, { recursive: true })
+  }
 } catch (err) {
   console.error("Failed to create uploads/masters directories:", err)
 }
-
-// serve masters folder
-app.use("/uploads", express.static(uploadsDir))
 
 /** MIME for mastered assets under /masters — Safari requires accurate types + byte ranges. */
 function contentTypeForMasterFile(basename) {
@@ -189,14 +241,44 @@ function sendMasterFile(req, res, headOnly) {
 
 app.head("/masters/:file", (req, res) => sendMasterFile(req, res, true))
 app.get("/masters/:file", (req, res) => sendMasterFile(req, res, false))
+const MAX_UPLOAD_BYTES = 500 * 1024 * 1024
+
+const ALLOWED_AUDIO_EXTENSIONS = new Set([
+  ".wav",
+  ".wave",
+  ".mp3",
+  ".mpeg",
+  ".m4a",
+  ".flac",
+  ".aiff",
+  ".aif",
+  ".aac",
+  ".ogg",
+  ".opus",
+  ".caf",
+])
+
+function audioUploadFileFilter(req, file, cb) {
+  const ext = path.extname(file.originalname || "").toLowerCase()
+  const mime = (file.mimetype || "").toLowerCase()
+  const mimeOk = mime.startsWith("audio/") || mime === "application/octet-stream"
+  if (ALLOWED_AUDIO_EXTENSIONS.has(ext) || mimeOk) {
+    cb(null, true)
+    return
+  }
+  cb(new Error("Unsupported audio format"))
+}
+
 const upload = multer({
   storage: multer.diskStorage({
-    destination: uploadsDir, // 🔥 ÄNDRA HIT
+    destination: uploadsDir,
     filename: (req, file, cb) => {
-  const safeName = Date.now() + ".wav"
-  cb(null, safeName)
-}
-  })
+      const safeName = `${Date.now()}${path.extname(file.originalname || ".wav") || ".wav"}`
+      cb(null, safeName)
+    },
+  }),
+  limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 },
+  fileFilter: audioUploadFileFilter,
 })
 
 // cache analysis
@@ -626,6 +708,7 @@ UPLOAD TRACK
 
 app.post(
 "/upload",
+uploadRateLimiter,
 upload.single("file"),
 async (req,res)=>{
 
@@ -637,11 +720,8 @@ if(!file){
   return res.status(400).json({error:"No file uploaded"})
 }
 
-// rename uploaded file
-const fileName = file.filename + ".wav"
-const newPath = file.path + ".wav"
-
-fs.renameSync(file.path, newPath)
+const fileName = file.filename
+const newPath = file.path
 
 // const analysis = await analyzeTrack(newPath)
 const analysis = await analyzeTrack(newPath)
@@ -968,6 +1048,7 @@ MASTER TRACK
 */
 
 app.post("/master",
+  uploadRateLimiter,
   upload.single("file"),
   async (req, res) => {
   res.setTimeout(0) // 🔥 LÄGG DEN HÄR
@@ -980,10 +1061,8 @@ app.post("/master",
         return res.status(400).json({ error: "No file uploaded" })
       }
 
-      const fileName = file.filename + ".wav"
-      const newPath = file.path + ".wav"
-
-      fs.renameSync(file.path, newPath)
+      const fileName = file.filename
+      const newPath = file.path
 
       const masterFileName = Date.now() + "-master.wav"
       const masterPath = path.join(mastersDir, masterFileName)
@@ -1140,27 +1219,55 @@ app.post("/master",
       )
 
       const railwayPlaybackUrl = `${baseUrl}${after}`
+
+      const previewFileName = previewFileNameForMaster(masterFileName)
+      const previewPath = path.join(mastersDir, previewFileName)
+      let previewAfterMp3Url = null
+      try {
+        await generateMasterPreviewMp3(masterPath, previewPath)
+      } catch (previewErr) {
+        console.warn("[preview] MP3 preview generation failed:", previewErr?.message || previewErr)
+      }
+
       const playback = await persistMasterExport({
         localMasterPath: masterPath,
         localUploadPath: newPath,
         masterFileName,
         railwayPlaybackUrl,
       })
-      const delivery = await deliverMasterExportEmail({
-        email: deliveryEmail,
-        objectKey: playback.objectKey,
-        playbackUrl: playback.afterUrl,
-        expiresAt: playback.expiresAt,
-        trackTitle: deliveryTrackTitle,
-      })
+
+      if (fs.existsSync(masterPath)) {
+        try {
+          fs.renameSync(masterPath, path.join(mastersPrivateDir, masterFileName))
+        } catch (moveErr) {
+          console.warn("[storage] failed to move master WAV to private dir:", moveErr?.message || moveErr)
+        }
+      }
+
+      if (fs.existsSync(previewPath)) {
+        if (isSupabaseStorageConfigured()) {
+          try {
+            await uploadMasterPreviewMp3(previewPath, playback.objectKey)
+            previewAfterMp3Url = await createPreviewPlaybackSignedUrl(playback.objectKey)
+            safeUnlink(previewPath)
+          } catch (previewUploadErr) {
+            console.warn("[preview] Supabase preview upload failed:", previewUploadErr?.message || previewUploadErr)
+            previewAfterMp3Url = `${baseUrl}/masters/${previewFileName}`
+          }
+        } else {
+          previewAfterMp3Url = `${baseUrl}/masters/${previewFileName}`
+        }
+      }
+
+      // Paid delivery is handled by POST /master/deliver after Stripe checkout.
+      const delivery = { requested: false }
 
       const resPayload = {
         success: true,
         before,
         after: playback.after,
-        afterUrl: playback.afterUrl,
-        // kept for backwards compatibility with older clients
-        fullUrl: playback.fullUrl,
+        previewAfterMp3Url,
+        previewAfterMp3: previewAfterMp3Url,
         objectKey: playback.objectKey,
         expiresAt: playback.expiresAt,
         analysisBefore,
@@ -1228,36 +1335,88 @@ app.post("/master",
   }
 )
 
-app.post("/master/deliver", async (req, res) => {
-  console.log("MASTER DELIVER HIT")
+app.post("/master/deliver", deliverRateLimiter, async (req, res) => {
   try {
     const body = req.body || {}
     const email = typeof body.email === "string" ? body.email.trim() : ""
     const objectKey = typeof body.objectKey === "string" ? body.objectKey.trim() : ""
-    const playbackUrl = typeof body.playbackUrl === "string" ? body.playbackUrl.trim() : ""
+    const stripeSessionId =
+      typeof body.stripeSessionId === "string"
+        ? body.stripeSessionId.trim()
+        : typeof body.stripe_session_id === "string"
+          ? body.stripe_session_id.trim()
+          : ""
     const expiresAt = typeof body.expiresAt === "string" && body.expiresAt.trim() ? body.expiresAt.trim() : null
     const trackTitle = typeof body.trackTitle === "string" ? body.trackTitle.trim() : ""
 
-    if (!email || !objectKey || !playbackUrl) {
+    if (!email || !objectKey || !stripeSessionId) {
       return res.status(400).json({ success: false, error: "Missing delivery details" })
+    }
+
+    const payment = await verifyPaidCheckoutForObjectKey(stripeSessionId, objectKey)
+    if (!payment.ok) {
+      return res.status(payment.status).json({ success: false, error: payment.error })
+    }
+
+    let playbackUrl = ""
+    let resolvedExpiresAt = expiresAt
+    if (isSupabaseStorageConfigured()) {
+      try {
+        playbackUrl = await createMasterPlaybackSignedUrl(objectKey)
+        resolvedExpiresAt = resolvedExpiresAt || signedUrlExpiresAt()
+      } catch (err) {
+        console.error("[deliver] failed to create signed playback URL:", err?.message || err)
+        return res.status(500).json({ success: false, error: "Could not create secure download link" })
+      }
+    } else {
+      const privatePath = path.join(mastersPrivateDir, path.basename(objectKey))
+      if (!fs.existsSync(privatePath)) {
+        return res.status(404).json({ success: false, error: "Master export is not available" })
+      }
+      const forwardedProto = req.headers["x-forwarded-proto"]
+      const proto = (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto || req.protocol)
+        .split(",")[0]
+        .trim()
+      const baseUrl = `${proto}://${req.get("host")}`
+      playbackUrl = `${baseUrl}/masters/${path.basename(objectKey)}`
+      try {
+        fs.copyFileSync(privatePath, path.join(mastersDir, path.basename(objectKey)))
+      } catch (copyErr) {
+        console.error("[deliver] failed to stage master for delivery:", copyErr?.message || copyErr)
+        return res.status(500).json({ success: false, error: "Could not prepare master download" })
+      }
     }
 
     const delivery = await deliverMasterExportEmail({
       email,
       objectKey,
       playbackUrl,
-      expiresAt,
+      expiresAt: resolvedExpiresAt,
       trackTitle,
     })
 
-    res.json({ success: true, delivery })
+    res.json({ success: true, delivery, playbackUrl, expiresAt: resolvedExpiresAt })
   } catch (err) {
     console.error("Master delivery failed:", err)
     res.status(500).json({ success: false, error: "Delivery failed" })
   }
 })
 
-
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(413).json({ error: "File too large (max 500MB)" })
+    }
+    return res.status(400).json({ error: err.message })
+  }
+  if (err?.message === "Unsupported audio format") {
+    return res.status(400).json({ error: "Unsupported audio format" })
+  }
+  if (err?.message === "Not allowed by CORS") {
+    return res.status(403).json({ error: "Origin not allowed" })
+  }
+  return next(err)
+})
 
 /* START SERVER */
 

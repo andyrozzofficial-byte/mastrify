@@ -14,6 +14,14 @@ import {
   type PreviewSource,
 } from "../../lib/audioPreviewTimeline"
 import { PUBLIC_BACKEND_API_BASE } from "../../lib/publicBackendUrl"
+import {
+  clearStoredCheckoutSession,
+  MASTER_PRICE_LABEL,
+  restoreVerifiedCheckoutSession,
+  startMasterCheckout,
+  storeCheckoutSession,
+  verifyCheckoutReturn,
+} from "../../lib/checkoutClient"
 
 type Step = "upload" | "analyzing" | "done"
 
@@ -69,6 +77,10 @@ export default function FlowPage() {
   const [deliveryError, setDeliveryError] = useState("")
   const [selectedSource, setSelectedSource] = useState<"original" | "mastered">("mastered")
   const [isPaid, setIsPaid] = useState(false)
+  const [stripeSessionId, setStripeSessionId] = useState("")
+  const [deliverySent, setDeliverySent] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutError, setCheckoutError] = useState("")
 
   const [step, setStep] = useState<Step>("upload")
   const [aiText, setAiText] = useState("")
@@ -88,6 +100,55 @@ export default function FlowPage() {
   useEffect(() => {
     selectedSourceRef.current = selectedSource
   }, [selectedSource])
+
+  useEffect(() => {
+    if (!mounted) return
+    const deliveryObjectKey = masterObjectKey || objectKeyFromPlaybackUrl(masteredUrl)
+    if (!deliveryObjectKey) return
+
+    let cancelled = false
+
+    const restorePayment = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const checkout = params.get("checkout")
+      const sessionIdFromUrl = params.get("session_id")?.trim()
+
+      if (checkout === "success" && sessionIdFromUrl) {
+        const result = await verifyCheckoutReturn(sessionIdFromUrl, deliveryObjectKey)
+        if (cancelled) return
+        if (result.paid && result.sessionId) {
+          storeCheckoutSession(deliveryObjectKey, result.sessionId)
+          setStripeSessionId(result.sessionId)
+          setIsPaid(true)
+          setDeliveryOpen(true)
+          if (result.email) setDeliveryEmail(result.email)
+          window.history.replaceState({}, "", "/flow")
+          return
+        }
+        clearStoredCheckoutSession(deliveryObjectKey)
+        setStripeSessionId("")
+        setIsPaid(false)
+        setCheckoutError(result.error || "Payment could not be verified.")
+        return
+      }
+
+      const restored = await restoreVerifiedCheckoutSession(deliveryObjectKey)
+      if (cancelled) return
+      if (restored.paid && restored.sessionId) {
+        setStripeSessionId(restored.sessionId)
+        setIsPaid(true)
+      } else {
+        setStripeSessionId("")
+        setIsPaid(false)
+      }
+    }
+
+    void restorePayment()
+
+    return () => {
+      cancelled = true
+    }
+  }, [mounted, masterObjectKey, masteredUrl])
 
   const getSelectedAudioEl = () => {
     if (isMobileClient) return mobileAudioRef.current
@@ -181,7 +242,8 @@ export default function FlowPage() {
     return isWebKit && !isCriOS && !isFxiOS
   }
 
-  const masteredPreviewUrl = isIOSSafari() && masteredPreviewMp3Url ? masteredPreviewMp3Url : masteredUrl
+  const masteredPreviewUrl = masteredPreviewMp3Url || masteredUrl
+  const hasMasterReady = Boolean(masterObjectKey && masteredPreviewMp3Url)
   // MOBILE ONLY: mastered preview must always be MP3 (never WAV)
   const masteredMobilePreviewUrl = masteredPreviewMp3Url || ""
   const mobileSelectedUrl =
@@ -198,6 +260,7 @@ export default function FlowPage() {
   setMasteredPreviewMp3Url("")
   setMasterObjectKey("")
   setMasterExpiresAt("")
+  setStripeSessionId("")
   
   setStep("upload")
   setIsPaid(false)
@@ -210,6 +273,7 @@ export default function FlowPage() {
   setMasteredPreviewMp3Url("")
   setMasterObjectKey("")
   setMasterExpiresAt("")
+  setStripeSessionId("")
   
   setStep("upload")
   setIsPaid(false)
@@ -241,12 +305,7 @@ export default function FlowPage() {
       const masterUrl = `${API}/master`
       const res = await axios.post(masterUrl, formData)
 
-const mastered =
-  res.data.afterUrl ||
-  res.data.fullUrl ||
-  (res.data.after ? `${API}${res.data.after}` : "")
-
-setMasteredUrl(mastered)
+setMasteredUrl("")
 
 const previewMp3 =
   res.data.previewAfterMp3Url ||
@@ -432,19 +491,45 @@ useEffect(() => {
   return () => clearInterval(interval)
 }, [step])
 
-const handlePayment = () => {
-  setDeliveryOpen(true)
-  setDeliveryError("")
+const handlePayment = async () => {
+  if (isPaid) {
+    setDeliveryOpen(true)
+    setDeliveryError("")
+    return
+  }
+
+  const deliveryObjectKey = masterObjectKey || objectKeyFromPlaybackUrl(masteredUrl)
+  if (!deliveryObjectKey) {
+    setCheckoutError("Master delivery link is not ready yet.")
+    return
+  }
+
+  setCheckoutLoading(true)
+  setCheckoutError("")
+  const result = await startMasterCheckout({
+    objectKey: deliveryObjectKey,
+    trackTitle: file?.name || "",
+    returnPath: "/flow",
+  })
+  if (!result.ok) {
+    setCheckoutError(result.error)
+    setCheckoutLoading(false)
+  }
 }
 
 const handleEmailDelivery = async () => {
+  if (!isPaid || !stripeSessionId) {
+    setDeliveryError("Complete payment before requesting your download link.")
+    return
+  }
+
   const email = deliveryEmail.trim()
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     setDeliveryError("Enter a valid email address.")
     return
   }
   const deliveryObjectKey = masterObjectKey || objectKeyFromPlaybackUrl(masteredUrl)
-  if (!masteredUrl || !deliveryObjectKey) {
+  if (!deliveryObjectKey) {
     setDeliveryError("Master delivery link is not ready yet.")
     return
   }
@@ -458,16 +543,23 @@ const handleEmailDelivery = async () => {
       body: JSON.stringify({
         email,
         objectKey: deliveryObjectKey,
-        playbackUrl: masteredUrl,
+        playbackUrl: masteredUrl || "",
         expiresAt: masterExpiresAt || null,
         trackTitle: file?.name || "",
+        stripeSessionId,
       }),
     })
     const data = await res.json().catch(() => null)
     if (!res.ok || data?.success === false) {
       throw new Error(data?.error || "Could not send email")
     }
-    setIsPaid(true)
+    if (typeof data?.playbackUrl === "string" && data.playbackUrl.trim()) {
+      setMasteredUrl(data.playbackUrl.trim())
+    }
+    if (typeof data?.expiresAt === "string" && data.expiresAt.trim()) {
+      setMasterExpiresAt(data.expiresAt.trim())
+    }
+    setDeliverySent(true)
     setDeliveryOpen(false)
   } catch (err) {
     setDeliveryError(err instanceof Error ? err.message : "Could not send email. Please try again.")
@@ -480,14 +572,14 @@ const handleEmailDelivery = async () => {
 
 
   useEffect(() => {
-  if (!masteredUrl) return
+  if (!hasMasterReady) return
 
   // Default to AFTER when master becomes available
   if (step === "done") setSelectedSource("mastered")
-}, [masteredUrl, step])
+}, [hasMasterReady, step])
 
   const selectSource = async (next: "original" | "mastered") => {
-    if (next === "mastered" && !masteredUrl) return
+    if (next === "mastered" && !masteredPreviewUrl) return
     if (next === "original" && !audioUrl) return
     if (next === selectedSource) return
 
@@ -603,10 +695,10 @@ const handleEmailDelivery = async () => {
     isStartingPlaybackRef.current = true
 
     try {
-      // DESKTOP flow (two audio elements already in DOM)
-      // Desktop MASTERED must use the WAV master URL (afterUrl/fullUrl).
+      // Desktop MASTERED uses the preview URL (MP3 clip pre-payment, full URL after delivery).
       if (selectedSourceRef.current === "mastered") {
-        if (!masteredUrl || !/^https:\/\//i.test(masteredUrl)) {
+        const playUrl = masteredPreviewUrl
+        if (!playUrl || !/^https?:\/\//i.test(playUrl)) {
           setIsPlaying(false)
           return
         }
@@ -616,8 +708,8 @@ const handleEmailDelivery = async () => {
 
         const masteredEl = masteredAudioRef.current
         if (masteredEl) {
-          if (masteredEl.src !== masteredUrl) {
-            masteredEl.src = masteredUrl
+          if (masteredEl.src !== playUrl) {
+            masteredEl.src = playUrl
             masteredEl.load()
           }
           await waitForReady(masteredEl)
@@ -784,14 +876,14 @@ disabled:opacity-40 disabled:cursor-not-allowed"
   </motion.button>
 )}
 
-{deliveryOpen && (
+{deliveryOpen && isPaid && !deliverySent && (
   <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/72 px-5 backdrop-blur-md">
     <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#090912] p-5 text-left shadow-[0_24px_80px_rgba(0,0,0,0.65)]">
       <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/58">Master delivery</p>
       <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">Secure your master link</h2>
       <p className="mt-2 text-sm leading-relaxed text-white/68">
-        Enter your email to receive your mastered track and secure download link. You can reopen it later from any
-        device, even if this page is closed.
+        Payment complete. Enter your email to receive your mastered track and secure download link. You can reopen it
+        later from any device, even if this page is closed.
       </p>
       <p className="mt-2 text-[12px] leading-relaxed text-white/48">
         We send the link instantly and only use it to deliver this export.
@@ -881,7 +973,7 @@ drop-shadow-[0_0_14px_rgba(139,92,246,0.22)]">
   Industry-level master • Ready for release
 </p>
 
-  {masteredUrl && (
+  {hasMasterReady && (
   <div className="mt-6 bg-black/50 backdrop-blur-xl border border-white/10 rounded-xl p-5 space-y-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] shadow-[0_22px_78px_rgba(0,0,0,0.62)]">
 
     <div className="grid grid-cols-2 gap-3">
@@ -902,9 +994,9 @@ drop-shadow-[0_0_14px_rgba(139,92,246,0.22)]">
       <motion.button
         type="button"
         onClick={() => selectSource("mastered")}
-        disabled={!masteredUrl}
-        whileHover={masteredUrl ? { scale: 1.02 } : undefined}
-        whileTap={masteredUrl ? { scale: 0.99 } : undefined}
+        disabled={!masteredPreviewUrl}
+        whileHover={masteredPreviewUrl ? { scale: 1.02 } : undefined}
+        whileTap={masteredPreviewUrl ? { scale: 0.99 } : undefined}
         className={
           selectedSource === "mastered"
             ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/75 to-blue-600/75 shadow-[0_0_14px_rgba(59,130,246,0.15)] ring-1 ring-white/10 hover:brightness-105 transition-all duration-300"
@@ -1024,25 +1116,32 @@ hover:brightness-110 transition-all duration-300"
 
   {/* RESULT TEXT */}
 
-  {/* 🟢 KÖP KNAPP (visas innan betalning) */}
-{!isPaid && (
+  {/* Export / payment */}
+{!deliverySent && (
   <>
-    
+    {checkoutError ? (
+      <p className="mt-3 text-center text-xs text-rose-300/85">{checkoutError}</p>
+    ) : null}
     <button
   onClick={handlePayment}
+  disabled={checkoutLoading}
   className="mt-4 w-full py-5 text-lg rounded-xl font-bold 
 bg-gradient-to-r from-purple-500 to-blue-500 text-white
 shadow-[0_0_40px_rgba(139,92,246,0.4)]
 hover:shadow-[0_0_60px_rgba(139,92,246,0.8)]
 hover:scale-[1.02]
 active:scale-[0.98]
-transition-all duration-300"
+transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
 >
-      Export master
+      {checkoutLoading
+        ? "Redirecting to checkout…"
+        : isPaid
+          ? "Get download link"
+          : `Pay ${MASTER_PRICE_LABEL} & download`}
 
 
       <p className="text-xs text-white/70 mt-2 text-center">
-  Ready for release • Instant download
+  Ready for release • Secure Stripe checkout
 </p>
     </button>
 
@@ -1051,7 +1150,7 @@ transition-all duration-300"
 )}
 
 {/* Delivery confirmation */}
-{isPaid && (
+{deliverySent && (
   <div
   className="block w-full py-5 mt-4 rounded-xl text-lg font-bold text-white text-center cursor-pointer
 bg-gradient-to-r from-purple-500 to-blue-500

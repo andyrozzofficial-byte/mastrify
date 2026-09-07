@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { MASTER_PRICE_LABEL } from "../../../lib/pricing"
 import { motion, useReducedMotion } from "framer-motion"
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -67,7 +68,7 @@ export default function PricingUnlockCard({ className = "" }: Props) {
               transition={{ duration: 0.6, delay: 0.15, ease: EASE }}
             >
               <span className="bg-gradient-to-b from-white via-violet-100 to-violet-200/85 bg-clip-text text-transparent">
-                $9
+                {MASTER_PRICE_LABEL}
               </span>
             </motion.p>
             <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.22em] text-label">
@@ -95,7 +96,9 @@ export default function PricingUnlockCard({ className = "" }: Props) {
             <span className="relative z-[1]">Start mastering</span>
           </Link>
 
-          <p className="mt-4 text-[11px] text-muted-soft">Payment is collected on the results screen after your master is generated.</p>
+          <p className="mt-4 text-[11px] text-muted-soft">
+            Secure checkout via Stripe on the results screen after your master is generated.
+          </p>
         </div>
       </div>
     </motion.div>

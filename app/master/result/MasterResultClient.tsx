@@ -34,6 +34,14 @@ import {
 } from "../../../lib/audioPreviewTimeline"
 import { parseTrackDisplayName } from "../../../lib/parseTrackDisplayName"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
+import {
+  clearStoredCheckoutSession,
+  MASTER_PRICE_LABEL,
+  restoreVerifiedCheckoutSession,
+  startMasterCheckout,
+  storeCheckoutSession,
+  verifyCheckoutReturn,
+} from "../../../lib/checkoutClient"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
 
 const STYLE_LABELS: Record<MasterStylePreset, string> = {
@@ -108,6 +116,10 @@ export default function MasterResultClient() {
     masterExpiresAt,
     deliveryEmail,
     setDeliveryEmail,
+    stripeSessionId,
+    setStripeSessionId,
+    setMasteredUrl,
+    setMasterExpiresAt,
     targetLufs,
     stylePreset,
     stereoEnhance,
@@ -123,6 +135,9 @@ export default function MasterResultClient() {
   const [selectedSource, setSelectedSource] = useState<"original" | "mastered">("mastered")
   const [isPlaying, setIsPlaying] = useState(false)
   const [playProgress, setPlayProgress] = useState(0)
+  const [isPaid, setIsPaid] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutError, setCheckoutError] = useState("")
   const [deliverySent, setDeliverySent] = useState(false)
   const [shareLabel, setShareLabel] = useState("Share")
   const [deliveryOpen, setDeliveryOpen] = useState(false)
@@ -176,6 +191,55 @@ export default function MasterResultClient() {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
     setIsMobileClient(/iPhone|iPad|iPod|Android|Mobile/i.test(ua))
   }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    const deliveryObjectKey = masterObjectKey || objectKeyFromPlaybackUrl(masteredUrl)
+    if (!deliveryObjectKey) return
+
+    let cancelled = false
+
+    const restorePayment = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const checkout = params.get("checkout")
+      const sessionIdFromUrl = params.get("session_id")?.trim()
+
+      if (checkout === "success" && sessionIdFromUrl) {
+        const result = await verifyCheckoutReturn(sessionIdFromUrl, deliveryObjectKey)
+        if (cancelled) return
+        if (result.paid && result.sessionId) {
+          storeCheckoutSession(deliveryObjectKey, result.sessionId)
+          setStripeSessionId(result.sessionId)
+          setIsPaid(true)
+          setDeliveryOpen(true)
+          if (result.email) setDeliveryEmail(result.email)
+          window.history.replaceState({}, "", "/master/result")
+          return
+        }
+        clearStoredCheckoutSession(deliveryObjectKey)
+        setStripeSessionId("")
+        setIsPaid(false)
+        setCheckoutError(result.error || "Payment could not be verified.")
+        return
+      }
+
+      const restored = await restoreVerifiedCheckoutSession(deliveryObjectKey)
+      if (cancelled) return
+      if (restored.paid && restored.sessionId) {
+        setStripeSessionId(restored.sessionId)
+        setIsPaid(true)
+      } else {
+        setStripeSessionId("")
+        setIsPaid(false)
+      }
+    }
+
+    void restorePayment()
+
+    return () => {
+      cancelled = true
+    }
+  }, [mounted, masterObjectKey, masteredUrl, setDeliveryEmail, setStripeSessionId])
 
   const originalPreviewUrl = useMemo(() => normalizePlaybackUrl(audioUrl), [audioUrl])
   const masteredWavUrl = useMemo(() => normalizePlaybackUrl(masteredUrl), [masteredUrl])
@@ -693,19 +757,45 @@ export default function MasterResultClient() {
     }
   }
 
-  const handlePayment = () => {
-    setDeliveryOpen(true)
-    setDeliveryError("")
+  const handlePayment = async () => {
+    if (isPaid) {
+      setDeliveryOpen(true)
+      setDeliveryError("")
+      return
+    }
+
+    const deliveryObjectKey = masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)
+    if (!deliveryObjectKey) {
+      setCheckoutError("Master delivery link is not ready yet.")
+      return
+    }
+
+    setCheckoutLoading(true)
+    setCheckoutError("")
+    const result = await startMasterCheckout({
+      objectKey: deliveryObjectKey,
+      trackTitle: file?.name || "",
+      returnPath: "/master/result",
+    })
+    if (!result.ok) {
+      setCheckoutError(result.error)
+      setCheckoutLoading(false)
+    }
   }
 
   const handleEmailDelivery = async () => {
+    if (!isPaid || !stripeSessionId) {
+      setDeliveryError("Complete payment before requesting your download link.")
+      return
+    }
+
     const email = deliveryEmail.trim()
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setDeliveryError("Enter a valid email address.")
       return
     }
     const deliveryObjectKey = masterObjectKey || objectKeyFromPlaybackUrl(masteredWavUrl)
-    if (!masteredWavUrl || !deliveryObjectKey) {
+    if (!deliveryObjectKey) {
       setDeliveryError("Master delivery link is not ready yet.")
       return
     }
@@ -719,14 +809,21 @@ export default function MasterResultClient() {
         body: JSON.stringify({
           email,
           objectKey: deliveryObjectKey,
-          playbackUrl: masteredWavUrl,
+          playbackUrl: masteredWavUrl || "",
           expiresAt: masterExpiresAt || null,
           trackTitle: trackMeta?.title || file?.name || "",
+          stripeSessionId,
         }),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok || data?.success === false) {
         throw new Error(data?.error || "Could not send email")
+      }
+      if (typeof data?.playbackUrl === "string" && data.playbackUrl.trim()) {
+        setMasteredUrl(data.playbackUrl.trim())
+      }
+      if (typeof data?.expiresAt === "string" && data.expiresAt.trim()) {
+        setMasterExpiresAt(data.expiresAt.trim())
       }
       setDeliverySent(true)
     } catch (err) {
@@ -819,7 +916,9 @@ export default function MasterResultClient() {
 
   if (!mounted) return null
 
-  if (!masteredWavUrl) {
+  const hasMasterReady = Boolean(masterObjectKey && masteredPreviewMp3Url)
+
+  if (!hasMasterReady) {
     return (
       <div className="mx-auto max-w-md px-6 py-24 text-center text-white/60">
         <p>No master in this session.</p>
@@ -1082,13 +1181,21 @@ export default function MasterResultClient() {
         transition={{ duration: 0.45, delay: 0.1 }}
         className="mx-auto mt-5 flex w-full max-w-[28rem] flex-col gap-3 px-0 sm:mt-6 sm:flex-row sm:justify-center sm:gap-4"
       >
+        {checkoutError ? (
+          <p className="text-center text-xs text-rose-300/85 sm:col-span-2">{checkoutError}</p>
+        ) : null}
         {!deliverySent ? (
           <button
             type="button"
             onClick={handlePayment}
-            className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99] sm:w-auto sm:px-9"
+            disabled={checkoutLoading}
+            className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-9"
           >
-            Pay $9 &amp; download
+            {checkoutLoading
+              ? "Redirecting to checkout…"
+              : isPaid
+                ? "Get download link"
+                : `Pay ${MASTER_PRICE_LABEL} & download`}
           </button>
         ) : (
           <div
@@ -1106,7 +1213,7 @@ export default function MasterResultClient() {
         </Link>
       </motion.div>
 
-      {deliveryOpen && !deliverySent ? (
+      {deliveryOpen && !deliverySent && isPaid ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/72 px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md min-[430px]:px-5">
           <motion.div
             initial={{ opacity: 0, y: 12, scale: 0.98 }}
@@ -1116,8 +1223,8 @@ export default function MasterResultClient() {
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/58">Master delivery</p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">Secure your master link</h2>
             <p className="mt-2 text-sm leading-relaxed text-white/68">
-              Enter your email to receive your mastered track and secure download link. You can reopen it later from any
-              device, even if this page is closed.
+              Payment complete. Enter your email to receive your mastered track and secure download link. You can reopen
+              it later from any device, even if this page is closed.
             </p>
             <p className="mt-2 text-[12px] leading-relaxed text-white/48">
               We send the link instantly and only use it to deliver this export.

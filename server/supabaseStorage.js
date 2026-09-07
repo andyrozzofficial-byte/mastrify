@@ -76,6 +76,42 @@ export function signedUrlExpiresAt(from = new Date()) {
   return new Date(from.getTime() + signedUrlTtlSec() * 1000).toISOString()
 }
 
+export function previewObjectKeyForMaster(objectKey) {
+  const base = masterObjectKey(objectKey)
+  return base.replace(/\.wav$/i, "_preview.mp3")
+}
+
+/**
+ * Upload a short mastered MP3 preview clip (pre-payment playback only).
+ */
+export async function uploadMasterPreviewMp3(localPath, objectKey) {
+  const bucket = getMastersBucket()
+  const key = previewObjectKeyForMaster(objectKey)
+  const body = fs.readFileSync(localPath)
+  const { error } = await getSupabaseServiceClient().storage.from(bucket).upload(key, body, {
+    contentType: "audio/mpeg",
+    upsert: true,
+    cacheControl: "3600",
+  })
+  if (error) {
+    throw new Error(`Supabase preview upload failed: ${error.message}`)
+  }
+  return { bucket, objectKey: key }
+}
+
+export async function createPreviewPlaybackSignedUrl(objectKey) {
+  const bucket = getMastersBucket()
+  const key = previewObjectKeyForMaster(objectKey)
+  const expiresIn = signedUrlTtlSec()
+  const { data, error } = await getSupabaseServiceClient()
+    .storage.from(bucket)
+    .createSignedUrl(key, expiresIn, { download: false })
+  if (error || !data?.signedUrl) {
+    throw new Error(`Supabase preview signed URL failed: ${error?.message || "missing signedUrl"}`)
+  }
+  return data.signedUrl
+}
+
 /**
  * Upload mastered WAV to private Supabase bucket.
  */

@@ -33,6 +33,7 @@ type MasterSessionSnapshotV2 = {
   masteredPreviewMp3Url: string
   masterObjectKey: string
   masterExpiresAt: string
+  stripeSessionId: string
   fileName: string
 }
 
@@ -65,6 +66,8 @@ type MasterSession = {
   setMasterObjectKey: (key: string) => void
   masterExpiresAt: string
   setMasterExpiresAt: (expiresAt: string) => void
+  stripeSessionId: string
+  setStripeSessionId: (sessionId: string) => void
   resetSession: () => void
   /** True after first client storage hydrate attempt (for /master/settings gating). */
   sessionHydrated: boolean
@@ -118,6 +121,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   const [deliveryEmail, setDeliveryEmail] = useState("")
   const [masterObjectKey, setMasterObjectKey] = useState("")
   const [masterExpiresAt, setMasterExpiresAt] = useState("")
+  const [stripeSessionId, setStripeSessionId] = useState("")
   const [sessionHydrated, setSessionHydrated] = useState(false)
   const hydrateRan = useRef(false)
 
@@ -131,6 +135,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setMasteredPreviewMp3Url("")
     setMasterObjectKey("")
     setMasterExpiresAt("")
+    setStripeSessionId("")
     setAnalysisBefore(null)
     setAnalysisAfter(null)
     clearMasterStorageKeys()
@@ -168,6 +173,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setMasteredPreviewMp3Url("")
     setMasterObjectKey("")
     setMasterExpiresAt("")
+    setStripeSessionId("")
     setAnalysisBefore(null)
     setAnalysisAfter(null)
     setStylePreset("STREAM")
@@ -176,6 +182,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setLowEndControl(50)
     setClarityPresence(50)
     setDeliveryEmail("")
+    setStripeSessionId("")
     clearMasterStorageKeys()
   }, [])
 
@@ -200,14 +207,18 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
         if (typeof s.stereoEnhance === "number" && Number.isFinite(s.stereoEnhance)) setStereoEnhance(s.stereoEnhance)
         if (typeof s.lowEndControl === "number" && Number.isFinite(s.lowEndControl)) setLowEndControl(s.lowEndControl)
         if (typeof s.clarityPresence === "number" && Number.isFinite(s.clarityPresence)) setClarityPresence(s.clarityPresence)
-        if (typeof s.masteredUrl === "string") setMasteredUrl(s.masteredUrl)
         if (typeof s.masteredPreviewMp3Url === "string") setMasteredPreviewMp3Url(s.masteredPreviewMp3Url)
         if (typeof s.masterObjectKey === "string") setMasterObjectKey(s.masterObjectKey)
         if (typeof s.masterExpiresAt === "string") setMasterExpiresAt(s.masterExpiresAt)
         if (typeof s.deliveryEmail === "string") setDeliveryEmail(s.deliveryEmail)
+        if (typeof s.stripeSessionId === "string") setStripeSessionId(s.stripeSessionId)
+        if (typeof s.masteredUrl === "string" && typeof s.stripeSessionId === "string" && s.stripeSessionId.trim()) {
+          setMasteredUrl(s.masteredUrl)
+        } else {
+          setMasteredUrl("")
+        }
       } else if (snap.v === 1) {
-        const mastered = typeof snap.masteredUrl === "string" ? snap.masteredUrl : ""
-        if (mastered) setMasteredUrl(mastered)
+        setMasteredUrl("")
         if (typeof snap.masteredPreviewMp3Url === "string") setMasteredPreviewMp3Url(snap.masteredPreviewMp3Url)
         if (snap.analysisBefore && typeof snap.analysisBefore === "object") {
           setAnalysisBefore(cloneAnalysis(snap.analysisBefore as Record<string, unknown>))
@@ -239,10 +250,12 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       masteredPreviewMp3Url,
       masterObjectKey,
       masterExpiresAt,
+      stripeSessionId,
       fileName: file?.name ?? "",
     }
     const hasPayload =
       !!masteredUrl ||
+      !!masteredPreviewMp3Url ||
       !!analysisBefore ||
       !!analysisAfter ||
       !!file ||
@@ -253,7 +266,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       stereoEnhance !== 50 ||
       lowEndControl !== 50 ||
       clarityPresence !== 50 ||
-      !!deliveryEmail
+      !!deliveryEmail ||
+      !!stripeSessionId
     if (!hasPayload) {
       try {
         sessionStorage.removeItem(MASTER_SESSION_STORAGE_KEY)
@@ -281,6 +295,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     masteredPreviewMp3Url,
     masterObjectKey,
     masterExpiresAt,
+    stripeSessionId,
     file,
   ])
 
@@ -314,6 +329,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       setMasterObjectKey,
       masterExpiresAt,
       setMasterExpiresAt,
+      stripeSessionId,
+      setStripeSessionId,
       resetSession,
       sessionHydrated,
       seedAnalyzeIntoMasterFlow,
@@ -328,6 +345,7 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
       masteredPreviewMp3Url,
       masterObjectKey,
       masterExpiresAt,
+      stripeSessionId,
       analysisBefore,
       analysisAfter,
       stylePreset,

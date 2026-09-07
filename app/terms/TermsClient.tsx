@@ -1,6 +1,7 @@
 "use client"
 
 import LegalPageShell from "../components/legal/LegalPageShell"
+import { MASTER_PRICE_LABEL } from "../../lib/pricing"
 
 const SECTIONS = [
   {
@@ -39,6 +40,10 @@ const SECTIONS = [
         <li>
           <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
           Mastering is delivered as a digital product — previews and paid full exports.
+        </li>
+        <li>
+          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
+          Each master export is {MASTER_PRICE_LABEL} USD via secure Stripe checkout after your preview is ready.
         </li>
         <li>
           <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />

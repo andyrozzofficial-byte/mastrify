@@ -1,6 +1,5 @@
 "use client"
 
-import { supabase } from "../../lib/supabase"
 import { useState, useRef } from "react"
 import axios from "axios"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
@@ -159,16 +158,11 @@ export default function AnalyzePage() {
   const router = useRouter()
   const { seedAnalyzeIntoMasterFlow } = useMasterSession()
 
-  const [showWaitlist, setShowWaitlist] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [processing, setProcessing] = useState(false)
   const [analysisStep, setAnalysisStep] = useState(0)
   const [result, setResult] = useState<any>(null)
-  const [waitlistEmail, setWaitlistEmail] = useState("")
-  const [waitlistLoading, setWaitlistLoading] = useState(false)
-  const [waitlistSuccess, setWaitlistSuccess] = useState(false)
-  const [waitlistError, setWaitlistError] = useState("")
   const issues = generateIssues(result).sort((a: any, b: any) => {
   const order: any = { high: 0, medium: 1, low: 2 }
   return order[a.level] - order[b.level]
@@ -190,43 +184,6 @@ export default function AnalyzePage() {
   const mainIssueRowIndex = issueListForUi.findIndex((x: any) => x.level === "high")
   const recommendations = generateFixes(result)
   const verdict = result?.verdict
-  const handleWaitlist = async () => {
-  setWaitlistError("")
-
-  if (!waitlistEmail.includes("@")) {
-    return setWaitlistError("Enter valid email")
-  }
-
-  setWaitlistLoading(true)
-
-  // 🔥 fake delay (känns mer "äkta")
-  await new Promise(res => setTimeout(res, 600 + Math.random() * 400))
-
-  const { error } = await supabase
-    .from("waitlist")
-    .insert([{ email: waitlistEmail }])
-
-  setWaitlistLoading(false)
-
-  if (error) {
-    if (error.message.includes("duplicate")) {
-      setWaitlistError("Already joined 😉")
-    } else {
-      setWaitlistError("Something went wrong")
-    }
-    return
-  }
-
-  // ✅ SUCCESS
-  setWaitlistSuccess(true)
-  setWaitlistEmail("")
-
-  // 🔥 låt user se success (viktigt!)
-  setTimeout(() => {
-    setShowWaitlist(false)
-    setWaitlistSuccess(false)
-  }, 5000)
-}
 
   const canMaster = result?.mixQuality > 70
   const reduce = useReducedMotion()
@@ -640,61 +597,6 @@ export default function AnalyzePage() {
           )}
         </AnimatePresence>
       </motion.div>
-
-{/* 🔥 WAITLIST POPUP */}
-{showWaitlist && (
-  <div
-  className={`fixed inset-0 bg-black/70 flex items-center justify-center z-50 transition-all duration-300 ${
-  waitlistSuccess ? "opacity-0 scale-95" : "opacity-100 scale-100"
-}`}
-  onClick={() => setShowWaitlist(false)}
->
-    
-    <div
-  onClick={(e) => e.stopPropagation()}
-  className="bg-[#0f172a] p-6 rounded-2xl w-[90%] max-w-md text-center border border-white/10"
->
-      
-      <h2 className="text-xl font-semibold mb-2">
-        🚀 Join early access
-      </h2>
-
-      <p className="text-gray-400 text-sm mb-4">
-        Be first to try AI mastering
-      </p>
-
-      <input
-  value={waitlistEmail}
-  onChange={(e) => setWaitlistEmail(e.target.value)}
-  placeholder="Enter your email"
-  className="w-full p-3 rounded-lg bg-black border border-gray-700 mb-3 outline-none"
-/>
-
-      <button
-  onClick={handleWaitlist}
-  disabled={waitlistLoading}
-  className="w-full p-3 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 font-semibold disabled:opacity-50"
->
-  {waitlistLoading ? "Joining..." : "Join waitlist"}
-</button>
-
-{waitlistSuccess && (
-  <p className="text-green-400 text-sm mt-2">
-    You're in! 🚀
-  </p>
-)}
-
-      <button
-        onClick={() => setShowWaitlist(false)}
-        className="text-gray-500 text-sm mt-3"
-      >
-        Close
-      </button>
-
-    </div>
-
-  </div>
-)}
 
     </motion.div>
   )
