@@ -19,11 +19,13 @@ export default function PremiumButton({
   variant = "primary",
   className = "",
   children,
+  prefetch = false,
   ...props
 }: Props) {
   return (
     <Link
-      className={`group relative inline-flex min-h-[48px] max-w-full min-w-0 shrink-0 items-center justify-center overflow-hidden rounded-xl px-6 text-center text-[13px] font-semibold tracking-[-0.01em] transition-all duration-300 active:scale-[0.98] sm:min-h-[48px] sm:px-7 md:min-h-[50px] md:px-8 md:text-[14px] ${styles[variant]} ${className}`}
+      prefetch={prefetch}
+      className={`safari-nav-link group relative inline-flex min-h-[48px] max-w-full min-w-0 shrink-0 items-center justify-center overflow-hidden rounded-xl px-6 text-center text-[13px] font-semibold tracking-[-0.01em] transition-[box-shadow,filter,background-color,border-color,color] duration-300 motion-safe:active:scale-[0.98] sm:min-h-[48px] sm:px-7 md:min-h-[50px] md:px-8 md:text-[14px] ${styles[variant]} ${className}`}
       {...props}
     >
       <span className={btnPrimaryVertical.shine} aria-hidden />

@@ -31,7 +31,7 @@ export default function AnalysisStageList({ activeStep }: Props) {
         transition={{ delay: 0.2, duration: 0.5 }}
       >
         <motion.div
-          className="relative h-full rounded-full bg-gradient-to-r from-violet-500/80 via-indigo-400/90 to-cyan-400/70 shadow-[0_0_20px_rgba(129,140,248,0.35)]"
+          className="relative h-full rounded-full bg-gradient-to-r from-violet-500/75 via-indigo-500/85 to-indigo-400/70 shadow-[0_0_12px_rgba(129,140,248,0.14)]"
           initial={{ width: "0%" }}
           animate={{ width: `${perceptual}%` }}
           transition={{ duration: reduceMotion ? 0 : 0.85, ease: [0.22, 1, 0.36, 1] }}
@@ -75,7 +75,7 @@ export default function AnalysisStageList({ activeStep }: Props) {
             >
               {active ? (
                 <motion.div
-                  className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r from-violet-500/[0.07] via-transparent to-cyan-500/[0.04]"
+                  className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r from-violet-500/[0.05] via-transparent to-transparent"
                   aria-hidden
                 />
               ) : null}

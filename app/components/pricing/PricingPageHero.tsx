@@ -26,7 +26,7 @@ export default function PricingPageHero() {
   return (
     <section className="marketing-hero-shell hero-section relative w-full">
       <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.055),transparent_55%)]"
         aria-hidden
         animate={reduce ? undefined : { opacity: [0.85, 1, 0.85] }}
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
@@ -43,7 +43,7 @@ export default function PricingPageHero() {
 
           <h1 className="mt-3.5 text-[1.6rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
             One master.
-            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-violet-100/90 bg-clip-text text-transparent">
               Full quality. No complexity.
             </span>
           </h1>

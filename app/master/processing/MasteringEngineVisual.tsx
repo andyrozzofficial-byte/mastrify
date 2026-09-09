@@ -60,7 +60,7 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
         transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_40%,rgba(34,211,238,0.12),transparent_55%)] blur-2xl lg:inset-[-4%] xl:inset-[-12%]"
+        className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_40%,rgba(139,92,246,0.06),transparent_55%)] blur-xl lg:inset-[-4%] xl:inset-[-12%]"
         animate={reduceMotion ? {} : { opacity: [0.25, 0.45, 0.25] }}
         transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
       />

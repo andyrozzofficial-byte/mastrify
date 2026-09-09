@@ -21,12 +21,12 @@ export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props
       className="relative"
     >
       <motion.div
-        className="pointer-events-none absolute -inset-1 rounded-xl bg-gradient-to-r from-violet-600/[0.16] via-indigo-500/[0.09] to-cyan-500/[0.1] blur-lg"
+        className="pointer-events-none absolute -inset-1 rounded-xl bg-gradient-to-r from-violet-600/[0.10] via-indigo-500/[0.06] to-transparent blur-lg"
         aria-hidden
         animate={reduce ? undefined : { opacity: [0.5, 0.78, 0.5] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.div className="relative overflow-hidden rounded-xl border border-violet-400/[0.2] bg-gradient-to-br from-violet-950/42 via-black/60 to-slate-950/48 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_40px_rgba(99,102,241,0.12),0_20px_48px_rgba(0,0,0,0.45)] backdrop-blur-xl md:flex md:items-center md:justify-between md:gap-6 md:px-5 md:py-4">
+      <motion.div className="glass-surface relative overflow-hidden rounded-xl border border-violet-400/[0.2] bg-gradient-to-br from-violet-950/42 via-black/60 to-slate-950/48 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_20px_rgba(99,102,241,0.06),0_20px_48px_rgba(0,0,0,0.45)] md:flex md:items-center md:justify-between md:gap-6 md:px-5 md:py-4">
         <div
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(105deg,rgba(255,255,255,0.04)_0%,transparent_42%,transparent_100%)]"
           aria-hidden
@@ -46,7 +46,7 @@ export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props
             onClick={onMaster}
             whileHover={reduce ? undefined : { y: -1 }}
             transition={{ duration: 0.22, ease: ANALYZE_EASE }}
-            className="inline-flex min-h-[46px] items-center justify-center rounded-lg bg-gradient-to-r from-[#6d28d9] via-[#4f46e5] to-[#2563eb] px-7 text-[13px] font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,0.19),0_12px_32px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.14] transition-[box-shadow,filter] duration-300 hover:shadow-[0_0_32px_rgba(99,102,241,0.24),0_14px_36px_rgba(0,0,0,0.34)] hover:brightness-[1.03]"
+            className="safari-nav-link inline-flex min-h-[46px] items-center justify-center rounded-lg bg-gradient-to-r from-[#6d28d9] via-[#4f46e5] to-[#2563eb] px-7 text-[13px] font-semibold text-white shadow-[0_0_16px_rgba(99,102,241,0.10),0_12px_32px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.14] transition-[box-shadow,filter] duration-300 hover:shadow-[0_0_20px_rgba(99,102,241,0.12),0_14px_36px_rgba(0,0,0,0.34)] hover:brightness-[1.03]"
           >
             Master my track
           </motion.button>
@@ -58,7 +58,7 @@ export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props
             transition={{ duration: 0.22, ease: ANALYZE_EASE }}
             className={`inline-flex min-h-[46px] items-center justify-center rounded-lg border px-5 text-[13px] font-semibold transition-[border-color,background-color,box-shadow] duration-300 ${
               canMaster
-                ? "border-white/[0.12] bg-white/[0.04] text-white/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] hover:border-cyan-400/25 hover:bg-white/[0.06] hover:shadow-[0_0_18px_rgba(34,211,238,0.06)]"
+                ? "border-white/[0.12] bg-white/[0.04] text-white/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] hover:border-white/[0.16] hover:bg-white/[0.06]"
                 : "cursor-not-allowed border-white/[0.06] bg-white/[0.02] text-white/64"
             }`}
           >

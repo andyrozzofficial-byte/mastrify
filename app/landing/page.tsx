@@ -32,7 +32,7 @@ export default function Landing() {
 
   return (
     <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-x-clip"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: EASE }}
@@ -40,15 +40,15 @@ export default function Landing() {
       <CinematicBackground intensity="strong" />
 
       <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_6%,rgba(99,102,241,0.14),transparent_58%),radial-gradient(ellipse_50%_40%_at_88%_70%,rgba(34,211,238,0.06),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_6%,rgba(99,102,241,0.07),transparent_58%)]"
         aria-hidden
         animate={reduce ? undefined : { opacity: [0.92, 1, 0.92] }}
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
       />
 
       <motion.div
-        className="pointer-events-none absolute left-1/2 top-[12%] h-[min(520px,62vw)] w-[min(680px,88vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.06] blur-[100px]"
-        animate={reduce ? undefined : { opacity: [0.45, 0.68, 0.45], scale: [1, 1.03, 1] }}
+        className="pointer-events-none absolute left-1/2 top-[12%] h-[min(420px,55vw)] w-[min(580px,80vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.035] blur-[64px]"
+        animate={reduce ? undefined : { opacity: [0.28, 0.4, 0.28], scale: [1, 1.02, 1] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         aria-hidden
       />
@@ -71,7 +71,7 @@ export default function Landing() {
 
             <h1 className="mt-3.5 text-[1.65rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2.1rem] md:text-[3.1rem] md:leading-[1.08] lg:mt-7 lg:text-[2.65rem]">
               Music shaped for release
-              <span className="mt-2 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+              <span className="mt-2 block bg-gradient-to-r from-violet-200 via-white to-violet-100/90 bg-clip-text text-transparent">
                 with musical depth
               </span>
             </h1>
@@ -87,13 +87,13 @@ export default function Landing() {
                 Transparent dynamics that respect what your mix already does well
               </li>
               <li className="flex gap-2.5">
-                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
+                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/50" aria-hidden />
                 Loudness and tone guided with restraint — not brute-force processing
               </li>
             </ul>
 
             <motion.div
-              className="mobile-cta-stack mt-4 sm:mt-8 lg:justify-start"
+              className="mobile-cta-stack relative z-20 mt-4 sm:mt-8 lg:justify-start"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.18, ease: EASE }}

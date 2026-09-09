@@ -41,7 +41,7 @@ function ThinSlider({
         max={100}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-0.5 w-full cursor-pointer appearance-none rounded-full bg-white/[0.07] accent-purple-500 transition [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(192,132,252,0.45),0_0_4px_rgba(34,211,238,0.12)] [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:shadow-[0_0_8px_rgba(192,132,252,0.45)]"
+        className="h-0.5 w-full cursor-pointer appearance-none rounded-full bg-white/[0.07] accent-purple-500 transition [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(192,132,252,0.22)] [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:shadow-[0_0_6px_rgba(192,132,252,0.22)]"
       />
       <div className="space-y-0.5">
         <p className="text-[10px] leading-snug text-white/45">{description}</p>
@@ -134,7 +134,7 @@ export default function MasterSettingsPage() {
           >
             Choose audio file
           </button>
-          <Link href="/master" className="text-xs text-purple-300 hover:underline">
+          <Link href="/master" prefetch={false} className="safari-nav-link text-xs text-purple-300 hover:underline">
             Start over from upload
           </Link>
         </div>
@@ -149,7 +149,7 @@ export default function MasterSettingsPage() {
         <div className="relative flex flex-col items-center justify-center gap-4 px-6 py-12">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
           <p className="text-sm text-white/50">Preparing session…</p>
-          <Link href="/master" className="text-xs text-purple-300 hover:underline">
+          <Link href="/master" prefetch={false} className="safari-nav-link text-xs text-purple-300 hover:underline">
             Return to upload
           </Link>
         </div>

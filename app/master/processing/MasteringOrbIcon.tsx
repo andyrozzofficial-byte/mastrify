@@ -87,7 +87,7 @@ export default function MasteringOrbIcon({ className }: { className?: string }) 
         />
       </svg>
       <motion.div
-        className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-violet-100 via-white to-sky-200 shadow-[0_0_18px_rgba(167,139,250,0.65)]"
+        className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-violet-100 via-white to-violet-50 shadow-[0_0_10px_rgba(167,139,250,0.22)]"
         animate={{ scale: [1, 1.18, 1], opacity: [0.88, 1, 0.88] }}
         transition={{ duration: 2.1, repeat: Infinity, ease: "easeInOut" }}
       />

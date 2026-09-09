@@ -14,7 +14,7 @@ export default function Pricing() {
 
   return (
     <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-x-clip"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: EASE }}
@@ -22,7 +22,7 @@ export default function Pricing() {
       <CinematicBackground intensity="strong" />
 
       <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.11),transparent_55%),radial-gradient(ellipse_50%_40%_at_88%_60%,rgba(34,211,238,0.06),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.055),transparent_55%)]"
         aria-hidden
         animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}

@@ -188,11 +188,11 @@ export default function MasterProcessingPage() {
 
       {/* Ambient lab depth */}
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_12%,rgba(99,102,241,0.14),transparent_58%),radial-gradient(ellipse_50%_40%_at_85%_75%,rgba(34,211,238,0.06),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_12%,rgba(99,102,241,0.07),transparent_58%)]"
         aria-hidden
       />
       <motion.div
-        className="pointer-events-none absolute left-1/2 top-[18%] h-[min(520px,70vw)] w-[min(680px,95vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.07] blur-[100px]"
+        className="pointer-events-none absolute left-1/2 top-[18%] h-[min(420px,60vw)] w-[min(580px,85vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.04] blur-[64px]"
         animate={{ opacity: [0.5, 0.75, 0.5], scale: [1, 1.04, 1] }}
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         aria-hidden
@@ -221,7 +221,7 @@ export default function MasterProcessingPage() {
           </p>
           <h1 className="mt-4 text-[1.62rem] font-semibold leading-[1.13] tracking-[-0.03em] text-white min-[430px]:text-[1.75rem] sm:text-[2.15rem] md:text-[2.65rem] md:leading-[1.08]">
             Mastering your track
-            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-violet-100/90 bg-clip-text text-transparent">
               with musical depth
             </span>
           </h1>
@@ -268,7 +268,7 @@ export default function MasterProcessingPage() {
           transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.div
-            className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-b from-violet-500/20 via-transparent to-cyan-500/10 opacity-60 blur-sm"
+            className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-b from-violet-500/10 via-transparent to-transparent opacity-50 blur-sm"
             animate={{ opacity: [0.35, 0.55, 0.35] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             aria-hidden

@@ -49,11 +49,11 @@ const PRESETS: PresetDefinition[] = [
     personality: { loudness: "Streaming", stereo: "Natural", dynamics: "Open" },
     motionKey: "balanced",
     accent: {
-      iconBg: "from-cyan-500/28 via-indigo-500/22 to-violet-600/16",
-      iconRing: "ring-cyan-300/35",
-      glow: "shadow-[0_0_28px_rgba(34,211,238,0.24)]",
-      activeBorder: "border-cyan-300/50",
-      activeAura: "bg-[radial-gradient(ellipse_70%_55%_at_50%_18%,rgba(34,211,238,0.16),transparent_68%)]",
+      iconBg: "from-indigo-500/28 via-indigo-500/22 to-violet-600/16",
+      iconRing: "ring-indigo-300/35",
+      glow: "shadow-[0_0_18px_rgba(99,102,241,0.12)]",
+      activeBorder: "border-indigo-300/50",
+      activeAura: "bg-[radial-gradient(ellipse_70%_55%_at_50%_18%,rgba(99,102,241,0.10),transparent_68%)]",
     },
     detail: {
       summary: "The safe all-rounder — clean level, even tone, and translation you can trust on any platform.",
@@ -120,7 +120,7 @@ const PRESETS: PresetDefinition[] = [
     accent: {
       iconBg: "from-violet-500/32 via-purple-600/24 to-fuchsia-500/16",
       iconRing: "ring-violet-300/38",
-      glow: "shadow-[0_0_32px_rgba(139,92,246,0.3)]",
+      glow: "shadow-[0_0_18px_rgba(139,92,246,0.14)]",
       activeBorder: "border-violet-300/50",
       activeAura: "bg-[radial-gradient(ellipse_70%_55%_at_50%_22%,rgba(139,92,246,0.18),transparent_68%)]",
     },

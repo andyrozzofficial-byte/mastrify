@@ -40,7 +40,7 @@ export default function MasterUploadHero({
   return (
     <section className="marketing-hero-shell hero-section relative w-full">
       <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.055),transparent_55%)]"
         aria-hidden
         animate={reduce ? undefined : { opacity: [0.85, 1, 0.85] }}
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
@@ -57,7 +57,7 @@ export default function MasterUploadHero({
 
           <h1 className="mt-3 text-[1.48rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white min-[430px]:text-[1.55rem] sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
             Release-ready masters
-            <span className="mt-0.5 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent sm:mt-1">
+            <span className="mt-0.5 block bg-gradient-to-r from-violet-200 via-white to-violet-100/90 bg-clip-text text-transparent sm:mt-1">
               with musical depth
             </span>
           </h1>
@@ -76,7 +76,7 @@ export default function MasterUploadHero({
               Perceptual processing tuned to your mix, not a one-size chain
             </li>
             <li className="flex gap-2.5 max-md:hidden">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
+              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/50" aria-hidden />
               Style and loudness goals you control before the final render
             </li>
             <li className="flex gap-2.5 max-lg:hidden">

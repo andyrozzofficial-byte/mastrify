@@ -29,7 +29,7 @@ export default function PricingUnlockCard({ className = "" }: Props) {
       transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
     >
       <div
-        className="pointer-events-none absolute -inset-px rounded-[1.4rem] bg-gradient-to-br from-violet-500/18 via-transparent to-cyan-500/10 opacity-60 blur-sm"
+        className="pointer-events-none absolute -inset-px rounded-[1.4rem] bg-gradient-to-br from-violet-500/9 via-transparent to-transparent opacity-50 blur-sm"
         aria-hidden
       />
 
@@ -43,7 +43,7 @@ export default function PricingUnlockCard({ className = "" }: Props) {
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-10 left-1/2 h-28 w-52 -translate-x-1/2 rounded-full bg-cyan-500/[0.04] blur-3xl"
+          className="pointer-events-none absolute -bottom-10 left-1/2 h-28 w-52 -translate-x-1/2 rounded-full bg-violet-600/[0.025] blur-3xl"
           aria-hidden
         />
 

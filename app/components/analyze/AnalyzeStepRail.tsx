@@ -49,7 +49,7 @@ export default function AnalyzeStepRail({ phase, className = "" }: Props) {
               />
               {active >= i ? (
                 <motion.div
-                  className="absolute inset-y-0 left-0 h-full rounded-full bg-gradient-to-r from-violet-500/40 to-cyan-400/30"
+                  className="absolute inset-y-0 left-0 h-full rounded-full bg-gradient-to-r from-violet-500/35 to-indigo-400/25"
                   initial={{ width: "0%" }}
                   animate={{ width: "100%" }}
                   transition={{ duration: 0.6, ease: EASE }}

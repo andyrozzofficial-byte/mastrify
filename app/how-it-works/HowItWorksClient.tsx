@@ -171,7 +171,7 @@ export default function HowItWorksClient() {
 
   return (
     <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-x-clip"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45 }}
@@ -179,7 +179,7 @@ export default function HowItWorksClient() {
       <CinematicBackground intensity="strong" />
 
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_8%,rgba(99,102,241,0.12),transparent_58%),radial-gradient(ellipse_50%_40%_at_85%_75%,rgba(34,211,238,0.06),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_8%,rgba(99,102,241,0.06),transparent_58%)]"
         aria-hidden
       />
 
@@ -192,7 +192,7 @@ export default function HowItWorksClient() {
             </span>
             <h1 className="mt-5 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.5rem] md:text-[3rem] md:leading-[1.08]">
               How your music becomes
-              <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+              <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-violet-100/90 bg-clip-text text-transparent">
                 release-ready
               </span>
             </h1>
@@ -206,7 +206,7 @@ export default function HowItWorksClient() {
                 Perceptual processing that follows the music, not a fixed template
               </li>
               <li className="flex gap-2.5">
-                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/60" aria-hidden />
+                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/50" aria-hidden />
                 Transparency when your material already speaks clearly
               </li>
               <li className="flex gap-2.5">
@@ -272,7 +272,7 @@ export default function HowItWorksClient() {
                 className="group relative overflow-hidden rounded-[1.15rem] border border-white/[0.07] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_20px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition duration-300 hover:border-white/[0.1] hover:bg-white/[0.045] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_56px_rgba(0,0,0,0.42)] md:p-6"
               >
                 <div className="relative flex items-start gap-4">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-gradient-to-br from-violet-500/15 to-cyan-500/10 text-violet-200/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-gradient-to-br from-violet-500/12 to-indigo-500/8 text-violet-200/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                     <step.icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">

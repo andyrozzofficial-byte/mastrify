@@ -267,7 +267,7 @@ export default function AnalyzePage() {
 
   return (
     <motion.div
-      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-hidden"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-x-clip"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45 }}
@@ -285,7 +285,7 @@ export default function AnalyzePage() {
       {!processing && (
         <>
           <motion.div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.055),transparent_55%)]"
             aria-hidden
             animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
@@ -347,7 +347,7 @@ export default function AnalyzePage() {
           <header className="-mt-1 text-center md:mt-0">
             <h1 className="text-[1.45rem] font-semibold leading-[1.1] tracking-[-0.02em] text-white sm:text-[1.6rem] md:text-[1.75rem]">
               Your mix,{" "}
-              <span className="bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-violet-200 via-white to-violet-100/90 bg-clip-text text-transparent">
                 understood
               </span>
             </h1>

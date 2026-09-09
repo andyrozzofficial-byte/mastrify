@@ -45,7 +45,7 @@ export default function AnalyzeUploadHero({
   return (
     <section className="marketing-hero-shell hero-section relative w-full md:pb-10">
       <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.055),transparent_55%)]"
         aria-hidden
         animate={reduce ? undefined : { opacity: [0.85, 1, 0.85] }}
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
@@ -62,7 +62,7 @@ export default function AnalyzeUploadHero({
 
           <h1 className="mt-3.5 text-[1.62rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white min-[430px]:text-[1.85rem] sm:mt-5 sm:text-[2.35rem] md:text-[2.65rem]">
             See what your mix
-            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-sky-200/90 bg-clip-text text-transparent">
+            <span className="mt-1 block bg-gradient-to-r from-violet-200 via-white to-violet-100/90 bg-clip-text text-transparent">
               actually needs
             </span>
           </h1>
@@ -78,7 +78,7 @@ export default function AnalyzeUploadHero({
               Understand loudness, width, and tone with engineer-level clarity
             </li>
             <li className="flex gap-2.5">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400/55" aria-hidden />
+              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/50" aria-hidden />
               Know what to fix in the mix — and what is already working
             </li>
             <li className="flex gap-2.5">

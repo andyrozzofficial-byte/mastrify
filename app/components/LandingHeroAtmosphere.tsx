@@ -31,7 +31,7 @@ export default function LandingHeroAtmosphere({
 
   return (
     <motion.div
-      className={`pointer-events-none absolute inset-0 max-lg:overflow-hidden ${
+      className={`pointer-events-none absolute inset-0 max-lg:overflow-x-clip ${
         compact
           ? "lg:inset-[-6%] xl:inset-[-10%]"
           : "lg:inset-[-12%] xl:inset-[-16%] 2xl:inset-[-18%]"
@@ -41,8 +41,8 @@ export default function LandingHeroAtmosphere({
       <motion.div
         className={`absolute left-1/2 top-1/2 h-[88%] w-[88%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl ${
           mobileGlowBoost || compact
-            ? "bg-[radial-gradient(circle,rgba(139,92,246,0.26)_0%,rgba(79,70,229,0.1)_42%,transparent_70%)]"
-            : "bg-[radial-gradient(circle,rgba(139,92,246,0.2)_0%,rgba(79,70,229,0.08)_40%,transparent_68%)]"
+            ? "bg-[radial-gradient(circle,rgba(139,92,246,0.12)_0%,rgba(79,70,229,0.05)_42%,transparent_70%)]"
+            : "bg-[radial-gradient(circle,rgba(139,92,246,0.10)_0%,rgba(79,70,229,0.04)_40%,transparent_68%)]"
         }`}
         animate={
           staticLayers

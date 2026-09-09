@@ -24,7 +24,7 @@ export default function MasterUploadPage() {
     >
       <CinematicBackground intensity="strong" />
       <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.055),transparent_55%)]"
         aria-hidden
         animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}

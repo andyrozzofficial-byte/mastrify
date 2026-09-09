@@ -48,7 +48,7 @@ export default function ContactClient() {
           transition={{ duration: 0.65, delay: 0.06, ease: EASE }}
         >
           <div
-            className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/18 via-transparent to-cyan-500/10 opacity-60 blur-sm"
+            className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/9 via-transparent to-transparent opacity-50 blur-sm"
             aria-hidden
           />
           <div className="relative overflow-hidden rounded-[1.35rem] border border-white/[0.11] bg-gradient-to-b from-white/[0.05] to-black/[0.78] px-6 py-8 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(167,139,250,0.1),0_24px_56px_rgba(0,0,0,0.48)] backdrop-blur-2xl md:px-8 md:py-9">

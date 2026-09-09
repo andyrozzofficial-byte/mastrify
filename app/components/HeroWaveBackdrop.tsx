@@ -75,7 +75,7 @@ export default function HeroWaveBackdrop({
             ref={(el) => {
               barRefs.current[i] = el
             }}
-            className="w-[2px] origin-bottom rounded-full bg-gradient-to-t from-violet-500/40 via-indigo-300/35 to-cyan-300/25 will-change-transform"
+            className="w-[2px] origin-bottom rounded-full bg-gradient-to-t from-violet-500/35 via-indigo-300/30 to-indigo-200/20 will-change-transform"
             style={{
               height: `${heightPct}%`,
               opacity: 0.42,

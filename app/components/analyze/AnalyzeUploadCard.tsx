@@ -54,7 +54,7 @@ export default function AnalyzeUploadCard({
       transition={{ duration: 0.65, delay: 0.12, ease: EASE }}
     >
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/20 via-transparent to-cyan-500/15 opacity-60 blur-sm"
+        className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/10 via-transparent to-transparent opacity-50 blur-sm"
         animate={
           reduce
             ? undefined
