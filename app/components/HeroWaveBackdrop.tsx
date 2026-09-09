@@ -21,18 +21,22 @@ function useMounted() {
 type Props = {
   className?: string
   heightClass?: string
+  /** When false, wave bars stay static (no rAF loop). */
+  motionActive?: boolean
 }
 
 export default function HeroWaveBackdrop({
   className = "",
   heightClass = "h-[42%]",
+  motionActive = true,
 }: Props) {
   const reduce = useReducedMotion()
   const mounted = useMounted()
   const barRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const animateBars = mounted && !reduce && motionActive
 
   useEffect(() => {
-    if (!mounted || reduce) return
+    if (!animateBars) return
 
     let raf = 0
     const start = performance.now()
@@ -52,7 +56,7 @@ export default function HeroWaveBackdrop({
 
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [mounted, reduce])
+  }, [animateBars])
 
   return (
     <div
@@ -62,7 +66,7 @@ export default function HeroWaveBackdrop({
       <motion.div
         className="flex h-full items-end justify-center gap-[3px] px-6"
         initial={false}
-        animate={mounted && !reduce ? { opacity: [0.12, 0.16, 0.12] } : undefined}
+        animate={animateBars ? { opacity: [0.12, 0.16, 0.12] } : undefined}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       >
         {HERO_WAVE_BAR_HEIGHTS.map((heightPct, i) => (

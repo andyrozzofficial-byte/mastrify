@@ -5,8 +5,7 @@ import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
-import HeroWaveBackdrop from "../components/HeroWaveBackdrop"
-import MasteringEngineVisual from "../master/processing/MasteringEngineVisual"
+import MarketingHeroOrb from "../components/MarketingHeroOrb"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -185,10 +184,8 @@ export default function HowItWorksClient() {
       />
 
       {/* Hero */}
-      <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 pb-12 md:pb-28">
-        <HeroWaveBackdrop />
-
-        <div className="marketing-hero-lockup relative grid items-center gap-6 sm:gap-10 md:gap-12">
+      <section className="marketing-hero-shell hero-section how-it-works-hero page-container page-hero-pad relative z-10 overflow-hidden pb-12 md:pb-28">
+        <div className="marketing-hero-lockup relative grid items-center gap-6 sm:gap-10">
           <Reveal className="marketing-hero-copy">
             <span className="hero-eyebrow-pill">
               Intelligent mastering
@@ -225,7 +222,7 @@ export default function HowItWorksClient() {
             >
               <Link
                 href="/master"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600/90 via-indigo-600/90 to-indigo-700/90 px-7 text-[14px] font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.15),0_12px_32px_rgba(0,0,0,0.4)] ring-1 ring-white/[0.08] transition hover:brightness-[1.06]"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600/90 via-indigo-600/90 to-indigo-700/90 px-7 text-[14px] font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.11),0_12px_32px_rgba(0,0,0,0.31)] ring-1 ring-white/[0.08] transition hover:brightness-[1.04]"
               >
                 Start mastering
               </Link>
@@ -238,24 +235,13 @@ export default function HowItWorksClient() {
             </motion.div>
           </Reveal>
 
-          <Reveal
-            delay={0.1}
-            className="marketing-hero-orb-slot hidden md:flex marketing-hero-visual relative min-w-0 justify-center overflow-hidden"
-          >
-            <div className="hero-engine-orb-cage relative w-full">
-              <div
-                className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.14),transparent_65%)]"
-                aria-hidden
-              />
-              <MasteringEngineVisual activeStep={engineStep} className="marketing-engine-visual relative z-[1]" />
-            </div>
-          </Reveal>
+          <MarketingHeroOrb activeStep={engineStep} />
         </div>
       </section>
 
       {/* Steps */}
-      <section className="relative z-10 border-t border-white/[0.05] bg-black/20 py-14 md:py-28">
-        <div className="mx-auto max-w-[1080px] px-5 md:px-10">
+      <section className="how-it-works-steps relative z-10 mt-8 border-t border-white/[0.05] bg-black/20 pt-8 pb-14 md:mt-12 md:pt-12 md:pb-28">
+        <div className="relative mx-auto max-w-[1080px] px-5 md:px-10">
           <Reveal className="text-center">
             <SectionLabel>The path to your master</SectionLabel>
             <h2 className="mt-3 text-[1.65rem] font-semibold tracking-[-0.02em] text-white sm:text-[2rem]">
@@ -283,12 +269,8 @@ export default function HowItWorksClient() {
                   hidden: reduce ? {} : { opacity: 0, y: 18 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } },
                 }}
-                className="group relative overflow-hidden rounded-[1.15rem] border border-white/[0.07] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_20px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition duration-300 hover:border-white/[0.1] hover:bg-white/[0.045] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_56px_rgba(0,0,0,0.42),0_0_40px_rgba(99,102,241,0.06)] md:p-6"
+                className="group relative overflow-hidden rounded-[1.15rem] border border-white/[0.07] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_20px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition duration-300 hover:border-white/[0.1] hover:bg-white/[0.045] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_56px_rgba(0,0,0,0.42)] md:p-6"
               >
-                <motion.div
-                  className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-violet-500/[0.07] blur-2xl transition group-hover:bg-violet-500/[0.1]"
-                  aria-hidden
-                />
                 <div className="relative flex items-start gap-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-gradient-to-br from-violet-500/15 to-cyan-500/10 text-violet-200/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                     <step.icon className="h-5 w-5" />
@@ -402,7 +384,7 @@ export default function HowItWorksClient() {
             <p className="text-[14px] text-white/66">Ready when your mix is.</p>
             <Link
               href="/master"
-              className="mt-5 inline-flex min-h-[52px] items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-10 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition hover:brightness-[1.06]"
+              className="mt-5 inline-flex min-h-[52px] items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-10 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.09),0_10px_28px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.08] transition hover:brightness-[1.04] hover:shadow-[0_0_18px_rgba(99,102,241,0.10),0_12px_32px_rgba(0,0,0,0.34)]"
             >
               Master your track
             </Link>

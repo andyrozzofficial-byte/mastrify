@@ -1,13 +1,16 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { motion, useReducedMotion } from "framer-motion"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
 import CinematicDivider from "../components/CinematicDivider"
 import CinematicReveal from "../components/CinematicReveal"
-import HeroEngineOrb from "../components/HeroEngineOrb"
 import PremiumButton from "../components/PremiumButton"
+import { useGlobeMotionActive, useMinMd } from "../../lib/useGlobeMotionActive"
+
+const MarketingHeroOrb = dynamic(() => import("../components/MarketingHeroOrb"), { ssr: false })
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -16,14 +19,16 @@ const dawLogos = ["Ableton Live", "FL Studio", "Logic Pro", "Pro Tools", "Studio
 export default function Landing() {
   const reduce = useReducedMotion()
   const [engineStep, setEngineStep] = useState(0)
+  const showOrb = useMinMd()
+  const { ref: orbRef } = useGlobeMotionActive(showOrb)
 
   useEffect(() => {
-    if (reduce) return
+    if (reduce || !showOrb) return
     const id = setInterval(() => {
       setEngineStep((s) => (s + 1) % 5)
     }, 4000)
     return () => clearInterval(id)
-  }, [reduce])
+  }, [reduce, showOrb])
 
   return (
     <motion.div
@@ -113,9 +118,9 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <div className="marketing-hero-orb-slot hidden md:block marketing-hero-visual homepage-hero-orb min-w-0 max-w-full overflow-hidden">
-            <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost />
-          </div>
+          {showOrb ? (
+            <MarketingHeroOrb ref={orbRef} activeStep={engineStep} />
+          ) : null}
         </motion.div>
       </section>
 

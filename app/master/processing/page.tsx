@@ -232,12 +232,16 @@ export default function MasterProcessingPage() {
         </motion.div>
 
         <motion.div
-          className="relative mt-8 min-h-[min(14rem,42vw)] w-full max-w-full overflow-hidden md:mt-10 md:min-h-[16rem]"
+          className="relative mt-8 min-h-[min(14rem,42vw)] w-full max-w-full overflow-visible md:mt-10 md:min-h-[16rem]"
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
         >
-          <MasteringEngineVisual activeStep={activeStep} />
+          <div className="marketing-hero-orb relative mx-auto w-full overflow-visible">
+            <div className="hero-engine-orb-cage relative mx-auto w-full overflow-visible max-lg:mx-auto">
+              <MasteringEngineVisual activeStep={activeStep} className="marketing-engine-visual" />
+            </div>
+          </div>
         </motion.div>
 
         {(audioUrl || file) && (
@@ -258,7 +262,7 @@ export default function MasterProcessingPage() {
         )}
 
         <motion.div
-          className="relative mt-2 w-full max-w-md min-w-0 md:mt-4 md:max-w-lg"
+          className="relative mt-2 w-full max-w-lg min-w-0 px-0.5 md:mt-4 md:max-w-xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}

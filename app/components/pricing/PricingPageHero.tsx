@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState } from "react"
-import HeroEngineOrb from "../HeroEngineOrb"
+import MarketingHeroOrb from "../MarketingHeroOrb"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -19,7 +19,7 @@ export default function PricingPageHero() {
 
   useEffect(() => {
     if (reduce) return
-    const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 4000)
+    const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 3200)
     return () => clearInterval(id)
   }, [reduce])
 
@@ -79,9 +79,7 @@ export default function PricingPageHero() {
           </p>
         </motion.div>
 
-        <div className="marketing-hero-orb-slot hidden md:block marketing-hero-visual min-w-0 max-w-full overflow-hidden">
-          <HeroEngineOrb activeStep={engineStep} compactAtmosphere mobileGlowBoost />
-        </div>
+        <MarketingHeroOrb activeStep={engineStep} />
       </motion.div>
     </section>
   )

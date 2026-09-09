@@ -157,6 +157,17 @@ export default function MasterResultClient() {
     selectedSourceRef.current = selectedSource
   }, [selectedSource])
 
+  const isMobileClientRef = useRef(isMobileClient)
+  const isPlayingRef = useRef(isPlaying)
+
+  useEffect(() => {
+    isMobileClientRef.current = isMobileClient
+  }, [isMobileClient])
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying
+  }, [isPlaying])
+
   useEffect(() => {
     if (!MASTRIFY_CLIENT_PIPELINE_DEBUG) return
     console.log("[pipeline] MasterResultClient state", {
@@ -378,6 +389,46 @@ export default function MasterResultClient() {
     setIsPlaying(false)
   }
 
+  const getActiveAudioElement = (): HTMLAudioElement | null => {
+    if (isMobileClientRef.current) return mobileAudioRef.current
+    const source = selectedSourceRef.current
+    return source === "mastered" ? masteredAudioRef.current : originalAudioRef.current
+  }
+
+  const syncPlaybackProgress = () => {
+    if (isSwappingMobileSourceRef.current) return
+    const isMobile = isMobileClientRef.current
+    const source = selectedSourceRef.current
+    const el = getActiveAudioElement()
+    if (!el) return
+
+    const abs = elementTimeToTimeline(source, el.currentTime, isMobile)
+
+    if (isMobile && Number.isFinite(abs) && abs >= PREVIEW_END - MOBILE_FADE_OUT_SECONDS && abs < PREVIEW_END) {
+      const remaining = PREVIEW_END - abs
+      el.volume = Math.max(0, Math.min(1, remaining / MOBILE_FADE_OUT_SECONDS))
+    } else if (isMobile) {
+      el.volume = 1
+    }
+
+    if (Number.isFinite(abs) && abs >= PREVIEW_END) {
+      el.pause()
+      originalAudioRef.current?.pause()
+      masteredAudioRef.current?.pause()
+      mobileAudioRef.current?.pause()
+      resetBothToPreviewStart()
+      setPlayProgress(100)
+      setIsPlaying(false)
+      return
+    }
+
+    sharedTimelineSecRef.current = abs
+    setPlayProgress(progressPercentFromAbsolute(abs))
+  }
+
+  const syncPlaybackProgressRef = useRef(syncPlaybackProgress)
+  syncPlaybackProgressRef.current = syncPlaybackProgress
+
   const waitForReady = (el: HTMLAudioElement) => {
     if (el.readyState >= 1) return Promise.resolve()
     return new Promise<void>((resolve) => {
@@ -499,16 +550,7 @@ export default function MasterResultClient() {
 
       const onTimeUpdate = () => {
         if (!isSelected()) return
-        const abs = elementTimeToTimeline(label, el.currentTime, false)
-        if (Number.isFinite(abs) && abs >= PREVIEW_END) {
-          pauseBoth()
-          resetBothToPreviewStart()
-          setIsPlaying(false)
-          setPlayProgress(0)
-          return
-        }
-        sharedTimelineSecRef.current = abs
-        setPlayProgress(progressPercentFromAbsolute(abs))
+        syncPlaybackProgressRef.current()
       }
 
       el.addEventListener("loadedmetadata", onReady)
@@ -542,27 +584,7 @@ export default function MasterResultClient() {
 
     const onTimeUpdate = () => {
       if (isSwappingMobileSourceRef.current) return
-      const source = selectedSourceRef.current
-      const abs = elementTimeToTimeline(source, el.currentTime, true)
-
-      if (Number.isFinite(abs) && abs >= PREVIEW_END - MOBILE_FADE_OUT_SECONDS && abs < PREVIEW_END) {
-        const remaining = PREVIEW_END - abs
-        el.volume = Math.max(0, Math.min(1, remaining / MOBILE_FADE_OUT_SECONDS))
-      } else {
-        el.volume = 1
-      }
-
-      if (Number.isFinite(abs) && abs >= PREVIEW_END) {
-        el.pause()
-        sharedTimelineSecRef.current = PREVIEW_START
-        applyTimelineToElement(el, source, PREVIEW_START, true)
-        el.volume = 1
-        setIsPlaying(false)
-        setPlayProgress(0)
-        return
-      }
-      sharedTimelineSecRef.current = abs
-      setPlayProgress(progressPercentFromAbsolute(abs))
+      syncPlaybackProgressRef.current()
     }
 
     el.addEventListener("loadedmetadata", onReady)
@@ -574,6 +596,22 @@ export default function MasterResultClient() {
       el.removeEventListener("timeupdate", onTimeUpdate)
     }
   }, [isMobileClient, selectedSource, mobilePlaybackUrl])
+
+  useEffect(() => {
+    if (!isPlaying) return
+    let rafId = 0
+    const tick = () => {
+      const el = getActiveAudioElement()
+      if (el && !el.paused) {
+        syncPlaybackProgressRef.current()
+      }
+      if (isPlayingRef.current) {
+        rafId = requestAnimationFrame(tick)
+      }
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [isPlaying])
 
   const selectSource = async (next: "original" | "mastered") => {
     if (next === "mastered" && !masteredPlaybackUrl) return
@@ -659,8 +697,19 @@ export default function MasterResultClient() {
     if (!selectedEl) return
 
     if (!selectedEl.paused) {
+      syncPlaybackProgress()
       pauseAll()
       return
+    }
+
+    if (playProgress >= 99.5) {
+      sharedTimelineSecRef.current = PREVIEW_START
+      setPlayProgress(0)
+      if (isMobileClient) {
+        applyTimelineToElement(mobileAudioRef.current, selectedSource, PREVIEW_START, true)
+      } else {
+        syncDesktopElementsToTimeline(PREVIEW_START)
+      }
     }
 
     const otherEl = !isMobileClient
@@ -1053,7 +1102,7 @@ export default function MasterResultClient() {
                   onClick={() => selectSource("original")}
                   className={`min-h-[44px] rounded-lg py-2.5 text-[11px] font-semibold transition-all duration-200 active:scale-[0.98] sm:min-h-0 sm:py-2.5 sm:text-xs ${
                     selectedSource === "original"
-                      ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.11)] ring-1 ring-white/[0.07]"
+                      ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.08)] ring-1 ring-white/[0.07]"
                       : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/88"
                   }`}
                 >
@@ -1064,7 +1113,7 @@ export default function MasterResultClient() {
                   onClick={() => selectSource("mastered")}
                   className={`min-h-[44px] rounded-lg py-2.5 text-[11px] font-semibold transition-all duration-200 active:scale-[0.98] sm:min-h-0 sm:py-2.5 sm:text-xs ${
                     selectedSource === "mastered"
-                      ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.11)] ring-1 ring-white/[0.07]"
+                      ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.08)] ring-1 ring-white/[0.07]"
                       : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/88"
                   }`}
                 >
@@ -1082,6 +1131,8 @@ export default function MasterResultClient() {
                 isPlaying={isPlaying}
                 windowStartSec={windowStart}
                 windowDurationSec={windowLen}
+                secondaryWindowStartSec={masteredPlayback.via === "mp3" ? 0 : windowStart}
+                secondaryWindowDurationSec={windowLen}
                 isMobileMastered={false}
                 interactive={Boolean(
                   isMobileClient
@@ -1099,7 +1150,7 @@ export default function MasterResultClient() {
                 <button
                   type="button"
                   onClick={togglePlayPause}
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600/95 to-indigo-700/95 text-white shadow-[0_0_12px_rgba(99,102,241,0.12),0_6px_16px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.05] hover:shadow-[0_0_14px_rgba(99,102,241,0.14)] active:scale-[0.97] sm:h-12 sm:w-12"
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600/95 to-indigo-700/95 text-white shadow-[0_0_12px_rgba(99,102,241,0.09),0_6px_16px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.03] hover:shadow-[0_0_14px_rgba(99,102,241,0.10)] active:scale-[0.97] sm:h-12 sm:w-12"
                   aria-label={isPlaying ? "Pause" : "Play"}
                 >
                   {isPlaying ? (
@@ -1129,7 +1180,7 @@ export default function MasterResultClient() {
                     </button>
                   </div>
                   <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-white/[0.07]">
-                    <motion.div
+                    <div
                       className="h-full rounded-full bg-gradient-to-r from-violet-400/75 to-sky-500/55"
                       style={{ width: `${playProgress}%` }}
                     />
@@ -1179,35 +1230,35 @@ export default function MasterResultClient() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1 }}
-        className="mx-auto mt-5 flex w-full max-w-[28rem] flex-col gap-3 px-0 sm:mt-6 sm:flex-row sm:justify-center sm:gap-4"
+        className="mx-auto mt-5 flex w-full flex-col items-center gap-3 px-0 sm:mt-6 sm:gap-3.5"
       >
         {checkoutError ? (
-          <p className="text-center text-xs text-rose-300/85 sm:col-span-2">{checkoutError}</p>
+          <p className="max-w-[17.5rem] text-center text-xs text-rose-300/85">{checkoutError}</p>
         ) : null}
         {!deliverySent ? (
           <button
             type="button"
             onClick={handlePayment}
             disabled={checkoutLoading}
-            className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-9"
+            className="inline-flex min-h-[54px] w-full max-w-[17.5rem] items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.09),0_10px_28px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.04] hover:shadow-[0_0_18px_rgba(99,102,241,0.10),0_12px_32px_rgba(0,0,0,0.34)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:px-9"
           >
-            {checkoutLoading
-              ? "Redirecting to checkout…"
-              : isPaid
-                ? "Get download link"
-                : `Pay ${MASTER_PRICE_LABEL} & download`}
+            <span className={checkoutLoading ? "text-center" : "whitespace-nowrap"}>
+              {checkoutLoading
+                ? "Redirecting to checkout…"
+                : isPaid
+                  ? "Get download link"
+                  : `Pay ${MASTER_PRICE_LABEL} & Download`}
+            </span>
           </button>
         ) : (
-          <div
-            className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.12),0_10px_28px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.06] hover:shadow-[0_0_18px_rgba(99,102,241,0.14),0_12px_32px_rgba(0,0,0,0.42)] active:scale-[0.99] sm:w-auto sm:px-9"
-          >
+          <div className="inline-flex min-h-[54px] w-full max-w-[17.5rem] items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.09),0_10px_28px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.04] hover:shadow-[0_0_18px_rgba(99,102,241,0.10),0_12px_32px_rgba(0,0,0,0.34)] active:scale-[0.99] sm:px-9">
             Check your inbox
           </div>
         )}
         <Link
           href="/master"
           onClick={() => resetSession()}
-          className="inline-flex min-h-[54px] w-full flex-1 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-7 text-[14px] font-semibold text-white/82 transition-all duration-200 hover:border-white/[0.11] hover:bg-white/[0.055] hover:text-white/92 active:scale-[0.99] sm:w-auto sm:px-8"
+          className="inline-flex min-h-[54px] w-full max-w-[17.5rem] items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-7 text-[14px] font-semibold text-white/82 transition-all duration-200 hover:border-white/[0.11] hover:bg-white/[0.055] hover:text-white/92 active:scale-[0.99] sm:px-8"
         >
           New master
         </Link>
@@ -1250,7 +1301,7 @@ export default function MasterResultClient() {
                 type="button"
                 onClick={handleEmailDelivery}
                 disabled={deliverySending}
-                className="inline-flex min-h-[46px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-5 text-sm font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-[46px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-5 text-sm font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.12)] transition hover:brightness-[1.03] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {deliverySending ? "Sending…" : "Email my master"}
               </button>

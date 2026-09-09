@@ -13,6 +13,8 @@ type Props = {
   /** Stronger mobile radial depth behind the engine graphic */
   mobileGlowBoost?: boolean
   className?: string
+  /** When false, wave/rings/atmosphere hold static frames (off-screen or hidden tab). */
+  motionActive?: boolean
 }
 
 /**
@@ -23,6 +25,7 @@ export default function HeroEngineOrb({
   compactAtmosphere = false,
   mobileGlowBoost = false,
   className = "",
+  motionActive = true,
 }: Props) {
   const reduce = useReducedMotion()
 
@@ -35,9 +38,17 @@ export default function HeroEngineOrb({
     >
       <div className="hero-engine-orb-cage relative mx-auto w-full overflow-hidden lg:max-w-[28rem] lg:overflow-visible lg:w-[min(24rem,42vw)] md:w-[min(21rem,38vw)]">
         <div className="hero-orb-radial-mobile pointer-events-none absolute inset-0 z-0 lg:hidden" aria-hidden />
-        <LandingHeroAtmosphere compact={compactAtmosphere} mobileGlowBoost={mobileGlowBoost || compactAtmosphere} />
+        <LandingHeroAtmosphere
+          compact={compactAtmosphere}
+          mobileGlowBoost={mobileGlowBoost || compactAtmosphere}
+          motionActive={motionActive}
+        />
         <motion.div className="relative z-[1] aspect-square h-full w-full max-w-full overflow-hidden lg:overflow-visible">
-          <HeroWaveBackdrop heightClass="h-[34%] md:h-[40%]" className="opacity-[0.18] md:opacity-[0.22]" />
+          <HeroWaveBackdrop
+            heightClass="h-[34%] md:h-[40%]"
+            className="opacity-[0.18] md:opacity-[0.22]"
+            motionActive={motionActive}
+          />
           <MasteringEngineVisual
             activeStep={activeStep}
             className="marketing-engine-visual relative z-[1] mx-auto h-full w-full max-w-full"

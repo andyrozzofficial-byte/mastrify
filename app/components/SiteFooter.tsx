@@ -73,7 +73,7 @@ function SocialLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-transparent text-muted-soft transition duration-300 active:scale-[0.96] hover:border-white/[0.1] hover:bg-white/[0.05] hover:text-white/82 hover:shadow-[0_0_18px_rgba(99,102,241,0.1)]"
+      className="flex h-11 w-11 items-center justify-center rounded-full border border-transparent text-muted-soft transition duration-300 active:scale-[0.96] hover:border-white/[0.1] hover:bg-white/[0.05] hover:text-white/82 hover:shadow-[0_0_18px_rgba(99,102,241,0.07)]"
     >
       {children}
     </a>

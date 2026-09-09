@@ -23,6 +23,9 @@ export type CinematicWaveformProps = {
   variant?: "original" | "mastered"
   windowStartSec?: number
   windowDurationSec?: number
+  /** Secondary (mastered) decode window — e.g. 0 for pre-cut MP3 preview clips */
+  secondaryWindowStartSec?: number
+  secondaryWindowDurationSec?: number
   isMobileMastered?: boolean
   interactive?: boolean
   onSeek?: (progress: number) => void
@@ -41,6 +44,8 @@ export default function CinematicWaveform({
   variant = "mastered",
   windowStartSec,
   windowDurationSec,
+  secondaryWindowStartSec,
+  secondaryWindowDurationSec,
   isMobileMastered = false,
   interactive = false,
   onSeek,
@@ -70,8 +75,15 @@ export default function CinematicWaveform({
     enabled: Boolean(audioSrc),
   })
 
+  const secondaryWindow = useMemo(() => {
+    if (mode !== "result") return window
+    const start = secondaryWindowStartSec ?? window.startSec
+    const duration = secondaryWindowDurationSec ?? window.durationSec
+    return { startSec: start, durationSec: duration }
+  }, [mode, secondaryWindowStartSec, secondaryWindowDurationSec, window])
+
   const secondary = useWaveformData(secondaryAudioSrc ?? null, {
-    window,
+    window: secondaryWindow,
     enabled: Boolean(secondaryAudioSrc) && mode === "result",
     densify: true,
   })
@@ -127,10 +139,15 @@ export default function CinematicWaveform({
 
   const loading = primary.loading || (mode === "result" && secondary.loading)
   const hasPeaks = Boolean(primary.peaks)
+  const masteredResultSurface = mode === "result" && variant === "mastered"
 
   return (
     <div
-      className={`fluid-surface relative overflow-hidden rounded-lg bg-gradient-to-b from-white/[0.035] to-black/[0.28] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.06] ${className}`}
+      className={`fluid-surface relative rounded-lg ${
+        masteredResultSurface
+          ? "overflow-visible bg-transparent shadow-none ring-0"
+          : "overflow-hidden bg-gradient-to-b from-white/[0.035] to-black/[0.28] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.06]"
+      } ${className}`}
       onPointerMove={interactive ? handlePointer : undefined}
       onPointerDown={interactive ? handlePointer : undefined}
       onPointerLeave={interactive ? handleLeave : undefined}

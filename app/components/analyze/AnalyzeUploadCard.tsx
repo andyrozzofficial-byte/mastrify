@@ -146,7 +146,7 @@ export default function AnalyzeUploadCard({
               <button
                 type="button"
                 onClick={onScanClick}
-                className="group relative flex min-h-[48px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
+                className="group relative flex min-h-[48px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.11),0_14px_36px_rgba(0,0,0,0.30),0_0_24px_rgba(99,102,241,0.09)] ring-1 ring-white/[0.1] transition hover:brightness-[1.03] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_18px_44px_rgba(0,0,0,0.34),0_0_32px_rgba(99,102,241,0.13)]"
               >
                 <span
                   className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
@@ -157,7 +157,7 @@ export default function AnalyzeUploadCard({
             ) : (
               <label
                 htmlFor={fileInputId}
-                className="group relative flex min-h-[48px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_36px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.1] transition hover:brightness-[1.04]"
+                className="group relative flex min-h-[48px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.11),0_14px_36px_rgba(0,0,0,0.30),0_0_24px_rgba(99,102,241,0.09)] ring-1 ring-white/[0.1] transition hover:brightness-[1.03] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_18px_44px_rgba(0,0,0,0.34),0_0_32px_rgba(99,102,241,0.13)]"
               >
                 <span
                   className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"

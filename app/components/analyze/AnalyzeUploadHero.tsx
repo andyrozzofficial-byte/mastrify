@@ -3,9 +3,10 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState, type RefObject } from "react"
-import HeroEngineOrb from "../HeroEngineOrb"
+import MarketingHeroOrb from "../MarketingHeroOrb"
 import AnalyzeStepRail, { type AnalyzePhase } from "./AnalyzeStepRail"
 import AnalyzeUploadCard from "./AnalyzeUploadCard"
+import { useGlobeMotionActive, useMinMd } from "../../../lib/useGlobeMotionActive"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -32,12 +33,14 @@ export default function AnalyzeUploadHero({
 }: Props) {
   const reduce = useReducedMotion()
   const [engineStep, setEngineStep] = useState(0)
+  const showOrb = useMinMd()
+  const { ref: orbRef } = useGlobeMotionActive(showOrb)
 
   useEffect(() => {
-    if (reduce) return
+    if (reduce || !showOrb) return
     const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 4000)
     return () => clearInterval(id)
-  }, [reduce])
+  }, [reduce, showOrb])
 
   return (
     <section className="marketing-hero-shell hero-section relative w-full md:pb-10">
@@ -49,7 +52,7 @@ export default function AnalyzeUploadHero({
       />
 
       <motion.div
-        className="marketing-hero-lockup marketing-hero-lockup--top relative isolate grid min-w-0 gap-5 max-lg:grid-cols-1 max-lg:gap-6"
+        className="marketing-hero-lockup relative grid min-w-0 grid-cols-1 gap-6 sm:gap-10 max-lg:gap-6"
         initial={reduce ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: EASE }}
@@ -122,12 +125,7 @@ export default function AnalyzeUploadHero({
           </p>
         </motion.div>
 
-        <HeroEngineOrb
-          activeStep={engineStep}
-          compactAtmosphere
-          mobileGlowBoost
-          className="marketing-hero-orb-slot hidden md:block marketing-hero-visual relative z-0 min-w-0 max-w-full overflow-hidden lg:sticky lg:top-24"
-        />
+        {showOrb ? <MarketingHeroOrb ref={orbRef} activeStep={engineStep} /> : null}
       </motion.div>
     </section>
   )

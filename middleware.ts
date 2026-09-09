@@ -34,6 +34,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/landing" ||
     pathname.startsWith("/about") ||
     pathname.startsWith("/pricing") ||
+    pathname.startsWith("/admin") ||
     pathname.startsWith("/how-it-works") ||
     pathname.startsWith("/blog") ||
     pathname === "/privacy" ||

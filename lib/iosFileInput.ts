@@ -25,5 +25,5 @@ export function bindIosFileInputHandlers(
     onPick(candidate, e.target)
   }
 
-  return { onChange: handler, onInput: handler }
+  return { onChange: handler }
 }

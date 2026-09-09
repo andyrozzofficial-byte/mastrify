@@ -75,6 +75,7 @@ export default function MasterSettingsPage() {
     analysisBefore,
     sessionHydrated,
     reconnectSourceFile,
+    setFile,
     stylePreset,
     setStylePreset,
     targetLufs,
@@ -129,7 +130,7 @@ export default function MasterSettingsPage() {
           <button
             type="button"
             onClick={() => reconnectInputRef.current?.click()}
-            className="rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-lg ring-1 ring-white/10 transition hover:brightness-110"
+            className="rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(0,0,0,0.22)] ring-1 ring-white/10 transition hover:brightness-[1.07]"
           >
             Choose audio file
           </button>
@@ -269,11 +270,15 @@ export default function MasterSettingsPage() {
               <button
                 type="button"
                 onClick={() => router.push("/master/processing")}
-                className="w-full rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] py-3 text-[13px] font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,0.3),0_14px_44px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 transition hover:brightness-110 md:text-sm"
+                className="w-full rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] py-3 text-[13px] font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,0.22),0_14px_44px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.09)] ring-1 ring-white/10 transition hover:brightness-[1.07] md:text-sm"
               >
                 Start mastering
               </button>
-              <Link href="/master" className="pb-0.5 text-center text-[10px] text-white/62 transition hover:text-white/82">
+              <Link
+                href="/master"
+                onClick={() => setFile(null)}
+                className="pb-0.5 text-center text-[10px] text-white/62 transition hover:text-white/82"
+              >
                 ← Change file
               </Link>
             </div>

@@ -235,10 +235,14 @@ export default function AnalyzePage() {
         throw apiError
       }
 
+      if (!apiData) {
+        throw new Error("Analysis returned no data")
+      }
+
       setAnalysisStep(ANALYSIS_STEPS.length - 1)
       await sleep(520)
 
-      const data = apiData as Record<string, unknown>
+      const data: Record<string, unknown> = apiData
       setResult(data)
       appendHistory({
         kind: "analysis",
@@ -269,48 +273,50 @@ export default function AnalyzePage() {
       transition={{ duration: 0.45 }}
     >
       <CinematicBackground intensity="strong" />
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
-        aria-hidden
-        animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className={`relative mx-auto w-full px-5 pb-8 pt-4 sm:pb-10 sm:pt-6 md:px-10 md:pb-16 md:pt-8 ${
-          result && !processing
-            ? "max-w-6xl pb-6 pt-3 md:max-w-7xl md:pb-16 md:pt-8"
-            : "max-w-[1080px]"
-        }`}
-      >
-        <AnimatePresence mode="wait">
-          {!result && !processing && (
-            <motion.div
-              key="upload"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, filter: "blur(4px)" }}
-              transition={{ duration: 0.4 }}
-            >
-              <AnalyzeUploadHero
-                phase="upload"
-                file={file}
-                fileInputRef={fileInputRef}
-                onFileInputChange={(selected) => void handleUpload(selected)}
-                onScanClick={() => void handleUpload()}
-              />
-            </motion.div>
-          )}
+      <AnimatePresence mode="wait">
+        {processing && (
+          <AnalyzeProcessingView
+            key="processing"
+            activeStep={analysisStep}
+            file={file}
+          />
+        )}
+      </AnimatePresence>
+      {!processing && (
+        <>
+          <motion.div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.1),transparent_55%)]"
+            aria-hidden
+            animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className={`relative mx-auto w-full px-5 pb-8 pt-4 sm:pb-10 sm:pt-6 md:px-10 md:pb-16 md:pt-8 ${
+              result
+                ? "max-w-6xl pb-6 pt-3 md:max-w-7xl md:pb-16 md:pt-8"
+                : "max-w-[1080px]"
+            }`}
+          >
+            <AnimatePresence mode="wait">
+              {!result && (
+                <motion.div
+                  key="upload"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, filter: "blur(4px)" }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <AnalyzeUploadHero
+                    phase="upload"
+                    file={file}
+                    fileInputRef={fileInputRef}
+                    onFileInputChange={(selected) => void handleUpload(selected)}
+                    onScanClick={() => void handleUpload()}
+                  />
+                </motion.div>
+              )}
 
-          {processing && (
-            <AnalyzeProcessingView
-              key="processing"
-              activeStep={analysisStep}
-              file={file}
-              fileName={file?.name}
-            />
-          )}
-
-          {result && !processing && (
+              {result && (
         <motion.div
           key="results"
           initial={{ opacity: 0, filter: "blur(10px)", y: 16 }}
@@ -594,10 +600,11 @@ export default function AnalyzePage() {
             aria-hidden
           />
         </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </>
+      )}
     </motion.div>
   )
 }

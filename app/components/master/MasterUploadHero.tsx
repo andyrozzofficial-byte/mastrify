@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState, type RefObject } from "react"
-import MasteringEngineVisual from "../../master/processing/MasteringEngineVisual"
+import MarketingHeroOrb from "../MarketingHeroOrb"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import MasterUploadCard from "./MasterUploadCard"
 
@@ -47,7 +47,7 @@ export default function MasterUploadHero({
       />
 
       <motion.div
-        className="marketing-hero-lockup marketing-hero-lockup--top relative grid min-w-0 gap-5 max-lg:grid-cols-1 sm:gap-6"
+        className="marketing-hero-lockup relative grid min-w-0 grid-cols-1 gap-6 sm:gap-10 max-lg:gap-6"
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
@@ -122,16 +122,7 @@ export default function MasterUploadHero({
           </p>
         </motion.div>
 
-        <motion.div
-          className="marketing-hero-orb-slot hidden md:flex marketing-hero-visual marketing-hero-visual-slot relative mx-auto w-full min-w-0 max-w-full justify-center overflow-hidden md:py-2 lg:sticky lg:top-20 lg:min-h-[16rem] lg:justify-start lg:py-0"
-          initial={reduce ? false : { opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
-        >
-          <div className="hero-engine-orb-cage relative w-full max-lg:mx-auto">
-            <MasteringEngineVisual activeStep={engineStep} className="marketing-engine-visual" />
-          </div>
-        </motion.div>
+        <MarketingHeroOrb activeStep={engineStep} />
       </motion.div>
     </section>
   )

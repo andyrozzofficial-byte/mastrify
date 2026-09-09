@@ -428,6 +428,42 @@ body {
       padding-bottom: 0.75rem;
     }
   }
+  /* Shared marketing hero globe — landing reference alignment (X via .marketing-hero-visual) */
+  .marketing-hero-orb {
+    overflow: visible !important;
+  }
+  .marketing-hero-orb .hero-engine-orb-cage {
+    overflow: visible !important;
+    contain: none !important;
+  }
+  .marketing-hero-orb .marketing-engine-visual {
+    overflow: visible !important;
+  }
+  @media (min-width: 1024px) {
+    .marketing-hero-lockup .marketing-hero-orb {
+      align-self: start;
+      margin-top: 0.75rem;
+    }
+  }
+  @media (min-width: 1280px) {
+    .marketing-hero-lockup .marketing-hero-orb {
+      margin-top: 0;
+    }
+  }
+  /* Why Mastrify — sit hero block slightly lower on the page */
+  @media (min-width: 768px) {
+    .how-it-works-hero.page-hero-pad {
+      padding-top: 5.75rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .how-it-works-hero.page-hero-pad {
+      padding-top: 5rem;
+    }
+  }
+  .how-it-works-steps {
+    isolation: isolate;
+  }
   .section-after-hero {
     padding-top: 1.75rem;
     margin-top: 0.25rem;

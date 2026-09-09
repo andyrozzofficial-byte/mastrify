@@ -17,6 +17,8 @@ Required env (Railway):
 
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET` (optional; local `/tmp` fallback)
 - `RESEND_API_KEY` (email delivery via `POST /master/deliver`)
-- `STRIPE_SECRET_KEY` (backend payment verify for deliver — configure when enabling payments)
+- `STRIPE_SECRET_KEY` (same test/live secret as Vercel — verifies `POST /master/download` and `POST /master/deliver`)
 
-Frontend env: see `mastrify/.env.example` (Stripe checkout runs on Vercel/Next API routes).
+Frontend env: see `mastrify/.env.example` (Stripe Checkout runs on Vercel/Next API routes).
+
+**Local test flow:** set `STRIPE_SECRET_KEY=sk_test_...` in `.env.local` (frontend) and in the server env, set `NEXT_PUBLIC_APP_URL=http://localhost:3000`, run backend on `:3001` and `npm run dev` on `:3000`. Use card `4242 4242 4242 4242`.

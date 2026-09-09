@@ -56,7 +56,7 @@ export default function HistoryPage() {
                   onClick={() => setTab(id)}
                   className={`rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition ${
                     tab === id
-                      ? "bg-gradient-to-r from-purple-500/30 to-cyan-500/20 text-white ring-1 ring-white/15 shadow-[0_0_14px_rgba(139,92,246,0.12)]"
+                      ? "bg-gradient-to-r from-purple-500/30 to-cyan-500/20 text-white ring-1 ring-white/15 shadow-[0_0_14px_rgba(139,92,246,0.09)]"
                       : "border border-white/10 bg-black/30 text-white/75 hover:border-white/20 hover:text-white/85"
                   }`}
                 >

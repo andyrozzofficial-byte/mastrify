@@ -16,14 +16,18 @@ type Props = {
   compact?: boolean
   /** Slightly stronger radial depth on narrow viewports */
   mobileGlowBoost?: boolean
+  /** When false, atmosphere layers hold a static frame (no repeat loops). */
+  motionActive?: boolean
 }
 
 export default function LandingHeroAtmosphere({
   className = "",
   compact = false,
   mobileGlowBoost = false,
+  motionActive = true,
 }: Props) {
   const reduce = useReducedMotion()
+  const staticLayers = reduce || !motionActive
 
   return (
     <motion.div
@@ -41,7 +45,7 @@ export default function LandingHeroAtmosphere({
             : "bg-[radial-gradient(circle,rgba(139,92,246,0.2)_0%,rgba(79,70,229,0.08)_40%,transparent_68%)]"
         }`}
         animate={
-          reduce
+          staticLayers
             ? undefined
             : {
                 opacity: mobileGlowBoost || compact ? [0.52, 0.78, 0.52] : [0.5, 0.75, 0.5],
@@ -57,13 +61,13 @@ export default function LandingHeroAtmosphere({
             : "bg-[radial-gradient(ellipse,rgba(56,189,248,0.08)_0%,transparent_70%)]"
         }`}
         animate={
-          reduce ? undefined : { opacity: mobileGlowBoost || compact ? [0.38, 0.58, 0.38] : [0.35, 0.55, 0.35] }
+          staticLayers ? undefined : { opacity: mobileGlowBoost || compact ? [0.38, 0.58, 0.38] : [0.35, 0.55, 0.35] }
         }
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       />
       <motion.div
         className="absolute inset-[8%] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(167,139,250,0.04)_60deg,transparent_120deg,rgba(125,211,252,0.03)_200deg,transparent_300deg)]"
-        animate={reduce ? undefined : { rotate: 360 }}
+        animate={staticLayers ? undefined : { rotate: 360 }}
         transition={{ duration: 48, repeat: Infinity, ease: "linear" }}
       />
       {PARTICLES.map((p, i) => (
@@ -77,7 +81,7 @@ export default function LandingHeroAtmosphere({
             height: p.size,
           }}
           animate={
-            reduce
+            staticLayers
               ? { opacity: 0.25 }
               : {
                   opacity: [0.12, 0.45, 0.12],

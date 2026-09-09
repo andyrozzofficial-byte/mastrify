@@ -88,7 +88,7 @@ export default function ContactClient() {
           </PremiumButton>
           <Link
             href="/pricing"
-            className="inline-flex min-h-[48px] min-w-[13.5rem] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.03] px-9 text-[14px] font-medium text-muted-strong shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-white/[0.04] transition duration-300 hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white/88"
+            className="inline-flex min-h-[48px] min-w-[13.5rem] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.03] px-9 text-[14px] font-medium text-muted-strong shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ring-1 ring-white/[0.04] transition duration-300 hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white/88"
           >
             View pricing
           </Link>

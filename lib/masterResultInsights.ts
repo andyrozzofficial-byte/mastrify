@@ -36,6 +36,9 @@ export type AnalysisMetrics = {
   materialTransparent?: unknown
   materialProfile?: unknown
   confidenceMessages?: unknown
+  trustMix?: unknown
+  earnedProcessing?: unknown
+  protectEmotionalMovement?: unknown
 }
 
 const LOUDNESS_PROFILES: { lufs: number; title: string; subtitle: string }[] = [

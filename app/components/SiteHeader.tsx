@@ -12,7 +12,7 @@ const links = [
 ] as const
 
 const navCtaClass =
-  "inline-flex min-h-[40px] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-[11px] font-semibold text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition active:scale-[0.98] hover:border-white/[0.14] hover:bg-white/[0.07] hover:text-white sm:min-h-[44px] sm:px-5 sm:py-2.5 sm:text-[12px] md:min-h-0 md:rounded-lg md:px-4 md:py-2 md:text-[13px]"
+  "inline-flex min-h-[40px] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-[11px] font-semibold text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition active:scale-[0.98] hover:border-white/[0.14] hover:bg-white/[0.07] hover:text-white sm:min-h-[44px] sm:px-5 sm:py-2.5 sm:text-[12px] md:min-h-0 md:rounded-lg md:px-4 md:py-2 md:text-[13px]"
 
 export default function SiteHeader() {
   const pathname = usePathname()
@@ -34,30 +34,21 @@ export default function SiteHeader() {
       }`}
     >
       <div className="mx-auto w-full max-w-[1240px] min-w-0">
-        <div className="flex h-[50px] min-w-0 items-center justify-between gap-2 px-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] min-[430px]:px-[max(0.875rem,env(safe-area-inset-left))] min-[430px]:pr-[max(0.875rem,env(safe-area-inset-right))] sm:h-12 sm:gap-3 sm:px-4 md:h-[58px] md:px-8">
+        <div className="flex h-[50px] min-w-0 items-center justify-between gap-2 px-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] min-[430px]:px-[max(0.875rem,env(safe-area-inset-left))] min-[430px]:pr-[max(0.875rem,env(safe-area-inset-right))] sm:h-12 sm:gap-3 sm:px-4 md:hidden">
           <Link
             href="/"
-            className="min-w-0 shrink bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text text-[1.02rem] font-extrabold tracking-tight text-transparent sm:text-lg md:text-xl"
+            className="min-w-0 shrink bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text text-[1.02rem] font-extrabold tracking-tight text-transparent sm:text-lg"
           >
             Mastrify
           </Link>
 
-          <Link href="/master" className={`${navCtaClass} shrink-0 md:hidden`}>
+          <Link href="/master" className={`${navCtaClass} shrink-0`}>
             Start
           </Link>
-
-          <div className="hidden shrink-0 items-center gap-3.5 md:flex">
-            <Link href="/master" className="text-[13px] font-medium text-muted-soft transition hover:text-muted-strong">
-              Log in
-            </Link>
-            <Link href="/master" className={navCtaClass}>
-              Start mastering
-            </Link>
-          </div>
         </div>
 
         <nav
-          className="flex min-w-0 items-center justify-between gap-0.5 overflow-hidden border-t border-white/[0.06] px-[max(0.375rem,env(safe-area-inset-left))] pr-[max(0.375rem,env(safe-area-inset-right))] py-2 min-[430px]:px-[max(0.5rem,env(safe-area-inset-left))] min-[430px]:pr-[max(0.5rem,env(safe-area-inset-right))] sm:gap-1.5 sm:px-4 sm:py-2.5 md:justify-center md:gap-6 md:border-t-0 md:px-8 md:py-0 lg:gap-8"
+          className="flex min-w-0 items-center justify-between gap-0.5 overflow-hidden border-t border-white/[0.06] px-[max(0.375rem,env(safe-area-inset-left))] pr-[max(0.375rem,env(safe-area-inset-right))] py-2 min-[430px]:px-[max(0.5rem,env(safe-area-inset-left))] min-[430px]:pr-[max(0.5rem,env(safe-area-inset-right))] sm:gap-1.5 sm:px-4 sm:py-2.5 md:hidden"
           aria-label="Main"
         >
           {links.map(({ href, label, short }) => {
@@ -66,21 +57,54 @@ export default function SiteHeader() {
               <Link
                 key={href}
                 href={href}
-                className={`relative flex min-h-[38px] min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 py-2 text-[11px] font-medium tracking-wide transition active:scale-[0.98] min-[430px]:px-2 sm:min-h-[40px] sm:px-3.5 sm:text-[12px] md:min-h-0 md:flex-none md:justify-start md:rounded-none md:bg-transparent md:px-0 md:py-0 md:pb-0.5 md:text-[13px] md:text-sm ${
+                className={`relative flex min-h-[38px] min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 py-2 text-[11px] font-medium tracking-wide transition active:scale-[0.98] min-[430px]:px-2 sm:min-h-[40px] sm:px-3.5 sm:text-[12px] ${
                   active
-                    ? "bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.06] md:bg-transparent md:shadow-none md:ring-0"
-                    : "text-white/62 hover:bg-white/[0.04] hover:text-white/88 md:hover:bg-transparent"
+                    ? "bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.06]"
+                    : "text-white/62 hover:bg-white/[0.04] hover:text-white/88"
                 }`}
               >
-                {active && (
-                  <span className="pointer-events-none absolute -bottom-0.5 left-1/2 hidden h-[2px] w-[calc(100%+8px)] -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_10px_rgba(192,132,252,0.42)] md:block" />
-                )}
-                <span className="md:hidden">{short}</span>
-                <span className="hidden md:inline">{label}</span>
+                <span>{short}</span>
               </Link>
             )
           })}
         </nav>
+
+        <div className="hidden h-[58px] min-w-0 items-center justify-between gap-6 px-8 md:flex">
+          <Link
+            href="/"
+            className="min-w-0 shrink bg-gradient-to-r from-white via-purple-200 to-cyan-200/90 bg-clip-text text-[1.02rem] font-extrabold tracking-tight text-transparent sm:text-lg md:text-xl"
+          >
+            Mastrify
+          </Link>
+
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-6 lg:gap-8">
+            <nav className="flex min-w-0 items-center gap-5 lg:gap-7" aria-label="Main">
+              {links.map(({ href, label }) => {
+                const active = pathname === href || pathname?.startsWith(`${href}/`)
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`relative inline-flex h-9 items-center text-[13px] font-medium leading-none tracking-wide transition hover:text-white/88 ${
+                      active ? "text-white" : "text-white/62"
+                    }`}
+                  >
+                    {label}
+                    {active && (
+                      <span className="pointer-events-none absolute bottom-0 left-1/2 h-[2px] w-[calc(100%+8px)] -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_10px_rgba(192,132,252,0.42)]" />
+                    )}
+                  </Link>
+                )
+              })}
+            </nav>
+
+            <div className="flex shrink-0 items-center">
+              <Link href="/master" className={navCtaClass}>
+                Start mastering
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
   )
