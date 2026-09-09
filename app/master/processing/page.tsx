@@ -193,7 +193,7 @@ export default function MasterProcessingPage() {
       />
       <motion.div
         className="pointer-events-none absolute left-1/2 top-[18%] h-[min(420px,60vw)] w-[min(580px,85vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.04] blur-[64px]"
-        animate={{ opacity: [0.5, 0.75, 0.5], scale: [1, 1.04, 1] }}
+        animate={{ opacity: [0.28, 0.42, 0.28] }}
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         aria-hidden
       />

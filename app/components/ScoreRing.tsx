@@ -37,9 +37,9 @@ export default function ScoreRing({
         prominent && !reduce
           ? {
               filter: [
-                "drop-shadow(0 0 28px rgba(139,92,246,0.22))",
-                "drop-shadow(0 0 36px rgba(99,102,241,0.3))",
-                "drop-shadow(0 0 28px rgba(139,92,246,0.22))",
+                "drop-shadow(0 0 14px rgba(139,92,246,0.08))",
+                "drop-shadow(0 0 18px rgba(99,102,241,0.10))",
+                "drop-shadow(0 0 14px rgba(139,92,246,0.08))",
               ],
             }
           : undefined
@@ -77,7 +77,7 @@ export default function ScoreRing({
       <svg
         width={size}
         height={size}
-        className={`relative -rotate-90 ${prominent ? "drop-shadow-[0_0_20px_rgba(139,92,246,0.12)]" : "drop-shadow-[0_0_10px_rgba(139,92,246,0.10)]"}`}
+        className={`relative -rotate-90 ${prominent ? "drop-shadow-[0_0_10px_rgba(139,92,246,0.06)]" : "drop-shadow-[0_0_6px_rgba(139,92,246,0.05)]"}`}
       >
         <circle
           cx={size / 2}

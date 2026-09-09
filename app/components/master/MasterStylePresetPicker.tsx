@@ -74,7 +74,7 @@ const PRESETS: PresetDefinition[] = [
     accent: {
       iconBg: "from-amber-500/30 via-orange-500/20 to-rose-500/14",
       iconRing: "ring-amber-300/38",
-      glow: "shadow-[0_0_28px_rgba(251,191,36,0.22)]",
+      glow: "shadow-[0_0_14px_rgba(251,191,36,0.12)]",
       activeBorder: "border-amber-300/50",
       activeAura: "bg-[radial-gradient(ellipse_70%_55%_at_50%_18%,rgba(251,191,36,0.14),transparent_68%)]",
     },
@@ -97,7 +97,7 @@ const PRESETS: PresetDefinition[] = [
     accent: {
       iconBg: "from-rose-500/30 via-red-500/24 to-orange-500/16",
       iconRing: "ring-rose-300/38",
-      glow: "shadow-[0_0_32px_rgba(244,63,94,0.28)]",
+      glow: "shadow-[0_0_14px_rgba(244,63,94,0.14)]",
       activeBorder: "border-rose-300/50",
       activeAura: "bg-[radial-gradient(ellipse_70%_55%_at_50%_18%,rgba(244,63,94,0.16),transparent_68%)]",
     },
@@ -120,7 +120,7 @@ const PRESETS: PresetDefinition[] = [
     accent: {
       iconBg: "from-violet-500/32 via-purple-600/24 to-fuchsia-500/16",
       iconRing: "ring-violet-300/38",
-      glow: "shadow-[0_0_18px_rgba(139,92,246,0.14)]",
+      glow: "shadow-[0_0_12px_rgba(139,92,246,0.08)]",
       activeBorder: "border-violet-300/50",
       activeAura: "bg-[radial-gradient(ellipse_70%_55%_at_50%_22%,rgba(139,92,246,0.18),transparent_68%)]",
     },
@@ -141,11 +141,11 @@ const PRESETS: PresetDefinition[] = [
     personality: { loudness: "Lifted", stereo: "Wide", dynamics: "Airy" },
     motionKey: "open",
     accent: {
-      iconBg: "from-sky-400/30 via-blue-500/22 to-indigo-500/16",
-      iconRing: "ring-sky-300/38",
-      glow: "shadow-[0_0_32px_rgba(56,189,248,0.26)]",
-      activeBorder: "border-sky-300/50",
-      activeAura: "bg-[radial-gradient(ellipse_70%_55%_at_50%_18%,rgba(56,189,248,0.14),transparent_68%)]",
+      iconBg: "from-indigo-400/30 via-indigo-500/22 to-violet-500/16",
+      iconRing: "ring-indigo-300/38",
+      glow: "shadow-[0_0_14px_rgba(99,102,241,0.10)]",
+      activeBorder: "border-indigo-300/50",
+      activeAura: "bg-[radial-gradient(ellipse_70%_55%_at_50%_18%,rgba(99,102,241,0.08),transparent_68%)]",
     },
     detail: {
       summary: "Brighter, wider, and more energetic with extra spatial lift.",
@@ -446,7 +446,7 @@ function StylePresetCard({
       <button
         type="button"
         onClick={onInfo}
-        className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.08] bg-black/45 text-white/45 backdrop-blur-sm transition hover:border-white/[0.14] hover:bg-black/60 hover:text-white/85 active:scale-95"
+        className="stable-interaction absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.08] bg-black/45 text-white/45 backdrop-blur-sm transition-[background-color,color] hover:border-white/[0.12] hover:bg-black/60 hover:text-white/85"
         aria-label={`More about ${preset.label}`}
       >
         <InfoIcon />

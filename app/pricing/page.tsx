@@ -44,7 +44,12 @@ export default function Pricing() {
           transition={{ duration: 0.5, delay: 0.15 }}
         >
           <div
-            className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(320px,50vh)] w-[min(520px,90vw)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_50%_40%_at_50%_50%,rgba(109,40,217,0.09),transparent_68%)] opacity-80 blur-3xl"
+            className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(320px,50vh)] w-[min(520px,90vw)] -translate-x-1/2 -translate-y-1/2 opacity-60"
+            style={{
+              background: "radial-gradient(ellipse 50% 40% at 50% 50%, rgba(109,40,217,0.045), transparent 68%)",
+              filter: "blur(40px)",
+              WebkitFilter: "blur(40px)",
+            }}
             aria-hidden
           />
           <PricingUnlockCard className="relative z-[1]" />

@@ -19,6 +19,19 @@ const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
   delay: i * 0.18,
 }))
 
+const HALO_STYLE = {
+  background:
+    "radial-gradient(circle, rgba(99,102,241,0.12) 0%, rgba(79,70,229,0.04) 46%, transparent 68%)",
+  filter: "blur(36px)",
+  WebkitFilter: "blur(36px)",
+} as const
+
+const HALO_STYLE_INNER = {
+  background: "radial-gradient(circle at 30% 40%, rgba(139,92,246,0.05), transparent 58%)",
+  filter: "blur(24px)",
+  WebkitFilter: "blur(24px)",
+} as const
+
 type Props = {
   activeStep: number
   className?: string
@@ -43,25 +56,27 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
 
   return (
     <motion.div
-      className={`relative mx-auto aspect-square w-full max-w-full max-lg:max-w-[min(11.5rem,calc(100vw-2.5rem))] lg:w-[min(20rem,88vw)] lg:max-w-[22rem] xl:max-w-[24rem] ${className ?? ""}`}
-      initial={{ opacity: 0, scale: 0.97 }}
+      className={`marketing-engine-visual relative mx-auto aspect-square w-full max-w-full max-lg:max-w-[min(11.5rem,calc(100vw-2.5rem))] lg:w-[min(20rem,88vw)] lg:max-w-[22rem] xl:max-w-[24rem] ${className ?? ""}`}
+      initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       aria-hidden
     >
-      {/* Depth layers — parallax glow */}
+      {/* Depth layers — no border-radius on blur carriers (Safari edge fix) */}
       <motion.div
-        className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.28)_0%,rgba(79,70,229,0.08)_45%,transparent_65%)] blur-3xl max-lg:scale-[0.98] lg:inset-[-5%] lg:scale-100 xl:inset-[-16%] 2xl:inset-[-22%]"
+        className="pointer-events-none absolute -inset-[42%] z-0"
+        style={HALO_STYLE}
         animate={
           reduceMotion
-            ? { opacity: 0.5 }
-            : { opacity: [0.44, 0.66, 0.44], scale: [haloScale * 0.98, haloScale * 1.05, haloScale * 0.98] }
+            ? { opacity: 0.35 }
+            : { opacity: [0.28, 0.42, 0.28], scale: [haloScale * 0.99, haloScale * 1.02, haloScale * 0.99] }
         }
         transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_40%,rgba(139,92,246,0.06),transparent_55%)] blur-xl lg:inset-[-4%] xl:inset-[-12%]"
-        animate={reduceMotion ? {} : { opacity: [0.25, 0.45, 0.25] }}
+        className="pointer-events-none absolute -inset-[28%] z-0"
+        style={HALO_STYLE_INNER}
+        animate={reduceMotion ? {} : { opacity: [0.18, 0.32, 0.18] }}
         transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
       />
 
@@ -69,14 +84,14 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
       {[0, 1, 2].map((i) => (
         <motion.div
           key={`bass-${i}`}
-          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full border border-indigo-400/20"
+          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full border border-indigo-400/14"
           style={{ width: "72%", height: "72%", marginLeft: "-36%", marginTop: "-36%" }}
           animate={
             reduceMotion
-              ? { opacity: 0.12 * profile.bass }
+              ? { opacity: 0.1 * profile.bass }
               : {
                   scale: [0.92 + i * 0.04, 1.02 + profile.bass * 0.08, 0.92 + i * 0.04],
-                  opacity: [0.08, 0.22 * profile.bass, 0.08],
+                  opacity: [0.06, 0.16 * profile.bass, 0.06],
                 }
           }
           transition={{ duration: 3.6 + i * 0.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
@@ -86,12 +101,12 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
       {/* Stereo field arcs */}
       <motion.div
         className="pointer-events-none absolute inset-[6%]"
-        animate={{ opacity: 0.35 + profile.stereo * 0.45, scaleX: 0.88 + profile.stereo * 0.14 }}
+        animate={{ opacity: 0.28 + profile.stereo * 0.35, scaleX: 0.88 + profile.stereo * 0.14 }}
         transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
       >
         <svg viewBox="0 0 200 200" className="h-full w-full" fill="none">
-          <ellipse cx="100" cy="100" rx="78" ry="42" stroke="rgba(125,211,252,0.12)" strokeWidth="0.75" />
-          <ellipse cx="100" cy="100" rx="62" ry="32" stroke="rgba(167,139,250,0.18)" strokeWidth="0.5" strokeDasharray="3 8" />
+          <ellipse cx="100" cy="100" rx="78" ry="42" stroke="rgba(167,139,250,0.10)" strokeWidth="0.75" />
+          <ellipse cx="100" cy="100" rx="62" ry="32" stroke="rgba(167,139,250,0.14)" strokeWidth="0.5" strokeDasharray="3 8" />
         </svg>
       </motion.div>
 
@@ -105,37 +120,37 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
       >
         <defs>
           <linearGradient id="specArcA" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.1" />
-            <stop offset="45%" stopColor="#818cf8" stopOpacity="0.65" />
-            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.15" />
+            <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.08" />
+            <stop offset="45%" stopColor="#818cf8" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#6366f1" stopOpacity="0.1" />
           </linearGradient>
           <linearGradient id="specArcB" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.08" />
+            <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#818cf8" stopOpacity="0.06" />
           </linearGradient>
         </defs>
-        <circle cx="100" cy="100" r="88" stroke="url(#specArcA)" strokeWidth="0.6" opacity="0.35" />
-        <path d="M100 12 A88 88 0 0 1 182 72" stroke="url(#specArcB)" strokeWidth="2.2" strokeLinecap="round" opacity="0.75" />
-        <path d="M182 128 A88 88 0 0 1 100 188" stroke="url(#specArcA)" strokeWidth="1.4" strokeLinecap="round" opacity="0.4" />
+        <circle cx="100" cy="100" r="88" stroke="url(#specArcA)" strokeWidth="0.6" opacity="0.3" />
+        <path d="M100 12 A88 88 0 0 1 182 72" stroke="url(#specArcB)" strokeWidth="2.2" strokeLinecap="round" opacity="0.65" />
+        <path d="M182 128 A88 88 0 0 1 100 188" stroke="url(#specArcA)" strokeWidth="1.4" strokeLinecap="round" opacity="0.35" />
       </motion.svg>
 
       {/* Counter-rotating inner ring */}
       <motion.svg
-        className="absolute inset-[12%] h-[76%] w-[76%] m-auto"
+        className="absolute inset-[12%] m-auto h-[76%] w-[76%]"
         viewBox="0 0 200 200"
         fill="none"
         animate={reduceMotion ? {} : { rotate: -360 }}
         transition={{ duration: ringDuration * 0.65, repeat: Infinity, ease: "linear" }}
       >
-        <circle cx="100" cy="100" r="70" stroke="rgba(167,139,250,0.2)" strokeWidth="0.75" strokeDasharray="2 12" />
-        <path d="M100 30 A70 70 0 0 0 48 148" stroke="rgba(56,189,248,0.35)" strokeWidth="1.25" strokeLinecap="round" />
+        <circle cx="100" cy="100" r="70" stroke="rgba(167,139,250,0.16)" strokeWidth="0.75" strokeDasharray="2 12" />
+        <path d="M100 30 A70 70 0 0 0 48 148" stroke="rgba(129,140,248,0.28)" strokeWidth="1.25" strokeLinecap="round" />
       </motion.svg>
 
       {/* Particles */}
       {PARTICLES.map((p) => (
         <motion.div
           key={p.id}
-          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full bg-violet-200/80 shadow-[0_0_8px_rgba(167,139,250,0.5)]"
+          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full bg-violet-200/70 shadow-[0_0_4px_rgba(167,139,250,0.2)]"
           style={{
             width: p.size,
             height: p.size,
@@ -144,12 +159,12 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
           }}
           animate={
             reduceMotion
-              ? { opacity: 0.3 }
+              ? { opacity: 0.25 }
               : {
                   x: Math.cos(p.angle + step * 0.15) * p.radius * 1.8,
                   y: Math.sin(p.angle + step * 0.15) * p.radius * 1.8,
-                  opacity: [0.15, 0.55, 0.15],
-                  scale: [0.8, 1.2, 0.8],
+                  opacity: [0.12, 0.45, 0.12],
+                  scale: [0.85, 1.1, 0.85],
                 }
           }
           transition={{
@@ -167,7 +182,7 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
           className="relative h-full w-full rounded-full p-[2px]"
           style={{
             background:
-              "linear-gradient(145deg, rgba(167,139,250,0.55) 0%, rgba(99,102,241,0.35) 42%, rgba(56,189,248,0.45) 100%)",
+              "linear-gradient(145deg, rgba(167,139,250,0.32) 0%, rgba(99,102,241,0.22) 42%, rgba(79,70,229,0.28) 100%)",
           }}
           animate={
             reduceMotion
@@ -175,27 +190,27 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
               : {
                   boxShadow: profile.tighten
                     ? [
-                        "0 0 40px rgba(99,102,241,0.15), inset 0 0 30px rgba(0,0,0,0.5)",
-                        "0 0 56px rgba(79,70,229,0.22), inset 0 0 36px rgba(0,0,0,0.55)",
-                        "0 0 40px rgba(99,102,241,0.15), inset 0 0 30px rgba(0,0,0,0.5)",
+                        "0 0 24px rgba(99,102,241,0.08), inset 0 0 24px rgba(0,0,0,0.5)",
+                        "0 0 32px rgba(79,70,229,0.11), inset 0 0 28px rgba(0,0,0,0.52)",
+                        "0 0 24px rgba(99,102,241,0.08), inset 0 0 24px rgba(0,0,0,0.5)",
                       ]
                     : [
-                        "0 0 48px rgba(139,92,246,0.12), inset 0 0 24px rgba(0,0,0,0.45)",
-                        "0 0 72px rgba(99,102,241,0.2), inset 0 0 32px rgba(0,0,0,0.5)",
-                        "0 0 48px rgba(139,92,246,0.12), inset 0 0 24px rgba(0,0,0,0.45)",
+                        "0 0 28px rgba(139,92,246,0.07), inset 0 0 20px rgba(0,0,0,0.45)",
+                        "0 0 36px rgba(99,102,241,0.10), inset 0 0 24px rgba(0,0,0,0.48)",
+                        "0 0 28px rgba(139,92,246,0.07), inset 0 0 20px rgba(0,0,0,0.45)",
                       ],
                 }
           }
           transition={{ duration: profile.tighten ? 1.6 : 2.8, repeat: Infinity, ease: "easeInOut" }}
         >
           <motion.div
-            className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#050508]/92 backdrop-blur-xl"
+            className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#050508]/94"
             animate={{ scale: reduceMotion ? 1 : [1, profile.core, 1] }}
             transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
           >
             {/* Harmonic shimmer */}
             <motion.div
-              className="pointer-events-none absolute inset-0 bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(196,181,253,0.08)_40deg,transparent_80deg,rgba(125,211,252,0.06)_140deg,transparent_200deg)]"
+              className="pointer-events-none absolute inset-0 bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(196,181,253,0.06)_40deg,transparent_80deg,rgba(129,140,248,0.04)_140deg,transparent_200deg)]"
               animate={reduceMotion ? {} : { rotate: 360 }}
               transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
             />
@@ -204,9 +219,9 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
             <svg className="relative z-[1] h-[42%] w-[42%]" viewBox="0 0 48 48" fill="none">
               <defs>
                 <linearGradient id="waveGrad" x1="0%" y1="50%" x2="100%" y2="50%">
-                  <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.4" />
-                  <stop offset="50%" stopColor="#f5f3ff" stopOpacity="0.95" />
-                  <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.55" />
+                  <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.35" />
+                  <stop offset="50%" stopColor="#f5f3ff" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#a5b4fc" stopOpacity="0.45" />
                 </linearGradient>
               </defs>
               {waveformPaths.map((d, i) => (
@@ -234,20 +249,20 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
 
             {/* Transient pulse core */}
             <motion.div
-              className="absolute left-1/2 top-1/2 z-[2] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.55),0_0_40px_rgba(167,139,250,0.45)]"
+              className="absolute left-1/2 top-1/2 z-[2] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.35),0_0_18px_rgba(167,139,250,0.18)]"
               animate={
                 reduceMotion
                   ? { scale: 1 }
-                  : { scale: [1, 1.35 * profile.core, 1], opacity: [0.85, 1, 0.85] }
+                  : { scale: [1, 1.25 * profile.core, 1], opacity: [0.85, 1, 0.85] }
               }
               transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.div
-              className="absolute left-1/2 top-1/2 z-[1] h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full ring-1 ring-violet-300/30"
+              className="absolute left-1/2 top-1/2 z-[1] h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full ring-1 ring-violet-300/22"
               animate={
                 reduceMotion
-                  ? { opacity: 0.4 }
-                  : { scale: [1, 1.25, 1], opacity: [0.25, 0.55, 0.25] }
+                  ? { opacity: 0.35 }
+                  : { scale: [1, 1.18, 1], opacity: [0.2, 0.42, 0.2] }
               }
               transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
             />
@@ -258,11 +273,11 @@ export default function MasteringEngineVisual({ activeStep, className }: Props) 
       {/* Scan line — analyzing feel */}
       <motion.div
         className="pointer-events-none absolute inset-[18%] overflow-hidden rounded-full"
-        animate={{ opacity: step === 0 ? 0.35 : 0.08 }}
+        animate={{ opacity: step === 0 ? 0.28 : 0.06 }}
         transition={{ duration: 0.8 }}
       >
         <motion.div
-          className="h-[2px] w-full bg-gradient-to-r from-transparent via-violet-200/40 to-transparent blur-[1px]"
+          className="h-[2px] w-full bg-gradient-to-r from-transparent via-violet-200/30 to-transparent blur-[1px]"
           animate={reduceMotion ? { top: "50%" } : { top: ["8%", "92%", "8%"] }}
           transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
           style={{ position: "absolute", left: 0, right: 0 }}

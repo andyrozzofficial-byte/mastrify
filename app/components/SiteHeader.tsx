@@ -12,7 +12,7 @@ const links = [
 ] as const
 
 const navCtaClass =
-  "safari-nav-link inline-flex min-h-[40px] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-[11px] font-semibold text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-[background-color,border-color,color,box-shadow] duration-200 hover:border-white/[0.14] hover:bg-white/[0.07] hover:text-white sm:min-h-[44px] sm:px-5 sm:py-2.5 sm:text-[12px] md:min-h-0 md:rounded-lg md:px-4 md:py-2 md:text-[13px]"
+  "safari-nav-link stable-interaction inline-flex min-h-[40px] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-[11px] font-semibold leading-none text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-[background-color,color] duration-200 hover:border-white/[0.12] hover:bg-white/[0.07] hover:text-white sm:min-h-[44px] sm:px-5 sm:py-2.5 sm:text-[12px] md:min-h-0 md:rounded-lg md:px-4 md:py-2 md:text-[13px]"
 
 export default function SiteHeader() {
   const pathname = usePathname()

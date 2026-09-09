@@ -10,6 +10,7 @@ import {
   isAcceptedAudioUpload,
 } from "../../../lib/audioUploadAccept"
 import { OFF_SCREEN_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
+import { btnPrimaryVertical, btnStablePrimary, btnStableSecondary } from "../buttonEffects"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -69,12 +70,8 @@ export default function MasterUploadCard({
 
       <motion.div
         layout
-        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color,box-shadow] duration-500 ${
-          loaded
-            ? "border-violet-400/22 shadow-[0_0_28px_rgba(99,102,241,0.1),0_28px_64px_rgba(0,0,0,0.48)]"
-            : dragging
-              ? "border-violet-400/30"
-              : "border-white/[0.1] hover:border-white/[0.14]"
+        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color] duration-500 ${
+          loaded ? "border-violet-400/18" : dragging ? "border-violet-400/22" : "border-white/[0.1] hover:border-white/[0.12]"
         }`}
         onDragOver={(e) => {
           e.preventDefault()
@@ -97,8 +94,13 @@ export default function MasterUploadCard({
         </motion.div>
 
         <motion.div
-          className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-violet-600/[0.08] blur-3xl"
-          animate={reduce ? undefined : { opacity: loaded ? [0.55, 0.75, 0.55] : [0.4, 0.65, 0.4] }}
+          className="pointer-events-none absolute -right-20 -top-20 h-48 w-48"
+          style={{
+            background: "radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 68%)",
+            filter: "blur(32px)",
+            WebkitFilter: "blur(32px)",
+          }}
+          animate={reduce ? undefined : { opacity: loaded ? [0.28, 0.42, 0.28] : [0.22, 0.38, 0.22] }}
           transition={{ duration: loaded ? 3 : 7, repeat: Infinity, ease: "easeInOut" }}
           aria-hidden
         />
@@ -178,23 +180,17 @@ export default function MasterUploadCard({
               type="button"
               disabled={!loaded}
               onClick={onContinue}
-              className="group relative z-[3] flex min-h-[46px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-6 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.11),0_12px_32px_rgba(0,0,0,0.27)] ring-1 ring-white/[0.1] transition hover:brightness-[1.03] disabled:cursor-not-allowed disabled:opacity-35"
+              className={`${btnStablePrimary} z-[3] disabled:cursor-not-allowed disabled:opacity-35`}
             >
               <span
-                className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%] group-disabled:translate-x-[-120%]"
+                className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%] group-disabled:translate-x-[-120%]"
                 aria-hidden
               />
               <span className="relative z-[1]">Continue to settings</span>
             </button>
 
-            <label
-              htmlFor={fileInputId}
-              className="group relative flex min-h-[46px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-white/[0.1] bg-white/[0.04] px-6 py-3 text-[13px] font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
-            >
-              <span
-                className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.1] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
-                aria-hidden
-              />
+            <label htmlFor={fileInputId} className={btnStableSecondary}>
+              <span className={btnPrimaryVertical.shine} aria-hidden />
               <span className="relative z-[1]">{loaded ? "Choose a different file" : "Choose file"}</span>
             </label>
 
@@ -208,7 +204,8 @@ export default function MasterUploadCard({
 
             <Link
               href="/analyze"
-              className="flex min-h-[40px] items-center justify-center rounded-xl text-[12px] font-medium text-white/50 transition hover:bg-white/[0.03] hover:text-white/75"
+              prefetch={false}
+              className="stable-interaction safari-nav-link flex min-h-[40px] items-center justify-center rounded-xl text-[12px] font-medium leading-none text-white/50 transition-[background-color,color] hover:bg-white/[0.03] hover:text-white/75"
             >
               Analyze mix first
             </Link>

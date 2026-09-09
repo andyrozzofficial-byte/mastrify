@@ -97,18 +97,27 @@ body {
     min-width: 0;
     box-sizing: border-box;
   }
-  /* Safari-safe navigation — avoids lost taps from active transforms + sticky blur */
-  .safari-nav-link {
+  /* Safari-safe interaction — stable position, no tap jump */
+  .safari-nav-link,
+  .stable-interaction {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     position: relative;
     z-index: 2;
     cursor: pointer;
+    transform: none;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
-  @media (pointer: coarse) {
-    .safari-nav-link:active {
-      transform: none !important;
-    }
+  .safari-nav-link:active,
+  .safari-nav-link:focus-visible,
+  .stable-interaction:active,
+  .stable-interaction:focus-visible {
+    transform: none !important;
+  }
+  .marketing-engine-visual {
+    isolation: isolate;
+    overflow: visible !important;
   }
   .glass-header {
     isolation: isolate;
@@ -563,17 +572,17 @@ body {
   .hero-orb-radial-mobile {
     pointer-events: none;
     position: absolute;
-    inset: -12%;
+    inset: -18%;
     z-index: 0;
-    border-radius: 9999px;
     background: radial-gradient(
       circle at 50% 46%,
-      rgba(99, 102, 241, 0.2) 0%,
-      rgba(79, 70, 229, 0.08) 40%,
-      rgba(5, 5, 8, 0) 72%
+      rgba(99, 102, 241, 0.09) 0%,
+      rgba(79, 70, 229, 0.035) 42%,
+      rgba(5, 5, 8, 0) 74%
     );
-    filter: blur(32px);
-    opacity: 0.78;
+    filter: blur(28px);
+    -webkit-filter: blur(28px);
+    opacity: 0.55;
   }
   @media (min-width: 768px) {
     .hero-orb-radial-mobile {

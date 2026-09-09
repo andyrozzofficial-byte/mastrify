@@ -48,7 +48,7 @@ export default function Landing() {
 
       <motion.div
         className="pointer-events-none absolute left-1/2 top-[12%] h-[min(420px,55vw)] w-[min(580px,80vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.035] blur-[64px]"
-        animate={reduce ? undefined : { opacity: [0.28, 0.4, 0.28], scale: [1, 1.02, 1] }}
+        animate={reduce ? undefined : { opacity: [0.2, 0.3, 0.2] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         aria-hidden
       />

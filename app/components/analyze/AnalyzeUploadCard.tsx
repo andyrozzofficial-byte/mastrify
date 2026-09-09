@@ -9,6 +9,7 @@ import {
   isAcceptedAudioUpload,
 } from "../../../lib/audioUploadAccept"
 import { IOS_SAFE_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
+import { btnPrimaryVertical, btnStablePrimary, btnStableSecondary } from "../buttonEffects"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -67,10 +68,8 @@ export default function AnalyzeUploadCard({
       />
 
       <motion.div
-        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color,box-shadow] duration-300 ${
-          dragging
-            ? "border-violet-400/30 shadow-[0_0_32px_rgba(139,92,246,0.12),0_28px_64px_rgba(0,0,0,0.5)]"
-            : "border-white/[0.1] hover:border-white/[0.14] hover:shadow-[0_0_28px_rgba(99,102,241,0.08),0_28px_64px_rgba(0,0,0,0.48)]"
+        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color] duration-300 ${
+          dragging ? "border-violet-400/22" : "border-white/[0.1] hover:border-white/[0.12]"
         }`}
         onDragOver={(e) => {
           e.preventDefault()
@@ -91,8 +90,13 @@ export default function AnalyzeUploadCard({
         </motion.div>
 
         <motion.div
-          className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-violet-600/[0.08] blur-3xl"
-          animate={reduce ? undefined : { opacity: [0.4, 0.65, 0.4] }}
+          className="pointer-events-none absolute -right-20 -top-20 h-48 w-48"
+          style={{
+            background: "radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 68%)",
+            filter: "blur(32px)",
+            WebkitFilter: "blur(32px)",
+          }}
+          animate={reduce ? undefined : { opacity: [0.22, 0.38, 0.22] }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
           aria-hidden
         />
@@ -143,26 +147,13 @@ export default function AnalyzeUploadCard({
 
           <motion.div className="relative z-[2] mt-6 flex flex-col items-center gap-3">
             {file ? (
-              <button
-                type="button"
-                onClick={onScanClick}
-                className="group relative flex min-h-[48px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.11),0_14px_36px_rgba(0,0,0,0.30),0_0_24px_rgba(99,102,241,0.09)] ring-1 ring-white/[0.1] transition hover:brightness-[1.03] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_18px_44px_rgba(0,0,0,0.34),0_0_32px_rgba(99,102,241,0.13)]"
-              >
-                <span
-                  className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
-                  aria-hidden
-                />
+              <button type="button" onClick={onScanClick} className={btnStablePrimary}>
+                <span className={btnPrimaryVertical.shine} aria-hidden />
                 <span className="relative z-[1]">Scan my track</span>
               </button>
             ) : (
-              <label
-                htmlFor={fileInputId}
-                className="group relative flex min-h-[48px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-8 py-3.5 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.11),0_14px_36px_rgba(0,0,0,0.30),0_0_24px_rgba(99,102,241,0.09)] ring-1 ring-white/[0.1] transition hover:brightness-[1.03] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_18px_44px_rgba(0,0,0,0.34),0_0_32px_rgba(99,102,241,0.13)]"
-              >
-                <span
-                  className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
-                  aria-hidden
-                />
+              <label htmlFor={fileInputId} className={btnStablePrimary}>
+                <span className={btnPrimaryVertical.shine} aria-hidden />
                 <span className="relative z-[1]">Choose file</span>
               </label>
             )}

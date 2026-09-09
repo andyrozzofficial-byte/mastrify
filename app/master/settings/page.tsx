@@ -164,14 +164,20 @@ export default function MasterSettingsPage() {
         <div className="relative">
           {/* Radial glow — behind main card */}
           <div
-            className="pointer-events-none absolute left-1/2 top-[28%] z-0 h-[min(420px,90vw)] w-[min(680px,120%)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_55%_42%_at_50%_50%,rgba(124,58,237,0.11),rgba(88,28,135,0.032)_50%,transparent_72%)] blur-3xl"
+            className="pointer-events-none absolute left-1/2 top-[28%] z-0 h-[min(420px,90vw)] w-[min(680px,120%)] -translate-x-1/2 -translate-y-1/2"
+            style={{
+              background:
+                "radial-gradient(ellipse 55% 42% at 50% 50%, rgba(124,58,237,0.05), rgba(88,28,135,0.018) 50%, transparent 72%)",
+              filter: "blur(40px)",
+              WebkitFilter: "blur(40px)",
+            }}
             aria-hidden
           />
 
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative z-10 overflow-hidden rounded-2xl border border-white/[0.09] bg-gradient-to-b from-white/[0.07] to-black/[0.72] p-6 shadow-[0_0_0_1px_rgba(139,92,246,0.08),0_0_32px_rgba(88,28,135,0.1),0_28px_72px_rgba(0,0,0,0.62)] ring-1 ring-purple-500/8 backdrop-blur-2xl md:p-8 md:pb-7"
+            className="glass-surface relative z-10 overflow-hidden rounded-2xl border border-white/[0.09] bg-gradient-to-b from-white/[0.07] to-black/[0.72] p-6 shadow-[0_0_0_1px_rgba(139,92,246,0.04),0_28px_72px_rgba(0,0,0,0.62)] ring-1 ring-purple-500/8 md:p-8 md:pb-7"
           >
             <Link
               href="/master"
@@ -270,7 +276,7 @@ export default function MasterSettingsPage() {
               <button
                 type="button"
                 onClick={() => router.push("/master/processing")}
-                className="w-full rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] py-3 text-[13px] font-semibold text-white shadow-[0_0_26px_rgba(99,102,241,0.22),0_14px_44px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.09)] ring-1 ring-white/10 transition hover:brightness-[1.07] md:text-sm"
+                className="stable-interaction w-full rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] py-3 text-[13px] font-semibold leading-none text-white shadow-[0_0_10px_rgba(99,102,241,0.06),0_14px_44px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.09)] ring-1 ring-white/10 transition-[filter] hover:brightness-[1.04] md:text-sm"
               >
                 Start mastering
               </button>

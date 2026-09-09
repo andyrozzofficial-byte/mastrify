@@ -29,6 +29,15 @@ export default function LandingHeroAtmosphere({
   const reduce = useReducedMotion()
   const staticLayers = reduce || !motionActive
 
+  const haloStyle = {
+    background:
+      mobileGlowBoost || compact
+        ? "radial-gradient(circle, rgba(139,92,246,0.08) 0%, rgba(79,70,229,0.03) 42%, transparent 72%)"
+        : "radial-gradient(circle, rgba(139,92,246,0.06) 0%, rgba(79,70,229,0.025) 40%, transparent 70%)",
+    filter: "blur(28px)",
+    WebkitFilter: "blur(28px)",
+  } as const
+
   return (
     <motion.div
       className={`pointer-events-none absolute inset-0 max-lg:overflow-x-clip ${
@@ -39,41 +48,27 @@ export default function LandingHeroAtmosphere({
       aria-hidden
     >
       <motion.div
-        className={`absolute left-1/2 top-1/2 h-[88%] w-[88%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl ${
-          mobileGlowBoost || compact
-            ? "bg-[radial-gradient(circle,rgba(139,92,246,0.12)_0%,rgba(79,70,229,0.05)_42%,transparent_70%)]"
-            : "bg-[radial-gradient(circle,rgba(139,92,246,0.10)_0%,rgba(79,70,229,0.04)_40%,transparent_68%)]"
-        }`}
+        className="absolute left-1/2 top-1/2 h-[92%] w-[92%] -translate-x-1/2 -translate-y-1/2"
+        style={haloStyle}
         animate={
           staticLayers
             ? undefined
             : {
-                opacity: mobileGlowBoost || compact ? [0.52, 0.78, 0.52] : [0.5, 0.75, 0.5],
-                scale: [1, 1.04, 1],
+                opacity: mobileGlowBoost || compact ? [0.32, 0.48, 0.32] : [0.28, 0.42, 0.28],
+                scale: [1, 1.02, 1],
               }
         }
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className={`absolute left-1/2 top-[42%] h-[55%] w-[70%] -translate-x-1/2 rounded-full blur-3xl ${
-          mobileGlowBoost || compact
-            ? "bg-[radial-gradient(ellipse,rgba(56,189,248,0.11)_0%,transparent_72%)]"
-            : "bg-[radial-gradient(ellipse,rgba(56,189,248,0.08)_0%,transparent_70%)]"
-        }`}
-        animate={
-          staticLayers ? undefined : { opacity: mobileGlowBoost || compact ? [0.38, 0.58, 0.38] : [0.35, 0.55, 0.35] }
-        }
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      />
-      <motion.div
-        className="absolute inset-[8%] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(167,139,250,0.04)_60deg,transparent_120deg,rgba(125,211,252,0.03)_200deg,transparent_300deg)]"
+        className="absolute inset-[8%] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,transparent_0deg,rgba(167,139,250,0.03)_60deg,transparent_120deg,rgba(129,140,248,0.02)_200deg,transparent_300deg)]"
         animate={staticLayers ? undefined : { rotate: 360 }}
         transition={{ duration: 48, repeat: Infinity, ease: "linear" }}
       />
       {PARTICLES.map((p, i) => (
         <motion.span
           key={i}
-          className="absolute rounded-full bg-violet-200/80 shadow-[0_0_6px_rgba(167,139,250,0.35)]"
+          className="absolute rounded-full bg-violet-200/70 shadow-[0_0_3px_rgba(167,139,250,0.15)]"
           style={{
             left: p.left,
             top: p.top,
@@ -82,11 +77,11 @@ export default function LandingHeroAtmosphere({
           }}
           animate={
             staticLayers
-              ? { opacity: 0.25 }
+              ? { opacity: 0.2 }
               : {
-                  opacity: [0.12, 0.45, 0.12],
-                  y: [0, -6 - (i % 3), 0],
-                  x: [0, (i % 2 === 0 ? 3 : -3), 0],
+                  opacity: [0.1, 0.35, 0.1],
+                  y: [0, -4 - (i % 3), 0],
+                  x: [0, (i % 2 === 0 ? 2 : -2), 0],
                 }
           }
           transition={{

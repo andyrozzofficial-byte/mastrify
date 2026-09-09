@@ -222,7 +222,7 @@ export default function HowItWorksClient() {
             >
               <Link
                 href="/master"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600/90 via-indigo-600/90 to-indigo-700/90 px-7 text-[14px] font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.11),0_12px_32px_rgba(0,0,0,0.31)] ring-1 ring-white/[0.08] transition hover:brightness-[1.04]"
+                className="stable-interaction inline-flex min-h-[48px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600/90 via-indigo-600/90 to-indigo-700/90 px-7 text-[14px] font-semibold leading-none text-white shadow-[0_0_8px_rgba(99,102,241,0.04),0_12px_32px_rgba(0,0,0,0.31)] ring-1 ring-white/[0.08] transition-[filter] hover:brightness-[1.02]"
               >
                 Start mastering
               </Link>
@@ -292,7 +292,7 @@ export default function HowItWorksClient() {
       {/* Philosophy */}
       <section className="relative z-10 py-12 md:py-24">
         <div className="mx-auto max-w-[1080px] px-5 md:px-10">
-          <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-black/40 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_32px_80px_rgba(0,0,0,0.5),0_0_72px_rgba(124,58,237,0.08)] backdrop-blur-2xl md:p-10 lg:p-12">
+          <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-black/40 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_32px_80px_rgba(0,0,0,0.5),0_0_24px_rgba(124,58,237,0.03)] backdrop-blur-2xl md:p-10 lg:p-12">
             <Reveal>
               <SectionLabel>Mastering philosophy</SectionLabel>
               <h2 className="mt-3 max-w-2xl text-[1.65rem] font-semibold leading-[1.15] tracking-[-0.02em] text-white sm:text-[2rem]">
