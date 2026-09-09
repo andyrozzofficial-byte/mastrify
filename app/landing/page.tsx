@@ -8,7 +8,6 @@ import CinematicBackground from "../components/CinematicBackground"
 import CinematicDivider from "../components/CinematicDivider"
 import CinematicReveal from "../components/CinematicReveal"
 import PremiumButton from "../components/PremiumButton"
-import { useGlobeMotionActive, useMinMd } from "../../lib/useGlobeMotionActive"
 
 const MarketingHeroOrb = dynamic(() => import("../components/MarketingHeroOrb"), { ssr: false })
 
@@ -19,16 +18,13 @@ const dawLogos = ["Ableton Live", "FL Studio", "Logic Pro", "Pro Tools", "Studio
 export default function Landing() {
   const reduce = useReducedMotion()
   const [engineStep, setEngineStep] = useState(0)
-  const showOrb = useMinMd()
-  const { ref: orbRef } = useGlobeMotionActive(showOrb)
-
   useEffect(() => {
-    if (reduce || !showOrb) return
+    if (reduce) return
     const id = setInterval(() => {
       setEngineStep((s) => (s + 1) % 5)
     }, 4000)
     return () => clearInterval(id)
-  }, [reduce, showOrb])
+  }, [reduce])
 
   return (
     <motion.div
@@ -76,6 +72,12 @@ export default function Landing() {
               </span>
             </h1>
 
+            <MarketingHeroOrb
+              activeStep={engineStep}
+              breakpoint="mobile-only"
+              className="homepage-hero-orb-mobile mx-auto my-3 w-full max-w-[min(13.5rem,calc(100vw-3rem))] overflow-x-clip sm:my-4"
+            />
+
             <p className="hero-lead lg:mx-0">
               Mastrify masters with perceptual intelligence — preserving punch, space, and emotional movement while
               bringing your mix to a confident, streaming-ready level.
@@ -118,9 +120,7 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          {showOrb ? (
-            <MarketingHeroOrb ref={orbRef} activeStep={engineStep} />
-          ) : null}
+          <MarketingHeroOrb activeStep={engineStep} breakpoint="md-up" />
         </motion.div>
       </section>
 
