@@ -33,17 +33,15 @@ export default function MasterUploadHero({
 
   useEffect(() => {
     if (reduce) return
-    const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 4000)
+    const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 12000)
     return () => clearInterval(id)
   }, [reduce])
 
   return (
     <section className="marketing-hero-shell hero-section relative w-full">
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.055),transparent_55%)]"
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.04),transparent_55%)]"
         aria-hidden
-        animate={reduce ? undefined : { opacity: [0.85, 1, 0.85] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
       />
 
       <motion.div

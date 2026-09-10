@@ -104,17 +104,13 @@ export default function SiteFooter() {
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/28 to-transparent"
         aria-hidden
       />
-      <motion.div
-        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-violet-500/[0.06] to-transparent"
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-violet-500/[0.04] to-transparent"
         aria-hidden
-        animate={reduce ? undefined : { opacity: [0.5, 0.8, 0.5] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_50%_100%,rgba(88,28,135,0.05),transparent_58%)]"
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_50%_100%,rgba(88,28,135,0.03),transparent_58%)]"
         aria-hidden
-        animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
 
       <motion.div
@@ -165,16 +161,6 @@ export default function SiteFooter() {
             <motion.div
               className={`footer-cta-card lg:max-w-[26.5rem] lg:ml-auto lg:mr-1 xl:max-w-[28rem] xl:mr-2 ${onAnalyze ? "footer-cta-card--analyze" : ""}`}
             >
-              <motion.div
-                className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-violet-600/[0.1] blur-2xl"
-                aria-hidden
-                animate={reduce ? undefined : { opacity: [0.35, 0.62, 0.35] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <div
-                className="pointer-events-none absolute bottom-0 left-1/4 h-20 w-2/3 rounded-full bg-violet-600/[0.025] blur-2xl"
-                aria-hidden
-              />
               <div className="relative flex h-full flex-col justify-center">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/58">Release ready</p>
                 <h2 className="mt-2 text-[1.15rem] font-semibold tracking-[-0.02em] text-white/92 sm:mt-2.5 sm:text-[1.3rem] lg:text-[1.35rem]">
@@ -212,10 +198,6 @@ export default function SiteFooter() {
               rel="noopener noreferrer"
               className="group/lunov relative inline tracking-[0.2em] text-label transition duration-500 hover:text-violet-200/78"
             >
-              <span
-                className="pointer-events-none absolute -inset-x-2 -inset-y-1 rounded-md opacity-0 blur-md transition duration-500 group-hover/lunov:bg-violet-500/[0.1] group-hover/lunov:opacity-100"
-                aria-hidden
-              />
               <span className="relative">Lunov</span>
             </a>
           </p>

@@ -1,7 +1,7 @@
 "use client"
 
 export default function CinematicBackground({ intensity = "default" }: { intensity?: "default" | "subtle" | "strong" }) {
-  const op = intensity === "subtle" ? 0.04 : intensity === "strong" ? 0.07 : 0.055
+  const op = intensity === "subtle" ? 0.03 : intensity === "strong" ? 0.05 : 0.04
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       <div
@@ -19,9 +19,7 @@ export default function CinematicBackground({ intensity = "default" }: { intensi
       <div
         className="absolute left-1/2 top-[-200px] h-[420px] w-[min(720px,130vw)] -translate-x-1/2"
         style={{
-          background: "radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 68%)",
-          filter: "blur(48px)",
-          WebkitFilter: "blur(48px)",
+          background: "radial-gradient(circle, rgba(139,92,246,0.025) 0%, transparent 68%)",
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/95 to-black" />

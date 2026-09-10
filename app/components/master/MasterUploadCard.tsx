@@ -56,22 +56,9 @@ export default function MasterUploadCard({
       transition={{ duration: 0.65, delay: 0.12, ease: EASE }}
     >
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/10 via-transparent to-transparent opacity-50 blur-sm"
-        animate={
-          reduce
-            ? undefined
-            : {
-                opacity: dragging || loaded ? 0.8 : [0.35, 0.55, 0.35],
-              }
-        }
-        transition={{ duration: dragging || loaded ? 0.3 : 4, repeat: dragging || loaded ? 0 : Infinity, ease: "easeInOut" }}
-        aria-hidden
-      />
-
-      <motion.div
         layout
-        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color] duration-500 ${
-          loaded ? "border-violet-400/18" : dragging ? "border-violet-400/22" : "border-white/[0.1] hover:border-white/[0.12]"
+        className={`fluid-surface panel-surface relative overflow-hidden rounded-[1.3rem] transition-[border-color] duration-500 ${
+          loaded ? "border-violet-400/16" : dragging ? "border-violet-400/18" : "border-white/[0.1] hover:border-white/[0.12]"
         }`}
         onDragOver={(e) => {
           e.preventDefault()
@@ -92,18 +79,6 @@ export default function MasterUploadCard({
         >
           <HeroWaveBackdrop heightClass="h-full" className="opacity-100" />
         </motion.div>
-
-        <motion.div
-          className="pointer-events-none absolute -right-20 -top-20 h-48 w-48"
-          style={{
-            background: "radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 68%)",
-            filter: "blur(32px)",
-            WebkitFilter: "blur(32px)",
-          }}
-          animate={reduce ? undefined : { opacity: loaded ? [0.28, 0.42, 0.28] : [0.22, 0.38, 0.22] }}
-          transition={{ duration: loaded ? 3 : 7, repeat: Infinity, ease: "easeInOut" }}
-          aria-hidden
-        />
 
         <div className="relative flex min-w-0 flex-col p-3.5 sm:p-6">
           <AnimatePresence mode="wait">

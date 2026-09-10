@@ -55,21 +55,8 @@ export default function AnalyzeUploadCard({
       transition={{ duration: 0.65, delay: 0.12, ease: EASE }}
     >
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/10 via-transparent to-transparent opacity-50 blur-sm"
-        animate={
-          reduce
-            ? undefined
-            : {
-                opacity: dragging ? 0.85 : [0.35, 0.55, 0.35],
-              }
-        }
-        transition={{ duration: dragging ? 0.25 : 4, repeat: dragging ? 0 : Infinity, ease: "easeInOut" }}
-        aria-hidden
-      />
-
-      <motion.div
-        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color] duration-300 ${
-          dragging ? "border-violet-400/22" : "border-white/[0.1] hover:border-white/[0.12]"
+        className={`fluid-surface panel-surface relative overflow-hidden rounded-[1.3rem] transition-[border-color] duration-300 ${
+          dragging ? "border-violet-400/18" : "border-white/[0.1] hover:border-white/[0.12]"
         }`}
         onDragOver={(e) => {
           e.preventDefault()
@@ -88,18 +75,6 @@ export default function AnalyzeUploadCard({
         >
           <HeroWaveBackdrop heightClass="h-full" className="opacity-100" />
         </motion.div>
-
-        <motion.div
-          className="pointer-events-none absolute -right-20 -top-20 h-48 w-48"
-          style={{
-            background: "radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 68%)",
-            filter: "blur(32px)",
-            WebkitFilter: "blur(32px)",
-          }}
-          animate={reduce ? undefined : { opacity: [0.22, 0.38, 0.22] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          aria-hidden
-        />
 
         <motion.div className="relative min-w-0 p-4 sm:p-7 md:p-8">
           <motion.div

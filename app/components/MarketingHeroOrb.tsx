@@ -33,9 +33,9 @@ const MarketingHeroOrb = forwardRef<HTMLDivElement, MarketingHeroOrbProps>(
         ]
           .filter(Boolean)
           .join(" ")}
-        initial={reduce ? false : { opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.85, delay: 0.1, ease: EASE }}
+        initial={reduce ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.9, delay: 0.08, ease: EASE }}
       >
         <div className="hero-engine-orb-cage relative w-full overflow-visible max-lg:mx-auto">
           <MasteringEngineVisual activeStep={activeStep} className="marketing-engine-visual" />

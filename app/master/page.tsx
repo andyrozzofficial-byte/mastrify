@@ -2,7 +2,7 @@
 
 import { useRef } from "react"
 import { useRouter } from "next/navigation"
-import { motion, useReducedMotion } from "framer-motion"
+import { motion } from "framer-motion"
 import CinematicBackground from "../components/CinematicBackground"
 import MasterUploadHero from "../components/master/MasterUploadHero"
 import { useMasterSession } from "./MasterSessionProvider"
@@ -13,8 +13,6 @@ export default function MasterUploadPage() {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const { file, setFile } = useMasterSession()
-  const reduce = useReducedMotion()
-
   return (
     <motion.div
       className="relative min-h-screen text-white"
@@ -23,17 +21,9 @@ export default function MasterUploadPage() {
       transition={{ duration: 0.45, ease: EASE }}
     >
       <CinematicBackground intensity="strong" />
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.055),transparent_55%)]"
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_45%_at_50%_0%,rgba(99,102,241,0.04),transparent_55%)]"
         aria-hidden
-        animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-violet-950/[0.08] to-transparent"
-        aria-hidden
-        animate={reduce ? undefined : { opacity: [0.4, 0.7, 0.4] }}
-        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
       />
 
       <motion.div className="relative mx-auto w-full max-w-[1080px] px-5 pb-4 pt-6 md:px-10 md:pb-8 md:pt-8">

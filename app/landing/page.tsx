@@ -22,7 +22,7 @@ export default function Landing() {
     if (reduce) return
     const id = setInterval(() => {
       setEngineStep((s) => (s + 1) % 5)
-    }, 4000)
+    }, 12000)
     return () => clearInterval(id)
   }, [reduce])
 
@@ -35,17 +35,8 @@ export default function Landing() {
     >
       <CinematicBackground intensity="strong" />
 
-      <motion.div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_6%,rgba(99,102,241,0.07),transparent_58%)]"
-        aria-hidden
-        animate={reduce ? undefined : { opacity: [0.92, 1, 0.92] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <motion.div
-        className="pointer-events-none absolute left-1/2 top-[12%] h-[min(420px,55vw)] w-[min(580px,80vw)] -translate-x-1/2 rounded-full bg-violet-600/[0.035] blur-[64px]"
-        animate={reduce ? undefined : { opacity: [0.2, 0.3, 0.2] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_6%,rgba(99,102,241,0.045),transparent_58%)]"
         aria-hidden
       />
 
@@ -137,17 +128,9 @@ export default function Landing() {
 
       {/* Below fold — mix intelligence */}
       <section className="section-after-hero relative z-10">
-        <motion.div
-          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-transparent via-violet-950/[0.12] to-transparent"
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-transparent via-violet-950/[0.08] to-transparent"
           aria-hidden
-          animate={reduce ? undefined : { opacity: [0.5, 0.85, 0.5] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="pointer-events-none absolute left-1/2 top-8 h-48 w-[min(640px,80vw)] -translate-x-1/2 rounded-full bg-indigo-600/[0.04] blur-[80px]"
-          aria-hidden
-          animate={reduce ? undefined : { opacity: [0.3, 0.55, 0.3], y: [0, 6, 0] }}
-          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
         />
 
         <motion.div

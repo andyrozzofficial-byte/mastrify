@@ -119,6 +119,21 @@ body {
     isolation: isolate;
     overflow: visible !important;
   }
+  /* Clean panels — depth only, no colored glow */
+  .panel-surface {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.045), rgba(0, 0, 0, 0.72));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 20px 48px rgba(0, 0, 0, 0.4);
+  }
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .panel-surface {
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+    }
+  }
+  .panel-surface-inset {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 16px 40px rgba(0, 0, 0, 0.36);
+  }
   .glass-header {
     isolation: isolate;
     -webkit-transform: translateZ(0);
@@ -665,9 +680,8 @@ body {
     bottom: 0.05rem;
     height: 78%;
     border-radius: 9999px;
-    background: radial-gradient(ellipse 70% 80% at 50% 100%, rgba(99, 102, 241, 0.07), transparent 76%);
-    filter: blur(16px);
-    opacity: 0.62;
+    background: radial-gradient(ellipse 70% 80% at 50% 100%, rgba(99, 102, 241, 0.04), transparent 76%);
+    opacity: 0.45;
   }
   @media (min-width: 768px) {
     .trust-band {
@@ -778,7 +792,6 @@ body {
   @media (hover: hover) {
     .trust-daw-item:hover .trust-daw-label {
       color: rgba(255, 255, 255, 0.72);
-      text-shadow: 0 0 18px rgba(139, 92, 246, 0.18);
     }
   }
   .landing-close-footer {
