@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server"
-import {
-  MASTER_PRICE_CENTS,
-  MASTER_PRICE_CURRENCY,
-  MASTER_PRODUCT_NAME,
-} from "../../../../lib/pricing"
+import { resolveCheckoutLineItems } from "../../../../lib/stripe/checkoutLineItems"
 import { getAppOrigin, getStripeServer } from "../../../../lib/stripe/server"
 
 export async function POST(request: Request) {
@@ -34,24 +30,7 @@ export async function POST(request: Request) {
   }
 
   const origin = getAppOrigin(request)
-  const priceId = process.env.STRIPE_PRICE_ID?.trim()
-  const lineItems = priceId
-    ? [{ price: priceId, quantity: 1 }]
-    : [
-        {
-          price_data: {
-            currency: MASTER_PRICE_CURRENCY,
-            unit_amount: MASTER_PRICE_CENTS,
-            product_data: {
-              name: MASTER_PRODUCT_NAME,
-              description: trackTitle
-                ? `Full-quality WAV export — ${trackTitle}`
-                : "Full-quality WAV export",
-            },
-          },
-          quantity: 1,
-        },
-      ]
+  const lineItems = await resolveCheckoutLineItems(stripe, trackTitle)
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -71,7 +50,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: session.url, sessionId: session.id })
   } catch (err) {
-    console.error("[checkout/create]", err)
+    const stripeMessage = err instanceof Error ? err.message : String(err)
+    console.error("[checkout/create]", stripeMessage, err)
     return NextResponse.json({ error: "Could not create checkout session." }, { status: 500 })
   }
 }
