@@ -44,6 +44,7 @@ import {
   verifyCheckoutReturn,
 } from "../../../lib/checkoutClient"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
+import { btnResultPlay, btnResultPrimary, btnResultToggleActive } from "../../components/buttonEffects"
 
 const STYLE_LABELS: Record<MasterStylePreset, string> = {
   STREAM: "Balanced",
@@ -1114,7 +1115,7 @@ export default function MasterResultClient() {
                   onClick={() => selectSource("original")}
                   className={`min-h-[44px] rounded-lg py-2.5 text-[11px] font-semibold transition-all duration-200 active:scale-[0.98] sm:min-h-0 sm:py-2.5 sm:text-xs ${
                     selectedSource === "original"
-                      ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.08)] ring-1 ring-white/[0.07]"
+                      ? btnResultToggleActive
                       : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/88"
                   }`}
                 >
@@ -1125,7 +1126,7 @@ export default function MasterResultClient() {
                   onClick={() => selectSource("mastered")}
                   className={`min-h-[44px] rounded-lg py-2.5 text-[11px] font-semibold transition-all duration-200 active:scale-[0.98] sm:min-h-0 sm:py-2.5 sm:text-xs ${
                     selectedSource === "mastered"
-                      ? "bg-gradient-to-r from-violet-600/75 to-indigo-600/78 text-white shadow-[0_0_10px_rgba(99,102,241,0.08)] ring-1 ring-white/[0.07]"
+                      ? btnResultToggleActive
                       : "border border-white/[0.06] bg-white/[0.03] text-white/48 hover:border-white/[0.09] hover:bg-white/[0.055] hover:text-white/88"
                   }`}
                 >
@@ -1162,7 +1163,7 @@ export default function MasterResultClient() {
                 <button
                   type="button"
                   onClick={togglePlayPause}
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600/95 to-indigo-700/95 text-white shadow-[0_0_12px_rgba(99,102,241,0.09),0_6px_16px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.03] hover:shadow-[0_0_14px_rgba(99,102,241,0.10)] active:scale-[0.97] sm:h-12 sm:w-12"
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full sm:h-12 sm:w-12 ${btnResultPlay}`}
                   aria-label={isPlaying ? "Pause" : "Play"}
                 >
                   {isPlaying ? (
@@ -1193,7 +1194,7 @@ export default function MasterResultClient() {
                   </div>
                   <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-white/[0.07]">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-violet-400/75 to-sky-500/55"
+                      className="h-full rounded-full bg-gradient-to-r from-violet-400/70 to-fuchsia-400/55"
                       style={{ width: `${playProgress}%` }}
                     />
                   </div>
@@ -1252,7 +1253,7 @@ export default function MasterResultClient() {
             type="button"
             onClick={handlePayment}
             disabled={checkoutLoading}
-            className="inline-flex min-h-[54px] w-full max-w-[17.5rem] items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.09),0_10px_28px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.04] hover:shadow-[0_0_18px_rgba(99,102,241,0.10),0_12px_32px_rgba(0,0,0,0.34)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:px-9"
+            className={`inline-flex min-h-[54px] w-full max-w-[17.5rem] items-center justify-center rounded-xl px-7 text-[15px] font-semibold sm:px-9 ${btnResultPrimary}`}
           >
             <span className={checkoutLoading ? "text-center" : "whitespace-nowrap"}>
               {checkoutLoading
@@ -1263,7 +1264,7 @@ export default function MasterResultClient() {
             </span>
           </button>
         ) : (
-          <div className="inline-flex min-h-[54px] w-full max-w-[17.5rem] items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-7 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.09),0_10px_28px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.08] transition-all duration-200 hover:brightness-[1.04] hover:shadow-[0_0_18px_rgba(99,102,241,0.10),0_12px_32px_rgba(0,0,0,0.34)] active:scale-[0.99] sm:px-9">
+          <div className={`inline-flex min-h-[54px] w-full max-w-[17.5rem] items-center justify-center rounded-xl px-7 text-[15px] font-semibold sm:px-9 ${btnResultPrimary}`}>
             Check your inbox
           </div>
         )}
@@ -1313,7 +1314,7 @@ export default function MasterResultClient() {
                 type="button"
                 onClick={handleEmailDelivery}
                 disabled={deliverySending}
-                className="inline-flex min-h-[46px] w-full flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-5 text-sm font-semibold text-white shadow-[0_0_18px_rgba(99,102,241,0.12)] transition hover:brightness-[1.03] disabled:cursor-not-allowed disabled:opacity-60"
+                className={`inline-flex min-h-[46px] w-full flex-1 items-center justify-center rounded-xl px-5 text-sm font-semibold ${btnResultPrimary}`}
               >
                 {deliverySending ? "Sending…" : "Email my master"}
               </button>
