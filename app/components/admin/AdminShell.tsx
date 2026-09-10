@@ -37,6 +37,7 @@ export function useAdminOverview() {
 
 export default function AdminShell({ children }: Props) {
   const pathname = usePathname()
+  const isAdminLoginRoute = pathname === "/admin/login"
   const router = useRouter()
   const [auth, setAuth] = useState<"loading" | "login" | "ready">("loading")
   const [role, setRole] = useState<AdminRole | null>(null)
@@ -105,10 +106,10 @@ export default function AdminShell({ children }: Props) {
   }, [checkAuth])
 
   useEffect(() => {
-    if (auth !== "login") return
+    if (auth !== "login" || isAdminLoginRoute) return
     const next = pathname?.startsWith("/admin") ? pathname : "/admin"
     router.replace(`/login?next=${encodeURIComponent(next)}`)
-  }, [auth, pathname, router])
+  }, [auth, isAdminLoginRoute, pathname, router])
 
   useEffect(() => {
     closeMobileNav()
@@ -127,6 +128,10 @@ export default function AdminShell({ children }: Props) {
     () => ({ overview, overviewLoading, overviewError }),
     [overview, overviewLoading, overviewError],
   )
+
+  if (isAdminLoginRoute) {
+    return <>{children}</>
+  }
 
   if (auth === "loading" || auth === "login") {
     return (
