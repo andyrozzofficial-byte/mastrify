@@ -1,15 +1,13 @@
 "use client"
 
-import dynamic from "next/dynamic"
 import { motion, useReducedMotion } from "framer-motion"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
 import CinematicDivider from "../components/CinematicDivider"
 import CinematicReveal from "../components/CinematicReveal"
+import MarketingHeroOrb from "../components/MarketingHeroOrb"
 import PremiumButton from "../components/PremiumButton"
-
-const MarketingHeroOrb = dynamic(() => import("../components/MarketingHeroOrb"), { ssr: false })
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -22,7 +20,7 @@ export default function Landing() {
     if (reduce) return
     const id = setInterval(() => {
       setEngineStep((s) => (s + 1) % 5)
-    }, 4000)
+    }, 3200)
     return () => clearInterval(id)
   }, [reduce])
 
@@ -62,12 +60,6 @@ export default function Landing() {
                 with musical depth
               </span>
             </h1>
-
-            <MarketingHeroOrb
-              activeStep={engineStep}
-              breakpoint="mobile-only"
-              className="homepage-hero-orb-mobile mx-auto my-3 w-full max-w-[min(13.5rem,calc(100vw-3rem))] overflow-x-clip sm:my-4"
-            />
 
             <p className="hero-lead lg:mx-0">
               Mastrify masters with perceptual intelligence — preserving punch, space, and emotional movement while
@@ -111,7 +103,7 @@ export default function Landing() {
             </p>
           </motion.div>
 
-          <MarketingHeroOrb activeStep={engineStep} breakpoint="md-up" />
+          <MarketingHeroOrb activeStep={engineStep} />
         </motion.div>
       </section>
 

@@ -269,7 +269,7 @@ export default function HowItWorksClient() {
                   hidden: reduce ? {} : { opacity: 0, y: 18 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } },
                 }}
-                className="group relative overflow-hidden rounded-[1.15rem] border border-white/[0.07] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_20px_48px_rgba(0,0,0,0.35)] backdrop-blur-xl transition duration-300 hover:border-white/[0.1] hover:bg-white/[0.045] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_56px_rgba(0,0,0,0.42)] md:p-6"
+                className="group relative overflow-hidden rounded-[1.15rem] border border-white/[0.07] bg-white/[0.03] p-5 transition duration-300 hover:border-white/[0.1] hover:bg-white/[0.045] md:p-6"
               >
                 <div className="relative flex items-start gap-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-gradient-to-br from-violet-500/12 to-indigo-500/8 text-violet-200/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -292,7 +292,7 @@ export default function HowItWorksClient() {
       {/* Philosophy */}
       <section className="relative z-10 py-12 md:py-24">
         <div className="mx-auto max-w-[1080px] px-5 md:px-10">
-          <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-black/40 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_32px_80px_rgba(0,0,0,0.5),0_0_24px_rgba(124,58,237,0.03)] backdrop-blur-2xl md:p-10 lg:p-12">
+          <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-black/40 p-6 md:p-10 lg:p-12">
             <Reveal>
               <SectionLabel>Mastering philosophy</SectionLabel>
               <h2 className="mt-3 max-w-2xl text-[1.65rem] font-semibold leading-[1.15] tracking-[-0.02em] text-white sm:text-[2rem]">
@@ -338,7 +338,7 @@ export default function HowItWorksClient() {
             </Reveal>
 
             <Reveal delay={0.1}>
-              <div className="rounded-[1.15rem] border border-white/[0.07] bg-white/[0.03] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_24px_56px_rgba(0,0,0,0.4)] backdrop-blur-xl md:p-8">
+              <div className="rounded-[1.15rem] border border-white/[0.07] bg-white/[0.03] p-6 md:p-8">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/64">Helpful habits</p>
                 <ul className="mt-5 space-y-4">
                   {[

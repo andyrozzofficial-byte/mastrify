@@ -28,22 +28,9 @@ export default function PricingUnlockCard({ className = "" }: Props) {
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
     >
-      <div
-        className="pointer-events-none absolute -inset-px rounded-[1.4rem] bg-gradient-to-br from-violet-500/9 via-transparent to-transparent opacity-50 blur-sm"
-        aria-hidden
-      />
-
-      <div className="relative overflow-hidden rounded-[1.35rem] border border-white/[0.11] bg-gradient-to-b from-white/[0.05] to-black/[0.78] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(167,139,250,0.1),0_24px_56px_rgba(0,0,0,0.48)] backdrop-blur-2xl md:p-10">
+      <div className="relative overflow-hidden rounded-[1.35rem] border border-white/[0.11] bg-gradient-to-b from-white/[0.05] to-black/[0.78] p-8 md:p-10">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/28 to-transparent"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -right-14 -top-14 h-36 w-36 rounded-full bg-violet-600/[0.07] blur-3xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -bottom-10 left-1/2 h-28 w-52 -translate-x-1/2 rounded-full bg-violet-600/[0.025] blur-3xl"
           aria-hidden
         />
 
