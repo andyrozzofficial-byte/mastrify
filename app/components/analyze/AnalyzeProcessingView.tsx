@@ -1,7 +1,6 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { useGlobeMotionActive } from "../../../lib/useGlobeMotionActive"
 import CinematicWaveform from "../audio/CinematicWaveform"
 import MasteringEngineVisual from "../../master/processing/MasteringEngineVisual"
 import AnalysisStageList, { ANALYSIS_STEPS } from "./AnalysisStageList"
@@ -19,7 +18,6 @@ function engineVisualStep(activeStep: number): number {
 
 export default function AnalyzeProcessingView({ activeStep, file }: Props) {
   const visualStep = engineVisualStep(activeStep)
-  const { ref: globeRef, active: globeMotionActive } = useGlobeMotionActive(true)
 
   return (
     <motion.div
@@ -80,14 +78,9 @@ export default function AnalyzeProcessingView({ activeStep, file }: Props) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div ref={globeRef} className="marketing-hero-orb relative mx-auto w-full overflow-visible">
+          <div className="marketing-hero-orb relative mx-auto w-full overflow-visible">
             <div className="hero-engine-orb-cage relative mx-auto w-full overflow-visible max-lg:mx-auto">
-              <MasteringEngineVisual
-                activeStep={visualStep}
-                variant="processing"
-                motionActive={globeMotionActive}
-                className="marketing-engine-visual"
-              />
+              <MasteringEngineVisual activeStep={visualStep} className="marketing-engine-visual" />
             </div>
           </div>
         </motion.div>
