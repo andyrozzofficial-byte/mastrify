@@ -51,6 +51,8 @@ export default function HeroEngineOrb({
           />
           <MasteringEngineVisual
             activeStep={activeStep}
+            variant="brand"
+            motionActive={motionActive}
             className="marketing-engine-visual relative z-[1] mx-auto h-full w-full max-w-full"
           />
         </motion.div>

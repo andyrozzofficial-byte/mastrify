@@ -11,6 +11,7 @@ import ProcessingStageList, { PROCESSING_STEPS } from "./ProcessingStageList"
 import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
+import { useGlobeMotionActive } from "../../../lib/useGlobeMotionActive"
 import { useMasterSession } from "../MasterSessionProvider"
 
 const API = PUBLIC_BACKEND_API_BASE
@@ -57,6 +58,7 @@ export default function MasterProcessingPage() {
     clarityPresence,
   } = useMasterSession()
   const [activeStep, setActiveStep] = useState(0)
+  const { ref: globeRef, active: globeMotionActive } = useGlobeMotionActive(true)
 
   useEffect(() => {
     if (!sessionHydrated) return
@@ -237,9 +239,14 @@ export default function MasterProcessingPage() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="marketing-hero-orb relative mx-auto w-full overflow-visible">
+          <div ref={globeRef} className="marketing-hero-orb relative mx-auto w-full overflow-visible">
             <div className="hero-engine-orb-cage relative mx-auto w-full overflow-visible max-lg:mx-auto">
-              <MasteringEngineVisual activeStep={activeStep} className="marketing-engine-visual" />
+              <MasteringEngineVisual
+                activeStep={activeStep}
+                variant="processing"
+                motionActive={globeMotionActive}
+                className="marketing-engine-visual"
+              />
             </div>
           </div>
         </motion.div>

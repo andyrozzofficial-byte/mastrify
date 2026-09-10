@@ -42,7 +42,7 @@ export default function AppLegacyRedirect() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
       >
-        <MasteringEngineVisual activeStep={2} className="mx-auto w-[min(14rem,70vw)] max-w-[16rem]" />
+        <MasteringEngineVisual activeStep={2} variant="brand" className="mx-auto w-[min(14rem,70vw)] max-w-[16rem]" />
         <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/60">
           Unlock confirmed
         </p>

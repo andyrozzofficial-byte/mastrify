@@ -38,7 +38,7 @@ const MarketingHeroOrb = forwardRef<HTMLDivElement, MarketingHeroOrbProps>(
         transition={{ duration: 0.9, delay: 0.08, ease: EASE }}
       >
         <div className="hero-engine-orb-cage relative w-full overflow-visible max-lg:mx-auto">
-          <MasteringEngineVisual activeStep={activeStep} className="marketing-engine-visual" />
+          <MasteringEngineVisual activeStep={activeStep} variant="brand" className="marketing-engine-visual" />
         </div>
       </motion.div>
     )
