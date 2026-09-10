@@ -158,7 +158,7 @@ export default function SiteFooter() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.08, ease: EASE }}
           >
-            <motion.div
+            <div
               className={`footer-cta-card lg:max-w-[26.5rem] lg:ml-auto lg:mr-1 xl:max-w-[28rem] xl:mr-2 ${onAnalyze ? "footer-cta-card--analyze" : ""}`}
             >
               <div className="relative flex h-full flex-col justify-center">
@@ -176,7 +176,7 @@ export default function SiteFooter() {
                   Start mastering
                 </PremiumButton>
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         </motion.div>
 

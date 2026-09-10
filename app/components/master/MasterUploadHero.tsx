@@ -33,7 +33,7 @@ export default function MasterUploadHero({
 
   useEffect(() => {
     if (reduce) return
-    const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 12000)
+    const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 4000)
     return () => clearInterval(id)
   }, [reduce])
 

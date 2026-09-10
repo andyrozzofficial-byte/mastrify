@@ -55,7 +55,7 @@ export default function AnalyzeUploadCard({
       transition={{ duration: 0.65, delay: 0.12, ease: EASE }}
     >
       <motion.div
-        className={`fluid-surface panel-surface relative overflow-hidden rounded-[1.3rem] transition-[border-color] duration-300 ${
+        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-[border-color] duration-300 ${
           dragging ? "border-violet-400/18" : "border-white/[0.1] hover:border-white/[0.12]"
         }`}
         onDragOver={(e) => {
