@@ -6,7 +6,7 @@ function normalizeEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? value : ""
 }
 
-const EXPIRY_COPY = "Your secure download link remains active for 7 days."
+const EXPIRY_COPY = "Your secure download link remains active for 12 hours."
 
 async function storeMasteredExport({ email, objectKey, expiresAt }) {
   if (!isSupabaseStorageConfigured()) return { stored: false, reason: "supabase_not_configured" }
@@ -70,7 +70,7 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
         </style>
       </head>
       <body style="margin:0;background:#030308;color:#f8fafc;">
-        <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Your Mastrify master is ready. Open your secure 7-day download link.</div>
+        <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Your Mastrify master is ready. Open your secure 12-hour download link.</div>
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#030308;margin:0;padding:0;">
           <tr>
             <td class="email-shell" align="center" style="padding:38px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
@@ -112,7 +112,7 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
     </html>
   `
   const textHeading = title ? `Your master of '${title}' is ready` : "Your master is ready"
-  const text = `${textHeading}\n\nYour mastered track is ready. Open your secure 7-day download link:\n${playbackUrl}\n\n${EXPIRY_COPY}\n\nSent by Mastrify Audio Engine`
+  const text = `${textHeading}\n\nYour mastered track is ready. Open your secure 12-hour download link:\n${playbackUrl}\n\n${EXPIRY_COPY}\n\nSent by Mastrify Audio Engine`
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",

@@ -18,6 +18,7 @@ import {
   uploadMasterPreviewMp3,
   safeUnlink,
   signedUrlExpiresAt,
+  startMasterStorageCleanupScheduler,
 } from "./supabaseStorage.js"
 import { deliverMasterExportEmail } from "./masteredExportDelivery.js"
 import { generateMasterPreviewMp3, previewFileNameForMaster } from "./masterPreview.js"
@@ -1452,4 +1453,5 @@ ensureFfmpegBinariesExecutable()
 // 🔥 STARTA SERVER
 app.listen(PORT, "0.0.0.0", () => {
   console.log("Server listening on port", PORT)
+  startMasterStorageCleanupScheduler()
 })

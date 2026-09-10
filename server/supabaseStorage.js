@@ -3,7 +3,8 @@ import fs from "fs"
 import path from "path"
 import { logStoragePersist, MASTRIFY_RESOURCE_DEBUG } from "./resourceUsageLog.js"
 
-const DEFAULT_SIGNED_URL_TTL_SEC = 60 * 60 * 24 * 7 // 7 days
+const DEFAULT_RETENTION_SEC = 60 * 60 * 12 // 12 hours
+const DEFAULT_CLEANUP_INTERVAL_MS = 15 * 60 * 1000 // 15 minutes
 
 let storageClient = null
 
@@ -67,9 +68,19 @@ export function safeUnlink(filePath) {
   }
 }
 
+/** Signed URL lifetime and Supabase object retention (same window). */
+export function masterRetentionTtlSec() {
+  const n = Number(process.env.MASTRIFY_RETENTION_SEC ?? process.env.MASTRIFY_SIGNED_URL_TTL_SEC)
+  return Number.isFinite(n) && n > 60 ? Math.floor(n) : DEFAULT_RETENTION_SEC
+}
+
 export function signedUrlTtlSec() {
-  const n = Number(process.env.MASTRIFY_SIGNED_URL_TTL_SEC)
-  return Number.isFinite(n) && n > 60 ? Math.floor(n) : DEFAULT_SIGNED_URL_TTL_SEC
+  return masterRetentionTtlSec()
+}
+
+export function masterCleanupIntervalMs() {
+  const n = Number(process.env.MASTRIFY_STORAGE_CLEANUP_INTERVAL_MS)
+  return Number.isFinite(n) && n >= 60_000 ? Math.floor(n) : DEFAULT_CLEANUP_INTERVAL_MS
 }
 
 export function signedUrlExpiresAt(from = new Date()) {
@@ -140,6 +151,104 @@ export async function uploadMasterWav(localPath, objectKey) {
 /**
  * Signed URL for inline playback (Range-friendly for Safari).
  */
+function objectTimestampMs(item) {
+  const raw = item?.updated_at || item?.created_at
+  const ts = Date.parse(String(raw || ""))
+  return Number.isFinite(ts) ? ts : null
+}
+
+/**
+ * Delete mastered WAV/MP3 objects older than the retention window.
+ * Also removes expired rows from mastered_exports when Supabase DB is configured.
+ */
+export async function purgeExpiredMasterStorage() {
+  if (!isSupabaseStorageConfigured()) {
+    return { deleted: 0, skipped: true, reason: "not_configured" }
+  }
+
+  const retentionMs = masterRetentionTtlSec() * 1000
+  const cutoffMs = Date.now() - retentionMs
+  const bucket = getMastersBucket()
+  const client = getSupabaseServiceClient()
+  const keysToDelete = []
+  let offset = 0
+  const pageSize = 100
+
+  while (true) {
+    const { data, error } = await client.storage.from(bucket).list("", {
+      limit: pageSize,
+      offset,
+      sortBy: { column: "created_at", order: "asc" },
+    })
+    if (error) {
+      throw new Error(`Supabase list failed: ${error.message}`)
+    }
+    if (!data?.length) break
+
+    for (const item of data) {
+      if (!item?.name || item.name.endsWith("/")) continue
+      const ts = objectTimestampMs(item)
+      if (ts == null || ts >= cutoffMs) continue
+      keysToDelete.push(item.name)
+    }
+
+    if (data.length < pageSize) break
+    offset += pageSize
+  }
+
+  if (keysToDelete.length) {
+    const { error } = await client.storage.from(bucket).remove(keysToDelete)
+    if (error) {
+      throw new Error(`Supabase remove failed: ${error.message}`)
+    }
+  }
+
+  let dbDeleted = 0
+  try {
+    const { error, count } = await client
+      .from("mastered_exports")
+      .delete({ count: "exact" })
+      .lt("expires_at", new Date().toISOString())
+    if (error) {
+      console.warn("[storage] mastered_exports cleanup:", error.message)
+    } else {
+      dbDeleted = count ?? 0
+    }
+  } catch (err) {
+    console.warn("[storage] mastered_exports cleanup failed:", err?.message || err)
+  }
+
+  return {
+    deleted: keysToDelete.length,
+    keys: keysToDelete,
+    dbDeleted,
+    retentionSec: masterRetentionTtlSec(),
+  }
+}
+
+export function startMasterStorageCleanupScheduler() {
+  if (!isSupabaseStorageConfigured()) return
+
+  const intervalMs = masterCleanupIntervalMs()
+  const run = async () => {
+    try {
+      const result = await purgeExpiredMasterStorage()
+      if (result.deleted > 0 || result.dbDeleted > 0) {
+        console.log("[storage] retention cleanup", result)
+      }
+    } catch (err) {
+      console.error("[storage] retention cleanup failed:", err?.message || err)
+    }
+  }
+
+  void run()
+  setInterval(run, intervalMs).unref?.()
+  console.log("[storage] retention cleanup scheduled", {
+    retentionSec: masterRetentionTtlSec(),
+    intervalMs,
+  })
+}
+
 export async function createMasterPlaybackSignedUrl(objectKey) {
   const bucket = getMastersBucket()
   const key = masterObjectKey(objectKey)

@@ -16,6 +16,8 @@ The separate `mastrify-backend` GitHub repo is kept in sync with this folder for
 Required env (Railway):
 
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET` (optional; local `/tmp` fallback)
+- `MASTRIFY_RETENTION_SEC` or `MASTRIFY_SIGNED_URL_TTL_SEC` (optional; default **43200** = 12 hours — signed URLs and Supabase WAV/MP3 deletion)
+- `MASTRIFY_STORAGE_CLEANUP_INTERVAL_MS` (optional; default **900000** = 15 minutes)
 - `RESEND_API_KEY` (email delivery via `POST /master/deliver`)
 - `STRIPE_SECRET_KEY` (same test/live secret as Vercel — verifies `POST /master/download` and `POST /master/deliver`)
 
