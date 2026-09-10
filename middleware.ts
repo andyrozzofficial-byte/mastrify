@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
+function isAdminBypass(pathname: string): boolean {
+  return (
+    pathname === "/login" ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/admin")
+  )
+}
+
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   const pathname = url.pathname
+
+  if (isAdminBypass(pathname)) {
+    return NextResponse.next()
+  }
 
   if (pathname.startsWith("/audio")) {
     return NextResponse.next()
@@ -34,7 +46,6 @@ export async function middleware(request: NextRequest) {
     pathname === "/landing" ||
     pathname.startsWith("/about") ||
     pathname.startsWith("/pricing") ||
-    pathname.startsWith("/admin") ||
     pathname.startsWith("/how-it-works") ||
     pathname.startsWith("/blog") ||
     pathname === "/privacy" ||

@@ -1,16 +1,16 @@
 import { Suspense } from "react"
-import LoginClient from "../../login/LoginClient"
+import LoginClient from "./LoginClient"
 
 export const metadata = {
-  title: "Admin login | Mastrify",
+  title: "Login | Mastrify",
   robots: { index: false, follow: false },
 }
 
-export default function AdminLoginPage() {
+export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[100dvh] items-center justify-center bg-[#F5F7FA] text-slate-500">
+        <div className="flex min-h-[100dvh] items-center justify-center bg-[#050508] text-white/50">
           Loading…
         </div>
       }
