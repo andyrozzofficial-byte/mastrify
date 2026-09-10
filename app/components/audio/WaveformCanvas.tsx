@@ -200,6 +200,7 @@ export default function WaveformCanvas({
   const lastSparkIdxRef = useRef(-1)
   const stereoBlendRef = useRef<Float32Array | null>(null)
   const rafRef = useRef<number | null>(null)
+  const kickDrawRef = useRef<() => void>(() => {})
 
   propsRef.current = {
     peaks,
@@ -528,6 +529,17 @@ export default function WaveformCanvas({
         ctx.restore()
       }
 
+      const needsContinuous =
+        p.mode === "processing" || p.isPlaying || p.hoverProgress != null || reduced
+      if (needsContinuous) {
+        rafRef.current = requestAnimationFrame(draw)
+      } else {
+        rafRef.current = null
+      }
+    }
+
+    kickDrawRef.current = () => {
+      if (rafRef.current != null) return
       rafRef.current = requestAnimationFrame(draw)
     }
 
@@ -536,8 +548,13 @@ export default function WaveformCanvas({
     return () => {
       ro?.disconnect()
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
     }
   }, [height, reducedMotion])
+
+  useEffect(() => {
+    kickDrawRef.current()
+  }, [peaks, altPeaks, blend, progress, hoverProgress, isPlaying, mode, variant, reducedMotion])
 
   return (
     <div ref={containerRef} className={className} style={{ height }}>

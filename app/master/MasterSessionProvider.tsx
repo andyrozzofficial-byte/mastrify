@@ -11,6 +11,11 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import {
+  cacheMasterSourceFile,
+  clearMasterSourceFile,
+  restoreMasterSourceFile,
+} from "../../lib/masterSourceFileCache"
 
 /** @deprecated use MASTER_SESSION_STORAGE_KEY — kept for one-time migration from older builds */
 export const MASTER_RESULT_STORAGE_KEY = "mastrify:master-result-v1"
@@ -133,7 +138,10 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     })
     setMasteredUrl("")
     setMasteredPreviewMp3Url("")
-    setMasterObjectKey("")
+    setMasterObjectKey((prevKey) => {
+      if (prevKey.trim()) void clearMasterSourceFile(prevKey)
+      return ""
+    })
     setMasterExpiresAt("")
     setStripeSessionId("")
     setAnalysisBefore(null)
@@ -164,6 +172,8 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const resetSession = useCallback(() => {
+    const objectKey = masterObjectKey.trim()
+    if (objectKey) void clearMasterSourceFile(objectKey)
     setAudioUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return ""
@@ -184,7 +194,35 @@ export function MasterSessionProvider({ children }: { children: ReactNode }) {
     setDeliveryEmail("")
     setStripeSessionId("")
     clearMasterStorageKeys()
-  }, [])
+  }, [masterObjectKey])
+
+  useEffect(() => {
+    if (!sessionHydrated || file || !masterObjectKey.trim()) return
+    let cancelled = false
+    void (async () => {
+      let fileName = ""
+      try {
+        const raw = sessionStorage.getItem(MASTER_SESSION_STORAGE_KEY)
+        if (raw) {
+          const snap = JSON.parse(raw) as MasterSessionSnapshotV2
+          fileName = typeof snap.fileName === "string" ? snap.fileName : ""
+        }
+      } catch {
+        /* ignore */
+      }
+      const restored = await restoreMasterSourceFile(masterObjectKey, fileName || undefined)
+      if (cancelled || !restored) return
+      reconnectSourceFile(restored)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [sessionHydrated, file, masterObjectKey, reconnectSourceFile])
+
+  useEffect(() => {
+    if (!file || !masterObjectKey.trim()) return
+    void cacheMasterSourceFile(masterObjectKey, file)
+  }, [file, masterObjectKey])
 
   useLayoutEffect(() => {
     if (typeof window === "undefined" || hydrateRan.current) return

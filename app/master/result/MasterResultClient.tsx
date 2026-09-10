@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
+import { cacheMasterSourceFile } from "../../../lib/masterSourceFileCache"
 import {
   MASTRIFY_CLIENT_LUFS_TRACE,
   MASTRIFY_CLIENT_PIPELINE_DEBUG,
@@ -130,8 +131,13 @@ export default function MasterResultClient() {
     analysisAfter,
   } = useMasterSession()
 
+  const reduceMotion = useReducedMotion()
   const [mounted, setMounted] = useState(false)
-  const [isMobileClient, setIsMobileClient] = useState(false)
+  const [isMobileClient, setIsMobileClient] = useState(() => {
+    if (typeof navigator === "undefined") return false
+    return /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent || "")
+  })
+  const skipEntranceMotion = reduceMotion || isMobileClient
   const [selectedSource, setSelectedSource] = useState<"original" | "mastered">("mastered")
   const [isPlaying, setIsPlaying] = useState(false)
   const [playProgress, setPlayProgress] = useState(0)
@@ -821,6 +827,9 @@ export default function MasterResultClient() {
 
     setCheckoutLoading(true)
     setCheckoutError("")
+    if (file) {
+      await cacheMasterSourceFile(deliveryObjectKey, file)
+    }
     const result = await startMasterCheckout({
       objectKey: deliveryObjectKey,
       trackTitle: file?.name || "",
@@ -979,9 +988,12 @@ export default function MasterResultClient() {
   }
 
   return (
-    <motion.div className="fluid-surface mx-auto max-w-[1080px] px-4 pb-3 pt-5 sm:px-6 md:px-10 md:pb-4 md:pt-6 lg:px-12">
+    <motion.div
+      data-scroll-surface
+      className="fluid-surface mx-auto max-w-[1080px] px-4 pb-3 pt-5 sm:px-6 md:px-10 md:pb-4 md:pt-6 lg:px-12"
+    >
       <motion.header
-        initial={{ opacity: 0, y: 10 }}
+        initial={skipEntranceMotion ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
         className="text-center"
@@ -1048,10 +1060,10 @@ export default function MasterResultClient() {
       </motion.header>
 
       <motion.div
-        initial={{ opacity: 0, y: 18 }}
+        initial={skipEntranceMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
-        className="fluid-surface mt-8 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.46),0_0_72px_rgba(124,58,237,0.09)] backdrop-blur-2xl sm:p-5 md:mt-10 md:rounded-[1.35rem] md:p-8 lg:p-9"
+        className="master-result-panel fluid-surface mt-8 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.46),0_0_72px_rgba(124,58,237,0.09)] backdrop-blur-2xl sm:p-5 md:mt-10 md:rounded-[1.35rem] md:p-8 lg:p-9"
       >
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-stretch lg:gap-10 xl:gap-11">
           {/* Before / After metrics */}
@@ -1227,7 +1239,7 @@ export default function MasterResultClient() {
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={skipEntranceMotion ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1 }}
         className="mx-auto mt-5 flex w-full flex-col items-center gap-3 px-0 sm:mt-6 sm:gap-3.5"
@@ -1265,9 +1277,9 @@ export default function MasterResultClient() {
       </motion.div>
 
       {deliveryOpen && !deliverySent && isPaid ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/72 px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md min-[430px]:px-5">
+        <div className="master-result-modal fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/72 px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md min-[430px]:px-5">
           <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            initial={skipEntranceMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             className="w-full max-w-md rounded-2xl border border-white/[0.1] bg-[#090912] p-4 text-left shadow-[0_24px_80px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.06)] min-[430px]:p-5"
           >

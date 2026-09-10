@@ -56,6 +56,7 @@ export default function CinematicWaveform({
   const [hoverProgress, setHoverProgress] = useState<number | null>(null)
   const scanRef = useRef(0)
   const [scanProgress, setScanProgress] = useState(0)
+  const scrubbingRef = useRef(false)
 
   const window = useMemo(() => {
     if (mode === "processing") {
@@ -116,26 +117,38 @@ export default function CinematicWaveform({
     []
   )
 
-  const handlePointer = useCallback(
+  const handlePointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
       if (!interactive || mode !== "result") return
+      scrubbingRef.current = true
+      e.currentTarget.setPointerCapture(e.pointerId)
       const rect = e.currentTarget.getBoundingClientRect()
-      const p = resolvePointerProgress(e.clientX, rect)
-      if (e.type === "pointerdown") {
-        onSeek?.(p)
-        setHoverProgress(null)
-        return
-      }
-      if (e.type === "pointermove" && (e.buttons === 1 || e.pointerType === "touch")) {
-        onSeek?.(p)
-        return
-      }
-      setHoverProgress(p)
+      onSeek?.(resolvePointerProgress(e.clientX, rect))
+      setHoverProgress(null)
     },
     [interactive, mode, onSeek, resolvePointerProgress]
   )
 
-  const handleLeave = useCallback(() => setHoverProgress(null), [])
+  const handlePointerMove = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      if (!interactive || mode !== "result") return
+      const rect = e.currentTarget.getBoundingClientRect()
+      const p = resolvePointerProgress(e.clientX, rect)
+      if (scrubbingRef.current) {
+        onSeek?.(p)
+        return
+      }
+      if (e.pointerType === "mouse") {
+        setHoverProgress(p)
+      }
+    },
+    [interactive, mode, onSeek, resolvePointerProgress]
+  )
+
+  const endScrub = useCallback(() => {
+    scrubbingRef.current = false
+    setHoverProgress(null)
+  }, [])
 
   const loading = primary.loading || (mode === "result" && secondary.loading)
   const hasPeaks = Boolean(primary.peaks)
@@ -143,14 +156,16 @@ export default function CinematicWaveform({
 
   return (
     <div
-      className={`fluid-surface relative rounded-lg ${
+      className={`waveform-scrub-surface fluid-surface relative rounded-lg ${
         masteredResultSurface
           ? "overflow-visible bg-transparent shadow-none ring-0"
           : "overflow-hidden bg-gradient-to-b from-white/[0.035] to-black/[0.28] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-12px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.06]"
       } ${className}`}
-      onPointerMove={interactive ? handlePointer : undefined}
-      onPointerDown={interactive ? handlePointer : undefined}
-      onPointerLeave={interactive ? handleLeave : undefined}
+      onPointerMove={interactive ? handlePointerMove : undefined}
+      onPointerDown={interactive ? handlePointerDown : undefined}
+      onPointerUp={interactive ? endScrub : undefined}
+      onPointerCancel={interactive ? endScrub : undefined}
+      onPointerLeave={interactive ? endScrub : undefined}
       role={interactive ? "slider" : undefined}
       aria-label={interactive ? "Waveform scrubber" : undefined}
       aria-valuenow={interactive ? Math.round(displayProgress * 100) : undefined}

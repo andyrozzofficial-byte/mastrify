@@ -3,8 +3,8 @@ import MasterResultClient from "./MasterResultClient"
 
 export default function MasterResultPage() {
   return (
-    <div className="relative text-white">
-      <CinematicBackground />
+    <div className="master-result-page relative text-white">
+      <CinematicBackground intensity="subtle" />
       <MasterResultClient />
     </div>
   )
