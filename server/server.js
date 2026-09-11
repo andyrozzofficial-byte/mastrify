@@ -23,6 +23,7 @@ import {
 import { deliverMasterExportEmail } from "./masteredExportDelivery.js"
 import { generateMasterPreviewMp3, previewFileNameForMaster } from "./masterPreview.js"
 import { verifyPaidCheckoutForObjectKey } from "./stripeCheckout.js"
+import { verifyFreeOrderForObjectKey } from "./discountCodes.js"
 import ffmpegPath from "ffmpeg-static"
 import ffprobeStatic from "ffprobe-static"
 
@@ -1347,14 +1348,22 @@ app.post("/master/deliver", deliverRateLimiter, async (req, res) => {
         : typeof body.stripe_session_id === "string"
           ? body.stripe_session_id.trim()
           : ""
+    const freeOrderId =
+      typeof body.freeOrderId === "string"
+        ? body.freeOrderId.trim()
+        : typeof body.free_order_id === "string"
+          ? body.free_order_id.trim()
+          : ""
     const expiresAt = typeof body.expiresAt === "string" && body.expiresAt.trim() ? body.expiresAt.trim() : null
     const trackTitle = typeof body.trackTitle === "string" ? body.trackTitle.trim() : ""
 
-    if (!email || !objectKey || !stripeSessionId) {
+    if (!email || !objectKey || (!stripeSessionId && !freeOrderId)) {
       return res.status(400).json({ success: false, error: "Missing delivery details" })
     }
 
-    const payment = await verifyPaidCheckoutForObjectKey(stripeSessionId, objectKey)
+    const payment = freeOrderId
+      ? await verifyFreeOrderForObjectKey(freeOrderId, objectKey)
+      : await verifyPaidCheckoutForObjectKey(stripeSessionId, objectKey)
     if (!payment.ok) {
       return res.status(payment.status).json({ success: false, error: payment.error })
     }

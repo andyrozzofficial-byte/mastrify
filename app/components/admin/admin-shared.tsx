@@ -724,6 +724,7 @@ export const ADMIN_NAV = [
   { href: "/admin/beta-users", label: "Beta Users", icon: "betaUsers" as AdminNavIconKey, badgeKey: null },
   { href: "/admin/analytics", label: "Analytics", icon: "analytics" as AdminNavIconKey, badgeKey: null },
   { href: "/admin/jobs", label: "Master Jobs", icon: "jobs" as AdminNavIconKey, badgeKey: null },
+  { href: "/admin/discount-codes", label: "Discount Codes", icon: "discountCodes" as AdminNavIconKey, badgeKey: null },
   { href: "/admin/settings", label: "Settings", icon: "settings" as AdminNavIconKey, badgeKey: null },
 ] as const
 

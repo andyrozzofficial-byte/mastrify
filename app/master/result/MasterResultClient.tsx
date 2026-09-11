@@ -36,11 +36,14 @@ import {
 import { parseTrackDisplayName } from "../../../lib/parseTrackDisplayName"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import {
+  type AppliedPromo,
   clearStoredCheckoutSession,
   MASTER_PRICE_LABEL,
+  redeemFreePromoCode,
   restoreVerifiedCheckoutSession,
   startMasterCheckout,
   storeCheckoutSession,
+  validatePromoCode,
   verifyCheckoutReturn,
 } from "../../../lib/checkoutClient"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
@@ -143,6 +146,11 @@ export default function MasterResultClient() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [playProgress, setPlayProgress] = useState(0)
   const [isPaid, setIsPaid] = useState(false)
+  const [freeOrderId, setFreeOrderId] = useState("")
+  const [promoInput, setPromoInput] = useState("")
+  const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null)
+  const [promoLoading, setPromoLoading] = useState(false)
+  const [promoError, setPromoError] = useState("")
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState("")
   const [deliverySent, setDeliverySent] = useState(false)
@@ -243,11 +251,18 @@ export default function MasterResultClient() {
 
       const restored = await restoreVerifiedCheckoutSession(deliveryObjectKey)
       if (cancelled) return
-      if (restored.paid && restored.sessionId) {
-        setStripeSessionId(restored.sessionId)
+      if (restored.paid) {
+        if (restored.freeOrderId) {
+          setFreeOrderId(restored.freeOrderId)
+          setStripeSessionId("")
+        } else if (restored.sessionId) {
+          setStripeSessionId(restored.sessionId)
+          setFreeOrderId("")
+        }
         setIsPaid(true)
       } else {
         setStripeSessionId("")
+        setFreeOrderId("")
         setIsPaid(false)
       }
     }
@@ -813,6 +828,32 @@ export default function MasterResultClient() {
     }
   }
 
+  const handleApplyPromo = async () => {
+    const code = promoInput.trim()
+    if (!code) {
+      setPromoError("Enter a discount code.")
+      return
+    }
+
+    setPromoLoading(true)
+    setPromoError("")
+    const result = await validatePromoCode(code)
+    if (!result.ok) {
+      setAppliedPromo(null)
+      setPromoError(result.error)
+    } else {
+      setAppliedPromo(result.promo)
+      setPromoInput(result.promo.code)
+    }
+    setPromoLoading(false)
+  }
+
+  const handleClearPromo = () => {
+    setPromoInput("")
+    setAppliedPromo(null)
+    setPromoError("")
+  }
+
   const handlePayment = async () => {
     if (isPaid) {
       setDeliveryOpen(true)
@@ -831,10 +872,30 @@ export default function MasterResultClient() {
     if (file) {
       await cacheMasterSourceFile(deliveryObjectKey, file)
     }
+
+    if (appliedPromo?.isFree) {
+      const redeemed = await redeemFreePromoCode({
+        code: appliedPromo.code,
+        objectKey: deliveryObjectKey,
+      })
+      if (!redeemed.ok) {
+        setCheckoutError(redeemed.error)
+        setCheckoutLoading(false)
+        return
+      }
+      setFreeOrderId(redeemed.freeOrderId)
+      setStripeSessionId("")
+      setIsPaid(true)
+      setDeliveryOpen(true)
+      setCheckoutLoading(false)
+      return
+    }
+
     const result = await startMasterCheckout({
       objectKey: deliveryObjectKey,
       trackTitle: file?.name || "",
       returnPath: "/master/result",
+      promoCode: appliedPromo?.code,
     })
     if (!result.ok) {
       setCheckoutError(result.error)
@@ -843,7 +904,7 @@ export default function MasterResultClient() {
   }
 
   const handleEmailDelivery = async () => {
-    if (!isPaid || !stripeSessionId) {
+    if (!isPaid || (!stripeSessionId && !freeOrderId)) {
       setDeliveryError("Complete payment before requesting your download link.")
       return
     }
@@ -871,7 +932,8 @@ export default function MasterResultClient() {
           playbackUrl: masteredWavUrl || "",
           expiresAt: masterExpiresAt || null,
           trackTitle: trackMeta?.title || file?.name || "",
-          stripeSessionId,
+          ...(stripeSessionId ? { stripeSessionId } : {}),
+          ...(freeOrderId ? { freeOrderId } : {}),
         }),
       })
       const data = await res.json().catch(() => null)
@@ -1245,6 +1307,45 @@ export default function MasterResultClient() {
         transition={{ duration: 0.45, delay: 0.1 }}
         className="mx-auto mt-5 flex w-full flex-col items-center gap-3 px-0 sm:mt-6 sm:gap-3.5"
       >
+        {!isPaid && !deliverySent ? (
+          <div className="w-full max-w-[17.5rem] rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">Discount code</p>
+            <div className="mt-2 flex gap-2">
+              <input
+                type="text"
+                value={promoInput}
+                onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                placeholder="e.g. WELCOME50"
+                autoComplete="off"
+                spellCheck={false}
+                className="min-w-0 flex-1 rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-violet-300/35"
+              />
+              <button
+                type="button"
+                onClick={() => void handleApplyPromo()}
+                disabled={promoLoading || !promoInput.trim()}
+                className="shrink-0 rounded-lg border border-violet-400/30 bg-violet-500/15 px-3 py-2 text-xs font-semibold text-violet-100 transition hover:bg-violet-500/25 disabled:opacity-50"
+              >
+                {promoLoading ? "…" : "Apply"}
+              </button>
+            </div>
+            {promoError ? <p className="mt-2 text-xs text-rose-300/85">{promoError}</p> : null}
+            {appliedPromo ? (
+              <div className="mt-2 flex items-center justify-between gap-2 text-xs text-emerald-200/90">
+                <p>
+                  {appliedPromo.percentOff}% off —{" "}
+                  <span className="font-semibold text-white">{appliedPromo.finalLabel}</span>
+                  {appliedPromo.percentOff > 0 && appliedPromo.percentOff < 100 ? (
+                    <span className="ml-1.5 text-white/40 line-through">{appliedPromo.originalLabel}</span>
+                  ) : null}
+                </p>
+                <button type="button" onClick={handleClearPromo} className="text-white/45 hover:text-white/70">
+                  Clear
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         {checkoutError ? (
           <p className="max-w-[17.5rem] text-center text-xs text-rose-300/85">{checkoutError}</p>
         ) : null}
@@ -1257,10 +1358,16 @@ export default function MasterResultClient() {
           >
             <span className={checkoutLoading ? "text-center" : "whitespace-nowrap"}>
               {checkoutLoading
-                ? "Redirecting to checkout…"
+                ? appliedPromo?.isFree
+                  ? "Applying code…"
+                  : "Redirecting to checkout…"
                 : isPaid
                   ? "Get download link"
-                  : `Pay ${MASTER_PRICE_LABEL} & Download`}
+                  : appliedPromo?.isFree
+                    ? "Continue — Free"
+                    : appliedPromo
+                      ? `Pay ${appliedPromo.finalLabel} & Download`
+                      : `Pay ${MASTER_PRICE_LABEL} & Download`}
             </span>
           </button>
         ) : (
@@ -1287,8 +1394,9 @@ export default function MasterResultClient() {
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/58">Master delivery</p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">Secure your master link</h2>
             <p className="mt-2 text-sm leading-relaxed text-white/68">
-              Payment complete. Enter your email to receive your mastered track and secure download link. You can reopen
-              it later from any device, even if this page is closed.
+              {freeOrderId
+                ? "Your master is ready. Enter your email to receive your download link — no payment required."
+                : "Payment complete. Enter your email to receive your mastered track and secure download link. You can reopen it later from any device, even if this page is closed."}
             </p>
             <p className="mt-2 text-[12px] leading-relaxed text-white/48">
               We send the link instantly and only use it to deliver this export.

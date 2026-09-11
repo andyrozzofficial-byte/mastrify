@@ -67,6 +67,15 @@ export function IconJobs({ className }: IconProps) {
   )
 }
 
+export function IconDiscount({ className }: IconProps) {
+  return (
+    <svg className={cn(className)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+      <path d="M20.59 13.41 11 3H4v7l9.59 9.59a2 2 0 0 0 2.82 0l4.18-4.18a2 2 0 0 0 0-2.82Z" />
+      <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 export function IconSettings({ className }: IconProps) {
   return (
     <svg className={cn(className)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
@@ -84,6 +93,7 @@ export const ADMIN_ICON_MAP = {
   betaUsers: IconBetaUsers,
   analytics: IconAnalytics,
   jobs: IconJobs,
+  discountCodes: IconDiscount,
   settings: IconSettings,
 } as const
 

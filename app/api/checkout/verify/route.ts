@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { recordStripeDiscountRedemption } from "../../../../lib/discountCodes"
 import { getStripeServer } from "../../../../lib/stripe/server"
 
 export async function GET(request: Request) {
@@ -39,6 +40,22 @@ export async function GET(request: Request) {
         { paid: false, error: "Payment does not match this master." },
         { status: 400 },
       )
+    }
+
+    const promoCode =
+      typeof session.metadata?.promoCode === "string" ? session.metadata.promoCode.trim() : ""
+    const finalCentsRaw =
+      typeof session.metadata?.finalCents === "string" ? Number(session.metadata.finalCents) : NaN
+    const finalCents = Number.isFinite(finalCentsRaw) ? finalCentsRaw : session.amount_total ?? 900
+
+    if (promoCode) {
+      await recordStripeDiscountRedemption({
+        rawCode: promoCode,
+        objectKey,
+        stripeSessionId: session.id,
+        finalAmountCents: finalCents,
+        email: session.customer_details?.email ?? null,
+      })
     }
 
     return NextResponse.json({

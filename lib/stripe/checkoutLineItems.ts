@@ -5,11 +5,14 @@ import {
   MASTER_PRODUCT_NAME,
 } from "../pricing"
 
-function buildInlinePriceLineItem(trackTitle: string): Stripe.Checkout.SessionCreateParams.LineItem {
+function buildInlinePriceLineItem(
+  trackTitle: string,
+  unitAmountCents: number = MASTER_PRICE_CENTS,
+): Stripe.Checkout.SessionCreateParams.LineItem {
   return {
     price_data: {
       currency: MASTER_PRICE_CURRENCY,
-      unit_amount: MASTER_PRICE_CENTS,
+      unit_amount: unitAmountCents,
       product_data: {
         name: MASTER_PRODUCT_NAME,
         description: trackTitle
@@ -25,10 +28,15 @@ function buildInlinePriceLineItem(trackTitle: string): Stripe.Checkout.SessionCr
 export async function resolveCheckoutLineItems(
   stripe: Stripe,
   trackTitle: string,
+  unitAmountCents: number = MASTER_PRICE_CENTS,
 ): Promise<Stripe.Checkout.SessionCreateParams.LineItem[]> {
+  if (unitAmountCents !== MASTER_PRICE_CENTS) {
+    return [buildInlinePriceLineItem(trackTitle, unitAmountCents)]
+  }
+
   const priceId = process.env.STRIPE_PRICE_ID?.trim()
   if (!priceId) {
-    return [buildInlinePriceLineItem(trackTitle)]
+    return [buildInlinePriceLineItem(trackTitle, unitAmountCents)]
   }
 
   try {
