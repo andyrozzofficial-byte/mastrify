@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { btnMastrifyPrimaryCore } from "../buttonEffects"
+import { cardMastrifyPurple, cardMastrifyPurpleSheen } from "../cardEffects"
 import { MASTER_PRICE_LABEL } from "../../../lib/pricing"
 import { motion, useReducedMotion } from "framer-motion"
 
@@ -29,11 +30,12 @@ export default function PricingUnlockCard({ className = "" }: Props) {
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
     >
-      <div className="relative overflow-hidden rounded-[1.35rem] border border-white/[0.11] bg-gradient-to-b from-white/[0.05] to-black/[0.78] p-8 md:p-10">
+      <div className={`relative overflow-hidden rounded-[1.35rem] border p-8 md:p-10 ${cardMastrifyPurple}`}>
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/28 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/45 to-transparent"
           aria-hidden
         />
+        <div className={`pointer-events-none absolute inset-0 ${cardMastrifyPurpleSheen}`} aria-hidden />
 
         <div className="relative text-center">
           <span className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70">

@@ -11,6 +11,7 @@ import {
 } from "../../../lib/audioUploadAccept"
 import { OFF_SCREEN_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
 import { btnMastrifySecondaryCore, btnStablePrimary, btnStableSecondary } from "../buttonEffects"
+import { panelMastrifyPurple } from "../cardEffects"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -57,8 +58,8 @@ export default function MasterUploadCard({
     >
       <motion.div
         layout
-        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] transition-[border-color] duration-500 ${
-          loaded ? "border-violet-400/16" : dragging ? "border-violet-400/18" : "border-white/[0.1] hover:border-white/[0.12]"
+        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border transition-[border-color] duration-500 ${panelMastrifyPurple} ${
+          loaded ? "border-violet-400/40" : dragging ? "border-violet-400/50" : "border-violet-400/25 hover:border-violet-400/35"
         }`}
         onDragOver={(e) => {
           e.preventDefault()

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import type { MasterStylePreset } from "../../master/MasterSessionProvider"
 import { btnMastrifySecondaryCore } from "../buttonEffects"
+import { optionMastrifyPurpleSelected } from "../cardEffects"
 
 const STROKE = 1.35
 
@@ -443,11 +444,11 @@ function StylePresetCard({
   const iconAnim = iconMotion(preset.motionKey, active, reduceMotion)
 
   return (
-    <div className="relative">
+    <div className="relative flex">
       <button
         type="button"
         onClick={onInfo}
-        className={`stable-interaction absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm ${btnMastrifySecondaryCore}`}
+        className={`stable-interaction absolute! right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm ${btnMastrifySecondaryCore}`}
         aria-label={`More about ${preset.label}`}
       >
         <InfoIcon />
@@ -457,9 +458,9 @@ function StylePresetCard({
         type="button"
         layout
         onClick={onSelect}
-        className={`group relative flex min-h-[11.5rem] w-full flex-col items-center rounded-2xl border px-2.5 pb-3.5 pt-3 text-center transition-colors duration-300 sm:min-h-[12rem] sm:px-3 sm:pb-4 lg:min-h-[10.5rem] lg:pb-3 ${
+        className={`group relative flex h-full min-h-[11.5rem] w-full flex-col items-center justify-center rounded-2xl border px-2.5 pb-3.5 pt-3 text-center transition-colors duration-300 sm:min-h-[12rem] sm:px-3 sm:pb-4 lg:min-h-[10.5rem] lg:pb-3 ${
           active
-            ? "border-white/20 bg-transparent text-white hover:border-violet-400/40 hover:bg-violet-600/10"
+            ? optionMastrifyPurpleSelected
             : "border-white/20 bg-transparent text-white/85 hover:border-violet-400/40 hover:bg-violet-600/10"
         }`}
         aria-pressed={active}
@@ -515,7 +516,7 @@ export default function MasterStylePresetPicker({ value, onChange }: MasterStyle
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3.5 lg:grid-cols-5 lg:gap-2.5">
+      <div className="grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3.5 lg:grid-cols-5 lg:gap-2.5">
         {PRESETS.map((preset) => (
           <StylePresetCard
             key={preset.id}

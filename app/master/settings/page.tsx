@@ -9,6 +9,7 @@ import MasterStylePresetPicker from "../../components/master/MasterStylePresetPi
 import { useMasterSession } from "../MasterSessionProvider"
 import { AUDIO_UPLOAD_ACCEPT, isAcceptedAudioUpload } from "../../../lib/audioUploadAccept"
 import { btnMastrifyPrimaryCore } from "../../components/buttonEffects"
+import { optionMastrifyPurpleSelected } from "../../components/cardEffects"
 
 const LOUDNESS = [
   { lufs: -14, label: "Streaming", detail: "Most transparent. Best for balanced streaming playback." },
@@ -222,7 +223,7 @@ export default function MasterSettingsPage() {
                         onClick={() => setTargetLufs(o.lufs)}
                         className={`rounded-xl border px-2.5 py-2 text-left transition md:px-3 md:py-2.5 ${
                           active
-                            ? "border-white/20 bg-transparent text-white hover:border-violet-400/40 hover:bg-violet-600/10"
+                            ? optionMastrifyPurpleSelected
                             : "border-white/20 bg-transparent text-white/70 hover:border-violet-400/40 hover:bg-violet-600/10"
                         }`}
                       >

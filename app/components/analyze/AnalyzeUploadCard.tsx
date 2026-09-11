@@ -10,6 +10,7 @@ import {
 } from "../../../lib/audioUploadAccept"
 import { IOS_SAFE_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
 import { btnStablePrimary, btnStableSecondary } from "../buttonEffects"
+import { panelMastrifyPurple } from "../cardEffects"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -55,8 +56,8 @@ export default function AnalyzeUploadCard({
       transition={{ duration: 0.65, delay: 0.12, ease: EASE }}
     >
       <motion.div
-        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border bg-gradient-to-b from-white/[0.045] to-black/[0.72] transition-[border-color] duration-300 ${
-          dragging ? "border-violet-400/18" : "border-white/[0.1] hover:border-white/[0.12]"
+        className={`fluid-surface relative overflow-hidden rounded-[1.3rem] border transition-[border-color] duration-300 ${panelMastrifyPurple} ${
+          dragging ? "border-violet-400/50" : "border-violet-400/25 hover:border-violet-400/35"
         }`}
         onDragOver={(e) => {
           e.preventDefault()

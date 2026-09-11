@@ -190,7 +190,7 @@ export default function HowItWorksClient() {
               Mastrify listens like an engineer who cares about the song — preserving dynamics, emotional movement,
               and the identity of your mix while bringing it to a confident, streaming-ready level.
             </p>
-            <ul className="hero-bullet-list mx-auto mt-4 max-w-md space-y-2 text-[14px] text-white/72 sm:mt-6 sm:space-y-2.5">
+            <ul className="hero-bullet-list mx-auto mt-6 max-w-md space-y-2 text-[14px] text-white/72 sm:mt-8 sm:space-y-2.5">
               <li className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
                 Perceptual processing that follows the music, not a fixed template
@@ -281,12 +281,12 @@ export default function HowItWorksClient() {
       <section className="relative z-10 py-12 md:py-24">
         <div className="mx-auto max-w-[1080px] px-5 md:px-10">
           <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-black/40 p-6 md:p-10 lg:p-12">
-            <Reveal>
+            <Reveal className="text-center">
               <SectionLabel>Mastering philosophy</SectionLabel>
-              <h2 className="mt-3 max-w-2xl text-[1.65rem] font-semibold leading-[1.15] tracking-[-0.02em] text-white sm:text-[2rem]">
+              <h2 className="mx-auto mt-3 max-w-2xl text-[1.65rem] font-semibold leading-[1.15] tracking-[-0.02em] text-white sm:text-[2rem]">
                 Smart transparency — the mix stays yours
               </h2>
-              <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-white/72 md:text-[15px]">
+              <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-relaxed text-white/72 md:text-[15px]">
                 Great mastering is often about what you choose not to do. Mastrify earns each move of the chain — so
                 punch, space, and emotion survive the journey to release.
               </p>
