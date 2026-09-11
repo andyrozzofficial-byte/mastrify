@@ -6,6 +6,7 @@ import { createSupabaseServerClient, getSupabaseKeySource } from "./supabaseServ
 const SUPPORT_INBOX_TABLE = "admin_support_inbox"
 import type { SupportSessionContext, SupportThreadMessage, SupportTicketCategory } from "./supportTypes"
 import { categoryLabel, isSupportTicketCategory } from "./supportTypes"
+import { sendSupportReplyEmail } from "./sendSupportReplyEmail"
 
 function isMissingSupportNameColumn(message: string): boolean {
   return /admin_support_inbox/i.test(message) && /\bname\b/i.test(message) && /does not exist/i.test(message)
@@ -194,12 +195,22 @@ export async function appendSupportReply(
 
   const { data: row, error: fetchErr } = await supabase
     .from(SUPPORT_INBOX_TABLE)
-    .select("thread, status")
+    .select("thread, status, email, subject")
     .eq("id", ticketId)
     .maybeSingle()
 
   if (fetchErr) return { error: fetchErr.message }
   if (!row) return { error: "Ticket not found" }
+
+  if (author === "admin") {
+    const emailResult = await sendSupportReplyEmail({
+      to: String(row.email ?? ""),
+      subject: row.subject ? String(row.subject) : null,
+      message: trimmed,
+      ticketId,
+    })
+    if (!emailResult.sent) return { error: emailResult.error }
+  }
 
   const thread = parseThread(row.thread)
   thread.push({
