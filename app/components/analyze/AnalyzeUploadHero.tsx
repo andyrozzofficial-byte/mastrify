@@ -2,11 +2,9 @@
 
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
-import { useEffect, useState, type RefObject } from "react"
-import MarketingHeroOrb from "../MarketingHeroOrb"
+import { type RefObject } from "react"
 import AnalyzeStepRail, { type AnalyzePhase } from "./AnalyzeStepRail"
 import AnalyzeUploadCard from "./AnalyzeUploadCard"
-import { useGlobeMotionActive, useMinMd } from "../../../lib/useGlobeMotionActive"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -32,18 +30,9 @@ export default function AnalyzeUploadHero({
   onScanClick,
 }: Props) {
   const reduce = useReducedMotion()
-  const [engineStep, setEngineStep] = useState(0)
-  const showOrb = useMinMd()
-  const { ref: orbRef } = useGlobeMotionActive(showOrb)
-
-  useEffect(() => {
-    if (reduce || !showOrb) return
-    const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 4000)
-    return () => clearInterval(id)
-  }, [reduce, showOrb])
 
   return (
-    <section className="marketing-hero-shell hero-section relative w-full md:pb-10">
+    <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 w-full overflow-hidden pb-12 md:pb-28">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.055),transparent_55%)]"
         aria-hidden
@@ -52,12 +41,12 @@ export default function AnalyzeUploadHero({
       />
 
       <motion.div
-        className="marketing-hero-lockup relative grid min-w-0 grid-cols-1 gap-6 sm:gap-10 max-lg:gap-6"
+        className="marketing-hero-lockup marketing-hero-lockup--content-only relative grid min-w-0 items-center gap-6 sm:gap-10"
         initial={reduce ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        <motion.div className="marketing-hero-copy relative z-10 flex min-w-0 flex-col max-lg:order-1">
+        <motion.div className="marketing-hero-copy relative z-10 flex min-w-0 flex-col items-center text-center">
           <span className="hero-eyebrow-pill">Perceptual mix intelligence</span>
 
           <h1 className="mt-3.5 text-[1.62rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white min-[430px]:text-[1.85rem] sm:mt-5 sm:text-[2.35rem] md:text-[2.65rem]">
@@ -72,7 +61,7 @@ export default function AnalyzeUploadHero({
             mastering journey, before you commit to the final master.
           </p>
 
-          <ul className="mt-4 space-y-2 text-[14px] text-white/70 sm:mt-6 sm:space-y-2.5">
+          <ul className="hero-bullet-list mx-auto mt-4 max-w-md space-y-2 text-[14px] text-white/70 sm:mt-6 sm:space-y-2.5">
             <li className="flex gap-2.5">
               <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
               Understand loudness, width, and tone with engineer-level clarity
@@ -87,9 +76,9 @@ export default function AnalyzeUploadHero({
             </li>
           </ul>
 
-          <AnalyzeStepRail phase={phase} className="mt-6 justify-start sm:mt-8 md:mt-9" />
+          <AnalyzeStepRail phase={phase} className="hero-step-rail-center-mobile mt-6 sm:mt-8 md:mt-9" />
 
-          <motion.div className="mt-6 w-full max-w-[29.5rem] min-w-0 sm:mt-8 lg:max-w-none">
+          <motion.div className="mx-auto mt-6 w-full max-w-[29.5rem] min-w-0 sm:mt-8">
             <AnalyzeUploadCard
               file={file}
               fileInputRef={fileInputRef}
@@ -98,7 +87,7 @@ export default function AnalyzeUploadHero({
             />
           </motion.div>
 
-          <motion.div className="mt-5 grid gap-2 sm:mt-8 sm:grid-cols-3 sm:gap-2.5">
+          <motion.div className="mx-auto mt-5 grid w-full max-w-md gap-2 sm:mt-8 sm:grid-cols-3 sm:gap-2.5">
             {TRUST.map((item, i) => (
               <motion.div
                 key={item.title}
@@ -124,8 +113,6 @@ export default function AnalyzeUploadHero({
             Supported formats &amp; tips
           </p>
         </motion.div>
-
-        {showOrb ? <MarketingHeroOrb ref={orbRef} activeStep={engineStep} /> : null}
       </motion.div>
     </section>
   )

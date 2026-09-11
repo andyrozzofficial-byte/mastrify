@@ -4,14 +4,11 @@ import { motion, useReducedMotion } from "framer-motion"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
-import CinematicDivider from "../components/CinematicDivider"
 import CinematicReveal from "../components/CinematicReveal"
 import MarketingHeroOrb from "../components/MarketingHeroOrb"
 import PremiumButton from "../components/PremiumButton"
 
 const EASE = [0.22, 1, 0.36, 1] as const
-
-const dawLogos = ["Ableton Live", "FL Studio", "Logic Pro", "Pro Tools", "Studio One"]
 
 export default function Landing() {
   const reduce = useReducedMotion()
@@ -39,15 +36,22 @@ export default function Landing() {
       />
 
       {/* Hero */}
-      <section className="marketing-hero-shell homepage-hero-shell hero-section page-container page-hero-pad relative z-10 sm:pb-10 md:pb-12">
+      <section className="marketing-hero-shell homepage-hero-shell hero-section page-container page-hero-pad relative z-10 overflow-hidden pb-12 md:pb-28">
         <motion.div
           className="marketing-hero-lockup homepage-hero-lockup relative grid items-center gap-6 sm:gap-10"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
         >
+          <MarketingHeroOrb
+            activeStep={engineStep}
+            breakpoint="all"
+            centered
+            className="homepage-hero-orb"
+          />
+
           <motion.div
-            className="marketing-hero-copy text-center lg:text-left"
+            className="marketing-hero-copy flex w-full flex-col items-center text-center"
             initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.05, ease: EASE }}
@@ -61,12 +65,12 @@ export default function Landing() {
               </span>
             </h1>
 
-            <p className="hero-lead lg:mx-0">
+            <p className="hero-lead">
               Mastrify masters with perceptual intelligence — preserving punch, space, and emotional movement while
               bringing your mix to a confident, streaming-ready level.
             </p>
 
-            <ul className="mx-auto mt-5 max-w-md space-y-2.5 text-left text-[14px] leading-[1.55] text-white/70 sm:mt-7 sm:space-y-3 lg:mx-0">
+            <ul className="hero-bullet-list mx-auto mt-5 max-w-md space-y-2.5 text-[14px] leading-[1.55] text-white/70 sm:mt-7 sm:space-y-3">
               <li className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
                 Transparent dynamics that respect what your mix already does well
@@ -78,7 +82,7 @@ export default function Landing() {
             </ul>
 
             <motion.div
-              className="mobile-cta-stack relative z-20 mt-4 sm:mt-8 lg:justify-start"
+              className="mobile-cta-stack relative z-20 mt-4 sm:mt-8"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
@@ -91,7 +95,7 @@ export default function Landing() {
               </PremiumButton>
             </motion.div>
 
-            <p className="mt-4 text-center text-[13px] text-support-68 sm:mt-5 lg:text-left">
+            <p className="mt-4 text-center text-[13px] text-support-68 sm:mt-5">
               <Link
                 href="/how-it-works"
                 className="transition hover:text-violet-200/70 hover:underline hover:underline-offset-2"
@@ -102,21 +106,8 @@ export default function Landing() {
               No signup required to begin
             </p>
           </motion.div>
-
-          <MarketingHeroOrb activeStep={engineStep} />
         </motion.div>
       </section>
-
-      {/* Bridge — tightens hero → below fold */}
-      <motion.div
-        className="relative z-10 mx-auto max-w-[1080px] px-5 md:px-10 lg:-mt-2"
-        initial={reduce ? false : { opacity: 0 }}
-        whileInView={reduce ? undefined : { opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8 }}
-      >
-        <CinematicDivider />
-      </motion.div>
 
       {/* Below fold — mix intelligence */}
       <section className="section-after-hero relative z-10">
@@ -144,35 +135,6 @@ export default function Landing() {
             <PremiumButton href="/analyze" variant="secondary" className="mt-5 min-h-[48px] px-8 sm:mt-7">
               Run a free mix analysis
             </PremiumButton>
-          </CinematicReveal>
-
-          <CinematicReveal className="mx-auto mt-10 max-w-[920px] sm:mt-14 md:mt-[3.75rem] lg:mt-10" delay={0.08}>
-            <motion.div
-              className="trust-band"
-              initial={reduce ? false : { opacity: 0, y: 10 }}
-              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-24px" }}
-              transition={{ duration: 0.65, ease: EASE }}
-            >
-              <p className="trust-band-kicker">Seamless with your studio</p>
-              <h3 className="trust-band-heading">Trusted by producers and artists worldwide</h3>
-              <div className="trust-daw-row" aria-label="Supported digital audio workstations">
-                <motion.ul className="trust-daw-list">
-                  {dawLogos.map((name, i) => (
-                    <motion.li
-                      key={name}
-                      className="trust-daw-item"
-                      initial={reduce ? false : { opacity: 0, y: 6 }}
-                      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: 0.04 * i, ease: EASE }}
-                    >
-                      <span className="trust-daw-label">{name}</span>
-                    </motion.li>
-                  ))}
-                </motion.ul>
-              </div>
-            </motion.div>
           </CinematicReveal>
         </motion.div>
       </section>

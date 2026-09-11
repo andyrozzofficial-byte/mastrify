@@ -9,26 +9,31 @@ const EASE = [0.22, 1, 0.36, 1] as const
 export type MarketingHeroOrbProps = {
   activeStep: number
   className?: string
-  /** md-up: desktop column (default). mobile-only: inline hero slot below md. */
-  breakpoint?: "md-up" | "mobile-only"
+  /** md-up: desktop column (default). all: every breakpoint. mobile-only: below md only. */
+  breakpoint?: "md-up" | "mobile-only" | "all"
+  /** Center orb on all breakpoints (home hero). */
+  centered?: boolean
 }
 
 /**
  * Shared marketing hero globe — same component, sizing and slot logic on every hero.
  */
 const MarketingHeroOrb = forwardRef<HTMLDivElement, MarketingHeroOrbProps>(
-  function MarketingHeroOrb({ activeStep, className = "", breakpoint = "md-up" }, ref) {
+  function MarketingHeroOrb({ activeStep, className = "", breakpoint = "md-up", centered = false }, ref) {
     const reduce = useReducedMotion()
     const visibility =
       breakpoint === "mobile-only"
         ? "flex md:hidden"
-        : "hidden md:flex"
+        : breakpoint === "all"
+          ? "flex"
+          : "hidden md:flex"
+    const align = centered ? "justify-center" : "justify-center lg:justify-start"
 
     return (
       <motion.div
         ref={ref}
         className={[
-          `marketing-hero-orb marketing-hero-orb-slot ${visibility} marketing-hero-visual relative mx-auto w-full min-w-0 max-w-full justify-center overflow-visible lg:justify-start lg:overflow-visible`,
+          `marketing-hero-orb marketing-hero-orb-slot ${visibility} marketing-hero-visual relative mx-auto w-full min-w-0 max-w-full ${align} overflow-visible lg:overflow-visible`,
           className,
         ]
           .filter(Boolean)
@@ -37,7 +42,7 @@ const MarketingHeroOrb = forwardRef<HTMLDivElement, MarketingHeroOrbProps>(
         animate={{ opacity: 1 }}
         transition={{ duration: 0.9, delay: 0.08, ease: EASE }}
       >
-        <div className="hero-engine-orb-cage relative w-full overflow-visible max-lg:mx-auto">
+        <div className="hero-engine-orb-cage relative mx-auto w-full overflow-visible">
           <MasteringEngineVisual activeStep={activeStep} className="marketing-engine-visual" />
         </div>
       </motion.div>

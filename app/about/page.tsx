@@ -1,8 +1,8 @@
 export default function About() {
   return (
-    <main className="min-h-screen bg-black text-white px-6 py-20">
+    <main className="min-h-screen bg-black px-6 py-20 text-white">
       
-      <div className="max-w-3xl mx-auto space-y-8">
+      <div className="mx-auto max-w-3xl space-y-8 text-center">
         
         <h1 className="text-4xl font-bold">About Mastrify</h1>
 

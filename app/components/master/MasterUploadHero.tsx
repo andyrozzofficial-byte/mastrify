@@ -2,8 +2,7 @@
 
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
-import { useEffect, useState, type RefObject } from "react"
-import MarketingHeroOrb from "../MarketingHeroOrb"
+import { type RefObject } from "react"
 import MasterFlowStepRail from "./MasterFlowStepRail"
 import MasterUploadCard from "./MasterUploadCard"
 
@@ -29,28 +28,21 @@ export default function MasterUploadHero({
   onContinue,
 }: Props) {
   const reduce = useReducedMotion()
-  const [engineStep, setEngineStep] = useState(0)
-
-  useEffect(() => {
-    if (reduce) return
-    const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 4000)
-    return () => clearInterval(id)
-  }, [reduce])
 
   return (
-    <section className="marketing-hero-shell hero-section relative w-full">
+    <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 w-full overflow-hidden pb-12 md:pb-28">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.04),transparent_55%)]"
         aria-hidden
       />
 
       <motion.div
-        className="marketing-hero-lockup relative grid min-w-0 grid-cols-1 gap-6 sm:gap-10 max-lg:gap-6"
+        className="marketing-hero-lockup marketing-hero-lockup--content-only relative grid min-w-0 items-center gap-6 sm:gap-10"
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
       >
-        <motion.div className="marketing-hero-copy flex min-w-0 flex-col max-lg:order-1">
+        <motion.div className="marketing-hero-copy flex min-w-0 flex-col items-center text-center">
           <span className="hero-eyebrow-pill sm:tracking-[0.22em]">Spatial mastering engine</span>
 
           <h1 className="mt-3 text-[1.48rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white min-[430px]:text-[1.55rem] sm:mt-4 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
@@ -68,7 +60,7 @@ export default function MasterUploadHero({
             </span>
           </p>
 
-          <ul className="mt-4 hidden space-y-2 text-[13px] text-white/70 sm:block sm:space-y-2.5 sm:text-[14px] md:mt-6">
+          <ul className="hero-bullet-list mx-auto mt-4 hidden max-w-md space-y-2 text-[13px] text-white/70 sm:block sm:space-y-2.5 sm:text-[14px] md:mt-6">
             <li className="flex gap-2.5">
               <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
               Perceptual processing tuned to your mix, not a one-size chain
@@ -83,9 +75,9 @@ export default function MasterUploadHero({
             </li>
           </ul>
 
-          <MasterFlowStepRail phase="upload" className="mt-4 justify-start sm:mt-5 md:mt-8" />
+          <MasterFlowStepRail phase="upload" className="hero-step-rail-center-mobile mt-4 sm:mt-5 md:mt-8" />
 
-          <motion.div className="mt-4 w-full max-w-[29.5rem] min-w-0 sm:mt-5 lg:max-w-none">
+          <motion.div className="mx-auto mt-4 w-full max-w-[29.5rem] min-w-0 sm:mt-5">
             <MasterUploadCard
               file={file}
               fileInputRef={fileInputRef}
@@ -94,7 +86,7 @@ export default function MasterUploadHero({
             />
           </motion.div>
 
-          <motion.div className="hidden gap-2 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-2.5 lg:mt-6">
+          <motion.div className="mx-auto hidden w-full max-w-md gap-2 sm:mt-5 sm:grid sm:grid-cols-3 sm:gap-2.5 lg:mt-6">
             {FEATURES.map((item, i) => (
               <motion.div
                 key={item.title}
@@ -119,8 +111,6 @@ export default function MasterUploadHero({
             </Link>
           </p>
         </motion.div>
-
-        <MarketingHeroOrb activeStep={engineStep} />
       </motion.div>
     </section>
   )

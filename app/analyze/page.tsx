@@ -290,14 +290,7 @@ export default function AnalyzePage() {
             animate={reduce ? undefined : { opacity: [0.88, 1, 0.88] }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
           />
-          <motion.div
-            className={`relative mx-auto w-full px-5 pb-8 pt-4 sm:pb-10 sm:pt-6 md:px-10 md:pb-16 md:pt-8 ${
-              result
-                ? "max-w-6xl pb-6 pt-3 md:max-w-7xl md:pb-16 md:pt-8"
-                : "max-w-[1080px]"
-            }`}
-          >
-            <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait">
               {!result && (
                 <motion.div
                   key="upload"
@@ -322,7 +315,7 @@ export default function AnalyzePage() {
           initial={{ opacity: 0, filter: "blur(10px)", y: 16 }}
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
           transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto mt-0 w-full space-y-2.5 pb-2 md:mt-2 md:space-y-5 md:pb-5"
+          className="relative mx-auto mt-0 w-full max-w-6xl space-y-2.5 px-5 pb-2 pt-3 md:max-w-7xl md:space-y-5 md:px-10 md:pb-5 md:pt-8"
         >
           <AnalyzeStepRail phase="results" className="mx-auto max-md:-mt-1.5 max-md:mb-0" />
 
@@ -603,7 +596,6 @@ export default function AnalyzePage() {
         </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
         </>
       )}
     </motion.div>

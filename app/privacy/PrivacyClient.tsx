@@ -18,7 +18,7 @@ const SECTIONS = [
       <ul>
         <li>
           <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
-          Files are used only to run mix analysis and mastering you request.
+          Files are used only to run the mix analysis or mastering you request.
         </li>
         <li>
           <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
@@ -26,7 +26,7 @@ const SECTIONS = [
         </li>
         <li>
           <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/60" aria-hidden />
-          Processing happens to deliver previews and exports back to you.
+          Processing is limited to delivering previews, playback links, and exports back to you.
         </li>
       </ul>
     ),
@@ -34,20 +34,29 @@ const SECTIONS = [
   {
     title: "Storage & retention",
     body: (
-      <p>
-        Uploads and generated masters may be stored temporarily to complete your session. Files can be automatically
-        deleted after a limited retention period. Playback and download links may expire after a limited period for
-        security and storage management. Do not rely on Mastrify as long-term storage — keep your own backups of original
-        mixes and final exports.
-      </p>
+      <>
+        <p>
+          Uploads, generated masters, and preview files may be stored temporarily so we can complete your session and
+          deliver results.
+        </p>
+        <p>
+          Playback and download links — including links to preview your master — are available for{" "}
+          <strong className="font-medium text-white/82">12 hours</strong> from when they are issued. After that window,
+          links may expire and associated files may be deleted automatically.
+        </p>
+        <p>
+          Mastrify is not long-term cloud storage. Keep your own backups of original mixes and final exports.
+        </p>
+      </>
     ),
   },
   {
     title: "Payments",
     body: (
       <p>
-        When you pay for an export, payment is handled through secure payment providers. Mastrify does not store full
-        card numbers on our servers. Billing is tied to the master you choose to unlock after it has been generated.
+        When you pay for an export, payment is handled through Stripe and other secure payment providers. Mastrify does
+        not store full card numbers on our servers. Billing applies to the specific master export you choose to unlock
+        after your preview is ready.
       </p>
     ),
   },
@@ -55,8 +64,8 @@ const SECTIONS = [
     title: "Security",
     body: (
       <p>
-        We use industry-standard practices to protect data in transit and at rest. No system is perfectly secure; if you
-        believe your account or upload was compromised, contact us promptly.
+        We use industry-standard practices to protect data in transit and at rest. No system is perfectly secure. If you
+        believe your account or upload was compromised, contact us promptly through our support form.
       </p>
     ),
   },
@@ -67,7 +76,7 @@ export default function PrivacyClient() {
     <LegalPageShell
       label="Legal"
       title="Privacy Policy"
-      lead="A clear summary of how Mastrify treats your audio, your data, and your trust."
+      lead="How Mastrify handles your audio, your data, and your trust — in plain language."
       sections={[...SECTIONS]}
     />
   )

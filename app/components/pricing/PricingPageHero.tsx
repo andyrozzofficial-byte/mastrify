@@ -2,8 +2,6 @@
 
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
-import { useEffect, useState } from "react"
-import MarketingHeroOrb from "../MarketingHeroOrb"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -15,16 +13,9 @@ const BULLETS = [
 
 export default function PricingPageHero() {
   const reduce = useReducedMotion()
-  const [engineStep, setEngineStep] = useState(0)
-
-  useEffect(() => {
-    if (reduce) return
-    const id = setInterval(() => setEngineStep((s) => (s + 1) % 5), 3200)
-    return () => clearInterval(id)
-  }, [reduce])
 
   return (
-    <section className="marketing-hero-shell hero-section relative w-full">
+    <section className="marketing-hero-shell hero-section page-container page-hero-pad relative z-10 w-full overflow-hidden pb-12 md:pb-28">
       <motion.div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_50%_at_50%_0%,rgba(99,102,241,0.055),transparent_55%)]"
         aria-hidden
@@ -33,12 +24,12 @@ export default function PricingPageHero() {
       />
 
       <motion.div
-        className="marketing-hero-lockup relative grid gap-5 sm:gap-8"
+        className="marketing-hero-lockup marketing-hero-lockup--content-only relative grid items-center gap-6 sm:gap-10"
         initial={reduce ? false : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: EASE }}
       >
-        <motion.div className="marketing-hero-copy flex flex-col">
+        <motion.div className="marketing-hero-copy flex w-full flex-col items-center text-center">
           <span className="hero-eyebrow-pill">Simple, honest pricing</span>
 
           <h1 className="mt-3.5 text-[1.6rem] font-semibold leading-[1.14] tracking-[-0.03em] text-white sm:mt-6 sm:text-[2rem] md:text-[2.65rem] md:leading-[1.12]">
@@ -53,7 +44,7 @@ export default function PricingPageHero() {
             export, powered by the same cinematic engine as the rest of Mastrify.
           </p>
 
-          <ul className="mt-4 space-y-2 text-[14px] text-white/70 sm:mt-6 sm:space-y-2.5">
+          <ul className="hero-bullet-list mx-auto mt-4 max-w-md space-y-2 text-[14px] text-white/70 sm:mt-6 sm:space-y-2.5">
             {BULLETS.map((text) => (
               <li key={text} className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
@@ -78,8 +69,6 @@ export default function PricingPageHero() {
             </Link>
           </p>
         </motion.div>
-
-        <MarketingHeroOrb activeStep={engineStep} />
       </motion.div>
     </section>
   )

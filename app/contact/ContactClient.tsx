@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import CinematicBackground from "../components/CinematicBackground"
+import SupportContactForm from "../components/contact/SupportContactForm"
 import PremiumButton from "../components/PremiumButton"
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -12,7 +13,7 @@ export default function ContactClient() {
 
   return (
     <motion.div
-      className="relative min-h-screen overflow-hidden text-white"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: EASE }}
@@ -23,26 +24,25 @@ export default function ContactClient() {
         aria-hidden
       />
 
-      <main className="page-container relative z-10 mx-auto flex w-full max-w-[600px] flex-col pb-16 pt-8 sm:pb-20 sm:pt-10 md:pb-28 md:pt-16">
+      <main className="page-container page-hero-pad relative z-10 mx-auto w-full max-w-[720px] pb-20 pt-10 sm:pb-24 sm:pt-12 md:pb-28 md:pt-16">
         <motion.header
           initial={reduce ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE }}
           className="mx-auto max-w-[34rem] text-center"
         >
-          <span className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/70">
-            Support
-          </span>
-          <h1 className="mt-7 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white/95 sm:text-[2.35rem]">
+          <span className="hero-eyebrow-pill">Support</span>
+          <h1 className="mt-5 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white/95 sm:text-[2.35rem]">
             Contact
           </h1>
-          <p className="mx-auto mt-6 text-[16px] leading-[1.72] text-muted md:text-[17px] md:leading-[1.78]">
-            Questions about mastering, exports, or billing? We typically reply within one business day.
+          <p className="hero-lead mx-auto mt-5 max-w-lg">
+            Questions about mastering, exports, or billing? Send a support ticket and we will get back to you — typically
+            within one business day.
           </p>
         </motion.header>
 
         <motion.div
-          className="relative mx-auto mt-14 w-full max-w-[26rem] md:mt-16"
+          className="relative mx-auto mt-10 w-full max-w-[26rem] md:mt-12"
           initial={reduce ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.06, ease: EASE }}
@@ -51,34 +51,31 @@ export default function ContactClient() {
             className="pointer-events-none absolute -inset-px rounded-[1.35rem] bg-gradient-to-br from-violet-500/9 via-transparent to-transparent opacity-50 blur-sm"
             aria-hidden
           />
-          <div className="relative overflow-hidden rounded-[1.35rem] border border-white/[0.11] bg-gradient-to-b from-white/[0.05] to-black/[0.78] px-6 py-8 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(167,139,250,0.1),0_24px_56px_rgba(0,0,0,0.48)] backdrop-blur-2xl md:px-8 md:py-9">
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/28 to-transparent"
-              aria-hidden
-            />
-            <div
-              className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-violet-600/[0.07] blur-3xl"
-              aria-hidden
-            />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-label-strong">Email</p>
+          <SupportContactForm />
+        </motion.div>
+
+        <motion.div
+          className="relative mx-auto mt-6 w-full max-w-[26rem] md:mt-8"
+          initial={reduce ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.1, ease: EASE }}
+        >
+          <div className="rounded-[1.15rem] border border-white/[0.07] bg-white/[0.02] px-6 py-5 text-center backdrop-blur-md md:px-7">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">Prefer email?</p>
             <a
               href="mailto:hello@mastrify.com"
-              className="group/email mt-4 inline-block text-[1.2rem] font-medium tracking-[-0.02em] text-white/92 transition duration-300 hover:text-violet-200/90 sm:text-[1.35rem]"
+              className="group/email mt-3 inline-block text-[1rem] font-medium tracking-[-0.02em] text-white/85 transition hover:text-violet-200/90"
             >
-              <span className="relative">
-                hello@mastrify.com
-                <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-violet-300/60 transition-all duration-300 group-hover/email:w-full" />
-              </span>
+              hello@mastrify.com
             </a>
-            <p className="mx-auto mt-5 max-w-[16rem] text-[14px] leading-[1.7] text-muted">
-              Include your track name and a short note. For export or payment help, mention when you completed your
-              master.
+            <p className="mx-auto mt-2 max-w-[16rem] text-[12px] leading-relaxed text-white/45">
+              Backup option if the form is unavailable.
             </p>
           </div>
         </motion.div>
 
         <motion.div
-          className="mx-auto mt-14 flex flex-col items-center gap-3 md:mt-16"
+          className="mx-auto mt-12 flex flex-col items-center gap-3 md:mt-14"
           initial={reduce ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.12, ease: EASE }}
@@ -94,7 +91,7 @@ export default function ContactClient() {
           </Link>
         </motion.div>
 
-        <p className="mx-auto mt-14 max-w-sm text-center text-[11px] leading-relaxed text-white/36 md:mt-16">
+        <p className="mx-auto mt-12 max-w-sm text-center text-[11px] leading-relaxed text-white/36 md:mt-14">
           Prefer to explore first?{" "}
           <Link href="/how-it-works" className="text-white/48 underline-offset-2 hover:text-violet-200/70 hover:underline">
             See how Mastrify works

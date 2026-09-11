@@ -15,7 +15,7 @@ export default function MasterUploadPage() {
   const { file, setFile } = useMasterSession()
   return (
     <motion.div
-      className="relative min-h-screen text-white"
+      className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-x-clip"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: EASE }}
@@ -26,14 +26,12 @@ export default function MasterUploadPage() {
         aria-hidden
       />
 
-      <motion.div className="relative mx-auto w-full max-w-[1080px] px-5 pb-4 pt-6 md:px-10 md:pb-8 md:pt-8">
-        <MasterUploadHero
-          file={file}
-          fileInputRef={inputRef}
-          onFileSelected={setFile}
-          onContinue={() => router.push("/master/settings")}
-        />
-      </motion.div>
+      <MasterUploadHero
+        file={file}
+        fileInputRef={inputRef}
+        onFileSelected={setFile}
+        onContinue={() => router.push("/master/settings")}
+      />
     </motion.div>
   )
 }

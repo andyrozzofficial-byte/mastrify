@@ -71,42 +71,43 @@ export default function SiteHeader() {
           })}
         </nav>
 
-        <div className="hidden h-[58px] min-w-0 items-center justify-between gap-6 px-8 md:flex">
+        <div className="relative hidden h-[58px] min-w-0 items-center justify-between gap-6 px-8 md:flex">
           <Link
             href="/"
             prefetch={false}
-            className="safari-nav-link min-w-0 shrink bg-gradient-to-r from-white via-purple-200 to-violet-200/85 bg-clip-text text-[1.02rem] font-extrabold tracking-tight text-transparent sm:text-lg md:text-xl"
+            className="safari-nav-link relative z-[2] min-w-0 shrink bg-gradient-to-r from-white via-purple-200 to-violet-200/85 bg-clip-text text-[1.02rem] font-extrabold tracking-tight text-transparent sm:text-lg md:text-xl"
           >
             Mastrify
           </Link>
 
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-6 lg:gap-8">
-            <nav className="flex min-w-0 items-center gap-5 lg:gap-7" aria-label="Main">
-              {links.map(({ href, label }) => {
-                const active = pathname === href || pathname?.startsWith(`${href}/`)
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    prefetch={false}
-                    className={`safari-nav-link relative inline-flex h-9 items-center text-[13px] font-medium leading-none tracking-wide transition-colors duration-200 hover:text-white/88 ${
-                      active ? "text-white" : "text-white/62"
-                    }`}
-                  >
-                    {label}
-                    {active && (
-                      <span className="pointer-events-none absolute bottom-0 left-1/2 h-[2px] w-[calc(100%+8px)] -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-purple-400/80 to-transparent shadow-[0_0_6px_rgba(192,132,252,0.18)]" />
-                    )}
-                  </Link>
-                )
-              })}
-            </nav>
+          <nav
+            className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-5 lg:gap-7"
+            aria-label="Main"
+          >
+            {links.map(({ href, label }) => {
+              const active = pathname === href || pathname?.startsWith(`${href}/`)
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  prefetch={false}
+                  className={`safari-nav-link pointer-events-auto relative inline-flex h-9 items-center text-[13px] font-medium leading-none tracking-wide transition-colors duration-200 hover:text-white/88 ${
+                    active ? "text-white" : "text-white/62"
+                  }`}
+                >
+                  {label}
+                  {active && (
+                    <span className="pointer-events-none absolute bottom-0 left-1/2 h-[2px] w-[calc(100%+8px)] -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-purple-400/80 to-transparent shadow-[0_0_6px_rgba(192,132,252,0.18)]" />
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
 
-            <div className="relative z-[2] flex shrink-0 items-center">
-              <Link href="/master" prefetch={false} className={navCtaClass}>
-                Start mastering
-              </Link>
-            </div>
+          <div className="relative z-[2] flex shrink-0 items-center">
+            <Link href="/master" prefetch={false} className={navCtaClass}>
+              Start mastering
+            </Link>
           </div>
         </div>
       </div>

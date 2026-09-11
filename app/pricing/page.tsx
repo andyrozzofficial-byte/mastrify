@@ -34,11 +34,11 @@ export default function Pricing() {
         transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <main className="page-container relative z-10 pb-10 pt-4 sm:pb-16 sm:pt-8 md:pb-24 md:pt-14">
-        <PricingPageHero />
+      <PricingPageHero />
 
+      <main className="marketing-section-column relative z-10 pb-10 sm:pb-16 md:pb-24">
         <motion.div
-          className="section-after-hero relative -mt-2 md:-mt-4"
+          className="section-after-hero relative"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.15 }}

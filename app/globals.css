@@ -248,15 +248,104 @@ body {
     .marketing-hero-visual > * {
       margin-inline: 0;
     }
+    /* Home — globe above copy, centered single column */
+    .marketing-hero-lockup.homepage-hero-lockup {
+      grid-template-columns: minmax(0, 1fr);
+      width: min(720px, 100%);
+      justify-items: center;
+      text-align: center;
+      gap: 1rem;
+    }
+    .marketing-hero-lockup.homepage-hero-lockup .marketing-hero-copy {
+      justify-self: center;
+      margin-inline: auto;
+      max-width: 36rem;
+      text-align: center;
+    }
+    .marketing-hero-lockup.homepage-hero-lockup .hero-lead,
+    .marketing-hero-lockup.homepage-hero-lockup .mobile-cta-stack {
+      margin-inline: auto;
+    }
+    .marketing-hero-lockup.homepage-hero-lockup .mobile-cta-stack {
+      justify-content: center;
+    }
+    .marketing-hero-lockup.homepage-hero-lockup .hero-eyebrow-pill {
+      margin-inline: auto;
+    }
+    .marketing-hero-lockup.homepage-hero-lockup .marketing-hero-orb,
+    .homepage-hero-orb {
+      justify-self: center;
+      margin-inline: auto;
+      align-self: center;
+      margin-top: 0;
+      width: min(22rem, 100%);
+    }
+    .homepage-hero-orb .hero-engine-orb-cage {
+      max-width: min(20rem, 28rem);
+      margin-inline: auto;
+    }
+    .homepage-hero-lockup .hero-bullet-list {
+      display: grid;
+      justify-items: center;
+    }
+    .homepage-hero-lockup .hero-bullet-list li {
+      display: inline-flex;
+      max-width: 24rem;
+      text-align: left;
+    }
+    /* Centered marketing heroes — Why Mastrify reference column */
+    .marketing-hero-lockup.marketing-hero-lockup--content-only {
+      grid-template-columns: minmax(0, 1fr);
+      width: min(720px, 100%);
+      justify-items: center;
+      text-align: center;
+    }
+    .marketing-hero-lockup.marketing-hero-lockup--content-only .marketing-hero-copy {
+      justify-self: center;
+      margin-inline: auto;
+      text-align: center;
+    }
+    .marketing-hero-lockup.marketing-hero-lockup--content-only .hero-lead,
+    .marketing-hero-lockup.marketing-hero-lockup--content-only .mobile-cta-stack,
+    .marketing-hero-lockup.marketing-hero-lockup--content-only .hero-cta-row {
+      margin-inline: auto;
+    }
+    .marketing-hero-lockup.marketing-hero-lockup--content-only .mobile-cta-stack,
+    .marketing-hero-lockup.marketing-hero-lockup--content-only .hero-cta-row {
+      justify-content: center;
+    }
+    .marketing-hero-lockup.marketing-hero-lockup--content-only .hero-eyebrow-pill {
+      margin-inline: auto;
+    }
+    .marketing-hero-lockup.marketing-hero-lockup--content-only .hero-bullet-list {
+      display: grid;
+      justify-items: center;
+    }
+    .marketing-hero-lockup.marketing-hero-lockup--content-only .hero-bullet-list li {
+      display: inline-flex;
+      max-width: 24rem;
+      text-align: left;
+    }
   }
   @media (min-width: 1440px) {
-    .marketing-hero-lockup {
+    .marketing-hero-lockup:not(.homepage-hero-lockup):not(.marketing-hero-lockup--content-only) {
       width: min(1080px, 100%);
       grid-template-columns: minmax(0, 610px) minmax(0, 410px);
       gap: 1.5rem;
     }
+    .marketing-hero-lockup.homepage-hero-lockup,
+    .marketing-hero-lockup.marketing-hero-lockup--content-only {
+      width: min(720px, 100%);
+      grid-template-columns: minmax(0, 1fr);
+    }
     .marketing-hero-visual {
       margin-left: -2rem;
+    }
+    .homepage-hero-orb {
+      margin-inline: auto;
+    }
+    .marketing-hero-lockup.marketing-hero-lockup--content-only .marketing-hero-visual {
+      margin-left: 0;
     }
   }
   /* Marketing heroes — clip orb/glow bleed; desktop layout unchanged from lg up */
@@ -306,8 +395,35 @@ body {
       inset: 0;
       filter: blur(28px);
     }
+    .homepage-hero-orb .hero-engine-orb-cage {
+      max-width: min(15rem, calc(100vw - 2.5rem));
+    }
+    .hero-bullet-list {
+      display: grid;
+      justify-items: center;
+    }
+    .hero-bullet-list li {
+      display: inline-flex;
+      max-width: 22rem;
+      text-align: left;
+    }
+    .hero-step-rail-center-mobile {
+      justify-content: center;
+    }
+    .marketing-hero-lockup--content-only .hero-lead {
+      margin-inline: auto;
+    }
   }
-  /* Marketing heroes: orbs hidden below md via .marketing-hero-orb-slot (product flow keeps orbs) */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .homepage-hero-orb .hero-engine-orb-cage {
+      max-width: min(18rem, 36vw);
+    }
+  }
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .homepage-hero-orb .hero-engine-orb-cage {
+      max-width: min(16rem, 42vw);
+    }
+  }
   @media (max-width: 767px) {
     .homepage-hero-shell {
       padding-bottom: 0.5rem;
@@ -390,6 +506,11 @@ body {
       margin-inline: 0;
       margin-top: 1.25rem;
     }
+    .marketing-hero-copy .hero-lead,
+    .homepage-hero-lockup .hero-lead,
+    .marketing-hero-lockup--content-only .hero-lead {
+      margin-inline: auto;
+    }
   }
   @media (min-width: 768px) {
     .hero-lead {
@@ -424,6 +545,28 @@ body {
   @media (min-width: 1024px) {
     .mobile-cta-stack {
       margin-inline: 0;
+    }
+    .homepage-hero-lockup .mobile-cta-stack,
+    .marketing-hero-lockup--content-only .mobile-cta-stack {
+      margin-inline: auto;
+      justify-content: center;
+    }
+  }
+  .marketing-content-column {
+    width: 100%;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+  .marketing-section-column {
+    width: 100%;
+    max-width: 1080px;
+    margin-inline: auto;
+    padding-inline: max(1.25rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+  }
+  @media (min-width: 768px) {
+    .marketing-section-column {
+      padding-inline: 2.5rem;
     }
   }
   .footer-tap-link {
@@ -549,9 +692,13 @@ body {
     overflow: visible !important;
   }
   @media (min-width: 1024px) {
-    .marketing-hero-lockup .marketing-hero-orb {
+    .marketing-hero-lockup:not(.homepage-hero-lockup) .marketing-hero-orb {
       align-self: start;
       margin-top: 0.75rem;
+    }
+    .homepage-hero-lockup .marketing-hero-orb {
+      align-self: center;
+      margin-top: 0;
     }
   }
   @media (min-width: 1280px) {

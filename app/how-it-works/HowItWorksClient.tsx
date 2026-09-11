@@ -3,9 +3,7 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
-import { useEffect, useState } from "react"
 import CinematicBackground from "../components/CinematicBackground"
-import MarketingHeroOrb from "../components/MarketingHeroOrb"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -159,15 +157,6 @@ function MasterIcon({ className }: { className?: string }) {
 
 export default function HowItWorksClient() {
   const reduce = useReducedMotion()
-  const [engineStep, setEngineStep] = useState(0)
-
-  useEffect(() => {
-    if (reduce) return
-    const id = setInterval(() => {
-      setEngineStep((s) => (s + 1) % 5)
-    }, 3200)
-    return () => clearInterval(id)
-  }, [reduce])
 
   return (
     <motion.div
@@ -185,8 +174,8 @@ export default function HowItWorksClient() {
 
       {/* Hero */}
       <section className="marketing-hero-shell hero-section how-it-works-hero page-container page-hero-pad relative z-10 overflow-hidden pb-12 md:pb-28">
-        <div className="marketing-hero-lockup relative grid items-center gap-6 sm:gap-10">
-          <Reveal className="marketing-hero-copy">
+        <div className="marketing-hero-lockup marketing-hero-lockup--content-only relative grid items-center gap-6 sm:gap-10">
+          <Reveal className="marketing-hero-copy flex w-full flex-col items-center text-center">
             <span className="hero-eyebrow-pill">
               Intelligent mastering
             </span>
@@ -196,11 +185,11 @@ export default function HowItWorksClient() {
                 release-ready
               </span>
             </h1>
-            <p className="mt-4 max-w-lg text-[14px] leading-relaxed text-white/75 sm:mt-5 sm:text-[15px] md:text-[16px] md:leading-relaxed">
+            <p className="hero-lead mt-4 max-w-lg text-[14px] leading-relaxed text-white/75 sm:mt-5 sm:text-[15px] md:text-[16px] md:leading-relaxed">
               Mastrify listens like an engineer who cares about the song — preserving dynamics, emotional movement,
               and the identity of your mix while bringing it to a confident, streaming-ready level.
             </p>
-            <ul className="mt-4 space-y-2 text-[14px] text-white/72 sm:mt-6 sm:space-y-2.5">
+            <ul className="hero-bullet-list mx-auto mt-4 max-w-md space-y-2 text-[14px] text-white/72 sm:mt-6 sm:space-y-2.5">
               <li className="flex gap-2.5">
                 <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-violet-400/70" aria-hidden />
                 Perceptual processing that follows the music, not a fixed template
@@ -215,7 +204,7 @@ export default function HowItWorksClient() {
               </li>
             </ul>
             <motion.div
-              className="mt-6 flex flex-wrap gap-2.5 sm:mt-8 sm:gap-3"
+              className="hero-cta-row mt-6 flex flex-wrap justify-center gap-2.5 sm:mt-8 sm:gap-3"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.5, ease: EASE }}
@@ -234,8 +223,6 @@ export default function HowItWorksClient() {
               </Link>
             </motion.div>
           </Reveal>
-
-          <MarketingHeroOrb activeStep={engineStep} />
         </div>
       </section>
 
