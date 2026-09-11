@@ -508,7 +508,8 @@ body {
     }
     .marketing-hero-copy .hero-lead,
     .homepage-hero-lockup .hero-lead,
-    .marketing-hero-lockup--content-only .hero-lead {
+    .marketing-hero-lockup--content-only .hero-lead,
+    .text-center .hero-lead {
       margin-inline: auto;
     }
   }

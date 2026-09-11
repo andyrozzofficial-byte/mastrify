@@ -35,7 +35,7 @@ export default function ContactClient() {
           <h1 className="mt-5 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white/95 sm:text-[2.35rem]">
             Contact
           </h1>
-          <p className="hero-lead mx-auto mt-5 max-w-lg">
+          <p className="hero-lead mx-auto mt-5 max-w-lg text-center">
             Questions about mastering, exports, or billing? Send a support ticket and we will get back to you — typically
             within one business day.
           </p>
