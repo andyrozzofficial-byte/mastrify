@@ -12,7 +12,9 @@ const links = [
 ] as const
 
 const navCtaClass =
-  "safari-nav-link stable-interaction inline-flex min-h-[40px] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2 text-[11px] font-semibold leading-none text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-[background-color,color] duration-200 hover:border-white/[0.12] hover:bg-white/[0.07] hover:text-white sm:min-h-[44px] sm:px-5 sm:py-2.5 sm:text-[12px] md:min-h-0 md:rounded-lg md:px-4 md:py-2 md:text-[13px]"
+  "safari-nav-link stable-interaction inline-flex min-h-[40px] items-center justify-center rounded-xl px-3.5 py-2 text-[11px] font-semibold leading-none sm:min-h-[44px] sm:px-5 sm:py-2.5 sm:text-[12px] md:min-h-0 md:rounded-lg md:px-4 md:py-2 md:text-[13px] border border-white/20 bg-transparent text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10 disabled:cursor-not-allowed disabled:opacity-60"
+
+const navCtaClassMobile = `${navCtaClass} shrink-0`
 
 export default function SiteHeader() {
   const pathname = usePathname()
@@ -43,7 +45,7 @@ export default function SiteHeader() {
             Mastrify
           </Link>
 
-          <Link href="/master" prefetch={false} className={`${navCtaClass} shrink-0`}>
+          <Link href="/master" prefetch={false} className={navCtaClassMobile}>
             Start
           </Link>
         </div>
@@ -61,7 +63,7 @@ export default function SiteHeader() {
                 prefetch={false}
                 className={`safari-nav-link relative flex min-h-[38px] min-w-0 flex-1 items-center justify-center rounded-lg px-1.5 py-2 text-[11px] font-medium tracking-wide transition-[background-color,color] duration-200 min-[430px]:px-2 sm:min-h-[40px] sm:px-3.5 sm:text-[12px] ${
                   active
-                    ? "bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.06]"
+                    ? "border border-white/20 bg-white/[0.08] text-white"
                     : "text-white/62 hover:bg-white/[0.04] hover:text-white/88"
                 }`}
               >

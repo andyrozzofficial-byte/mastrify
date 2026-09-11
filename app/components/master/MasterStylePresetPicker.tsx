@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import type { MasterStylePreset } from "../../master/MasterSessionProvider"
+import { btnMastrifySecondaryCore } from "../buttonEffects"
 
 const STROKE = 1.35
 
@@ -361,7 +362,7 @@ function StylePresetDetailSheet({
               <motion.div className="flex items-start gap-4" layout>
                 <motion.div
                   layout
-                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${preset.accent.iconBg} text-white ring-1 ${preset.accent.iconRing} ${preset.accent.glow}`}
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${preset.accent.iconBg} text-white ring-1 ${preset.accent.iconRing}`}
                   {...iconMotion(preset.motionKey, true, false)}
                 >
                   <PresetIcon motionKey={preset.motionKey} />
@@ -381,7 +382,7 @@ function StylePresetDetailSheet({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-white/55 transition hover:bg-white/[0.08] hover:text-white"
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${btnMastrifySecondaryCore}`}
                   aria-label="Close"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -414,7 +415,7 @@ function StylePresetDetailSheet({
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-5 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] py-3 text-sm font-semibold text-white/82 transition hover:bg-white/[0.07] hover:text-white"
+                className={`mt-5 w-full rounded-xl py-3 text-sm font-semibold ${btnMastrifySecondaryCore}`}
               >
                 Got it
               </button>
@@ -446,7 +447,7 @@ function StylePresetCard({
       <button
         type="button"
         onClick={onInfo}
-        className="stable-interaction absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.08] bg-black/45 text-white/45 backdrop-blur-sm transition-[background-color,color] hover:border-white/[0.12] hover:bg-black/60 hover:text-white/85"
+        className={`stable-interaction absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm ${btnMastrifySecondaryCore}`}
         aria-label={`More about ${preset.label}`}
       >
         <InfoIcon />
@@ -456,38 +457,16 @@ function StylePresetCard({
         type="button"
         layout
         onClick={onSelect}
-        whileTap={{ scale: 0.96 }}
-        animate={
-          active
-            ? { scale: 1.02, boxShadow: "0 0 24px rgba(124,58,237,0.12)" }
-            : { scale: 1, boxShadow: "0 0 0px rgba(0,0,0,0)" }
-        }
-        transition={{ type: "spring", stiffness: 400, damping: 26 }}
         className={`group relative flex min-h-[11.5rem] w-full flex-col items-center rounded-2xl border px-2.5 pb-3.5 pt-3 text-center transition-colors duration-300 sm:min-h-[12rem] sm:px-3 sm:pb-4 lg:min-h-[10.5rem] lg:pb-3 ${
           active
-            ? `${preset.accent.activeBorder} bg-gradient-to-b from-white/[0.1] via-purple-500/[0.09] to-black/55 ring-1 ring-white/[0.1]`
-            : "border-white/[0.07] bg-black/32 hover:border-white/[0.13] hover:bg-white/[0.04]"
+            ? "border-white/20 bg-transparent text-white hover:border-violet-400/40 hover:bg-violet-600/10"
+            : "border-white/20 bg-transparent text-white/85 hover:border-violet-400/40 hover:bg-violet-600/10"
         }`}
         aria-pressed={active}
         aria-label={`${preset.label}. ${preset.tagline}. Works well for ${preset.worksWellFor.join(", ")}`}
       >
-        <AnimatePresence>
-          {active ? (
-            <motion.span
-              layoutId="preset-active-aura"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className={`pointer-events-none absolute inset-0 rounded-2xl ${preset.accent.activeAura}`}
-              aria-hidden
-            />
-          ) : null}
-        </AnimatePresence>
-
         <motion.span
-          className={`relative mt-0.5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br sm:h-[3.75rem] sm:w-[3.75rem] ${preset.accent.iconBg} text-white ring-1 ${preset.accent.iconRing} transition-shadow duration-300 ${
-            active ? preset.accent.glow : "group-hover:shadow-[0_0_22px_rgba(255,255,255,0.07)]"
-          }`}
+          className={`relative mt-0.5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br sm:h-[3.75rem] sm:w-[3.75rem] ${preset.accent.iconBg} text-white ring-1 ${preset.accent.iconRing}`}
           {...iconAnim}
         >
           <PresetIcon motionKey={preset.motionKey} />

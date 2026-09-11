@@ -580,10 +580,7 @@ body {
     align-items: center;
     font-size: 14px;
     color: var(--text-muted-strong);
-    transition: color 0.2s ease, transform 0.15s ease;
-  }
-  .footer-tap-link:active {
-    transform: scale(0.99);
+    transition: color 0.2s ease;
   }
   /* Analyze readiness ring — subtle arc shimmer (presentation only) */
   @keyframes scoreRingShimmer {

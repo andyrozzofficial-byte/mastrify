@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 import Link from "next/link"
 import PremiumButton from "./PremiumButton"
+import { btnMastrifySecondaryCore } from "./buttonEffects"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -73,7 +74,7 @@ function SocialLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="stable-interaction flex h-11 w-11 items-center justify-center rounded-full border border-transparent text-muted-soft transition duration-300 hover:border-white/[0.1] hover:bg-white/[0.05] hover:text-white/82"
+      className={`stable-interaction flex h-11 w-11 items-center justify-center rounded-full ${btnMastrifySecondaryCore}`}
     >
       {children}
     </a>

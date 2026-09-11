@@ -9,7 +9,7 @@ import {
   isAcceptedAudioUpload,
 } from "../../../lib/audioUploadAccept"
 import { IOS_SAFE_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
-import { btnPrimaryVertical, btnStablePrimary, btnStableSecondary } from "../buttonEffects"
+import { btnStablePrimary, btnStableSecondary } from "../buttonEffects"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -123,13 +123,11 @@ export default function AnalyzeUploadCard({
           <motion.div className="relative z-[2] mt-6 flex flex-col items-center gap-3">
             {file ? (
               <button type="button" onClick={onScanClick} className={btnStablePrimary}>
-                <span className={btnPrimaryVertical.shine} aria-hidden />
-                <span className="relative z-[1]">Scan my track</span>
+                Scan my track
               </button>
             ) : (
               <label htmlFor={fileInputId} className={btnStablePrimary}>
-                <span className={btnPrimaryVertical.shine} aria-hidden />
-                <span className="relative z-[1]">Choose file</span>
+                Choose file
               </label>
             )}
 

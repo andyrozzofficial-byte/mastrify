@@ -94,7 +94,7 @@ function FeedbackListCard({
             <Link
               href={`/admin/feedback/${row.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="rounded-lg bg-violet-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-violet-700"
+              className="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-xs font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10"
             >
               Detail
             </Link>

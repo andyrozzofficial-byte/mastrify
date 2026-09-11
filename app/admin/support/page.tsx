@@ -117,7 +117,7 @@ export default function AdminSupportPage() {
           <button
             type="button"
             onClick={() => setShowForm((v) => !v)}
-            className="rounded-xl bg-gradient-to-r from-violet-700 to-indigo-600 px-4 py-2 text-sm font-semibold text-white"
+            className="rounded-xl border border-white/20 bg-transparent px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10"
           >
             {showForm ? "Cancel" : "New ticket"}
           </button>
@@ -195,7 +195,7 @@ export default function AdminSupportPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 sm:col-span-2"
+                className="rounded-xl border border-white/20 bg-transparent px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10 disabled:opacity-60 sm:col-span-2"
               >
                 {saving ? "Saving…" : "Add ticket"}
               </button>

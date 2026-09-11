@@ -61,7 +61,7 @@ export function BetaUserQuickActions({
           type="button"
           disabled={saving || betaApproved}
           onClick={() => void runAction("approve")}
-          className="rounded-lg bg-emerald-600/90 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+          className="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-xs font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10 disabled:opacity-50"
         >
           {betaApproved ? "Approved" : "Approve"}
         </button>
@@ -78,7 +78,7 @@ export function BetaUserQuickActions({
           type="button"
           disabled={saving}
           onClick={() => void runAction("invite")}
-          className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+          className={`${ADMIN_BUTTON_PRIMARY} disabled:opacity-50`}
         >
           Send invite code
         </button>

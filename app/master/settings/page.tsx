@@ -8,6 +8,7 @@ import CinematicBackground from "../../components/CinematicBackground"
 import MasterStylePresetPicker from "../../components/master/MasterStylePresetPicker"
 import { useMasterSession } from "../MasterSessionProvider"
 import { AUDIO_UPLOAD_ACCEPT, isAcceptedAudioUpload } from "../../../lib/audioUploadAccept"
+import { btnMastrifyPrimaryCore } from "../../components/buttonEffects"
 
 const LOUDNESS = [
   { lufs: -14, label: "Streaming", detail: "Most transparent. Best for balanced streaming playback." },
@@ -130,7 +131,7 @@ export default function MasterSettingsPage() {
           <button
             type="button"
             onClick={() => reconnectInputRef.current?.click()}
-            className="rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#2563eb] px-6 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(0,0,0,0.22)] ring-1 ring-white/10 transition hover:brightness-[1.07]"
+            className={`rounded-xl px-6 py-3 text-sm font-semibold ${btnMastrifyPrimaryCore}`}
           >
             Choose audio file
           </button>
@@ -221,8 +222,8 @@ export default function MasterSettingsPage() {
                         onClick={() => setTargetLufs(o.lufs)}
                         className={`rounded-xl border px-2.5 py-2 text-left transition md:px-3 md:py-2.5 ${
                           active
-                            ? "border-purple-400/50 bg-purple-500/[0.12] text-white shadow-[0_0_14px_rgba(147,51,234,0.14)] ring-1 ring-purple-400/20"
-                            : "border-white/[0.06] bg-black/20 text-white/75 hover:border-white/[0.1] hover:bg-white/[0.03]"
+                            ? "border-white/20 bg-transparent text-white hover:border-violet-400/40 hover:bg-violet-600/10"
+                            : "border-white/20 bg-transparent text-white/70 hover:border-violet-400/40 hover:bg-violet-600/10"
                         }`}
                       >
                         <span className={`block text-[11px] font-semibold leading-tight ${active ? "text-white" : "text-white/65"}`}>
@@ -276,7 +277,7 @@ export default function MasterSettingsPage() {
               <button
                 type="button"
                 onClick={() => router.push("/master/processing")}
-                className="stable-interaction w-full rounded-xl bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#2563eb] py-3 text-[13px] font-semibold leading-none text-white shadow-[0_0_10px_rgba(99,102,241,0.06),0_14px_44px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.09)] ring-1 ring-white/10 transition-[filter] hover:brightness-[1.04] md:text-sm"
+                className={`stable-interaction w-full rounded-xl py-3 text-[13px] font-semibold leading-none md:text-sm ${btnMastrifyPrimaryCore}`}
               >
                 Start mastering
               </button>

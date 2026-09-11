@@ -48,3 +48,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local perf harness output + throwaway browser profile
+perf-verify*.json
+.chrome-prof/
+
+# supabase cli local link state (machine-specific)
+supabase/.temp/

@@ -184,10 +184,10 @@ export default function AdminIssuesPage() {
                     type="button"
                     disabled={updatingId === row.id || row.status === status}
                     onClick={() => void updateStatus(row.id, status)}
-                    className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-40 ${
+                    className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 disabled:opacity-40 ${
                       row.status === status
-                        ? "border-violet-400/35 bg-violet-500/15 text-violet-100"
-                        : "border-white/[0.08] bg-white/[0.03] text-white/60 hover:bg-white/[0.06]"
+                        ? "border-white/20 bg-transparent text-white hover:border-violet-400/40 hover:bg-violet-600/10"
+                        : "border-white/20 bg-transparent text-white/70 hover:border-violet-400/40 hover:bg-violet-600/10"
                     }`}
                   >
                     {BETA_ISSUE_STATUS_LABELS[status]}

@@ -61,7 +61,7 @@ export default function AdminFeedbackDetailPage() {
         actions={
           <Link
             href="/admin/feedback"
-            className="rounded-lg border border-white/[0.1] bg-[#222228] px-3 py-2 text-xs font-medium text-white/75 transition hover:text-white"
+            className="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-xs font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10"
           >
             ← All feedback
           </Link>

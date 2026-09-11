@@ -152,7 +152,7 @@ export default function AdminSupportTicketPage() {
             type="button"
             disabled={saving}
             onClick={() => patch({ status: "resolved" })}
-            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+            className="rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10 disabled:opacity-60"
           >
             Mark resolved
           </button>
@@ -182,7 +182,7 @@ export default function AdminSupportTicketPage() {
               <button
                 type="submit"
                 disabled={saving || !reply.trim()}
-                className="mt-3 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-60"
+                className="mt-3 rounded-xl border border-white/20 bg-transparent px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10 disabled:opacity-60"
               >
                 {saving ? "Sending…" : "Send reply"}
               </button>
@@ -222,7 +222,7 @@ export default function AdminSupportTicketPage() {
               type="button"
               disabled={saving}
               onClick={() => patch({ admin_notes: notes.trim() || null })}
-              className="mt-3 rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              className="mt-3 rounded-xl border border-white/20 bg-transparent px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10 disabled:opacity-60"
             >
               Save notes
             </button>

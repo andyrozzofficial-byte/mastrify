@@ -20,6 +20,7 @@ import {
 import MetricInsightTile from "../components/analyze/MetricInsightTile"
 import { ANALYZE_EASE } from "../components/analyze/analyzeMotion"
 import ScoreRing from "../components/ScoreRing"
+import { btnMastrifySecondaryCore } from "../components/buttonEffects"
 import {
   brightnessPresentation,
   clarityPresentation,
@@ -408,14 +409,14 @@ export default function AnalyzePage() {
                         /* user cancelled or clipboard blocked */
                       }
                     }}
-                    className="stable-interaction inline-flex min-h-[44px] items-center rounded-lg border border-white/[0.1] bg-white/[0.04] px-4 py-2.5 text-[11px] font-semibold leading-none text-white/88 transition-[background-color,color] hover:border-white/[0.12] hover:bg-white/[0.07] md:text-xs"
+                    className={`stable-interaction inline-flex min-h-[44px] items-center rounded-lg px-4 py-2.5 text-[11px] font-semibold leading-none md:text-xs ${btnMastrifySecondaryCore}`}
                   >
                     Share
                   </button>
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="stable-interaction inline-flex min-h-[44px] items-center rounded-lg border border-white/[0.1] bg-white/[0.04] px-4 py-2.5 text-[11px] font-semibold leading-none text-white/88 transition-[background-color,color] hover:border-white/[0.12] hover:bg-white/[0.07] md:text-xs"
+                    className={`stable-interaction inline-flex min-h-[44px] items-center rounded-lg px-4 py-2.5 text-[11px] font-semibold leading-none md:text-xs ${btnMastrifySecondaryCore}`}
                   >
                     Download PDF
                   </button>

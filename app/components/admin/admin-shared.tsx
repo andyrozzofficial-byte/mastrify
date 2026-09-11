@@ -148,7 +148,7 @@ export function BetaRankBadge({ rank }: { rank: string }) {
 }
 
 export const ADMIN_BUTTON_PRIMARY =
-  "inline-flex min-h-[44px] items-center justify-center rounded-lg bg-gradient-to-r from-violet-600 via-indigo-600 to-indigo-700 px-4 py-2.5 text-xs font-semibold text-white shadow-[0_0_20px_rgba(99,102,241,0.2)] transition hover:brightness-110 disabled:opacity-50"
+  "inline-flex min-h-[44px] items-center justify-center rounded-lg border border-white/20 bg-transparent px-4 py-2.5 text-xs font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10 disabled:opacity-50"
 
 export function AdminCard({
   children,
@@ -193,7 +193,7 @@ export function KpiCard({
             : "from-white/15 to-transparent"
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.05] p-6 shadow-[0_0_40px_rgba(0,0,0,0.22)] transition duration-200 max-md:p-4 hover:-translate-y-0.5 hover:border-violet-400/35 max-md:hover:translate-y-0">
+    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.05] p-6 transition-colors duration-200 max-md:p-4 hover:border-violet-400/35">
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accentBar}`} />
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/70">{label}</p>
       <p className="mt-3 text-4xl font-bold tracking-tight tabular-nums text-white">{value}</p>
@@ -754,7 +754,7 @@ export function AdminNavLink({
       onClick={() => onNavigate?.()}
       className={`group flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition duration-200 ${
         active
-          ? "bg-violet-500/12 text-violet-100 shadow-[0_0_20px_rgba(139,92,246,0.15)] ring-1 ring-violet-400/25"
+          ? "border border-white/20 bg-transparent text-white hover:border-violet-400/40 hover:bg-violet-600/10"
           : "text-white/65 hover:bg-white/[0.055] hover:text-white/90"
       }`}
     >

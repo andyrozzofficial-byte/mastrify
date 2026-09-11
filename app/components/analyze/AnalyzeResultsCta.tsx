@@ -1,6 +1,7 @@
 "use client"
 
 import { motion, useReducedMotion } from "framer-motion"
+import { btnMastrifySecondaryCore } from "../buttonEffects"
 import { ANALYZE_EASE } from "./analyzeMotion"
 
 type Props = {
@@ -38,7 +39,7 @@ export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props
           <motion.button
             type="button"
             onClick={onMaster}
-            className="stable-interaction safari-nav-link inline-flex min-h-[46px] items-center justify-center rounded-lg bg-gradient-to-r from-[#6d28d9] via-[#4f46e5] to-[#2563eb] px-7 text-[13px] font-semibold leading-none text-white shadow-[0_12px_32px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.14] transition-[filter] duration-300 hover:brightness-[1.02]"
+            className={`stable-interaction safari-nav-link inline-flex min-h-[46px] items-center justify-center rounded-lg px-7 text-[13px] font-semibold leading-none ${btnMastrifySecondaryCore}`}
           >
             Master my track
           </motion.button>
@@ -46,10 +47,8 @@ export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props
             type="button"
             onClick={onFlow}
             disabled={!canMaster}
-            className={`stable-interaction inline-flex min-h-[46px] items-center justify-center rounded-lg border px-5 text-[13px] font-semibold leading-none transition-[background-color,color] duration-300 ${
-              canMaster
-                ? "border-white/[0.12] bg-white/[0.04] text-white/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] hover:border-white/[0.16] hover:bg-white/[0.06]"
-                : "cursor-not-allowed border-white/[0.06] bg-white/[0.02] text-white/64"
+            className={`stable-interaction inline-flex min-h-[46px] items-center justify-center rounded-lg px-5 text-[13px] font-semibold leading-none ${
+              canMaster ? btnMastrifySecondaryCore : "cursor-not-allowed border border-white/20 bg-transparent text-white/64 opacity-60"
             }`}
           >
             One-page master

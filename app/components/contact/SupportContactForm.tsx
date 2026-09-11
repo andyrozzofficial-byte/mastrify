@@ -7,6 +7,7 @@ import {
   SUPPORT_TICKET_CATEGORIES,
   type SupportTicketCategory,
 } from "../../../lib/supportTypes"
+import { btnMastrifyPrimaryCore } from "../buttonEffects"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -157,7 +158,7 @@ export default function SupportContactForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="stable-interaction w-full rounded-xl bg-gradient-to-r from-violet-600/90 via-indigo-600/90 to-indigo-700/90 px-5 py-3 text-[14px] font-semibold text-white shadow-[0_12px_32px_rgba(0,0,0,0.31)] ring-1 ring-white/[0.08] transition-[filter,opacity] hover:brightness-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
+          className={`stable-interaction w-full rounded-xl px-5 py-3 text-[14px] font-semibold ${btnMastrifyPrimaryCore}`}
         >
           {submitting ? "Sending…" : "Send support request"}
         </button>

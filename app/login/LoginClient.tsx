@@ -85,7 +85,7 @@ export default function LoginClient() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-violet-700 to-indigo-600 py-3 text-sm font-semibold text-white disabled:opacity-60"
+            className="w-full rounded-xl border border-slate-200 bg-transparent py-3 text-sm font-semibold text-slate-900 transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>

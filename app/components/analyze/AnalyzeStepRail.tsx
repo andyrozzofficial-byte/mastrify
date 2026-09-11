@@ -61,22 +61,12 @@ export default function AnalyzeStepRail({ phase, className = "" }: Props) {
             <motion.span
               className={`relative flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-semibold sm:h-[2.35rem] sm:w-[2.35rem] sm:text-xs ${
                 i < active
-                  ? "bg-violet-600/25 text-violet-200/80 ring-1 ring-violet-400/25"
+                  ? "border border-white/20 bg-transparent text-white"
                   : i === active
-                    ? "bg-gradient-to-b from-violet-500/95 to-indigo-700/95 text-white ring-1 ring-white/10"
+                    ? "border border-white/20 bg-transparent text-white"
                     : "border border-white/[0.08] bg-black/40 text-white/60"
               }`}
-              animate={
-                reduce || i !== active
-                  ? undefined
-                  : {
-                      boxShadow: [
-                        "0 0 0 rgba(139,92,246,0)",
-                        "0 0 18px rgba(139,92,246,0.35)",
-                        "0 0 0 rgba(139,92,246,0)",
-                      ],
-                    }
-              }
+              animate={undefined}
               transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
             >
               {i + 1}

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { btnMastrifyPrimaryCore } from "../buttonEffects"
 import { MASTER_PRICE_LABEL } from "../../../lib/pricing"
 import { motion, useReducedMotion } from "framer-motion"
 
@@ -74,13 +75,9 @@ export default function PricingUnlockCard({ className = "" }: Props) {
 
           <Link
             href="/master"
-            className="stable-interaction group/btn relative mx-auto mt-8 inline-flex min-h-[50px] min-w-[13.5rem] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 px-9 text-[15px] font-semibold leading-none text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.11),0_16px_40px_rgba(0,0,0,0.31),0_0_8px_rgba(99,102,241,0.04)] ring-1 ring-white/[0.1] transition-[filter] duration-300 hover:brightness-[1.02] md:mt-9"
+            className={`stable-interaction mx-auto mt-8 inline-flex min-h-[50px] min-w-[13.5rem] items-center justify-center rounded-xl px-9 text-[15px] font-semibold leading-none md:mt-9 ${btnMastrifyPrimaryCore}`}
           >
-            <span
-              className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.09] to-transparent transition-transform duration-700 ease-out group-hover/btn:translate-x-[120%]"
-              aria-hidden
-            />
-            <span className="relative z-[1]">Start mastering</span>
+            Start mastering
           </Link>
 
           <p className="mt-4 text-[11px] text-muted-soft">

@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import type { ComponentProps } from "react"
-import { btnPrimaryVertical, btnSecondary } from "./buttonEffects"
+import { btnMastrifySecondaryCore } from "./buttonEffects"
 
 type Variant = "primary" | "secondary"
 
+/** Every variant matches landing "Analyze your mix" — secondary is the reference token. */
 const styles: Record<Variant, string> = {
-  primary: `bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 text-white ${btnPrimaryVertical.shadow} ${btnPrimaryVertical.ring} ${btnPrimaryVertical.hover}`,
-  secondary: `border border-white/[0.1] bg-white/[0.035] text-white/85 ${btnSecondary.shadow} ${btnSecondary.ring} hover:border-white/[0.12] hover:bg-white/[0.06] hover:text-white ${btnSecondary.hover}`,
+  primary: btnMastrifySecondaryCore,
+  secondary: btnMastrifySecondaryCore,
 }
 
 type Props = ComponentProps<typeof Link> & {
@@ -25,11 +26,10 @@ export default function PremiumButton({
   return (
     <Link
       prefetch={prefetch}
-      className={`safari-nav-link stable-interaction group relative inline-flex min-h-[48px] max-w-full min-w-0 shrink-0 items-center justify-center overflow-hidden rounded-xl px-6 text-center text-[13px] font-semibold leading-none tracking-[-0.01em] transition-[box-shadow,filter,background-color,border-color,color] duration-300 sm:min-h-[48px] sm:px-7 md:min-h-[50px] md:px-8 md:text-[14px] ${styles[variant]} ${className}`}
+      className={`safari-nav-link stable-interaction inline-flex min-h-[48px] max-w-full min-w-0 shrink-0 items-center justify-center rounded-xl px-6 text-center text-[13px] font-semibold leading-none tracking-[-0.01em] sm:min-h-[48px] sm:px-7 md:min-h-[50px] md:px-8 md:text-[14px] ${styles[variant]} ${className}`}
       {...props}
     >
-      <span className={btnPrimaryVertical.shine} aria-hidden />
-      <span className="relative z-[1]">{children}</span>
+      {children}
     </Link>
   )
 }

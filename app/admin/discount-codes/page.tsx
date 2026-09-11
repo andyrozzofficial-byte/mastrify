@@ -298,7 +298,7 @@ export default function AdminDiscountCodesPage() {
                           type="button"
                           disabled={busyId === row.id}
                           onClick={() => void toggleActive(row)}
-                          className="rounded-lg border border-white/[0.1] bg-white/[0.04] px-2.5 py-1.5 text-xs font-medium text-white/75 hover:bg-white/[0.08]"
+                          className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold ${ADMIN_BUTTON_PRIMARY}`}
                         >
                           {row.active ? "Deactivate" : "Activate"}
                         </button>
@@ -306,7 +306,7 @@ export default function AdminDiscountCodesPage() {
                           type="button"
                           disabled={busyId === row.id}
                           onClick={() => void deleteCode(row)}
-                          className="rounded-lg border border-rose-400/20 bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-500/20"
+                          className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold ${ADMIN_BUTTON_PRIMARY}`}
                         >
                           Delete
                         </button>
@@ -341,7 +341,7 @@ export default function AdminDiscountCodesPage() {
                       type="button"
                       disabled={busyId === row.id}
                       onClick={() => void toggleActive(row)}
-                      className="rounded-lg border border-white/[0.1] px-3 py-2 text-xs font-medium text-white/75"
+                      className={`rounded-lg px-3 py-2 text-xs font-semibold ${ADMIN_BUTTON_PRIMARY}`}
                     >
                       {row.active ? "Deactivate" : "Activate"}
                     </button>
@@ -349,7 +349,7 @@ export default function AdminDiscountCodesPage() {
                       type="button"
                       disabled={busyId === row.id}
                       onClick={() => void deleteCode(row)}
-                      className="rounded-lg border border-rose-400/20 px-3 py-2 text-xs font-medium text-rose-200"
+                      className={`rounded-lg px-3 py-2 text-xs font-semibold ${ADMIN_BUTTON_PRIMARY}`}
                     >
                       Delete
                     </button>

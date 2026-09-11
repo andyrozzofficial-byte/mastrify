@@ -96,14 +96,14 @@ export function AdminActionCenter({
                     <button
                       type="button"
                       onClick={() => setDisposition(item.id, "fixed")}
-                      className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-[11px] font-semibold text-white/70 transition hover:border-emerald-400/40 hover:text-emerald-200"
+                      className="rounded-lg border border-white/20 bg-transparent px-2.5 py-1.5 text-[11px] font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10"
                     >
                       Mark fixed
                     </button>
                     <button
                       type="button"
                       onClick={() => setDisposition(item.id, "ignored")}
-                      className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-[11px] font-semibold text-white/60 transition hover:border-white/20"
+                      className="rounded-lg border border-white/20 bg-transparent px-2.5 py-1.5 text-[11px] font-semibold text-white/70 transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10"
                     >
                       Ignore
                     </button>
@@ -114,10 +114,10 @@ export function AdminActionCenter({
                         else setDisposition(item.id, "tracked")
                         refresh()
                       }}
-                      className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold shadow-sm transition ${
+                      className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-200 ${
                         disposition === "tracked"
-                          ? "border-violet-400/40 bg-violet-500/20 text-violet-100"
-                          : "border-white/[0.08] bg-white/[0.03] text-violet-200 hover:border-violet-400/40"
+                          ? "border-white/20 bg-transparent text-white hover:border-violet-400/40 hover:bg-violet-600/10"
+                          : "border-white/20 bg-transparent text-white/70 hover:border-violet-400/40 hover:bg-violet-600/10"
                       }`}
                     >
                       Track issue

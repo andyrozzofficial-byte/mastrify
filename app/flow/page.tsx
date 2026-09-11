@@ -22,6 +22,7 @@ import {
   storeCheckoutSession,
   verifyCheckoutReturn,
 } from "../../lib/checkoutClient"
+import { btnMastrifySecondaryCore } from "../components/buttonEffects"
 
 type Step = "upload" | "analyzing" | "done"
 
@@ -791,11 +792,7 @@ const handleEmailDelivery = async () => {
 
           <label
   htmlFor="fileUpload"
-  className="cursor-pointer w-full inline-block text-center py-4 text-lg rounded-xl font-semibold transition-all duration-200
-bg-gradient-to-r from-purple-500 to-blue-500 text-white
-shadow-[0_10px_30px_rgba(0,0,0,0.34)]
-hover:brightness-[1.07] hover:shadow-[0_14px_46px_rgba(0,0,0,0.42)]
-active:scale-[0.99]"
+  className={`cursor-pointer inline-block w-full rounded-xl py-4 text-center text-lg font-semibold ${btnMastrifySecondaryCore}`}
 >
             Select track
           </label>
@@ -812,7 +809,7 @@ active:scale-[0.99]"
 
   <label
     htmlFor="refUpload"
-    className="cursor-pointer bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-xs transition"
+    className={`cursor-pointer rounded-lg px-4 py-2 text-xs font-semibold ${btnMastrifySecondaryCore}`}
   >
     Use reference track (optional)
   </label>
@@ -862,13 +859,7 @@ active:scale-[0.99]"
   <motion.button
   onClick={runMaster}
   disabled={!file || step === "analyzing"}
-  whileHover={file && step !== "analyzing" ? { scale: 1.02 } : undefined}
-  whileTap={file && step !== "analyzing" ? { scale: 0.99 } : undefined}
-  className="px-12 py-5 mt-6 text-xl font-semibold text-white rounded-xl bg-gradient-to-r from-purple-500 to-blue-500
-shadow-[0_16px_55px_rgba(0,0,0,0.42)]
-hover:brightness-[1.07] hover:shadow-[0_22px_75px_rgba(0,0,0,0.48)]
-transition-all duration-300
-disabled:opacity-40 disabled:cursor-not-allowed"
+  className={`mt-6 rounded-xl px-12 py-5 text-xl font-semibold disabled:cursor-not-allowed disabled:opacity-40 ${btnMastrifySecondaryCore}`}
   >
     {step === "analyzing"
       ? "Mastering…"
@@ -903,7 +894,7 @@ disabled:opacity-40 disabled:cursor-not-allowed"
           type="button"
           onClick={handleEmailDelivery}
           disabled={deliverySending}
-          className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 px-5 text-sm font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.09),0_8px_24px_rgba(0,0,0,0.28)] transition hover:brightness-[1.03] hover:shadow-[0_0_18px_rgba(99,102,241,0.10),0_10px_28px_rgba(0,0,0,0.32)] disabled:cursor-not-allowed disabled:opacity-60"
+          className={`inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl px-5 text-sm font-semibold ${btnMastrifySecondaryCore}`}
         >
           {deliverySending ? "Sending…" : "Email my master"}
         </button>
@@ -911,7 +902,7 @@ disabled:opacity-40 disabled:cursor-not-allowed"
           type="button"
           onClick={() => setDeliveryOpen(false)}
           disabled={deliverySending}
-          className="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] px-5 text-sm font-semibold text-white/76 transition hover:bg-white/[0.055]"
+          className={`inline-flex min-h-[46px] flex-1 items-center justify-center rounded-xl px-5 text-sm font-semibold text-white/70 ${btnMastrifySecondaryCore}`}
         >
           Not now
         </button>
@@ -980,12 +971,10 @@ drop-shadow-[0_0_14px_rgba(139,92,246,0.22)]">
       <motion.button
         type="button"
         onClick={() => selectSource("original")}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.99 }}
         className={
           selectedSource === "original"
-            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/75 to-blue-600/75 shadow-[0_0_14px_rgba(139,92,246,0.12)] ring-1 ring-white/10 hover:brightness-[1.03] transition-all duration-300"
-            : "py-3 rounded-xl font-bold text-white/75 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15 hover:text-white transition-all duration-300"
+            ? `rounded-xl py-3 font-bold ${btnMastrifySecondaryCore}`
+            : `rounded-xl py-3 font-bold text-white/70 ${btnMastrifySecondaryCore}`
         }
       >
         ORIGINAL
@@ -995,12 +984,10 @@ drop-shadow-[0_0_14px_rgba(139,92,246,0.22)]">
         type="button"
         onClick={() => selectSource("mastered")}
         disabled={!masteredPreviewUrl}
-        whileHover={masteredPreviewUrl ? { scale: 1.02 } : undefined}
-        whileTap={masteredPreviewUrl ? { scale: 0.99 } : undefined}
         className={
           selectedSource === "mastered"
-            ? "py-3 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600/75 to-blue-600/75 shadow-[0_0_14px_rgba(59,130,246,0.11)] ring-1 ring-white/10 hover:brightness-[1.03] transition-all duration-300"
-            : "py-3 rounded-xl font-bold text-white/75 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15 hover:text-white transition-all duration-300 disabled:opacity-35 disabled:cursor-not-allowed"
+            ? `rounded-xl py-3 font-bold ${btnMastrifySecondaryCore}`
+            : `rounded-xl py-3 font-bold text-white/70 disabled:cursor-not-allowed disabled:opacity-35 ${btnMastrifySecondaryCore}`
         }
       >
         MASTERED
@@ -1011,17 +998,9 @@ drop-shadow-[0_0_14px_rgba(139,92,246,0.22)]">
       <motion.button
         type="button"
         onClick={togglePlayPause}
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
         aria-label={isPlaying ? "Pause" : "Play"}
-        className="relative w-12 h-12 md:w-14 md:h-14 rounded-full grid place-items-center text-white border border-white/10 overflow-hidden
-bg-gradient-to-r from-purple-600/80 to-blue-600/80
-shadow-[0_10px_30px_rgba(0,0,0,0.42)] hover:shadow-[0_14px_44px_rgba(0,0,0,0.48)]
-hover:brightness-[1.07] transition-all duration-300"
+        className={`relative grid h-12 w-12 place-items-center rounded-full md:h-14 md:w-14 ${btnMastrifySecondaryCore}`}
       >
-        <span className="pointer-events-none absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
-        <span className="pointer-events-none absolute inset-0 shadow-[inset_0_0_18px_rgba(139,92,246,0.10)]" />
-        <span className="pointer-events-none absolute -inset-[2px] rounded-full bg-gradient-to-r from-purple-400/25 to-blue-400/22 blur-lg opacity-60" />
         {isPlaying ? (
           <svg
             width="20"
@@ -1125,13 +1104,7 @@ hover:brightness-[1.07] transition-all duration-300"
     <button
   onClick={handlePayment}
   disabled={checkoutLoading}
-  className="mt-4 w-full py-5 text-lg rounded-xl font-bold 
-bg-gradient-to-r from-purple-500 to-blue-500 text-white
-shadow-[0_0_40px_rgba(139,92,246,0.30)]
-hover:shadow-[0_0_60px_rgba(139,92,246,0.58)]
-hover:scale-[1.02]
-active:scale-[0.98]
-transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
+  className={`mt-4 w-full rounded-xl py-5 text-lg font-bold ${btnMastrifySecondaryCore}`}
 >
       {checkoutLoading
         ? "Redirecting to checkout…"
@@ -1152,12 +1125,7 @@ transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
 {/* Delivery confirmation */}
 {deliverySent && (
   <div
-  className="block w-full py-5 mt-4 rounded-xl text-lg font-bold text-white text-center cursor-pointer
-bg-gradient-to-r from-purple-500 to-blue-500
-shadow-[0_0_40px_rgba(139,92,246,0.26)]
-hover:brightness-[1.07] hover:scale-[1.02]
-active:scale-[0.98]
-transition-all duration-300"
+  className={`mt-4 block w-full cursor-pointer rounded-xl py-5 text-center text-lg font-bold ${btnMastrifySecondaryCore}`}
 >
   Check your inbox
 </div>

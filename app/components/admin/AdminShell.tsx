@@ -152,7 +152,7 @@ export default function AdminShell({ children }: Props) {
                 type="button"
                 aria-expanded={mobileNav}
                 aria-label={mobileNav ? "Close menu" : "Open menu"}
-                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 text-xs text-white/65 transition hover:bg-white/[0.07] lg:hidden"
+                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/20 bg-transparent px-3 text-xs font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10 lg:hidden"
                 onClick={() => setMobileNav((v) => !v)}
               >
                 {mobileNav ? "Close" : "Menu"}

@@ -214,7 +214,7 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-gradient-to-r from-violet-700 to-indigo-600 py-3 text-sm font-semibold text-white disabled:opacity-60"
+          className="w-full rounded-xl border border-white/20 bg-transparent py-3 text-sm font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10 disabled:opacity-60"
         >
           {loading ? "Signing in…" : "Sign in"}
         </button>
@@ -327,7 +327,7 @@ export default function BetaFeedbackDashboard() {
         <button
           type="button"
           onClick={() => void load()}
-          className="mt-4 rounded-lg border border-white/10 px-4 py-2 text-sm text-white"
+          className="mt-4 rounded-xl border border-white/20 bg-transparent px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:border-violet-400/40 hover:bg-violet-600/10"
         >
           Retry
         </button>

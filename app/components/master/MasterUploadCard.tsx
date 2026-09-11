@@ -10,7 +10,7 @@ import {
   isAcceptedAudioUpload,
 } from "../../../lib/audioUploadAccept"
 import { OFF_SCREEN_FILE_INPUT_CLASS, bindIosFileInputHandlers } from "../../../lib/iosFileInput"
-import { btnPrimaryVertical, btnStablePrimary, btnStableSecondary } from "../buttonEffects"
+import { btnMastrifySecondaryCore, btnStablePrimary, btnStableSecondary } from "../buttonEffects"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -157,16 +157,11 @@ export default function MasterUploadCard({
               onClick={onContinue}
               className={`${btnStablePrimary} z-[3] disabled:cursor-not-allowed disabled:opacity-35`}
             >
-              <span
-                className="pointer-events-none absolute inset-0 -translate-x-[120%] skew-x-12 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%] group-disabled:translate-x-[-120%]"
-                aria-hidden
-              />
-              <span className="relative z-[1]">Continue to settings</span>
+              Continue to settings
             </button>
 
             <label htmlFor={fileInputId} className={btnStableSecondary}>
-              <span className={btnPrimaryVertical.shine} aria-hidden />
-              <span className="relative z-[1]">{loaded ? "Choose a different file" : "Choose file"}</span>
+              {loaded ? "Choose a different file" : "Choose file"}
             </label>
 
             {!loaded ? <p className="text-center text-[11px] text-white/58">or drag and drop</p> : null}
@@ -180,7 +175,7 @@ export default function MasterUploadCard({
             <Link
               href="/analyze"
               prefetch={false}
-              className="stable-interaction safari-nav-link flex min-h-[40px] items-center justify-center rounded-xl text-[12px] font-medium leading-none text-white/50 transition-[background-color,color] hover:bg-white/[0.03] hover:text-white/75"
+              className={`stable-interaction safari-nav-link flex min-h-[40px] items-center justify-center rounded-xl text-[12px] font-semibold leading-none ${btnMastrifySecondaryCore}`}
             >
               Analyze mix first
             </Link>

@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import CinematicBackground from "../components/CinematicBackground"
+import { btnMastrifySecondaryCore } from "../components/buttonEffects"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -211,13 +212,13 @@ export default function HowItWorksClient() {
             >
               <Link
                 href="/master"
-                className="stable-interaction inline-flex min-h-[48px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600/90 via-indigo-600/90 to-indigo-700/90 px-7 text-[14px] font-semibold leading-none text-white shadow-[0_0_8px_rgba(99,102,241,0.04),0_12px_32px_rgba(0,0,0,0.31)] ring-1 ring-white/[0.08] transition-[filter] hover:brightness-[1.02]"
+                className={`stable-interaction inline-flex min-h-[48px] items-center justify-center rounded-xl px-7 text-[14px] font-semibold leading-none ${btnMastrifySecondaryCore}`}
               >
                 Start mastering
               </Link>
               <Link
                 href="/analyze"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] px-7 text-[14px] font-semibold text-white/80 transition hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white"
+                className={`inline-flex min-h-[48px] items-center justify-center rounded-xl px-7 text-[14px] font-semibold leading-none ${btnMastrifySecondaryCore}`}
               >
                 Analyze a mix first
               </Link>
@@ -371,7 +372,7 @@ export default function HowItWorksClient() {
             <p className="text-[14px] text-white/66">Ready when your mix is.</p>
             <Link
               href="/master"
-              className="mt-5 inline-flex min-h-[52px] items-center justify-center rounded-xl bg-gradient-to-r from-[#5b21b6] via-[#4f46e5] to-[#1d4ed8] px-10 text-[15px] font-semibold text-white shadow-[0_0_14px_rgba(99,102,241,0.09),0_10px_28px_rgba(0,0,0,0.30)] ring-1 ring-white/[0.08] transition hover:brightness-[1.04] hover:shadow-[0_0_18px_rgba(99,102,241,0.10),0_12px_32px_rgba(0,0,0,0.34)]"
+              className={`mt-5 inline-flex min-h-[52px] items-center justify-center rounded-xl px-10 text-[15px] font-semibold ${btnMastrifySecondaryCore}`}
             >
               Master your track
             </Link>

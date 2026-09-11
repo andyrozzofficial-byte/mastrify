@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import CinematicBackground from "../components/CinematicBackground"
+import { btnMastrifySecondaryCore } from "../components/buttonEffects"
 import { getHistory, type HistoryEntry } from "../../lib/history"
 
 type Tab = "all" | "analysis" | "master"
@@ -56,8 +57,8 @@ export default function HistoryPage() {
                   onClick={() => setTab(id)}
                   className={`rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition ${
                     tab === id
-                      ? "bg-gradient-to-r from-purple-500/30 to-cyan-500/20 text-white ring-1 ring-white/15 shadow-[0_0_14px_rgba(139,92,246,0.09)]"
-                      : "border border-white/10 bg-black/30 text-white/75 hover:border-white/20 hover:text-white/85"
+                      ? "border border-white/20 bg-transparent text-white hover:border-violet-400/40 hover:bg-violet-600/10"
+                      : "border border-white/20 bg-transparent text-white/70 hover:border-violet-400/40 hover:bg-violet-600/10"
                   }`}
                 >
                   {label}
@@ -147,14 +148,14 @@ export default function HistoryPage() {
                       <a
                         href={e.masteredUrl}
                         download
-                        className="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-white/90 transition hover:border-cyan-400/35 hover:bg-white/[0.1]"
+                        className={`rounded-xl px-3 py-2 text-xs font-semibold ${btnMastrifySecondaryCore}`}
                       >
                         Download
                       </a>
                     )}
                     <Link
                       href={e.kind === "analysis" ? "/analyze" : "/master"}
-                      className="rounded-xl border border-white/10 px-3 py-2 text-xs font-medium text-white/55 transition hover:border-white/25 hover:text-white"
+                      className={`rounded-xl px-3 py-2 text-xs font-semibold text-white/70 ${btnMastrifySecondaryCore}`}
                     >
                       New
                     </Link>
