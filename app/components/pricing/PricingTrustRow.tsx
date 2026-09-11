@@ -26,7 +26,7 @@ export default function PricingTrustRow() {
       {TRUST.map((label, i) => (
         <motion.li
           key={label}
-          className="flex items-center gap-2.5 rounded-lg border border-white/[0.05] bg-black/[0.28] px-3.5 py-3 sm:justify-center lg:justify-start"
+          className="flex items-center gap-2.5 rounded-lg border border-white/[0.05] bg-black/[0.28] px-3.5 py-3 sm:justify-center sm:max-lg:last:odd:col-span-2 sm:max-lg:last:odd:mx-auto sm:max-lg:last:odd:w-[calc(50%-0.25rem)] lg:justify-start"
           initial={reduce ? false : { opacity: 0, y: 8 }}
           whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true }}

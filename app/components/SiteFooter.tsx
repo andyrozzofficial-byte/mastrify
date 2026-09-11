@@ -124,7 +124,7 @@ export default function SiteFooter() {
         <motion.div className="footer-mobile-grid grid min-w-0 items-start gap-5 sm:gap-7 md:gap-12 lg:grid-cols-12 lg:items-center lg:gap-x-8 xl:gap-x-10">
           {/* Brand */}
           <motion.div
-            className="min-w-0 lg:col-span-3 xl:col-span-3"
+            className="min-w-0 max-lg:text-center lg:col-span-3 xl:col-span-3"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -133,7 +133,7 @@ export default function SiteFooter() {
             <Link href="/" className="inline-flex items-center">
               <span className="text-[17px] font-semibold tracking-[-0.02em] text-white/92">Mastrify</span>
             </Link>
-            <p className="mt-2.5 max-w-[16.5rem] text-[13px] leading-[1.55] text-muted sm:mt-3 md:mt-4 lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
+            <p className="mt-2.5 max-w-[16.5rem] text-[13px] leading-[1.55] text-muted max-lg:mx-auto sm:mt-3 md:mt-4 lg:max-w-[15.5rem] md:text-[14px] md:leading-[1.7] xl:max-w-[17rem]">
               Intelligent mastering for music that deserves its full emotional weight — release-ready, without the
               noise.
             </p>
@@ -141,7 +141,7 @@ export default function SiteFooter() {
 
           {/* Navigation */}
           <motion.div
-            className="grid w-full max-w-[17.5rem] min-w-0 grid-cols-2 gap-x-6 gap-y-5 sm:gap-x-8 sm:gap-y-6 md:gap-x-10 md:gap-y-8 lg:col-span-3 lg:max-w-[15.5rem] lg:justify-self-center xl:col-span-3 xl:max-w-[16.5rem]"
+            className="grid w-full max-w-[17.5rem] min-w-0 grid-cols-2 gap-x-6 gap-y-5 max-lg:mx-auto max-lg:text-center sm:gap-x-8 sm:gap-y-6 md:gap-x-10 md:gap-y-8 lg:col-span-3 lg:max-w-[15.5rem] lg:justify-self-center xl:col-span-3 xl:max-w-[16.5rem]"
             initial={reduce ? false : { opacity: 0, y: 10 }}
             whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -162,7 +162,7 @@ export default function SiteFooter() {
             <div
               className={`footer-cta-card lg:max-w-[26.5rem] lg:ml-auto lg:mr-1 xl:max-w-[28rem] xl:mr-2 ${onAnalyze ? "footer-cta-card--analyze" : ""}`}
             >
-              <div className="relative flex h-full flex-col justify-center">
+              <div className="relative flex h-full flex-col justify-center max-lg:items-center max-lg:text-center">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-200/58">Release ready</p>
                 <h2 className="mt-2 text-[1.15rem] font-semibold tracking-[-0.02em] text-white/92 sm:mt-2.5 sm:text-[1.3rem] lg:text-[1.35rem]">
                   Ready to master your track?
@@ -189,7 +189,7 @@ export default function SiteFooter() {
           viewport={{ once: true }}
           transition={{ duration: 0.55, delay: 0.1, ease: EASE }}
         >
-          <p className="order-1 text-[11px] text-muted-soft md:order-none">© {year} Mastrify</p>
+          <p className="order-1 text-[11px] text-muted-soft max-md:text-center md:order-none">© {year} Mastrify</p>
 
           <p className="order-3 px-1 text-center text-[8px] font-normal uppercase leading-relaxed tracking-[0.2em] text-muted-faint sm:text-[9px] sm:tracking-[0.24em] md:order-none md:flex-1 md:px-4 md:tracking-[0.26em]">
             Designed &amp; engineered by{" "}
