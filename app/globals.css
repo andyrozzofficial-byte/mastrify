@@ -512,6 +512,10 @@ body {
     .text-center .hero-lead {
       margin-inline: auto;
     }
+    .marketing-page-root main > header .hero-lead {
+      margin-inline: auto;
+      text-align: center;
+    }
   }
   @media (min-width: 768px) {
     .hero-lead {
@@ -620,11 +624,23 @@ body {
     touch-action: pan-y;
     overscroll-behavior-y: contain;
   }
+  .master-result-page .master-result-panel {
+    width: 100%;
+    max-width: min(42rem, 100%);
+    margin-inline: auto;
+    box-sizing: border-box;
+  }
+  .master-result-actions {
+    width: 100%;
+    max-width: min(22rem, 100%);
+    margin-inline: auto;
+    padding-bottom: 0.75rem;
+  }
   .waveform-scrub-surface {
     touch-action: pan-y;
   }
   @media (max-width: 767px) {
-    .master-result-panel {
+    .master-result-page .master-result-panel {
       -webkit-backdrop-filter: none !important;
       backdrop-filter: none !important;
       background: rgba(8, 8, 14, 0.94) !important;

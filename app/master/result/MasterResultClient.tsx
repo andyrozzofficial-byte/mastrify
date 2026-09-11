@@ -1053,7 +1053,7 @@ export default function MasterResultClient() {
   return (
     <motion.div
       data-scroll-surface
-      className="fluid-surface mx-auto max-w-[1080px] px-4 pb-3 pt-5 sm:px-6 md:px-10 md:pb-4 md:pt-6 lg:px-12"
+      className="fluid-surface mx-auto max-w-[1080px] px-4 pb-5 pt-5 sm:px-6 sm:pb-6 md:px-10 md:pb-6 md:pt-6 lg:px-12"
     >
       <motion.header
         initial={skipEntranceMotion ? false : { opacity: 0, y: 10 }}
@@ -1126,9 +1126,9 @@ export default function MasterResultClient() {
         initial={skipEntranceMotion ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
-        className="master-result-panel fluid-surface mt-8 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_56px_rgba(0,0,0,0.46),0_0_72px_rgba(124,58,237,0.09)] backdrop-blur-2xl sm:p-5 md:mt-10 md:rounded-[1.35rem] md:p-8 lg:p-9"
+        className="master-result-panel fluid-surface mt-8 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_48px_rgba(0,0,0,0.42),0_0_56px_rgba(124,58,237,0.08)] backdrop-blur-2xl sm:p-5 md:mt-10 md:rounded-[1.25rem] md:p-6"
       >
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-stretch lg:gap-10 xl:gap-11">
+        <div className="flex flex-col gap-5 md:gap-6">
           {/* Before / After metrics */}
           <div className="flex min-w-0 flex-col">
             <p className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/60">Sound profile</p>
@@ -1167,8 +1167,8 @@ export default function MasterResultClient() {
           </div>
 
           {/* Preview + settings */}
-          <div className="flex min-w-0 flex-col gap-4 lg:gap-4">
-            <div className="fluid-surface card-pad-mobile flex flex-1 flex-col rounded-xl border border-white/[0.055] bg-black/[0.3] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] md:p-5">
+          <div className="flex min-w-0 flex-col gap-3.5 md:gap-4">
+            <div className="fluid-surface card-pad-mobile flex flex-1 flex-col rounded-xl border border-white/[0.055] bg-black/[0.3] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] md:p-4">
               <p className="text-center text-[9px] font-semibold uppercase tracking-[0.24em] text-white/60">Mastering preview</p>
 
               <div className="mt-3 grid grid-cols-2 gap-1.5 sm:gap-2">
@@ -1305,10 +1305,10 @@ export default function MasterResultClient() {
         initial={skipEntranceMotion ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1 }}
-        className="mx-auto mt-5 flex w-full flex-col items-center gap-3 px-0 sm:mt-6 sm:gap-3.5"
+        className="master-result-actions mt-7 flex flex-col items-stretch gap-2.5 px-0 sm:mt-8 sm:gap-3"
       >
         {!isPaid && !deliverySent ? (
-          <div className="w-full max-w-[17.5rem] rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+          <div className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">Discount code</p>
             <div className="mt-2 flex gap-2">
               <input
@@ -1347,14 +1347,14 @@ export default function MasterResultClient() {
           </div>
         ) : null}
         {checkoutError ? (
-          <p className="max-w-[17.5rem] text-center text-xs text-rose-300/85">{checkoutError}</p>
+          <p className="text-center text-xs text-rose-300/85">{checkoutError}</p>
         ) : null}
         {!deliverySent ? (
           <button
             type="button"
             onClick={handlePayment}
             disabled={checkoutLoading}
-            className={`inline-flex min-h-[54px] w-full max-w-[17.5rem] items-center justify-center rounded-xl px-7 text-[15px] font-semibold sm:px-9 ${btnResultPrimary}`}
+            className={`inline-flex min-h-[52px] w-full items-center justify-center rounded-xl px-7 text-[15px] font-semibold tracking-[-0.01em] sm:min-h-[54px] sm:px-9 ${btnResultPrimary}`}
           >
             <span className={checkoutLoading ? "text-center" : "whitespace-nowrap"}>
               {checkoutLoading
@@ -1371,17 +1371,30 @@ export default function MasterResultClient() {
             </span>
           </button>
         ) : (
-          <div className={`inline-flex min-h-[54px] w-full max-w-[17.5rem] items-center justify-center rounded-xl px-7 text-[15px] font-semibold sm:px-9 ${btnResultPrimary}`}>
+          <div className={`inline-flex min-h-[52px] w-full items-center justify-center rounded-xl px-7 text-[15px] font-semibold sm:min-h-[54px] sm:px-9 ${btnResultPrimary}`}>
             Check your inbox
           </div>
         )}
         <Link
           href="/master"
           onClick={() => resetSession()}
-          className="inline-flex min-h-[54px] w-full max-w-[17.5rem] items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] px-7 text-[14px] font-semibold text-white/82 transition-all duration-200 hover:border-white/[0.11] hover:bg-white/[0.055] hover:text-white/92 active:scale-[0.99] sm:px-8"
+          className="inline-flex min-h-[46px] w-full items-center justify-center rounded-xl border border-white/[0.09] bg-white/[0.025] px-6 text-[13px] font-semibold text-white/72 transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.045] hover:text-white/88 active:scale-[0.99] sm:min-h-[48px] sm:text-[14px]"
         >
           New master
         </Link>
+        <div className="mt-1.5 flex flex-col items-center border-t border-white/[0.06] pt-3">
+          <p className="text-center text-[11px] leading-relaxed text-white/52">Happy with the result? Share your master!</p>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="mt-2.5 flex min-h-[40px] min-w-[10.5rem] items-center justify-center gap-2 rounded-full border border-white/[0.06] bg-black/[0.22] px-4 text-[11px] font-medium text-white/62 transition-all duration-200 hover:border-white/[0.1] hover:bg-black/[0.3] hover:text-white/80 active:scale-[0.98] sm:text-xs"
+          >
+            <svg className="h-3.5 w-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.935-2.186 2.25 2.25 0 00-3.935 2.186z" />
+            </svg>
+            {shareLabel}
+          </button>
+        </div>
       </motion.div>
 
       {deliveryOpen && !deliverySent && isPaid ? (
@@ -1438,25 +1451,6 @@ export default function MasterResultClient() {
           </motion.div>
         </div>
       ) : null}
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-        className="mx-auto mt-4 max-w-md pb-1 text-center md:mt-5"
-      >
-        <p className="text-[12px] leading-relaxed text-white/66 md:text-[13px]">Happy with the result? Share your master!</p>
-        <button
-          type="button"
-          onClick={handleShare}
-          className="mt-2.5 inline-flex items-center gap-2 rounded-full border border-white/[0.07] bg-black/[0.28] px-4 py-2 text-[11px] font-medium text-white/68 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-200 hover:border-white/[0.1] hover:bg-white/[0.04] hover:text-white/85 active:scale-[0.98] md:mt-3 md:px-5 md:text-xs"
-        >
-          <svg className="h-3.5 w-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.935-2.186 2.25 2.25 0 00-3.935 2.186z" />
-          </svg>
-          {shareLabel}
-        </button>
-      </motion.div>
 
       {originalPreviewUrl ? (
         <audio

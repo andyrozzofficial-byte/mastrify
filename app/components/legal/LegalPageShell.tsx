@@ -50,7 +50,7 @@ export default function LegalPageShell({ label, title, lead, sections, children 
           <h1 className="mt-5 text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-white/95 sm:text-[2.35rem]">
             {title}
           </h1>
-          <p className="hero-lead mx-auto mt-5 max-w-lg">{lead}</p>
+          <p className="hero-lead mx-auto mt-5 max-w-lg text-center">{lead}</p>
         </motion.header>
 
         <div className="mx-auto mt-10 max-w-[540px] space-y-5 sm:mt-12 md:mt-14 md:space-y-6">

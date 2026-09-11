@@ -146,7 +146,7 @@ export async function startMasterCheckout(params: {
   returnPath: string
   promoCode?: string
 }): Promise<{ ok: true } | { ok: false; error: string; isFree?: boolean }> {
-  const res = await fetch("/api/checkout/create", {
+  const res = await fetch("/api/checkout/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),

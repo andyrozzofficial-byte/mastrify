@@ -1,6 +1,5 @@
 import { createMasterCheckoutSession } from "../../../../lib/stripe/createMasterCheckoutSession"
 
-/** @deprecated Prefer POST /api/checkout/session */
 export async function POST(request: Request) {
   return createMasterCheckoutSession(request)
 }

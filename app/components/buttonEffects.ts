@@ -42,12 +42,12 @@ export const btnStablePrimary = `stable-interaction group relative inline-flex m
 
 export const btnStableSecondary = `stable-interaction group relative inline-flex min-h-[46px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-white/[0.1] bg-white/[0.04] px-6 py-3 text-[13px] font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-white/[0.04] transition-[background-color,color] duration-300 hover:border-white/[0.12] hover:bg-white/[0.06] hover:text-white`
 
-/** Master result page — solid blue primaries, depth shadows only (no colored glow). */
+/** Master result page — violet accent primaries, depth shadows only (no colored glow). */
 export const btnResultPrimary =
-  "stable-interaction bg-[#2563eb] text-white ring-1 ring-white/[0.1] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_10px_28px_rgba(0,0,0,0.28)] transition-[box-shadow,filter,transform] duration-200 hover:brightness-[1.02] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_12px_32px_rgba(0,0,0,0.32)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+  "stable-interaction bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 text-white ring-1 ring-violet-300/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_10px_28px_rgba(0,0,0,0.28)] transition-[box-shadow,filter,transform] duration-200 hover:brightness-[1.04] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_12px_32px_rgba(0,0,0,0.32)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
 
 export const btnResultToggleActive =
-  "bg-[#2563eb] text-white ring-1 ring-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]"
+  "bg-gradient-to-b from-violet-500/92 via-indigo-600/94 to-indigo-800/96 text-white ring-1 ring-violet-300/12 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]"
 
 export const btnResultPlay =
-  "bg-[#2563eb] text-white ring-1 ring-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_6px_16px_rgba(0,0,0,0.26)] transition-[box-shadow,filter,transform] duration-200 hover:brightness-[1.02] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_8px_18px_rgba(0,0,0,0.30)] active:scale-[0.97]"
+  "bg-gradient-to-b from-violet-500/95 via-indigo-600/95 to-indigo-800/95 text-white ring-1 ring-violet-300/12 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_6px_16px_rgba(0,0,0,0.26)] transition-[box-shadow,filter,transform] duration-200 hover:brightness-[1.04] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_8px_18px_rgba(0,0,0,0.30)] active:scale-[0.97]"
