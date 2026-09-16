@@ -8,7 +8,7 @@ function normalizeEmail(email) {
 
 const EXPIRY_COPY = "Your secure download link remains active for 12 hours."
 
-async function storeMasteredExport({ email, objectKey, expiresAt }) {
+async function storeMasteredExport({ email, objectKey, expiresAt, trackTitle, amountCents, stripeSessionId }) {
   if (!isSupabaseStorageConfigured()) return { stored: false, reason: "supabase_not_configured" }
 
   const createdAt = new Date().toISOString()
@@ -19,6 +19,9 @@ async function storeMasteredExport({ email, objectKey, expiresAt }) {
       object_key: objectKey,
       created_at: createdAt,
       expires_at: expiresAt,
+      track_title: trackTitle || null,
+      amount_cents: amountCents != null && Number.isFinite(Number(amountCents)) ? Math.round(Number(amountCents)) : null,
+      stripe_session_id: stripeSessionId || null,
     })
 
   if (error) throw new Error(`mastered_exports insert failed: ${error.message}`)
@@ -142,7 +145,7 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
 /**
  * Best-effort delivery: never block a successful master response if DB/email fails.
  */
-export async function deliverMasterExportEmail({ email, objectKey, playbackUrl, expiresAt, trackTitle }) {
+export async function deliverMasterExportEmail({ email, objectKey, playbackUrl, expiresAt, trackTitle, amountCents, stripeSessionId }) {
   const to = normalizeEmail(email)
   if (!to) return { requested: false }
   if (!objectKey || !playbackUrl) return { requested: true, delivered: false, reason: "missing_export_link" }
@@ -150,7 +153,7 @@ export async function deliverMasterExportEmail({ email, objectKey, playbackUrl, 
   const result = { requested: true, email: to, objectKey, expiresAt }
 
   try {
-    result.storage = await storeMasteredExport({ email: to, objectKey, expiresAt })
+    result.storage = await storeMasteredExport({ email: to, objectKey, expiresAt, trackTitle, amountCents, stripeSessionId })
   } catch (err) {
     result.storage = { stored: false, error: err?.message || String(err) }
     console.warn("[delivery] failed to store mastered export:", result.storage.error)

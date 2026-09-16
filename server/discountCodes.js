@@ -45,5 +45,5 @@ export async function verifyFreeOrderForObjectKey(freeOrderId, objectKey) {
     return { ok: false, status: 402, error: "Invalid free order amount" }
   }
 
-  return { ok: true }
+  return { ok: true, amountCents: 0 }
 }

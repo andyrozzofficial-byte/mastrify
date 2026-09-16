@@ -51,5 +51,12 @@ export async function verifyPaidCheckoutForObjectKey(stripeSessionId, objectKey)
     return { ok: false, status: 403, error: "Payment does not match this master" }
   }
 
-  return { ok: true, session }
+  const metaFinal = typeof session.metadata?.finalCents === "string" ? Number(session.metadata.finalCents) : NaN
+  const amountCents = Number.isFinite(metaFinal)
+    ? Math.round(metaFinal)
+    : session.amount_total != null
+      ? Math.round(session.amount_total)
+      : null
+
+  return { ok: true, session, amountCents }
 }

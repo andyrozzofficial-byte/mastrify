@@ -1397,12 +1397,15 @@ app.post("/master/deliver", deliverRateLimiter, async (req, res) => {
       }
     }
 
+    const amountCents = payment.amountCents ?? null
     const delivery = await deliverMasterExportEmail({
       email,
       objectKey,
       playbackUrl,
       expiresAt: resolvedExpiresAt,
       trackTitle,
+      amountCents,
+      stripeSessionId: stripeSessionId || null,
     })
 
     res.json({ success: true, delivery, playbackUrl, expiresAt: resolvedExpiresAt })
