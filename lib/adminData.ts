@@ -12,6 +12,7 @@ import type {
   AdminJobStatus,
   AdminKpis,
   AdminOverview,
+  AdminSiteTraffic,
   AdminSupportPriority,
   AdminSupportRow,
   AdminSupportStatus,
@@ -53,6 +54,7 @@ export type AdminPaginated<T> = { rows: T[]; pagination: AdminPaginationMeta }
 export const SUPPORT_INBOX_TABLE = "admin_support_inbox"
 export const MASTER_JOBS_TABLE = "admin_master_jobs"
 export const PIPELINE_EVENTS_TABLE = "admin_pipeline_events"
+export const SITE_PAGE_VIEWS_TABLE = "admin_site_page_views"
 export const CUSTOMER_PROFILES_TABLE = "admin_customer_profiles"
 export const MASTERED_EXPORTS_TABLE = "mastered_exports"
 export const PIPELINE_EVENT_MASTER_COMPLETE = "master_complete"
@@ -1359,19 +1361,206 @@ function weekKey(iso: string): string {
   return monday.toISOString().slice(0, 10)
 }
 
+function daysAgoIso(days: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - days)
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
+function pctRate(numerator: number, denominator: number): number | null {
+  if (denominator <= 0) return null
+  return Math.round((numerator / denominator) * 1000) / 10
+}
+
+function topCounts(
+  rows: { label: string; count: number }[],
+  limit = 10,
+): { label: string; count: number }[] {
+  const map = new Map<string, number>()
+  for (const row of rows) {
+    const label = row.label.trim() || "Unknown"
+    map.set(label, (map.get(label) ?? 0) + row.count)
+  }
+  return [...map.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([label, count]) => ({ label, count }))
+}
+
+function visitorIdFromPipelineMetadata(metadata: unknown): string | null {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null
+  const id = (metadata as { visitor_id?: unknown }).visitor_id
+  return typeof id === "string" && id.trim() ? id.trim() : null
+}
+
+type SitePageViewRow = {
+  created_at: string
+  visitor_id: string
+  session_id: string
+  path: string
+  referrer_host: string | null
+  device_type: string | null
+  country: string | null
+  is_new_visitor: boolean
+}
+
+function emptySiteTraffic(): AdminSiteTraffic {
+  return {
+    visitorsToday: 0,
+    sessionsToday: 0,
+    pageViewsToday: 0,
+    visitors7d: 0,
+    visitors30d: 0,
+    newVisitors30d: 0,
+    returningVisitors30d: 0,
+    topPages: [],
+    topReferrers: [],
+    devices: [],
+    countries: [],
+    dailyTraffic: [],
+    conversions: {
+      visitorToUploadRate: null,
+      uploadToMasterRate: null,
+      masterToPaidExportRate: null,
+      visitors30d: 0,
+      uploads30d: 0,
+      masters30d: 0,
+      paidExports30d: 0,
+    },
+  }
+}
+
+function buildSiteTrafficMetrics(
+  pageViews: SitePageViewRow[],
+  pipelineEvents: {
+    event_type: string
+    created_at: string
+    session_id: string | null
+    metadata?: unknown
+  }[],
+  paidExports30d: number,
+  masters30d: number,
+): AdminSiteTraffic {
+  const publicViews = pageViews.filter((row) => !row.path.startsWith("/admin"))
+  if (publicViews.length === 0) return emptySiteTraffic()
+
+  const todayStart = startOfTodayIso()
+  const since7d = daysAgoIso(7)
+  const since30d = daysAgoIso(30)
+
+  const viewsToday = publicViews.filter((r) => r.created_at >= todayStart)
+  const views7d = publicViews.filter((r) => r.created_at >= since7d)
+  const views30d = publicViews.filter((r) => r.created_at >= since30d)
+
+  const visitorsToday = new Set(viewsToday.map((r) => r.visitor_id)).size
+  const sessionsToday = new Set(viewsToday.map((r) => r.session_id)).size
+  const pageViewsToday = viewsToday.length
+  const visitors7d = new Set(views7d.map((r) => r.visitor_id)).size
+  const visitors30d = new Set(views30d.map((r) => r.visitor_id)).size
+
+  const newVisitorIds = new Set<string>()
+  for (const row of views30d) {
+    if (row.is_new_visitor) newVisitorIds.add(row.visitor_id)
+  }
+  const newVisitors30d = newVisitorIds.size
+  const returningVisitors30d = Math.max(0, visitors30d - newVisitors30d)
+
+  const dailyMap = new Map<string, { visitors: Set<string>; sessions: Set<string>; pageViews: number }>()
+  for (const row of views30d) {
+    const key = dateKey(row.created_at)
+    const cur = dailyMap.get(key) ?? { visitors: new Set(), sessions: new Set(), pageViews: 0 }
+    cur.visitors.add(row.visitor_id)
+    cur.sessions.add(row.session_id)
+    cur.pageViews += 1
+    dailyMap.set(key, cur)
+  }
+
+  const dailyTraffic = [...dailyMap.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-30)
+    .map(([date, v]) => ({
+      date,
+      visitors: v.visitors.size,
+      sessions: v.sessions.size,
+      pageViews: v.pageViews,
+    }))
+
+  const events30d = pipelineEvents.filter((e) => e.created_at >= since30d)
+  const uploadEvents30d = events30d.filter((e) => e.event_type === "upload")
+  const uploads30d = countDistinctSessions(uploadEvents30d)
+
+  const uploadVisitorIds = new Set<string>()
+  for (const event of uploadEvents30d) {
+    const visitorId = visitorIdFromPipelineMetadata(event.metadata)
+    if (visitorId) uploadVisitorIds.add(visitorId)
+  }
+
+  return {
+    visitorsToday,
+    sessionsToday,
+    pageViewsToday,
+    visitors7d,
+    visitors30d,
+    newVisitors30d,
+    returningVisitors30d,
+    topPages: topCounts(publicViews.map((r) => ({ label: r.path, count: 1 }))),
+    topReferrers: topCounts(
+      publicViews.map((r) => ({
+        label: r.referrer_host?.trim() || "Direct / none",
+        count: 1,
+      })),
+    ),
+    devices: topCounts(
+      publicViews.map((r) => ({
+        label: r.device_type?.trim() || "desktop",
+        count: 1,
+      })),
+    ),
+    countries: topCounts(
+      publicViews
+        .filter((r) => r.country?.trim())
+        .map((r) => ({ label: r.country!.trim(), count: 1 })),
+    ),
+    dailyTraffic,
+    conversions: {
+      visitorToUploadRate: pctRate(uploadVisitorIds.size, visitors30d),
+      uploadToMasterRate: pctRate(masters30d, uploads30d),
+      masterToPaidExportRate: pctRate(paidExports30d, masters30d),
+      visitors30d,
+      uploads30d,
+      masters30d,
+      paidExports30d,
+    },
+  }
+}
+
 export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExtended | { error: string }> {
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const [feedbackRes, eventsRes, exportsRes, exportCtx] = await Promise.all([
+  const since30d = daysAgoIso(30)
+
+  const [feedbackRes, eventsRes, exportsRes, exportCtx, pageViewsRes] = await Promise.all([
     supabase
       .from(BETA_FEEDBACK_TABLE)
       .select("id, created_at, session_id, track_name, mastering_style, responses")
       .order("created_at", { ascending: false })
       .limit(2000),
-    supabase.from(PIPELINE_EVENTS_TABLE).select("event_type, created_at, session_id").limit(5000),
+    supabase
+      .from(PIPELINE_EVENTS_TABLE)
+      .select("event_type, created_at, session_id, metadata")
+      .limit(5000),
     fetchExportsSince(null),
     loadExportClassificationContext(),
+    supabase
+      .from(SITE_PAGE_VIEWS_TABLE)
+      .select(
+        "created_at, visitor_id, session_id, path, referrer_host, device_type, country, is_new_visitor",
+      )
+      .gte("created_at", since30d)
+      .order("created_at", { ascending: false })
+      .limit(50000),
   ])
 
   if (feedbackRes.error) return { error: feedbackRes.error.message }
@@ -1545,6 +1734,20 @@ export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExten
       count: n,
     }))
 
+  const exports30d = exports.filter((ex) => ex.created_at >= since30d)
+  const paidExports30d = countPaidExports(exports30d, exportCtx)
+  const masters30dRes = await supabase
+    .from(BETA_MASTER_COMPLETIONS_TABLE)
+    .select("session_id", { count: "exact", head: true })
+    .gte("completed_at", since30d)
+  const masters30d = masters30dRes.count ?? 0
+
+  const pageViews = pageViewsRes.error ? [] : ((pageViewsRes.data ?? []) as SitePageViewRow[])
+  const siteTraffic =
+    pageViewsRes.error && /does not exist|42P01/i.test(pageViewsRes.error.message)
+      ? null
+      : buildSiteTrafficMetrics(pageViews, events, paidExports30d, masters30d)
+
   return {
     funnel,
     avgLufs,
@@ -1555,6 +1758,7 @@ export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExten
     weeklyTrend,
     genreDistribution: legacy.charts.genreDistribution ?? [],
     recommendOverTime: recommendOverTime ?? [],
+    siteTraffic,
   }
 }
 

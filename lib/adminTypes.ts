@@ -258,6 +258,30 @@ export type AdminJobRow = {
   source: string
 }
 
+export type AdminSiteTraffic = {
+  visitorsToday: number
+  sessionsToday: number
+  pageViewsToday: number
+  visitors7d: number
+  visitors30d: number
+  newVisitors30d: number
+  returningVisitors30d: number
+  topPages: { label: string; count: number }[]
+  topReferrers: { label: string; count: number }[]
+  devices: { label: string; count: number }[]
+  countries: { label: string; count: number }[]
+  dailyTraffic: { date: string; visitors: number; sessions: number; pageViews: number }[]
+  conversions: {
+    visitorToUploadRate: number | null
+    uploadToMasterRate: number | null
+    masterToPaidExportRate: number | null
+    visitors30d: number
+    uploads30d: number
+    masters30d: number
+    paidExports30d: number
+  }
+}
+
 export type AdminAnalyticsExtended = {
   funnel: { step: string; count: number }[]
   avgLufs: number | null
@@ -268,4 +292,5 @@ export type AdminAnalyticsExtended = {
   weeklyTrend: { week: string; uploads: number; masters: number; downloads: number }[]
   genreDistribution: { label: string; count: number }[]
   recommendOverTime: { date: string; avgRecommend: number; count: number }[]
+  siteTraffic: AdminSiteTraffic | null
 }

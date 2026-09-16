@@ -18,11 +18,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "eventType must be upload or analyze" }, { status: 400 })
   }
 
+  const visitorId = typeof body.visitorId === "string" ? body.visitorId.trim() : ""
+  const metadata = visitorId ? { visitor_id: visitorId } : undefined
+
   const result = await writePipelineEvent({
     sessionId,
     eventType,
     trackName: typeof body.trackName === "string" ? body.trackName : null,
     userEmail: typeof body.userEmail === "string" ? body.userEmail : null,
+    metadata,
   })
 
   if ("error" in result) {
