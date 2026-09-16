@@ -82,6 +82,8 @@ export type AdminOverview = AdminKpis & {
     created_at: string
     track_name: string | null
     mastering_style: string | null
+    processing_time_ms: number | null
+    master_lufs: number | null
     status: AdminJobStatus
   }[]
   recentPurchases: { id: string; created_at: string; email: string; track_title: string | null; amount: number }[]

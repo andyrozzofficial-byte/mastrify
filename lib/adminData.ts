@@ -36,6 +36,7 @@ import {
   type AdminPaginationMeta,
 } from "./adminPagination"
 import { countCanonicalMastersCompletedSince } from "./canonicalMasterStats"
+import { BETA_MASTER_COMPLETIONS_TABLE } from "./betaMasterTracking"
 import { ingestDebug, ingestError, requireServiceRoleForAdminTable } from "./adminIngestDebug"
 import { statsDebug } from "./statsDebug"
 
@@ -49,6 +50,20 @@ export const MASTERED_EXPORTS_TABLE = "mastered_exports"
 export const PIPELINE_EVENT_MASTER_COMPLETE = "master_complete"
 
 const EXPORT_PRICE_USD = 9
+const DEFAULT_EXPORT_CENTS = 900
+
+function exportRevenueUsd(row: { amount_cents?: number | null }): number {
+  if (row.amount_cents != null && Number.isFinite(Number(row.amount_cents))) {
+    return Number(row.amount_cents) / 100
+  }
+  return DEFAULT_EXPORT_CENTS / 100
+}
+
+function countDistinctSessions(rows: { session_id?: string | null }[]): number {
+  return new Set(
+    rows.map((r) => r.session_id).filter((s): s is string => Boolean(s?.trim())),
+  ).size
+}
 
 function startOfTodayIso(): string {
   const d = new Date()
@@ -246,13 +261,8 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
   // - uploadsToday: admin_pipeline_events upload events (analytics funnel), else master_jobs created today, else feedback rows today
   // - mastersCompletedToday: CANONICAL — beta_master_completions.completed_at >= today (see canonicalMasterStats.ts)
   // - paidDownloadsToday/revenueToday: mastered_exports today (existing exports source)
-  const [feedbackRes, eventsRes, jobsTodayRes, exportsRes, canonicalMastersCompletedToday] =
+  const [eventsRes, jobsTodayRes, exportsRes, canonicalMastersCompletedToday] =
     await Promise.all([
-    supabase
-      .from(BETA_FEEDBACK_TABLE)
-      .select("id, created_at, session_id")
-      .gte("created_at", today)
-      .limit(2000),
     supabase
       .from(PIPELINE_EVENTS_TABLE)
       .select("id, event_type, created_at, session_id")
@@ -267,21 +277,15 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
     countCanonicalMastersCompletedSince(today),
   ])
 
-  const feedbackTodayCount =
-    feedbackRes.error && feedbackRes.error.message.includes("does not exist")
-      ? 0
-      : feedbackRes.data?.length ?? 0
-  if (feedbackRes.error && !feedbackRes.error.message.includes("does not exist")) {
-    logKpiFailure("feedback-today", feedbackRes.error.message)
-  }
-
-  const uploadsFromEvents = eventsRes.data?.filter((e) => e.event_type === "upload").length ?? 0
+  const uploadEventsToday =
+    eventsRes.data?.filter((e) => e.event_type === "upload") ?? []
+  const uploadsFromEvents = countDistinctSessions(uploadEventsToday)
   if (eventsRes.error) logKpiFailure("uploads-events-today", eventsRes.error.message)
 
   const jobsTodayCount = jobsTodayRes.data?.length ?? 0
   if (jobsTodayRes.error) logKpiFailure("jobs-today", jobsTodayRes.error.message)
 
-  const uploadsToday = Math.max(uploadsFromEvents, jobsTodayCount, feedbackTodayCount)
+  const uploadsToday = uploadsFromEvents > 0 ? uploadsFromEvents : jobsTodayCount
 
   const pipelineMasterCompleteToday =
     eventsRes.data?.filter((e) => e.event_type === PIPELINE_EVENT_MASTER_COMPLETE).length ?? 0
@@ -297,24 +301,46 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
   })
 
   const paidDownloadsToday = exportsRes.data.length
-  const revenueToday = exportsRes.data.reduce(
-    (sum, row) => sum + (row.amount_cents != null ? row.amount_cents / 100 : EXPORT_PRICE_USD),
-    0,
-  )
+  const revenueToday = exportsRes.data.reduce((sum, row) => sum + exportRevenueUsd(row), 0)
   if (exportsRes.error) logKpiFailure("exports-today", String(exportsRes.error))
 
   const conversionRate =
     uploadsToday > 0 ? Math.round((paidDownloadsToday / uploadsToday) * 1000) / 10 : null
 
-  const weekFeedbackRes = await supabase
-    .from(BETA_FEEDBACK_TABLE)
-    .select("session_id")
-    .gte("created_at", weekAgo)
-    .limit(5000)
-  if (weekFeedbackRes.error) logKpiFailure("active-users-7d", weekFeedbackRes.error.message)
-  const activeUsers = new Set(
-    (weekFeedbackRes.data ?? []).map((r) => r.session_id).filter((s): s is string => Boolean(s)),
-  ).size
+  const [weekPipelineRes, weekCompletionsRes, weekExportsRes] = await Promise.all([
+    supabase
+      .from(PIPELINE_EVENTS_TABLE)
+      .select("session_id, user_email")
+      .gte("created_at", weekAgo)
+      .limit(5000),
+    supabase
+      .from(BETA_MASTER_COMPLETIONS_TABLE)
+      .select("session_id, email")
+      .gte("completed_at", weekAgo)
+      .limit(5000),
+    supabase
+      .from(MASTERED_EXPORTS_TABLE)
+      .select("email")
+      .gte("created_at", weekAgo)
+      .limit(5000),
+  ])
+  if (weekPipelineRes.error) logKpiFailure("active-users-7d-pipeline", weekPipelineRes.error.message)
+  if (weekCompletionsRes.error) logKpiFailure("active-users-7d-completions", weekCompletionsRes.error.message)
+  if (weekExportsRes.error) logKpiFailure("active-users-7d-exports", weekExportsRes.error.message)
+
+  const activeSet = new Set<string>()
+  for (const row of weekPipelineRes.data ?? []) {
+    if (row.session_id) activeSet.add(`session:${row.session_id}`)
+    else if (row.user_email) activeSet.add(`email:${String(row.user_email).toLowerCase()}`)
+  }
+  for (const row of weekCompletionsRes.data ?? []) {
+    if (row.session_id) activeSet.add(`session:${row.session_id}`)
+    else if (row.email) activeSet.add(`email:${String(row.email).toLowerCase()}`)
+  }
+  for (const row of weekExportsRes.data ?? []) {
+    if (row.email) activeSet.add(`email:${String(row.email).toLowerCase()}`)
+  }
+  const activeUsers = activeSet.size
 
   let failedJobs = 0
   if (jobsTodayRes.data) {
@@ -473,22 +499,45 @@ async function fetchAdminOverviewUncached(): Promise<AdminOverview | { error: st
     priority: r.priority,
   }))
 
-  const recentMasters = feedback.slice(0, 8).map((r) => ({
-    id: r.id,
-    created_at: r.created_at,
-    track_name: r.track_name,
-    mastering_style: r.mastering_style,
-    processing_time_ms: r.processing_time_ms,
-    master_lufs: r.master_lufs,
-    status: "complete" as const,
-  }))
+  const supabase = createSupabaseServerClient()
+  let recentMasters: AdminOverview["recentMasters"] = []
+  if (supabase) {
+    const { data: completionRows } = await supabase
+      .from(BETA_MASTER_COMPLETIONS_TABLE)
+      .select("session_id, completed_at, track_name, mastering_style, processing_time_ms, master_lufs")
+      .order("completed_at", { ascending: false })
+      .limit(8)
+    recentMasters = (completionRows ?? []).map((r) => ({
+      id: String(r.session_id),
+      created_at: String(r.completed_at),
+      track_name: r.track_name ?? null,
+      mastering_style: r.mastering_style ?? null,
+      processing_time_ms: r.processing_time_ms != null ? Number(r.processing_time_ms) : null,
+      master_lufs: r.master_lufs != null ? Number(r.master_lufs) : null,
+      status: "complete" as const,
+    }))
+  }
+  if (recentMasters.length === 0) {
+    const jobs = await fetchAdminJobs()
+    if (!isFetchError(jobs)) {
+      recentMasters = jobs.slice(0, 8).map((j) => ({
+        id: j.id,
+        created_at: j.created_at,
+        track_name: j.track_name,
+        mastering_style: j.mastering_style,
+        processing_time_ms: j.processing_time_ms,
+        master_lufs: j.master_lufs,
+        status: j.status === "failed" ? ("failed" as const) : ("complete" as const),
+      }))
+    }
+  }
 
   const recentPurchases = exports.slice(0, 8).map((row, i) => ({
     id: row.id ?? `export-${i}`,
     created_at: row.created_at,
     email: row.email,
     track_title: row.track_title ?? null,
-    amount: row.amount_cents != null ? row.amount_cents / 100 : EXPORT_PRICE_USD,
+    amount: exportRevenueUsd(row),
   }))
 
   const activity: AdminActivityItem[] = [
@@ -1316,17 +1365,24 @@ export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExten
   const events = eventsRes.data ?? []
   const exports = exportsRes.data
 
-  const uploads = Math.max(
-    events.filter((e) => e.event_type === "upload").length,
-    feedback.length,
+  const uploadSessions = countDistinctSessions(events.filter((e) => e.event_type === "upload"))
+  const analyzeSessions = countDistinctSessions(events.filter((e) => e.event_type === "analyze"))
+  const masterCompleteSessions = countDistinctSessions(
+    events.filter((e) => e.event_type === PIPELINE_EVENT_MASTER_COMPLETE),
   )
-  const analyzed = Math.max(
-    events.filter((e) => e.event_type === "analyze").length,
-    feedback.length,
-  )
-  const mastered = feedback.length
+
+  const completionsRes = await supabase
+    .from(BETA_MASTER_COMPLETIONS_TABLE)
+    .select("session_id", { count: "exact", head: true })
+  const masteredFromTable = completionsRes.count ?? 0
+
+  const uploads = uploadSessions
+  const analyzed = analyzeSessions
+  const mastered = Math.max(masteredFromTable, masterCompleteSessions)
   const paid = exports.length
-  const downloaded = exports.length
+  const downloaded = countDistinctSessions(
+    events.filter((e) => e.event_type === "download"),
+  ) || paid
 
   const funnel = [
     { step: "Upload", count: uploads },
@@ -1335,26 +1391,51 @@ export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExten
     { step: "Download", count: downloaded },
   ]
 
-  const lufsValues = feedback
+  const completionsDetailRes = await supabase
+    .from(BETA_MASTER_COMPLETIONS_TABLE)
+    .select("master_lufs, processing_time_ms, mastering_style, completed_at")
+    .order("completed_at", { ascending: false })
+    .limit(2000)
+  const completionRows = completionsDetailRes.data ?? []
+
+  const lufsValues = completionRows
+    .map((r) => (r.master_lufs != null ? Number(r.master_lufs) : NaN))
+    .filter((n): n is number => Number.isFinite(n))
+  const feedbackLufs = feedback
     .map((r) => payloadOf(r as { responses: BetaFeedbackPayload }).masterLufs)
     .filter((n): n is number => typeof n === "number" && Number.isFinite(n))
+  if (lufsValues.length === 0) lufsValues.push(...feedbackLufs)
   const avgLufs =
     lufsValues.length > 0
       ? Math.round((lufsValues.reduce((a, b) => a + b, 0) / lufsValues.length) * 10) / 10
       : null
 
   const styleCounts = new Map<string, number>()
-  for (const row of feedback) {
-    const style = row.mastering_style ?? payloadOf(row as { responses: BetaFeedbackPayload }).masteringStyle
+  for (const row of completionRows) {
+    const style = row.mastering_style?.trim()
     if (!style) continue
     styleCounts.set(style, (styleCounts.get(style) ?? 0) + 1)
+  }
+  if (styleCounts.size === 0) {
+    for (const row of feedback) {
+      const style = row.mastering_style ?? payloadOf(row as { responses: BetaFeedbackPayload }).masteringStyle
+      if (!style) continue
+      styleCounts.set(style, (styleCounts.get(style) ?? 0) + 1)
+    }
   }
   const topStyleEntry = [...styleCounts.entries()].sort((a, b) => b[1] - a[1])[0]
   const topStyle = topStyleEntry ? { style: topStyleEntry[0], count: topStyleEntry[1] } : null
 
-  const procTimes = feedback
-    .map((r) => payloadOf(r as { responses: BetaFeedbackPayload }).processingTimeMs)
-    .filter((n): n is number => typeof n === "number" && Number.isFinite(n))
+  const procTimes = completionRows
+    .map((r) => (r.processing_time_ms != null ? Number(r.processing_time_ms) : NaN))
+    .filter((n): n is number => Number.isFinite(n))
+  if (procTimes.length === 0) {
+    procTimes.push(
+      ...feedback
+        .map((r) => payloadOf(r as { responses: BetaFeedbackPayload }).processingTimeMs)
+        .filter((n): n is number => typeof n === "number" && Number.isFinite(n)),
+    )
+  }
   const avgProcessingMs =
     procTimes.length > 0 ? Math.round(procTimes.reduce((a, b) => a + b, 0) / procTimes.length) : null
 
@@ -1366,10 +1447,15 @@ export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExten
   const dropOffStep = worst && worst.loss > 0 ? worst.step : null
 
   const dailyMap = new Map<string, { uploads: number; masters: number; downloads: number }>()
-  for (const row of feedback) {
+  for (const row of events.filter((e) => e.event_type === "upload")) {
     const key = dateKey(row.created_at)
     const cur = dailyMap.get(key) ?? { uploads: 0, masters: 0, downloads: 0 }
     cur.uploads += 1
+    dailyMap.set(key, cur)
+  }
+  for (const row of events.filter((e) => e.event_type === PIPELINE_EVENT_MASTER_COMPLETE)) {
+    const key = dateKey(row.created_at)
+    const cur = dailyMap.get(key) ?? { uploads: 0, masters: 0, downloads: 0 }
     cur.masters += 1
     dailyMap.set(key, cur)
   }
@@ -1386,10 +1472,15 @@ export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExten
     .map(([date, v]) => ({ date, ...v }))
 
   const weeklyMap = new Map<string, { uploads: number; masters: number; downloads: number }>()
-  for (const row of feedback) {
+  for (const row of events.filter((e) => e.event_type === "upload")) {
     const key = weekKey(row.created_at)
     const cur = weeklyMap.get(key) ?? { uploads: 0, masters: 0, downloads: 0 }
     cur.uploads += 1
+    weeklyMap.set(key, cur)
+  }
+  for (const row of events.filter((e) => e.event_type === PIPELINE_EVENT_MASTER_COMPLETE)) {
+    const key = weekKey(row.created_at)
+    const cur = weeklyMap.get(key) ?? { uploads: 0, masters: 0, downloads: 0 }
     cur.masters += 1
     weeklyMap.set(key, cur)
   }

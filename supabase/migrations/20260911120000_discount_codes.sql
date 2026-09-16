@@ -35,4 +35,11 @@ create table if not exists public.discount_redemptions (
 create index if not exists discount_redemptions_code_id_idx on public.discount_redemptions (code_id);
 create index if not exists discount_redemptions_object_key_idx on public.discount_redemptions (object_key);
 
+alter table public.discount_codes enable row level security;
+alter table public.discount_redemptions enable row level security;
+revoke all on table public.discount_codes from anon, authenticated;
+revoke all on table public.discount_redemptions from anon, authenticated;
+grant all on table public.discount_codes to service_role;
+grant all on table public.discount_redemptions to service_role;
+
 notify pgrst, 'reload schema';

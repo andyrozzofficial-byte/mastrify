@@ -12,6 +12,8 @@ import { appendHistory } from "../../../lib/history"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 import { MASTRIFY_CLIENT_LUFS_TRACE, MASTRIFY_CLIENT_PIPELINE_DEBUG } from "../../../lib/mastrifyDebug"
 import { useMasterSession } from "../MasterSessionProvider"
+import { trackMasterComplete, trackMasterFailed } from "../../../lib/trackClient"
+import { getOrCreateWorkflowSessionId } from "../../../lib/workflowSessionId"
 
 const API = PUBLIC_BACKEND_API_BASE
 
@@ -77,6 +79,7 @@ export default function MasterProcessingPage() {
       }
 
       try {
+        const procStart = performance.now()
         const formData = new FormData()
         formData.append("file", file)
         formData.append("stylePreset", stylePreset)
@@ -143,6 +146,17 @@ export default function MasterProcessingPage() {
           masteredUrl: mastered || undefined,
         })
 
+        const workflowSessionId = getOrCreateWorkflowSessionId()
+        const aa = res.data.analysisAfter as Record<string, unknown> | undefined
+        trackMasterComplete({
+          sessionId: workflowSessionId,
+          objectKey: responseObjectKey || undefined,
+          trackName: file.name,
+          masteringStyle: stylePreset,
+          processingTimeMs: Math.round(performance.now() - procStart),
+          masterLufs: typeof aa?.lufs === "number" ? aa.lufs : null,
+        })
+
         await sleep(480)
         if (!cancelled) router.replace("/master/result")
       } catch (e: unknown) {
@@ -150,6 +164,11 @@ export default function MasterProcessingPage() {
           (typeof axios.isCancel === "function" && axios.isCancel(e)) ||
           (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "ERR_CANCELED")
         if (aborted) return
+        trackMasterFailed({
+          sessionId: getOrCreateWorkflowSessionId(),
+          trackName: file?.name,
+          errorLog: e instanceof Error ? e.message : "Mastering failed",
+        })
         alert("Mastering failed")
         if (!cancelled) router.replace("/master/settings")
       }

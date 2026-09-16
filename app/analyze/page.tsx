@@ -39,6 +39,8 @@ import { appendHistory } from "../../lib/history"
 import { publicBackendUrl } from "../../lib/publicBackendUrl"
 import { AUDIO_UPLOAD_REJECT_MESSAGE, isAcceptedAudioUpload } from "../../lib/audioUploadAccept"
 import { useMasterSession } from "../master/MasterSessionProvider"
+import { trackPipelineEvent } from "../../lib/trackClient"
+import { getOrCreateWorkflowSessionId } from "../../lib/workflowSessionId"
 
 
 function generateFixes(result: any) {
@@ -203,6 +205,9 @@ export default function AnalyzePage() {
     setAnalysisStep(0)
     setResult(null)
 
+    const workflowSessionId = getOrCreateWorkflowSessionId()
+    trackPipelineEvent({ sessionId: workflowSessionId, eventType: "upload", trackName: f.name })
+
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
     const formData = new FormData()
@@ -245,6 +250,7 @@ export default function AnalyzePage() {
 
       const data: Record<string, unknown> = apiData
       setResult(data)
+      trackPipelineEvent({ sessionId: workflowSessionId, eventType: "analyze", trackName: f.name })
       appendHistory({
         kind: "analysis",
         name: f.name || "Audio",

@@ -6,6 +6,8 @@ import { motion } from "framer-motion"
 import CinematicBackground from "../components/CinematicBackground"
 import MasterUploadHero from "../components/master/MasterUploadHero"
 import { useMasterSession } from "./MasterSessionProvider"
+import { trackPipelineEvent } from "../../lib/trackClient"
+import { getOrCreateWorkflowSessionId, resetWorkflowSessionId } from "../../lib/workflowSessionId"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -13,6 +15,11 @@ export default function MasterUploadPage() {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const { file, setFile } = useMasterSession()
+  const handleFileSelected = (f: File) => {
+    resetWorkflowSessionId()
+    trackPipelineEvent({ sessionId: getOrCreateWorkflowSessionId(), eventType: "upload", trackName: f.name })
+    setFile(f)
+  }
   return (
     <motion.div
       className="marketing-page-root relative min-h-screen overflow-x-clip text-white max-lg:overflow-x-clip"
@@ -29,7 +36,7 @@ export default function MasterUploadPage() {
       <MasterUploadHero
         file={file}
         fileInputRef={inputRef}
-        onFileSelected={setFile}
+        onFileSelected={handleFileSelected}
         onContinue={() => router.push("/master/settings")}
       />
     </motion.div>
