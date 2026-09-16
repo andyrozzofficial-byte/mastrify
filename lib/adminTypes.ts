@@ -142,6 +142,7 @@ export type AdminCustomerRow = {
   feedbackCount: number
   supportCount: number
   exportCount: number
+  paidExportCount: number
   purchased: boolean
   lastActivity: string
   lastTrack: string | null
@@ -155,6 +156,7 @@ export type AdminCustomerProfile = {
   purchased: boolean
   totalTracksMastered: number
   exportCount: number
+  paidExportCount: number
   lastActivity: string | null
   feedback: AdminFeedbackRow[]
   support: AdminSupportRow[]

@@ -39,6 +39,14 @@ import { countCanonicalMastersCompletedSince } from "./canonicalMasterStats"
 import { BETA_MASTER_COMPLETIONS_TABLE } from "./betaMasterTracking"
 import { ingestDebug, ingestError, requireServiceRoleForAdminTable } from "./adminIngestDebug"
 import { statsDebug } from "./statsDebug"
+import {
+  countPaidExports,
+  exportRevenueUsd,
+  groupExportsByEmail,
+  loadExportClassificationContext,
+  sumExportRevenueUsd,
+  type ExportRow,
+} from "./exportStats"
 
 export type AdminPaginated<T> = { rows: T[]; pagination: AdminPaginationMeta }
 
@@ -48,16 +56,6 @@ export const PIPELINE_EVENTS_TABLE = "admin_pipeline_events"
 export const CUSTOMER_PROFILES_TABLE = "admin_customer_profiles"
 export const MASTERED_EXPORTS_TABLE = "mastered_exports"
 export const PIPELINE_EVENT_MASTER_COMPLETE = "master_complete"
-
-const EXPORT_PRICE_USD = 9
-const DEFAULT_EXPORT_CENTS = 900
-
-function exportRevenueUsd(row: { amount_cents?: number | null }): number {
-  if (row.amount_cents != null && Number.isFinite(Number(row.amount_cents))) {
-    return Number(row.amount_cents) / 100
-  }
-  return DEFAULT_EXPORT_CENTS / 100
-}
 
 function countDistinctSessions(rows: { session_id?: string | null }[]): number {
   return new Set(
@@ -172,15 +170,12 @@ function normalizeJobStatus(raw: unknown): AdminJobStatus {
 async function fetchExportsSince(iso: string | null) {
   const supabase = createSupabaseServerClient()
   if (!supabase) {
-    return {
-      data: [] as { id: string; email: string; created_at: string; amount_cents?: number; track_title?: string | null }[],
-      error: null,
-    }
+    return { data: [] as ExportRow[], error: null }
   }
 
   let q = supabase
     .from(MASTERED_EXPORTS_TABLE)
-    .select("id, email, created_at, amount_cents, track_title")
+    .select("id, email, created_at, amount_cents, track_title, object_key, stripe_session_id")
     .order("created_at", { ascending: false })
   if (iso) q = q.gte("created_at", iso)
 
@@ -189,7 +184,7 @@ async function fetchExportsSince(iso: string | null) {
     return { data: [], error: null }
   }
   if (error) return { data: [], error: error.message }
-  return { data: data ?? [], error: null }
+  return { data: (data ?? []) as ExportRow[], error: null }
 }
 
 /** Manual/cron job sync — never call from GET/read paths. */
@@ -261,7 +256,7 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
   // - uploadsToday: admin_pipeline_events upload events (analytics funnel), else master_jobs created today, else feedback rows today
   // - mastersCompletedToday: CANONICAL — beta_master_completions.completed_at >= today (see canonicalMasterStats.ts)
   // - paidDownloadsToday/revenueToday: mastered_exports today (existing exports source)
-  const [eventsRes, jobsTodayRes, exportsRes, canonicalMastersCompletedToday] =
+  const [eventsRes, jobsTodayRes, exportsRes, canonicalMastersCompletedToday, exportCtx] =
     await Promise.all([
     supabase
       .from(PIPELINE_EVENTS_TABLE)
@@ -275,6 +270,7 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
       .limit(2000),
     fetchExportsSince(today),
     countCanonicalMastersCompletedSince(today),
+    loadExportClassificationContext(),
   ])
 
   const uploadEventsToday =
@@ -300,8 +296,8 @@ export async function computeAdminKpis(): Promise<AdminKpis | { error: string }>
     },
   })
 
-  const paidDownloadsToday = exportsRes.data.length
-  const revenueToday = exportsRes.data.reduce((sum, row) => sum + exportRevenueUsd(row), 0)
+  const paidDownloadsToday = countPaidExports(exportsRes.data, exportCtx)
+  const revenueToday = sumExportRevenueUsd(exportsRes.data, exportCtx)
   if (exportsRes.error) logKpiFailure("exports-today", String(exportsRes.error))
 
   const conversionRate =
@@ -480,7 +476,10 @@ async function fetchAdminOverviewUncached(): Promise<AdminOverview | { error: st
     buildAdminActionCenter(feedback),
   )
 
-  const exportsAll = await fetchExportsSince(null)
+  const [exportsAll, exportCtx] = await Promise.all([
+    fetchExportsSince(null),
+    loadExportClassificationContext(),
+  ])
   const exports = exportsAll.data
 
   const recentFeedback = feedback.slice(0, 6).map((r) => ({
@@ -537,7 +536,7 @@ async function fetchAdminOverviewUncached(): Promise<AdminOverview | { error: st
     created_at: row.created_at,
     email: row.email,
     track_title: row.track_title ?? null,
-    amount: exportRevenueUsd(row),
+    amount: exportRevenueUsd(row, exportCtx),
   }))
 
   const activity: AdminActivityItem[] = [
@@ -1055,7 +1054,10 @@ export async function fetchAdminCustomers(): Promise<AdminCustomerRow[] | { erro
   const supportError = isFetchError(support) ? support.error : null
   const supportRows = isFetchError(support) ? [] : support
 
-  const exports = await fetchExportsSince(null)
+  const [exports, exportCtx] = await Promise.all([
+    fetchExportsSince(null),
+    loadExportClassificationContext(),
+  ])
   const supabase = createSupabaseServerClient()
   const profilesRes = supabase
     ? await supabase.from(CUSTOMER_PROFILES_TABLE).select("email, name, notes, purchased")
@@ -1065,13 +1067,14 @@ export async function fetchAdminCustomers(): Promise<AdminCustomerRow[] | { erro
     (profilesRes.data ?? []).map((p) => [p.email.toLowerCase(), p]),
   )
 
-  const exportsByEmail = new Map<string, number>()
-  for (const ex of exports.data) {
-    const e = ex.email.toLowerCase()
-    exportsByEmail.set(e, (exportsByEmail.get(e) ?? 0) + 1)
-  }
+  const { exportCount: exportsByEmail, paidExportCount: paidExportsByEmail } = groupExportsByEmail(
+    exports.data,
+    exportCtx,
+  )
 
   const map = new Map<string, AdminCustomerRow>()
+
+  const customerPurchased = (email: string) => (paidExportsByEmail.get(email) ?? 0) > 0
 
   for (const row of feedback) {
     const email = row.contact_email?.trim().toLowerCase()
@@ -1085,7 +1088,8 @@ export async function fetchAdminCustomers(): Promise<AdminCustomerRow[] | { erro
         feedbackCount: 1,
         supportCount: 0,
         exportCount: exportsByEmail.get(email) ?? 0,
-        purchased: profile?.purchased ?? (exportsByEmail.get(email) ?? 0) > 0,
+        paidExportCount: paidExportsByEmail.get(email) ?? 0,
+        purchased: customerPurchased(email),
         lastActivity: row.created_at,
         lastTrack: row.track_name,
         avgRecommend: row.recommend_score,
@@ -1114,7 +1118,8 @@ export async function fetchAdminCustomers(): Promise<AdminCustomerRow[] | { erro
         feedbackCount: 0,
         supportCount: 1,
         exportCount: exportsByEmail.get(email) ?? 0,
-        purchased: profile?.purchased ?? (exportsByEmail.get(email) ?? 0) > 0,
+        paidExportCount: paidExportsByEmail.get(email) ?? 0,
+        purchased: customerPurchased(email),
         lastActivity: row.created_at,
         lastTrack: null,
         avgRecommend: null,
@@ -1130,6 +1135,7 @@ export async function fetchAdminCustomers(): Promise<AdminCustomerRow[] | { erro
     console.error("[admin-customers] support inbox unavailable", supportError)
   }
   for (const [email, count] of exportsByEmail) {
+    const paidCount = paidExportsByEmail.get(email) ?? 0
     if (!map.has(email)) {
       const profile = profileByEmail.get(email)
       map.set(email, {
@@ -1138,7 +1144,8 @@ export async function fetchAdminCustomers(): Promise<AdminCustomerRow[] | { erro
         feedbackCount: 0,
         supportCount: 0,
         exportCount: count,
-        purchased: profile?.purchased ?? count > 0,
+        paidExportCount: paidCount,
+        purchased: customerPurchased(email),
         lastActivity: new Date(0).toISOString(),
         lastTrack: null,
         avgRecommend: null,
@@ -1146,7 +1153,8 @@ export async function fetchAdminCustomers(): Promise<AdminCustomerRow[] | { erro
     } else {
       const row = map.get(email)!
       row.exportCount = count
-      if (count > 0) row.purchased = profileByEmail.get(email)?.purchased ?? true
+      row.paidExportCount = paidCount
+      row.purchased = customerPurchased(email)
     }
   }
 
@@ -1179,9 +1187,14 @@ export async function fetchCustomerProfile(email: string): Promise<AdminCustomer
     }
   }
 
-  const exports = await fetchExportsSince(null)
-  const exportCount = exports.data.filter((e) => e.email.toLowerCase() === normalized).length
-  if (exportCount > 0) purchased = true
+  const [exports, exportCtx] = await Promise.all([
+    fetchExportsSince(null),
+    loadExportClassificationContext(),
+  ])
+  const userExports = exports.data.filter((e) => e.email.toLowerCase() === normalized)
+  const exportCount = userExports.length
+  const paidExportCount = countPaidExports(userExports, exportCtx)
+  purchased = paidExportCount > 0
 
   const userFeedback = feedback.filter((f) => f.contact_email?.toLowerCase() === normalized)
   const userSupport = supportRows.filter((s) => s.email.toLowerCase() === normalized)
@@ -1200,6 +1213,7 @@ export async function fetchCustomerProfile(email: string): Promise<AdminCustomer
     purchased,
     totalTracksMastered: userFeedback.length,
     exportCount,
+    paidExportCount,
     lastActivity,
     feedback: userFeedback,
     support: userSupport,
@@ -1349,7 +1363,7 @@ export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExten
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const [feedbackRes, eventsRes, exportsRes] = await Promise.all([
+  const [feedbackRes, eventsRes, exportsRes, exportCtx] = await Promise.all([
     supabase
       .from(BETA_FEEDBACK_TABLE)
       .select("id, created_at, session_id, track_name, mastering_style, responses")
@@ -1357,6 +1371,7 @@ export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExten
       .limit(2000),
     supabase.from(PIPELINE_EVENTS_TABLE).select("event_type, created_at, session_id").limit(5000),
     fetchExportsSince(null),
+    loadExportClassificationContext(),
   ])
 
   if (feedbackRes.error) return { error: feedbackRes.error.message }
@@ -1379,14 +1394,15 @@ export async function fetchAdminAnalyticsExtended(): Promise<AdminAnalyticsExten
   const uploads = uploadSessions
   const analyzed = analyzeSessions
   const mastered = Math.max(masteredFromTable, masterCompleteSessions)
-  const paid = exports.length
-  const downloaded = countDistinctSessions(
-    events.filter((e) => e.event_type === "download"),
-  ) || paid
+  const paid = countPaidExports(exports, exportCtx)
+  const allExports = exports.length
+  const downloaded =
+    countDistinctSessions(events.filter((e) => e.event_type === "download")) || allExports
 
   const funnel = [
     { step: "Upload", count: uploads },
     { step: "Analyze", count: analyzed },
+    { step: "Master", count: mastered },
     { step: "Payment", count: paid },
     { step: "Download", count: downloaded },
   ]

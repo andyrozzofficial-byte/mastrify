@@ -85,6 +85,9 @@ export default function AdminCustomerProfilePage() {
         <AdminCard className="!p-4">
           <p className="text-[11px] font-medium uppercase tracking-wide text-white/42">Exports</p>
           <p className="mt-2 text-2xl font-semibold text-white">{profile.exportCount}</p>
+          <p className="mt-1 text-[11px] text-white/45">
+            {profile.paidExportCount} paid · {profile.exportCount - profile.paidExportCount} free
+          </p>
         </AdminCard>
         <AdminCard className="!p-4">
           <p className="text-[11px] font-medium uppercase tracking-wide text-white/42">Purchased</p>
