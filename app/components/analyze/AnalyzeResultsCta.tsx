@@ -5,12 +5,10 @@ import { btnMastrifySecondaryCore } from "../buttonEffects"
 import { ANALYZE_EASE } from "./analyzeMotion"
 
 type Props = {
-  canMaster: boolean
   onMaster: () => void
-  onFlow: () => void
 }
 
-export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props) {
+export default function AnalyzeResultsCta({ onMaster }: Props) {
   const reduce = useReducedMotion()
 
   return (
@@ -42,16 +40,6 @@ export default function AnalyzeResultsCta({ canMaster, onMaster, onFlow }: Props
             className={`stable-interaction safari-nav-link inline-flex min-h-[46px] items-center justify-center rounded-lg px-7 text-[13px] font-semibold leading-none ${btnMastrifySecondaryCore}`}
           >
             Master my track
-          </motion.button>
-          <motion.button
-            type="button"
-            onClick={onFlow}
-            disabled={!canMaster}
-            className={`stable-interaction inline-flex min-h-[46px] items-center justify-center rounded-lg px-5 text-[13px] font-semibold leading-none ${
-              canMaster ? btnMastrifySecondaryCore : "cursor-not-allowed border border-white/20 bg-transparent text-white/64 opacity-60"
-            }`}
-          >
-            One-page master
           </motion.button>
         </motion.div>
       </motion.div>

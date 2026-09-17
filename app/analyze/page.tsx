@@ -505,7 +505,6 @@ export default function AnalyzePage() {
           )}
 
           <AnalyzeResultsCta
-            canMaster={canMaster}
             onMaster={() => {
               if (file && result) {
                 seedAnalyzeIntoMasterFlow(file, result as Record<string, unknown>)
@@ -514,15 +513,12 @@ export default function AnalyzePage() {
                 router.push("/master")
               }
             }}
-            onFlow={() => {
-              window.location.href = "/flow"
-            }}
           />
-          <p className="-mt-0.5 text-center text-[10px] leading-tight text-white/60 md:text-left">
-            {canMaster
-              ? "Choose workflow — identical processing core."
-              : "Fix critical mix issues first for the strongest master."}
-          </p>
+          {!canMaster ? (
+            <p className="-mt-0.5 text-center text-[10px] leading-tight text-white/60 md:text-left">
+              Fix critical mix issues first for the strongest master.
+            </p>
+          ) : null}
 
           {/* Diagnostics — issues */}
           {(result.issues?.length || 0) > 0 && issueListForUi.length > 0 && (
