@@ -166,8 +166,14 @@ export default function AdminDiscountCodesPage() {
     if (!window.confirm(`Delete code ${row.code}? This cannot be undone.`)) return
     setBusyId(row.id)
     const res = await fetch(`/api/admin/discount-codes?id=${encodeURIComponent(row.id)}`, { method: "DELETE" })
+    const json = await res.json().catch(() => null)
     setBusyId(null)
-    if (res.ok) await loadRows()
+    if (!res.ok) {
+      setError(json?.error ?? "Could not delete code")
+      return
+    }
+    setError(null)
+    await loadRows()
   }
 
   return (

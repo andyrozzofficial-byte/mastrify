@@ -367,7 +367,18 @@ export async function deleteDiscountCode(id: string): Promise<{ ok: true } | { e
   const supabase = createSupabaseServerClient()
   if (!supabase) return { error: "Database unavailable" }
 
-  const { error } = await supabase.from(DISCOUNT_CODES_TABLE).delete().eq("id", id)
+  const codeId = id.trim()
+  if (!codeId) return { error: "Missing id" }
+
+  // discount_redemptions.code_id uses ON DELETE RESTRICT — remove redemptions first.
+  const { error: redemptionError } = await supabase
+    .from(DISCOUNT_REDEMPTIONS_TABLE)
+    .delete()
+    .eq("code_id", codeId)
+
+  if (redemptionError) return { error: redemptionError.message }
+
+  const { error } = await supabase.from(DISCOUNT_CODES_TABLE).delete().eq("id", codeId)
   if (error) return { error: error.message }
   return { ok: true }
 }
