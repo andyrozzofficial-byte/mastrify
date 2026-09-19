@@ -563,8 +563,8 @@ export default function AnalyzePage() {
                             </span>
                           ) : null}
                           <p className="text-[13px] font-semibold leading-snug text-white md:text-[14px]">{presented.title}</p>
-                          {isMain && issue.realImpact !== undefined ? (
-                            <span className="text-[10px] tabular-nums text-amber-100/55">+{Math.max(1, actualGain)}%</span>
+                          {isMain && issue.realImpact !== undefined && issue.realImpact > 0 ? (
+                            <span className="text-[10px] tabular-nums text-amber-100/55">+{actualGain}%</span>
                           ) : null}
                         </div>
                         {presented.insight ? (
@@ -573,7 +573,7 @@ export default function AnalyzePage() {
                         {presented.tip ? (
                           <p className="mt-1 text-[10px] leading-snug text-white/55">{presented.tip}</p>
                         ) : null}
-                        {isMain && issue.realImpact !== undefined ? (
+                        {isMain && issue.realImpact !== undefined && issue.realImpact > 0 ? (
                           <p className="mt-0.5 text-[10px] tabular-nums text-white/60">
                             Readiness {current}% → {next}%
                           </p>
