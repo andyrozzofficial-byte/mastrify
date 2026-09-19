@@ -452,7 +452,7 @@ function analysisMetrics(a) {
   }
 }
 
-/** True when the material is limited/crushed — not merely quiet or premaster-loud. */
+/** Advisory only — used for recommendations/issues, not readiness score. */
 function isOverCompressed({ lufs, dynamic, peakDb }) {
   if (!isNaN(dynamic) && dynamic < 5.5) return true
   if (!isNaN(lufs) && !isNaN(dynamic) && lufs > -11 && dynamic < 8.5) return true
@@ -462,77 +462,48 @@ function isOverCompressed({ lufs, dynamic, peakDb }) {
 }
 
 function calculateMixScore(a) {
-  let score = 72
+  let score = 68
 
-  const targetStereoMin = 0.35
+  const targetStereoMin = 0.32
   const targetStereoMax = 0.85
 
-  const metrics = analysisMetrics(a)
-  const { lufs, dynamic, stereo, low, high, peakDb } = metrics
+  const { stereo, low, high } = analysisMetrics(a)
 
   /*
-   * Readiness = mix quality (balance, dynamics, stereo, headroom).
-   * Integrated LUFS is NOT a quality proxy — quiet premasters are normal.
+   * Readiness = mix quality only (stereo + tonal balance).
+   * LUFS, peak level, and compression/limiting are recommendations — not score drivers.
    */
-  if (!isNaN(dynamic)) {
-    if (dynamic >= 8 && dynamic <= 22) {
-      score += 8
-    } else if (dynamic >= 6 && dynamic < 8) {
-      score += 3
-    } else if (dynamic < 5) {
-      score -= 16
-    } else if (dynamic < 6) {
-      score -= 10
-    }
-  }
-
   if (!isNaN(stereo)) {
     if (stereo >= 0.4 && stereo <= 0.8) {
-      score += 4
+      score += 12
+    } else if (stereo >= 0.32 && stereo < 0.4) {
+      score += 6
     }
     if (stereo < targetStereoMin) {
-      score -= Math.min(14, (targetStereoMin - stereo) * 28)
+      score -= Math.min(18, (targetStereoMin - stereo) * 40)
     } else if (stereo > targetStereoMax) {
-      score -= Math.min(8, (stereo - targetStereoMax) * 18)
+      score -= Math.min(8, (stereo - targetStereoMax) * 20)
     }
   }
 
   if (!isNaN(low)) {
     if (low >= 0.15 && low <= 0.45) {
-      score += 4
+      score += 12
     } else if (low > 0.7) {
-      score -= 10
+      score -= 14
     } else if (low < 0.2) {
-      score -= 8
+      score -= 10
     }
   }
 
   if (!isNaN(high)) {
     if (high >= 0.15 && high <= 0.4) {
-      score += 3
+      score += 10
     } else if (high < 0.15) {
-      score -= 8
+      score -= 10
     } else if (high > 0.35) {
-      score -= 6
+      score -= 8
     }
-  }
-
-  if (!isNaN(peakDb)) {
-    if (peakDb <= -3 && peakDb >= -12) {
-      score += 3
-    } else if (peakDb > -0.35) {
-      score -= Math.min(14, (peakDb + 0.35) * 18)
-    } else if (peakDb > -1.5) {
-      score -= 4
-    }
-  }
-
-  if (!isNaN(lufs) && lufs < -36) {
-    score -= Math.min(4, (-36 - lufs) * 0.25)
-  }
-
-  if (isOverCompressed(metrics)) {
-    score -= 12
   }
 
   return Math.max(0, Math.min(100, Math.round(score)))
@@ -553,16 +524,16 @@ function generateFullAnalysis(a){
 
   const { lufs, dynamic, stereo, low, high, peakDb } = analysisMetrics(a)
 
-  /* ---------------- LOUDNESS / HEADROOM ---------------- */
+  /* ---------------- LOUDNESS (advisory — not part of readiness score) ---------------- */
 
   if (isOverCompressed({ lufs, dynamic, peakDb })) {
-    mainIssue = "Track too loud — over-compressed"
-    fixes.push("Reduce limiter input by 2–4 dB")
-    plan.push("reduce loudness slightly")
-  } else if (!isNaN(lufs) && lufs < -36) {
-    mainIssue = "Mix is extremely quiet"
-    fixes.push("Check gain staging — mix may be too low to evaluate reliably")
-    plan.push("raise mix level moderately")
+    secondaryIssues.push("Track is loud/limited — leave headroom in the mix before mastering")
+    fixes.push("Reduce limiter input by 2–4 dB before mastering")
+    plan.push("preserve headroom for mastering")
+  } else if (!isNaN(lufs) && lufs < -30) {
+    secondaryIssues.push("Mix level is conservative — normal for a premaster with headroom")
+    fixes.push("No level change required before mastering unless the mix feels too quiet in context")
+    plan.push("master from current headroom")
   }
 
   /* ---------------- STEREO ---------------- */
@@ -619,11 +590,9 @@ function generateFullAnalysis(a){
 
   /* ---------------- DYNAMICS ---------------- */
 
-  if (!isNaN(dynamic)) {
-    if (dynamic < 5) {
-      secondaryIssues.push("Overcompressed mix")
-      fixes.push("Reduce compression to restore punch")
-    }
+  if (!isNaN(dynamic) && dynamic < 5) {
+    secondaryIssues.push("Dynamics are heavily limited — restore punch in the mix if possible")
+    fixes.push("Reduce bus compression or limiting on the mix")
   }
 
   /* ---------------- FALLBACK ---------------- */
