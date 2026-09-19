@@ -441,105 +441,96 @@ return plan
 
 }
 
-function calculateMixScore(a){
+function analysisMetrics(a) {
+  return {
+    lufs: Number(a?.lufs),
+    dynamic: Number(a?.dynamicRange),
+    stereo: Number(a?.stereoWidth),
+    low: Number(a?.lowEnergy ?? a?.bassWeight),
+    high: Number(a?.highEnergy ?? a?.brightness),
+    peakDb: Number(a?.peakDb),
+  }
+}
 
+function calculateMixScore(a) {
   let score = 75
 
-  const targetLufs = -14
   const targetDynamicMin = 6
-  const targetDynamicMax = 12
-  const targetStereoMin = 0.4
-  const targetStereoMax = 0.8
+  const targetDynamicMax = 14
+  const targetStereoMin = 0.35
+  const targetStereoMax = 0.85
 
-  /* ---------------- SAFE VALUES ---------------- */
+  const { lufs, dynamic, stereo, low, high, peakDb } = analysisMetrics(a)
 
-  const lufs = Number(a.lufs)
-const dynamic = Number(a.dynamicRange)
-  const stereo = Number(a.stereoWidth)
-  const low = Number(a.lowEnergy)
-  const high = Number(a.highEnergy)
-
-  /* ---------------- LOUDNESS ---------------- */
-
-  if(!isNaN(lufs)){
-
-  // 🎯 perfekt mix range
-  if(lufs >= -18 && lufs <= -12){
-  score += 10
-}
-
-  // 🔇 för tyst
-  else if(lufs < -18){
-    score -= Math.min(20, (-18 - lufs) * 1.5)
-  }
-
-  // 🔊 för loud (börjar bli master)
-  else if(lufs > -12){
-    score -= Math.min(25, (lufs + 12) * 2)
-  }
-
-  // 🚨 limiter = big penalty
-  if(lufs > -9){
-    score -= 15
-  }
-
-}
-
-/* ---------------- BALANCE BONUS ---------------- */
-
-if(!isNaN(dynamic)){
-  if(dynamic >= 6 && dynamic <= 12){
-    score += 5
-  }
-}
-
-if(!isNaN(stereo)){
-  if(stereo >= 0.4 && stereo <= 0.8){
-    score += 3
-  }
-}
-
-  /* ---------------- DYNAMICS ---------------- */
-
-  if(!isNaN(dynamic)){
-    if(dynamic < targetDynamicMin){
-      score -= Math.min(20, (targetDynamicMin - dynamic) * 3)
-    } 
-    else if(dynamic > targetDynamicMax){
-      score -= Math.min(10, (dynamic - targetDynamicMax) * 1.5)
+  /*
+   * Loudness is a small readiness factor for premasters.
+   * Lower integrated level + healthy peak headroom is normal before mastering.
+   */
+  if (!isNaN(lufs)) {
+    if (lufs >= -26 && lufs <= -14) {
+      score += 4
+    } else if (lufs >= -14 && lufs <= -11) {
+      score += 2
+    } else if (lufs < -32) {
+      score -= Math.min(6, (-32 - lufs) * 0.4)
+    } else if (lufs > -9) {
+      score -= Math.min(10, (lufs + 9) * 4)
+    } else if (lufs > -11) {
+      score -= Math.min(4, (lufs + 11) * 2)
     }
   }
 
-  /* ---------------- STEREO ---------------- */
-
-  if(!isNaN(stereo)){
-    if(stereo < targetStereoMin){
-      score -= Math.min(15, (targetStereoMin - stereo) * 30)
-    } 
-    else if(stereo > targetStereoMax){
-      score -= Math.min(8, (stereo - targetStereoMax) * 20)
+  if (!isNaN(peakDb)) {
+    if (peakDb >= -6 && peakDb <= -0.5) {
+      score += 3
+    } else if (peakDb > -0.3) {
+      score -= Math.min(12, (peakDb + 0.3) * 20)
     }
   }
 
-  /* ---------------- LOW END ---------------- */
-
-  if(!isNaN(low)){
-    if(low > 0.7) score -= 10
-    else if(low < 0.2) score -= 8
+  if (!isNaN(dynamic)) {
+    if (dynamic >= 6 && dynamic <= 14) {
+      score += 6
+    }
+    if (dynamic < targetDynamicMin) {
+      score -= Math.min(18, (targetDynamicMin - dynamic) * 3)
+    } else if (dynamic > targetDynamicMax) {
+      score -= Math.min(8, (dynamic - targetDynamicMax) * 1.2)
+    }
   }
 
-  /* ---------------- HIGH END ---------------- */
-
-  if(!isNaN(high)){
-    if(high < 0.15) score -= 8
-    else if(high > 0.35) score -= 6
+  if (!isNaN(stereo)) {
+    if (stereo >= 0.4 && stereo <= 0.8) {
+      score += 4
+    }
+    if (stereo < targetStereoMin) {
+      score -= Math.min(14, (targetStereoMin - stereo) * 28)
+    } else if (stereo > targetStereoMax) {
+      score -= Math.min(8, (stereo - targetStereoMax) * 18)
+    }
   }
 
-  /* ---------------- FINAL ---------------- */
+  if (!isNaN(low)) {
+    if (low >= 0.15 && low <= 0.45) {
+      score += 4
+    } else if (low > 0.7) {
+      score -= 10
+    } else if (low < 0.2) {
+      score -= 8
+    }
+  }
 
-  const finalScore = Math.max(0, Math.min(100, Math.round(score)))
+  if (!isNaN(high)) {
+    if (high >= 0.15 && high <= 0.4) {
+      score += 3
+    } else if (high < 0.15) {
+      score -= 8
+    } else if (high > 0.35) {
+      score -= 6
+    }
+  }
 
-return finalScore
+  return Math.max(0, Math.min(100, Math.round(score)))
 }
 
 function generateFullAnalysis(a){
@@ -555,29 +546,20 @@ function generateFullAnalysis(a){
 
   const targetLufs = -9
 
-  const lufs = Number(a.lufs)
-  const dynamic = Number(a.dynamicRange)
-  const stereo = Number(a.stereoWidth)
-  const low = Number(a.lowEnergy)
-  const high = Number(a.highEnergy)
+  const { lufs, dynamic, stereo, low, high, peakDb } = analysisMetrics(a)
 
-  /* ---------------- LOUDNESS ---------------- */
+  /* ---------------- LOUDNESS / HEADROOM ---------------- */
 
-  if(!isNaN(lufs)){
-
-    if(lufs < -20){
-      mainIssue = "Low output level"
-      fixes.push("Boost loudness to commercial level")
-      plan.push("increase loudness significantly")
-    }
-
-
-    else if(lufs > -9){
+  if (!isNaN(lufs)) {
+    if (lufs > -8 || (!isNaN(peakDb) && peakDb > -0.3)) {
       mainIssue = "Track too loud — over-compressed"
       fixes.push("Reduce limiter input by 2–4 dB")
       plan.push("reduce loudness slightly")
+    } else if (lufs < -32) {
+      mainIssue = "Mix is extremely quiet"
+      fixes.push("Check gain staging — mix may be too low to evaluate reliably")
+      plan.push("raise mix level moderately")
     }
-
   }
 
   /* ---------------- STEREO ---------------- */
@@ -600,7 +582,7 @@ function generateFullAnalysis(a){
 
   /* ---------------- ENERGY ---------------- */
 
-  if(!isNaN(lufs) && lufs < -14 && !mainIssue){
+  if (!isNaN(lufs) && lufs < -30 && !mainIssue) {
     mainIssue = "Mix lacks energy"
     fixes.push("Boost upper mids")
     fixes.push("Enhance transients")
