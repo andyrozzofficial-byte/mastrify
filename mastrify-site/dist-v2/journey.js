@@ -15,7 +15,8 @@ window.createMastrifyJourney=function(host){
  const metricNotes={Loudness:'Loudness describes how strong the whole song feels over time. Leave room for the loudest moments so the final level can rise without losing their impact.',Dynamics:'Dynamics are the space between quiet detail and strong peaks. Keeping that contrast helps drums, accents and phrasing feel alive.',Stereo:'The stereo field places sounds between the left and right speakers. A grounded centre and open sides can give the mix width without losing focus in mono.', 'Low end':'Kick and bass share the foundation. A controlled low end gives both room to speak and keeps heavier sections from overwhelming the rest of the song.',Tone:'Tonal balance is the relationship between lows, mids and highs. Small broad changes can add openness while keeping the character of the original mix.',Energy:'Energy follows how the arrangement builds and relaxes. A steady foundation lets choruses and transitions make their own impact.',Presence:'Presence helps vocals and lead instruments feel close and easy to follow. The aim is definition with enough space around the other parts.',Highs:'The top end holds air, cymbal detail and brightness. A smooth finish keeps that sparkle while avoiding sharp edges.'};
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const time=n=>`${Math.floor((n||0)/60)}:${String(Math.floor((n||0)%60)).padStart(2,'0')}`;
- let step='upload',emptyState=false,job=null,disposed=false,result=session.results[kind],exportBlob=null,exportResultId=null,exportJob=null,exportBusy=false,checkoutBusy=false,checkoutJob=null;
+ let step='upload',emptyState=false,job=null,disposed=false,result=session.results[kind],checkoutBusy=false,checkoutJob=null;
+ const paidForResult=()=>!!(result&&session.receipt?.resultId===result.id);
  const settings=session.settings;
  const styleIcons=[['Balanced','Natural and versatile','M4 12v8m5-13v18m5-22v26m5-20v14'],['Warm','Soft, intimate and smooth','M3 23c0-14 18-14 18 0M7 23c0-8 10-8 10 0M12 2v4M2 7l3 3m17-3-3 3'],['Punchy','Upfront with a firm attack','m14 2-11 16h8l-1 12 11-18h-8Z'],['Club','Weight and impact','M4 24h16M6 19V11m6 8V4m6 15V8'],['Open','Wide, lifted and airy','M3 12V4h8m2 0h8v8M3 20v8h8m2 0h8v-8M3 4l7 8m11-8-7 8M3 28l7-8m11 8-7-8']];
  const styles=styleIcons.map(([name,description,path])=>[name,COPY?COPY.style(name).tagline:description,path]);
@@ -58,7 +59,7 @@ ${(()=>{const pv=processView();if(!pv)return `<section id="processing-stage" cla
   hidden($('transport'),step!=='results'||!audio.getState().loaded);hidden($('processing-line'),true);
   hidden($('level-match').closest('label'),isAnalysis);
  }
- function cancel(){job?.abort();job=null;exportJob?.abort();exportJob=null;checkoutJob?.abort();checkoutJob=null;audio.pause();MastrifyProcessing.leave();}
+ function cancel(){job?.abort();job=null;checkoutJob?.abort();checkoutJob=null;audio.pause();MastrifyProcessing.leave();}
  function readSettings(){return {...settings};}
  // Load a master result's preview into the A/B player. Shared by start()
  // and the return from a hosted payment page.
@@ -107,7 +108,7 @@ ${(()=>{const pv=processView();if(!pv)return `<section id="processing-stage" cla
    // cancelled on the payment page (cancel_url ...?checkout=cancelled): the master is back, nothing to verify
    if(/^cancel/i.test(params.get('checkout')||'')){$('export-status').textContent=STR.checkoutCancelled||'Checkout cancelled. Your master is still here.';return true;}
    try{const receipt=await service.verify({resultId:result.id,query,signal:events.signal});session.receipt=receipt;
-    $('checkout-open').textContent='Download WAV ↓';$('export-status').textContent=receipt.free?'Free export unlocked · your WAV is ready.':'Your WAV is ready.';openEmail();}
+    renderResults();$('export-status').textContent=STR.exportReady||'Payment complete. Enter your email to receive your download link.';openEmail();}
    catch(error){if(error.name!=='AbortError'){$('export-status').textContent=error.message||(STR.verifyFailed||'Could not verify payment.');host.report(error);}}
    return true;
   }catch(error){job=null;if(error.name!=='AbortError')host.report(error);return false;}
@@ -116,7 +117,7 @@ ${(()=>{const pv=processView();if(!pv)return `<section id="processing-stage" cla
   if(host.isLoading()||!session.file||job)return;
   cancel();const controller=new AbortController();job=controller;
   const revision=session.revision,snapshot=readSettings(),file=session.file;
-  result=null;session.results[kind]=null;if(!isAnalysis)session.receipt=null;exportBlob=null;
+  result=null;session.results[kind]=null;if(!isAnalysis)session.receipt=null;
   if(!isAnalysis)audio.clear('master');
   $('studio-error').textContent='';checkedCount=-1;show('processing',{scroll:true});
   try{
@@ -250,7 +251,7 @@ ${(()=>{const pv=processView();if(!pv)return `<section id="processing-stage" cla
   const reportName=new URLSearchParams(location.search).get('report')||'orbit';
   const reportView=isAnalysis&&window.MastrifyReportViews&&reportName!=='classic'?(window.MastrifyReportViews[reportName]||window.MastrifyReportViews.orbit):null;
   $('result-stage').innerHTML=isAnalysis&&reportView?reportView({result,duration:audio.getState().sources.original.duration,notes:metricNotes,views:insightViews,issueStyle:new URLSearchParams(location.search).get('issue')||'stub'}):isAnalysis?`${readinessStage()}${demo?`<p class="report-disclosure">${result.analysis?.measured?'Quick in-browser measurement (approximate). The full engine refines these findings.':'Example findings to demonstrate the flow; these are not measurements of your track.'}</p>`:''}<div class="analysis-grid">${result.analysis.metrics.map(metricMarkup).join('')}</div><section class="insight-list" aria-labelledby="insight-heading"><div class="insight-heading"><span class="eyebrow">DETAILS TO EXPLORE</span><h2 id="insight-heading">Hear the possibility.</h2><p>Open a detail. See the idea. Know what to listen for.</p></div>${result.analysis.insights.map(insightMarkup).join('')}</section>${tipsMarkup()}<div class="report-actions"><button id="print-result" class="plain-action">↓ Download PDF</button><button id="share-result" class="plain-action">Share report ↗</button></div><div class="next-master flow-surface"><div><h3>Keep the momentum.</h3><p>Your track is already here.</p></div><button id="master-same-track" class="button primary">Master this track ↗</button></div><button id="new-result" class="plain-action start-again">← Analyze another track</button>`:
- `${readyMarkup(s)}${comparisonMarkup()}<div class="master-summary flow-surface"><div><span>CHARACTER</span><strong>${esc(s.style)}</strong></div><div><span>TARGET</span><strong>${esc(minus(s.target))} <small>LUFS</small></strong></div><button id="adjust-result" class="sum-wide"><span class="sum-text">Adjust<span class="sum-more"> settings</span></span><i aria-hidden="true">↗</i></button><p class="master-recipe">${[['Stereo','Width',s.width],['Low end','Low end',s.low],['Presence','Clarity',s.clarity]].map(([icon,label,value])=>`<span style="--fill:${Math.max(0,Math.min(100,Number(value)||0))}%">${metricIcon(icon)}<em>${label}</em><strong>${value}%</strong><i aria-hidden="true"></i></span>`).join('')}</p></div><div class="export-card flow-surface"><span class="export-mark" aria-hidden="true">↗</span><div><span class="eyebrow export-eyebrow"><i aria-hidden="true"></i>${demo?'TEST EXPORT':'YOUR RELEASE'}</span><h2>Take it with you.</h2><p>${demo?'Try checkout and download an unprocessed WAV.':'Your full-quality WAV, ready to release.'}</p></div><button id="checkout-open" class="button primary">${session.receipt?.resultId===result.id?'Download WAV ↓':demo?'Export · $9.00 test':'Export · $9.00'}</button><p id="export-status" role="status"></p></div><div class="result-links"><button id="new-result" class="plain-action">← ${STR.newMaster||'New track'}</button><button id="share-result" class="plain-action">Share summary ↗</button></div>`;
+ `${readyMarkup(s)}${comparisonMarkup()}<div class="master-summary flow-surface"><div><span>CHARACTER</span><strong>${esc(s.style)}</strong></div><div><span>TARGET</span><strong>${esc(minus(s.target))} <small>LUFS</small></strong></div><button id="adjust-result" class="sum-wide"><span class="sum-text">Adjust<span class="sum-more"> settings</span></span><i aria-hidden="true">↗</i></button><p class="master-recipe">${[['Stereo','Width',s.width],['Low end','Low end',s.low],['Presence','Clarity',s.clarity]].map(([icon,label,value])=>`<span style="--fill:${Math.max(0,Math.min(100,Number(value)||0))}%">${metricIcon(icon)}<em>${label}</em><strong>${value}%</strong><i aria-hidden="true"></i></span>`).join('')}</p></div><div class="export-card flow-surface"><span class="export-mark" aria-hidden="true">↗</span><div><span class="eyebrow export-eyebrow"><i aria-hidden="true"></i>${demo?'TEST EXPORT':'YOUR RELEASE'}</span><h2>Take it with you.</h2><p>${paidForResult()?(STR.exportReady||'Payment complete. Enter your email to receive your download link.'):demo?(STR.exportDemoUnpaid||'Try the checkout flow. Your master arrives by email only.'):(STR.exportUnpaid||'Secure checkout. Your full-quality master arrives by email.')}</p></div>${paidForResult()?'':`<button id="checkout-open" class="button primary">${demo?'Export · $9.00 test':'Export · $9.00'}</button>`}<p id="export-status" role="status"></p></div><div class="result-links"><button id="new-result" class="plain-action">← ${STR.newMaster||'New track'}</button><button id="share-result" class="plain-action">Share summary ↗</button></div>`;
   on($('master-same-track'),'click',()=>host.navigate('/master?step=settings'));
   on($('adjust-result'),'click',()=>{audio.pause();host.setMode('idle');show('settings',{scroll:true});});
   on($('new-result'),'click',()=>{cancel();result=null;host.clearFile();show('upload',{scroll:true});host.setMode('idle');});
@@ -261,7 +262,7 @@ ${(()=>{const pv=processView();if(!pv)return `<section id="processing-stage" cla
    catch(error){host.report(error);}finally{button.removeAttribute('aria-busy');}
   });
   on($('share-result'),'click',share);
-  on($('checkout-open'),'click',()=>session.receipt?.resultId===result.id?download():openCheckout());
+  if($('checkout-open'))on($('checkout-open'),'click',()=>openCheckout());
   el.querySelectorAll('.metric-toggle,.insight-toggle').forEach(button=>on(button,'click',()=>{
    const open=button.getAttribute('aria-expanded')!=='true';
    if(button.classList.contains('metric-toggle'))closeReportCards(false,true);
@@ -277,20 +278,6 @@ ${(()=>{const pv=processView();if(!pv)return `<section id="processing-stage" cla
  function openCheckout(){
   $('checkout-track').textContent=result.name;$('checkout-error').textContent='';$('checkout-dialog').showModal();
   syncCheckoutPrice().catch(error=>{if(!disposed)$('checkout-error').textContent=error.message||(STR.checkoutFailed||'Could not start checkout. Please try again.');});
- }
- async function download(){
-  if(exportBusy||!result||session.receipt?.resultId!==result.id)return;
-  const expected=result,revision=session.revision,controller=new AbortController();exportJob=controller;exportBusy=true;$('checkout-open').disabled=true;$('export-status').textContent='Preparing your WAV…';
-  try{
-   const blob=exportBlob&&exportResultId===expected.id?exportBlob:expected.demo?await MastrifyFiles.wav(expected.audio,{signal:controller.signal}):await service.download({resultId:expected.id,signal:controller.signal});
-   if(!(blob instanceof Blob))throw new Error('The full master download is not available yet.');
-   if(disposed||controller.signal.aborted||revision!==session.revision||expected!==result)return;
-   exportBlob=blob;exportResultId=expected.id;
-   const stem=result.name.replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9 _-]/g,'').slice(0,80)||'Your-track';
-   MastrifyFiles.save(exportBlob,stem+(result.demo?' - Mastrify demo (unprocessed).wav':' - Mastrify master.wav'));
-   $('export-status').textContent=result.demo?'Demo WAV downloaded · original audio, unchanged.':'Your WAV is ready. Keep a backup.';
-  }catch(error){if(error.name!=='AbortError'){$('export-status').textContent='Could not prepare the WAV. Please try again.';host.report(error);}}
-  finally{if(exportJob===controller)exportJob=null;exportBusy=false;if(!disposed&&$('checkout-open'))$('checkout-open').disabled=false;}
  }
  const guides=COPY?{
   character:{title:'Find your character.',body:`<p>Start with the feeling you want to keep. These choices guide tone, dynamics and space together.</p><dl class="preset-guide preset-guide-rich">${COPY.STYLES.map(st=>`<div><dt><span class="guide-dot" data-character="${esc(st.id)}" aria-hidden="true"></span><span class="preset-name">${esc(st.id)}</span><small class="preset-tagline">${esc(st.tagline)} · ${esc(st.intensity)}</small></dt><dd><p>${esc(st.summary)}</p><ul class="preset-details">${st.details.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><p class="preset-genres"><span>Works well for</span> ${st.worksWellFor.map(g=>`<b>${esc(g)}</b>`).join('')}</p></dd></div>`).join('')}</dl><h3>Choose a loudness goal</h3><p>${esc(COPY.TARGET_INTRO)}</p><dl class="preset-guide">${COPY.TARGETS.map(t=>`<div><dt><span class="guide-dot" aria-hidden="true"></span><span class="preset-name">${esc(t.label)} <small>${t.value} LUFS</small></span></dt><dd>${esc(t.description)}</dd></div>`).join('')}</dl><p>These are creative targets, not a guarantee of platform playback volume.</p>`},
@@ -331,12 +318,12 @@ ${(()=>{const pv=processView();if(!pv)return `<section id="processing-stage" cla
     try{await MastrifyFiles.stash('checkout-return',{kind,resultId:result.id,result:{...result,audio:null},file:session.file,settings:readSettings(),code:appliedCode,at:Date.now()});}catch(error){host.report(error);}
     location.assign(outcome.redirect);return;
    }
-   const receipt=outcome;session.receipt=receipt;$('checkout-dialog').close();$('checkout-open').textContent='Download WAV ↓';$('export-status').textContent=receipt.free?'Free export unlocked · your WAV is ready.':receipt.test?'Test checkout complete · $0 charged. Your WAV is ready.':'Your WAV is ready.';openEmail();}
+   const receipt=outcome;session.receipt=receipt;$('checkout-dialog').close();renderResults();$('export-status').textContent=STR.exportReady||'Payment complete. Enter your email to receive your download link.';openEmail();}
   catch(error){if(error.name!=='AbortError')$('checkout-error').textContent=error.message;}
   finally{if(checkoutJob===controller)checkoutJob=null;checkoutBusy=false;if(!disposed)$('confirm-checkout').disabled=false;}
  });
- // After payment the email is required (Linus 22 sep): the download link is
- // the safety net if the direct download fails, so the dialog has no close
+ // After payment the email is required (Linus 22 sep): the secure download
+ // link is delivered by email only, so the dialog has no close
  // button and no "Not now", ignores Escape, and reopens if the browser closes
  // it anyway. It closes itself once the email is sent.
  let emailJob=null,emailRequired=false;
@@ -423,9 +410,9 @@ ${(()=>{const pv=processView();if(!pv)return `<section id="processing-stage" cla
    else if(result&&result.sourceRevision===session.revision){renderResults();show('results');await host.setMode(isAnalysis?'original':'master');}
    else await host.setMode('idle');syncScene();
   },
-  fileLoaded(){cancel();result=null;exportBlob=null;show('upload');host.setMode('idle');},
-  fileCleared(){cancel();result=null;exportBlob=null;for(const n of el.querySelectorAll('input[name=master-style]'))n.checked=n.value===settings.style;for(const n of el.querySelectorAll('input[name=loudness-target]'))n.checked=Number(n.value)===settings.target;for(const key of ['width','low','clarity']){$(key+'-setting').value=settings[key];$(key+'-value').textContent=settings[key]+'%';put(key+'-hint',sliderHint(key,settings[key]));}$('style-description').textContent=styles.find(s=>s[0]===settings.style)[1];put('style-genres',styleGenres(settings.style));put('target-hint',goalHint(settings.target));show('upload');},
-  dispose(){disposed=true;cancel();emailJob?.abort();audio.clearPreviewWindow();events.abort();$('checkout-dialog')?.close();$('guide-dialog')?.close();$('email-dialog')?.close();heading.remove();compare.remove();$('brain').hidden=false;$('page-content').hidden=false;exportBlob=null;},
+  fileLoaded(){cancel();result=null;show('upload');host.setMode('idle');},
+  fileCleared(){cancel();result=null;for(const n of el.querySelectorAll('input[name=master-style]'))n.checked=n.value===settings.style;for(const n of el.querySelectorAll('input[name=loudness-target]'))n.checked=Number(n.value)===settings.target;for(const key of ['width','low','clarity']){$(key+'-setting').value=settings[key];$(key+'-value').textContent=settings[key]+'%';put(key+'-hint',sliderHint(key,settings[key]));}$('style-description').textContent=styles.find(s=>s[0]===settings.style)[1];put('style-genres',styleGenres(settings.style));put('target-hint',goalHint(settings.target));show('upload');},
+  dispose(){disposed=true;cancel();emailJob?.abort();audio.clearPreviewWindow();events.abort();$('checkout-dialog')?.close();$('guide-dialog')?.close();$('email-dialog')?.close();heading.remove();compare.remove();$('brain').hidden=false;$('page-content').hidden=false;},
   getState(){return {step,engineDemo:service.mode==='demo',resultId:result?.id||null,style:settings.style,loudnessTarget:settings.target,settings:readSettings(),sourceRevision:session.revision,testPaid:!!result&&session.receipt?.resultId===result.id};}
  };
 };
