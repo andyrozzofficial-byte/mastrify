@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import axios from "axios"
+import axios, { type AxiosResponse } from "axios"
 import { motion } from "framer-motion"
 import CinematicBackground from "../../components/CinematicBackground"
 import CinematicWaveform from "../../components/audio/CinematicWaveform"
@@ -41,6 +41,41 @@ function sliderDebugEnabled() {
   } catch {
     return false
   }
+}
+
+/** iOS + macOS Safari — use fetch for cross-origin multipart POST (WebKit XHR quirk). */
+function isSafariBrowser() {
+  if (typeof navigator === "undefined") return false
+  const ua = navigator.userAgent || ""
+  const isWebKit = /WebKit/i.test(ua)
+  const isNonSafari = /Chrome|Chromium|CriOS|Edg|OPR|FxiOS/i.test(ua)
+  return isWebKit && !isNonSafari
+}
+
+async function postMasterRequest(
+  masterUrl: string,
+  formData: FormData,
+  signal: AbortSignal,
+): Promise<AxiosResponse> {
+  if (isSafariBrowser()) {
+    const response = await fetch(masterUrl, {
+      method: "POST",
+      body: formData,
+      signal,
+    })
+    const data = await response.json().catch(() => null)
+    if (!response.ok) {
+      const detail =
+        data && typeof data === "object" && typeof (data as { error?: unknown }).error === "string"
+          ? (data as { error: string }).error
+          : `Request failed with status code ${response.status}`
+      throw new Error(detail)
+    }
+    if (!data) throw new Error("Mastering failed")
+    return { data } as AxiosResponse
+  }
+
+  return axios.post(masterUrl, formData, { signal })
 }
 
 export default function MasterProcessingPage() {
@@ -104,7 +139,7 @@ export default function MasterProcessingPage() {
             masterUrl,
           })
         }
-        const res = await axios.post(masterUrl, formData, { signal: ac.signal })
+        const res = await postMasterRequest(masterUrl, formData, ac.signal)
         if (cancelled) return
 
         if (MASTRIFY_CLIENT_LUFS_TRACE) {
@@ -165,7 +200,8 @@ export default function MasterProcessingPage() {
       } catch (e: unknown) {
         const aborted =
           (typeof axios.isCancel === "function" && axios.isCancel(e)) ||
-          (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "ERR_CANCELED")
+          (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "ERR_CANCELED") ||
+          (e instanceof DOMException && e.name === "AbortError")
         if (aborted) return
         trackMasterFailed({
           sessionId: getOrCreateWorkflowSessionId(),
