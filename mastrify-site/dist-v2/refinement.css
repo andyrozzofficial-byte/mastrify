@@ -1,0 +1,1652 @@
+/* Keep decorative light inside the layout viewport, including while rotating. */
+html { width:100%; overflow-x:hidden; overflow-anchor:none; -webkit-text-size-adjust:100%; }
+body { width:100%; min-width:0; overflow-x:hidden; }
+@supports(overflow:clip) { html,body { overflow-x:clip; } }
+main,.experience,.hero-copy,.studio-panel,#page-content,.wrap { min-width:0; }
+.cta-compositor > .cta-compositor-rim { overflow:hidden; }
+.experience { overflow-anchor:none; }
+button,input,select,textarea { max-width:100%; }
+.file-name { overflow-wrap:anywhere; }
+
+/* Touch feedback uses only a short transform, with no render loop. */
+:where(button,.button,.text-link,.file-label,summary,.style-option,.target-choice,.target-row label,.header nav a,.brand) {
+  -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+}
+:where(button,.button,.text-link,.file-label,summary,.style-option,.target-choice,.target-row label,.header nav a,.brand) * {
+  -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+}
+button,.button,.text-link,.file-label,summary,.style-option,.target-choice,.target-row label,.header nav a,.brand {
+  transition:transform 220ms cubic-bezier(.18,.75,.3,1),border-color 160ms ease,background-color 160ms ease;
+}
+button:not(:disabled):active,.button:not(:has(input:disabled)):active,.text-link:active,
+.file-label:not(:has(input:disabled)):active,summary:active,.style-option:active,.target-choice:active,.target-row label:active,
+.is-pressing:not(:disabled) {
+  transform:translateY(1px) scale(.975)!important;
+  transition:transform 85ms cubic-bezier(.2,.75,.3,1)!important;
+}
+:where(button,.button,.text-link,.file-label,summary,.style-option,.target-choice,.target-row label,.header nav a,.brand):focus-visible { outline:2px solid #bda5ff; outline-offset:4px; }
+@media(hover:none) { .button:hover { transform:none; } }
+
+/* All studio modes share identical geometry above the changing content. */
+body[data-step] .experience { padding-top:12px; }
+body[data-step] .experience .home-modes { margin:10px auto 18px; }
+body[data-step] .experience .brain { margin-top:0; }
+body[data-step] .studio-panel { margin-top:0; }
+
+/* A single, generous upload control carries the record's material and light. */
+body[data-step] .integrated-sources { display:block; margin:0; }
+body[data-step] .integrated-sources > .upload-source { padding:0; border:0; background:none; }
+.upload-button {
+  position:relative; display:flex; align-items:center; justify-content:center; gap:24px;
+  width:100%; min-height:176px; padding:26px 38px; border:1px solid #a893e785;
+  border-radius:22px; color:var(--text); cursor:pointer; isolation:isolate;
+  background:radial-gradient(ellipse at 15% 20%,#7653ab28,transparent 58%),radial-gradient(ellipse at 95% 100%,#508bbb19,transparent 62%),#0d0c17;
+  box-shadow:inset 0 1px 0 #e0d7ff17,inset 0 -1px 0 #8bcaff16;
+}
+.upload-button:hover,.source-card.dragging .upload-button { border-color:#c2a5ff; background-color:#151121; }
+.upload-orbit { display:grid; place-items:center; flex:0 0 88px; width:88px; height:88px; border-radius:50%; border:1px solid #ab8ae865; background:radial-gradient(circle,#151327 42%,#090a12 70%); box-shadow:0 0 0 5px #b192ef08,0 0 0 6px #a48dd520,inset 0 0 20px #8f78be14; }
+.upload-orbit img { width:52px; height:44px; pointer-events:none; }
+.upload-copy { display:flex; flex-direction:column; gap:5px; text-align:left; }
+.upload-copy strong { font-size:27px; line-height:1.2; letter-spacing:-.7px; font-weight:600; }
+.upload-copy > span { color:#b0a6c5; font-size:14px; }
+.upload-copy small { color:#857b99; font:10px/1.5 ui-monospace,monospace; letter-spacing:.7px; margin-top:7px; }
+.upload-plus { display:grid; place-items:center; position:absolute; top:16px; right:18px; width:28px; height:28px; font-size:25px; line-height:1; font-weight:300; color:#ccb5ff; }
+.upload-file-detail { display:flex; align-items:center; gap:10px; padding:12px 4px 0; }
+body[data-step] .upload-file-detail .file-name { white-space:normal; flex:1; margin:0; min-height:0; text-align:left; font-size:13px; }
+body[data-step] .master-import { padding:10px 0 0; font-size:13px; }
+body[data-step] .master-import summary { width:fit-content; margin:auto; min-height:36px; }
+#upload-stage .flow-actions { margin:16px auto 12px; }
+#upload-stage .local-note { max-width:550px; margin:12px auto 0; font-size:11px; line-height:1.6; }
+#upload-stage #example-flow { min-height:42px; padding:9px 18px; font-size:13px; }
+body[data-step] #journey-intro { margin:32px 0 0; padding-top:28px; }
+body[data-step] .studio-intro h1 { max-width:740px; margin:10px auto 14px; }
+body[data-step] .studio-intro > p:not(.eyebrow) { max-width:650px; margin:12px auto; line-height:1.6; }
+body[data-step] .studio-intro .source-list { margin:14px auto 0; line-height:1.55; }
+body[data-step] .studio-intro .source-list li { margin:5px 0; }
+
+/* Consistent, compact reading rhythm across the site. */
+body[data-page=home] .hero-copy { padding:0; }
+body[data-page=home] .hero-copy .eyebrow { margin-bottom:12px; }
+body[data-page=home] .hero-copy h1 { margin-bottom:18px; }
+body[data-page=home] .hero-description { line-height:1.6; max-width:570px; margin:0 auto 20px; }
+body[data-page=home] .hero-actions { margin:0 auto!important; gap:14px!important; }
+body[data-page=home] .hero-note { margin:16px 0 0; }
+body[data-page=home] .experience { padding-bottom:40px; }
+.analysis-intro { padding-block:48px; gap:55px; align-items:center; }
+.analysis-intro p:not(.eyebrow) { margin-bottom:18px; }
+/* Texten fyller sin spalt i stället för att sluta en bit in, så gapet mot
+ * listan blir ett mellanrum och inte ett tomrum. */
+.analysis-intro > div:first-child p:not(.eyebrow) { max-width:520px; }
+/* Bara siffrorna lyser, inte rubrikerna eller texten under. */
+.intelligence-list span { color:#b79bff; text-shadow:0 0 10px #a77dff5c,0 0 24px #8a68e03a; }
+.studio-strip { padding-block:36px; }
+.studio-strip > div { margin:20px 0 0; }
+.release-cta { padding-block:52px; }
+.release-cta h2 { margin:14px 0 18px; font-size:clamp(32px,4vw,52px); }
+.page-head { padding-top:44px; padding-bottom:32px; }
+.page-head h1 { margin:14px 0 18px; }
+.page-head > p:not(.eyebrow) { margin-bottom:18px; line-height:1.6; }
+.source-list { line-height:1.6; }
+.source-list li { margin-block:7px; }
+.page-head .source-list { margin-block:18px; }
+.method { padding-block:28px 48px; gap:55px; }
+.method-steps li { padding:18px 0; gap:18px; }
+.method-steps p { margin-top:6px; line-height:1.6; }
+.method-title h2,.editorial-band h2,.studio-help h2 { margin:12px 0; }
+.editorial-band { padding-block:36px 44px; }
+.editorial-band > p:not(.eyebrow) { margin-block:12px 22px; line-height:1.65; }
+.philosophy-grid { gap:24px 36px; margin-top:26px; }
+.philosophy-grid h3 { margin:0 0 8px; }
+.philosophy-grid p { margin:0; line-height:1.65; }
+.two-col { gap:28px; }
+.trust-section { padding-block:36px 48px; }
+.contact-panel { padding-bottom:52px; }
+.legal { padding-block:36px 52px; }
+.legal p,.legal li { line-height:1.7; }
+.footer { padding-top:28px; }
+.studio-help { padding-block:28px 40px; gap:18px 40px; border-top:1px solid var(--line); }
+.studio-help h2 { font-size:30px; }
+.studio-help p:not(.eyebrow) { font-size:14px; line-height:1.65; margin:8px 0; }
+.studio-help .button { min-height:44px; padding:11px 18px; }
+
+/* Compact feature tiles with the same luminous control language. */
+.principles { gap:12px; padding-block:26px 30px; }
+.principles > div,.principles > div:last-child { position:relative; padding:22px; border:1px solid #b298dd20; border-radius:16px; background:linear-gradient(130deg,#151020,#0b0b13); }
+.principles .principle-symbol { display:grid; place-items:center; width:36px; height:36px; border:1px solid #ad8cee35; border-radius:11px; background:#a085e30a; color:#b699ed; }
+.principle-symbol svg { width:24px; height:24px; }
+.principles h2 { margin:14px 0 6px; font-size:20px; }
+.principles p { font-size:14px; line-height:1.55; }
+
+/* Pricing starts with the offer, with less repeated supporting text. */
+.pricing-head { padding-bottom:22px; }
+.pricing-head > p:last-child { margin-bottom:0; }
+.pricing-layout { grid-template-columns:minmax(0,1fr) minmax(0,.8fr); gap:54px; align-items:center; max-width:1080px; padding-bottom:48px; }
+.price-panel { padding:28px; border-radius:22px; overflow:hidden; }
+/* Linus 20 sep: en liten glow i kortets kant, som Start-knappens i mobilen.
+   Ljuset som redan finns i controls.css tands igen, men lugnare an originalet:
+   ett varv pa 16 s i stallet for 9, och skenet utanfor kortet andas mellan .28
+   och .5 i stallet for .35 till .9. Start-knappen kor 8 s varv, men kortet ar
+   manga ganger storre, sa samma takt hade blivit rastlos. */
+.price-panel::before { animation:price-rim-orbit 16s linear infinite; }
+.price-panel::after { animation:price-panel-glow 7s ease-in-out infinite; opacity:.4; }
+@keyframes price-panel-glow { 0%,100% { opacity:.28; } 50% { opacity:.5; } }
+@media(prefers-reduced-motion:reduce) {
+  .price-panel::before { animation:none; --price-rim-angle:35deg; }
+  .price-panel::after { animation:none; opacity:.4; }
+}
+.price-heading { display:flex; align-items:center; gap:20px; justify-content:space-between; }
+.price-heading .eyebrow { margin:0 0 8px; font-size:9px; letter-spacing:1.6px; }
+.price-heading h2 { margin:0; font-size:25px; line-height:1.25; letter-spacing:-.8px; }
+/* Samma platta som uppladdningsrutans ring: en svart cirkel blir ett hål i
+ * det violetta kortet, en mörk violett botten sitter i materialet. */
+.price-mark { width:48px; height:48px; padding:8px; flex-shrink:0; border:1px solid #ab8ae865; border-radius:50%; background:radial-gradient(circle,#151327 42%,#090a12 70%); box-shadow:0 0 0 4px #b192ef08,0 0 0 5px #a48dd520,inset 0 0 14px #8f78be14; }
+.price-line { display:flex; align-items:center; gap:20px; padding:22px 0 18px; }
+/* Priset är kortets tyngdpunkt och får bära ett eget ljus: tre lager halo i
+ * husets violett och blått, starkast tätt intill siffran. Det är ren text, så
+ * webbläsaren målar det en gång; ingenting räknas om per bildruta. */
+.price-panel .price {
+  font-size:86px; letter-spacing:-5px; margin:0; line-height:1; white-space:nowrap;
+  color:#fdfaff;
+  text-shadow:0 0 13px #b492ff59,0 0 38px #9a7af03d,0 0 78px #7f62c92e;
+}
+.price > span { font-size:30px; letter-spacing:-1px; text-shadow:0 0 11px #b492ff42,0 0 26px #8d70dd24; }
+.price > span:first-child { margin-top:8px; }
+.price-line > p { font-size:13px; line-height:1.7; color:#b5a7ca; margin:0; }
+.price-line > p > span { color:#82758f; font-size:12px; }
+.price-panel .source-list { border-top:1px solid #b99ee91a; padding-top:16px; margin:0 0 20px; font-size:14px; }
+.price-panel .source-list li { margin:6px 0; }
+.price-panel > .price-footnote { font-size:11px; text-align:center; margin:12px 0 0; }
+.price-details .retention { line-height:1.65; }
+
+@media(max-width:760px) {
+  body[data-step] .experience { padding-top:8px; }
+  body[data-step] .mode-grid { gap:8px; }
+  body[data-step] .mode-card { min-height:72px; padding-block:10px; }
+  body[data-step] .experience .home-modes { margin:10px auto 18px; }
+  body[data-page] .experience .brain { margin-top:0; }
+  body[data-page=home] .experience .home-modes { margin-bottom:24px; }
+  body[data-page=home] .hero-description { font-size:15px; line-height:1.65; margin-bottom:18px; }
+  body[data-page=home] .hero-actions { gap:8px!important; }
+  body[data-page=home] .hero-note { margin-top:12px; line-height:1.5; }
+  .upload-button { min-height:154px; padding:24px 20px; gap:19px; border-radius:18px; }
+  .upload-orbit { flex-basis:62px; width:62px; height:62px; }
+  .upload-orbit img { width:40px; height:36px; }
+  .upload-copy strong { font-size:22px; }
+  .upload-copy > span { font-size:12px; }
+  .upload-copy small { font-size:9px; letter-spacing:.3px; margin-top:5px; }
+  .upload-plus { top:9px; right:11px; font-size:21px; }
+  body[data-step] #journey-intro { margin-top:26px; padding-top:24px; margin-bottom:0; }
+  body[data-step] .studio-intro h1 { font-size:clamp(29px,7.4vw,40px); }
+  body[data-step] .studio-intro > p:not(.eyebrow) { font-size:15px; }
+  body[data-step] .studio-intro .source-list { font-size:13px; }
+  .page-head { padding-top:32px; padding-bottom:24px; }
+  .page-head h1 { margin:12px 0 16px; }
+  .page-head > p:not(.eyebrow) { font-size:15px; line-height:1.65; }
+  .page-head .source-list { margin:14px auto 18px; }
+  .analysis-intro { gap:24px; padding-block:32px; }
+  .analysis-intro h2,.editorial-band h2,.method h2 { font-size:29px; }
+  .analysis-intro p:not(.eyebrow) { line-height:1.65; margin-bottom:16px; }
+  .method { gap:20px; padding-block:24px 32px; }
+  .method-steps li { padding:16px 0; gap:16px; }
+  .method-steps h3 { font-size:20px; line-height:1.35; }
+  .method-steps p { font-size:14px; margin-top:7px; line-height:1.6; }
+  .editorial-band { padding-block:28px 32px; }
+  .philosophy-grid { gap:24px; margin-top:24px; }
+  .two-col { gap:8px; }
+  .principles { grid-template-columns:1fr; gap:10px; padding-block:24px; }
+  .principles > div,.principles > div:last-child { display:grid; grid-template-columns:38px 1fr; gap:3px 14px; padding:17px; }
+  .principles .principle-symbol { grid-row:1 / 3; align-self:center; }
+  .principles h2 { font-size:18px; margin:0; }
+  .principles p { font-size:13px; }
+  .studio-help { gap:12px; padding-block:24px 30px; }
+  .studio-help h2 { font-size:28px; }
+  .studio-help .button { margin-top:4px; }
+  .pricing-head { padding-top:28px; padding-bottom:20px; }
+  .pricing-head h1 { font-size:clamp(30px,7.5vw,42px); }
+  .pricing-layout { grid-template-columns:1fr; gap:28px; padding-top:0; padding-bottom:32px; }
+  .price-panel { padding:22px; border-radius:20px; max-width:460px; width:100%; margin:auto; }
+  .price-heading h2 { font-size:22px; }
+  .price-heading .eyebrow { font-size:8px; letter-spacing:1px; }
+  .price-line { padding-block:20px 16px; }
+  .price-panel .price { font-size:76px; text-shadow:0 0 11px #b492ff54,0 0 30px #9a7af038,0 0 62px #7f62c92a; }
+  .price-panel .source-list { font-size:13px; padding-top:13px; margin-bottom:17px; }
+  .price-details { padding-inline:4px; }
+  .price-details h2 { font-size:26px; margin:10px 0 12px; }
+  .price-details h2 br { display:none; }
+
+  input:not([type=range]):not([type=checkbox]):not([type=radio]),select,textarea { font-size:16px; }
+}
+@media(max-width:360px) {
+  .upload-button { gap:13px; padding-inline:15px; }
+  .upload-orbit { flex-basis:48px; width:48px; height:48px; }
+  .upload-orbit img { width:33px; }
+  .upload-copy strong { font-size:20px; }
+  .upload-copy > span { font-size:11px; }
+  .price-panel { padding:18px; }
+  .price-line { gap:14px; }
+  .price-heading h2 { font-size:20px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .is-pressing:not(:disabled),button:not(:disabled):active,.button:active,.file-label:active { transform:none!important; }
+  button,.button,.text-link,.file-label,summary,.style-option,.target-choice,.target-row label { transition:none!important; }
+}
+
+/* A slow colour drift through the release line; the letterforms stay still. */
+body[data-page=home] .hero-copy h1 span {
+  background-image:linear-gradient(105deg,#85bfff 0%,#b595ff 24%,#ffffff 46%,#f7faff 54%,#b595ff 76%,#85bfff 100%);
+  -webkit-background-clip:text;
+  background-size:220% 100%;
+  background-position:0% 50%;
+  animation:release-colour-drift 9s ease-in-out infinite alternate;
+}
+@keyframes release-colour-drift {
+  to { background-position:100% 50%; }
+}
+@media(prefers-reduced-motion:reduce) {
+  body[data-page=home] .hero-copy h1 span { animation:none; background-size:100% 100%; }
+}
+
+/* ── Pris-sidan, 18 september ─────────────────────────────────────────────
+   Kortet var för brett för sitt innehåll, så halva ytan stod tom, och
+   högerspalten var fyra lösa textblock. Kortet smalnas av, prisraden spänner
+   ut sig, listan får bockar, och högerspalten får de tre stegen som faktiskt
+   möter en i mastringsflödet. Ett avslutande band fyller sidans fot. */
+/* Linus 20 sep: kortet kandes fortfarande for brett, for mycket tom yta i det.
+   Kortet ar nu 380 px brett i stallet for 434, vilket ar 20 px mer an vad
+   rubriken och loggan kraver pa en rad (293 px plus 60 px luft). Luften
+   mellan spalterna vaxer till 72 px och hogerspalten tar resten, 548 px vid
+   sidans 1000 px. Fast bredd, sa kortet ser likadant ut i alla datorbredder
+   ned till 901 px, dar sidan gar over till en spalt. */
+.pricing-layout { grid-template-columns:380px 348px; gap:76px; justify-content:center; align-items:start; }
+.price-panel { padding:30px 30px 26px; }
+.price-heading { padding-bottom:4px; }
+
+/* Priset till vänster, enheten längst ut till höger: raden bär hela bredden. */
+.price-line { justify-content:space-between; align-items:flex-end; gap:16px; padding:24px 0 22px; border-bottom:1px solid #b99fe918; }
+.price-line > p { text-align:right; }
+
+.price-panel .source-list.price-includes { margin:20px 0 24px; padding:0; font-size:14.5px; }
+.price-includes li { position:relative; display:grid; grid-template-columns:19px 1fr; align-items:baseline; gap:11px; margin:0; padding:10px 0; color:#b6acc6; }
+.price-includes li + li { border-top:1px solid #b99fe910; }
+.price-details .price-includes li::before,
+.price-includes li::before {
+  content:'';grid-row:1;width:17px;height:17px;border-radius:50%;align-self:center;font-size:0;
+  border:1px solid #63e3b45c;
+  background:#63e3b414 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2395f0d0' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.4 4 4 8-8'/%3E%3C/svg%3E") center/10px 10px no-repeat;
+}
+.price-panel > .button.primary { width:100%; }
+
+/* Högerspalten: rubrik, löfte, och sedan de tre stegen på en egen skena. */
+.price-details > h2 { max-width:16ch; }
+.price-details > p:not(.retention) { color:#9f96ad; font-size:16px; line-height:1.7; max-width:46ch; margin:0 0 4px; }
+.price-steps { position:relative; list-style:none; margin:26px 0 24px; padding:0 0 0 38px; }
+.price-steps::before { content:''; position:absolute; left:11px; top:18px; bottom:18px; width:1px; background:linear-gradient(180deg,#b28cf055,#8dc3f62e 58%,#63e3b42e); }
+.price-details .price-steps li { display:block; position:relative; margin:0; padding:11px 0; font-size:inherit; color:inherit; }
+.price-details .price-steps li::before { content:none; }
+.price-steps li > span {
+  position:absolute; left:-38px; top:13px; display:grid; place-items:center;
+  width:23px; height:23px; border-radius:50%; background:#0b0a12;
+  border:1px solid #9d84c74d; font:10px ui-monospace,monospace; color:#a08fbe;
+}
+.price-steps strong { display:block; font-size:16px; font-weight:530; letter-spacing:-.3px; color:#ddd2f2; }
+.price-steps small { display:block; margin-top:3px; font-size:13.5px; line-height:1.6; color:#8d84a0; }
+.price-details .retention { margin-top:22px; }
+
+/* Avslutningen: tre skäl och en sista väg in, så sidan inte tar slut i luft. */
+.price-assurance { max-width:1080px; padding:52px 48px 74px; border-top:1px solid var(--line); text-align:center; }
+.price-assurance > .eyebrow { font:11px ui-monospace,monospace; letter-spacing:2.2px; color:#a58fd0; margin:0 0 30px; }
+.assurance-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; text-align:left; }
+.assurance-row > div { position:relative; padding:24px 22px 26px; border:1px solid #b99fe91c; border-radius:15px; background:linear-gradient(150deg,#14101f,#0c0b14 72%); overflow:hidden; }
+.assurance-row > div::before { content:''; position:absolute; pointer-events:none; inset:0; border-radius:inherit; background:radial-gradient(ellipse 120% 90% at 6% 0%,#a47ae518,transparent 62%); }
+.assurance-row h3 { position:relative; margin:0 0 8px; font-size:18px; font-weight:530; letter-spacing:-.4px; color:#ded3f4; }
+.assurance-row p { position:relative; margin:0; font-size:14.5px; line-height:1.68; color:#918a9f; }
+.price-assurance > .button.primary { margin-top:36px; min-width:270px; }
+
+@media (max-width:900px) {
+  .pricing-layout { grid-template-columns:1fr; }
+}
+@media (max-width:760px) {
+  .price-panel { padding:24px 22px 22px; }
+  .price-line { padding:20px 0 18px; }
+  .price-line > p { font-size:12px; }
+  .price-panel .source-list.price-includes { margin:16px 0 20px; font-size:14px; }
+  .price-includes li { padding:9px 0; gap:10px; }
+  .price-details > h2 { max-width:none; }
+  .price-details > p:not(.retention) { font-size:15.5px; line-height:1.78; max-width:none; }
+  .price-steps { margin:22px 0 20px; padding-left:34px; }
+  .price-steps::before { left:10px; }
+  .price-steps li > span { left:-34px; top:12px; width:21px; height:21px; font-size:9px; }
+  .price-steps strong { font-size:15.5px; }
+  .price-steps small { font-size:13px; line-height:1.65; }
+  .price-assurance { padding:40px 22px 64px; }
+  .price-assurance > .eyebrow { margin-bottom:22px; }
+  .assurance-row { grid-template-columns:1fr; gap:12px; }
+  .assurance-row > div { padding:19px 18px 21px; }
+  .assurance-row h3 { font-size:17px; }
+  .assurance-row p { font-size:14px; }
+  .price-assurance > .button.primary { width:100%; min-width:0; margin-top:26px; }
+}
+
+/* Pris-rubriken bär samma långsamma färgvandring som släppraden på hemsidan. */
+body[data-page=pricing] .pricing-head h1 {
+  background-image:linear-gradient(105deg,#85bfff 0%,#b595ff 24%,#ffffff 46%,#f7faff 54%,#b595ff 76%,#85bfff 100%);
+  background-clip:text;
+  -webkit-background-clip:text;
+  color:transparent;
+  background-size:220% 100%;
+  background-position:0% 50%;
+  animation:release-colour-drift 9s ease-in-out infinite alternate;
+}
+@media(prefers-reduced-motion:reduce) {
+  body[data-page=pricing] .pricing-head h1 { animation:none; background-size:100% 100%; }
+}
+
+/* ── Sidfoten ──────────────────────────────────────────────────────────────
+ * Tre tydliga delar i stället för tre lösa rader: en avslutande platta, en
+ * länkgrid med fyra spalter, och en bottenrad med en egen signaturrad.
+ * Plattan står överallt utom på hemsidan, som redan har sin egen släppruta
+ * direkt ovanför foten; två likadana uppmaningar efter varandra ser slarvigt
+ * ut. Ingenting här animeras per bildruta.
+ */
+.footer { padding-top:0; }
+/* Sidfoten ligger i samma spalt som resten av sidan. Utan detta står den
+ * bredare än innehållet, och mellan 1000 och 1120 px rör plattan fönsterkanten.
+ * Selektorn är ett steg vassare än journey.css egen, som nollar indraget. */
+@media(min-width:761px) { body[data-page] footer.footer { padding-inline:30px; } }
+
+.footer-cta {
+  position:relative; overflow:hidden;
+  display:grid; grid-template-columns:minmax(0,1.3fr) auto; gap:44px; align-items:center;
+  margin:56px 0 0; padding:46px 44px;
+  border:1px solid #a98ae02e; border-radius:20px;
+  background:
+    radial-gradient(120% 170% at 10% 0%, #6d51b016, transparent 62%),
+    radial-gradient(95% 150% at 94% 100%, #5b7fc714, transparent 58%),
+    linear-gradient(140deg,#14121f,#0b0b14 58%,#0d1019);
+}
+/* Samma hårfina violett-till-blå linje som processkedjans skena. */
+.footer-cta::before {
+  content:''; position:absolute; left:0; right:0; top:0; height:1px;
+  background:linear-gradient(90deg,transparent,#b884ff8c 22%,#8bddff8c 68%,transparent);
+}
+.footer-cta .eyebrow { margin:0 0 14px; color:#9f8fc4; }
+.footer-cta h2 {
+  margin:0; font-weight:540; font-size:clamp(30px,3.3vw,44px);
+  line-height:1.12; letter-spacing:-1.6px; max-width:16ch;
+}
+.footer-cta h2 span {
+  background:linear-gradient(100deg,#c3a2ff 5%,#85bfff);
+  background-clip:text; -webkit-background-clip:text; color:transparent;
+}
+.footer-cta-note { margin:16px 0 0; font-size:15px; line-height:1.75; color:#8b86a2; max-width:56ch; }
+.footer-cta-actions { display:flex; flex-direction:column; align-items:stretch; gap:14px; }
+.footer-cta-meta {
+  margin:0 0 4px; text-align:center;
+  font:500 10px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:2px; color:#6f6a86;
+}
+.footer-cta-actions .text-link { justify-content:center; color:#a79bc4; }
+.footer-cta-actions .text-link:hover { color:#c9b3ff; }
+/* CTA-kortet hör hemma på framsidan, inte i mastringsflödet: där står man
+   redan mitt i det kortet bjuder in till. På framsidan ersätter kortet den
+   gamla .release-cta, som sa exakt samma sak i enklare form. */
+body[data-page=master] .footer-cta { display:none; }
+body[data-page=master] .footer-grid { padding-top:48px; }
+/* Samma sak i analysflödet. Kortet låg annars direkt under checklistan
+   medan analysen körde, och bjöd in till att "analysera först" på den sida
+   där man redan analyserar. */
+body[data-page=analyze] .footer-cta { display:none; }
+body[data-page=analyze] .footer-grid { padding-top:48px; }
+body[data-page=home] section.release-cta { display:none; }
+
+.footer-grid {
+  display:grid; gap:44px;
+  grid-template-columns:minmax(240px,1.6fr) repeat(3,minmax(110px,.65fr));
+  padding:52px 0 44px;
+}
+.footer-brand .brand { font-size:23px; }
+.footer-brand > p { margin:18px 0 0; max-width:40ch; font-size:14px; line-height:1.8; color:#807b92; }
+.footer-col { display:flex; flex-direction:column; align-items:flex-start; gap:13px; }
+.footer-col > span {
+  font:500 10px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:2px; color:#635f77; margin-bottom:5px;
+}
+.footer-col a { position:relative; font-size:14px; color:#a4a0b3; }
+.footer-col a::after {
+  content:''; position:absolute; left:0; right:100%; bottom:-4px; height:1px;
+  background:linear-gradient(90deg,#b58cff,#8bd0ff); transition:right .3s ease;
+}
+.footer-col a:hover { color:#dccdff; }
+.footer-col a:hover::after { right:0; }
+
+.footer-bottom {
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:14px 26px;
+  border-top:1px solid var(--line); padding:22px 0 34px; font-size:12px; color:#666173;
+}
+.footer-bottom > span:first-child { margin-right:0; }
+.footer-bottom > :last-child { justify-self:end; text-align:right; }
+/* En tyst signaturrad i samma stil som avläsningen under skivan. */
+.footer-sign {
+  justify-self:center; display:inline-flex; align-items:center; gap:10px;
+  font:500 10px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:2px; color:#5d5872;
+}
+.footer-sign::before {
+  content:''; width:5px; height:5px; border-radius:50%;
+  background:#9a8cbd; box-shadow:0 0 10px #9677e04a;
+}
+
+@media(max-width:900px) {
+  .footer-cta { padding:42px 32px; gap:32px; grid-template-columns:1fr; }
+  .footer-cta h2 { max-width:20ch; }
+  .footer-cta-actions { flex-direction:row; flex-wrap:wrap; align-items:center; gap:14px 26px; }
+  .footer-cta-meta { flex-basis:100%; text-align:left; margin:0; }
+  .footer-grid { grid-template-columns:1fr 1fr 1fr; gap:36px 28px; }
+  .footer-brand { grid-column:1/-1; }
+}
+
+/* Mobil: hela foten står mitt på, precis som hjältebilden och släpprutan
+ * gör på samma skärm. Länkarna ligger i tre centrerade band i stället för
+ * spalter av olika längd, som såg sneda ut. */
+@media(max-width:760px) {
+  .footer-cta { margin-top:40px; padding:34px 22px 30px; border-radius:15px; gap:24px; text-align:center; }
+  .footer-cta h2 { font-size:clamp(28px,7.6vw,36px); letter-spacing:-1.1px; max-width:none; }
+  .footer-cta-note { margin:14px auto 0; font-size:14px; max-width:34ch; }
+  .footer-cta-actions { flex-direction:column; align-items:stretch; gap:12px; }
+  .footer-cta-meta { text-align:center; margin:0 0 2px; }
+  .footer-cta-actions .button { width:100%; }
+  .footer-cta-actions .text-link { min-height:44px; }
+
+  .footer-grid { display:block; padding:32px 0 6px; text-align:center; }
+  .footer-brand { display:flex; flex-direction:column; align-items:center; }
+  .footer-brand .brand { justify-content:center; }
+  .footer-brand > p { margin:15px auto 0; max-width:33ch; font-size:13px; }
+  .footer-col {
+    display:flex; flex-flow:row wrap; justify-content:center; align-items:center;
+    gap:12px 22px; margin-top:22px;
+  }
+  .footer-col:first-of-type { margin-top:28px; padding-top:26px; border-top:1px solid var(--line); }
+  .footer-col > span { flex-basis:100%; margin:0 0 3px; }
+  .footer-col a { font-size:14px; }
+
+  .footer-bottom {
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    gap:10px; margin-top:28px; padding:22px 0 30px; font-size:11px;
+  }
+  .footer-bottom > :last-child { justify-self:auto; text-align:center; }
+  .footer-sign { margin:0; order:3; }
+}
+
+/* Märkesordet bär samma långsamma färgvandring som släppraderna, både i
+ * huvudet och i foten. Punkten följer med i stället för att stå kvar i sin
+ * platta violett, annars krockar de när gradienten vandrar förbi.
+ * Huvudet och foten rullar ur bild, så ritningen upphör när de inte syns. */
+.brand > span {
+  background-image:linear-gradient(105deg,#85bfff 0%,#b595ff 24%,#ffffff 46%,#f7faff 54%,#b595ff 76%,#85bfff 100%);
+  background-clip:text;
+  -webkit-background-clip:text;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+  background-size:220% 100%;
+  background-position:0% 50%;
+  animation:release-colour-drift 9s ease-in-out infinite alternate;
+}
+.brand > span .brand-dot { color:inherit; -webkit-text-fill-color:inherit; }
+@media(prefers-reduced-motion:reduce) {
+  .brand > span { animation:none; background-size:100% 100%; }
+}
+
+/* Hemsidans tre punkter som egna plattor på mobil. Som lös lista föll de isär:
+ * siffran satt ensam långt från rubriken och raderna flöt ihop. Plattorna är
+ * samma material som funktionsrutorna högre upp på sidan. */
+@media(max-width:760px) {
+  .analysis-intro { gap:26px; }
+  .analysis-intro > div:first-child p:not(.eyebrow) { max-width:none; }
+  .intelligence-list { display:grid; gap:10px; }
+  .intelligence-list > div,
+  .intelligence-list > div:last-child {
+    grid-template-columns:auto 1fr; gap:3px 13px; align-items:baseline;
+    padding:15px 17px 17px;
+    border:1px solid #b298dd22; border-radius:14px;
+    background:linear-gradient(130deg,#151020,#0b0b13);
+  }
+  .intelligence-list span { padding-top:0; font-size:11px; letter-spacing:.5px; }
+  .intelligence-list strong { font-size:17px; letter-spacing:-.3px; }
+  .intelligence-list p { margin:3px 0 0!important; font-size:13px!important; line-height:1.6; }
+}
+
+/* ---- Karaktärernas fem färger, 18 september ----
+   Alla fem finns redan i sidans skala: neutral periwinkle, bärnsten från
+   "high", korall från "main issue", vår violett och vår blå. Kortens
+   storlek, avstånd och form är orörda. Bara ikonens platta, den valda
+   rutans kant och prickarna i guiden får färg. */
+#settings-stage .character svg {
+  width:40px; height:40px; padding:6px 9px; border-radius:12px; box-sizing:border-box;
+}
+#settings-stage .character:has(input[value="Balanced"]) svg {
+  background:radial-gradient(130% 130% at 28% 12%, #aab6eed9, #8f9de05c 62%, #0d0a16 100%);
+  box-shadow:inset 0 1px 0 #ffffff26, 0 4px 14px #8f9de024;
+  color:#fff;
+}
+#settings-stage .character:has(input[value="Balanced"]:checked) {
+  border-color:#aab6eec4;
+  box-shadow:0 0 0 1px #aab6ee3d, 0 0 18px #8f9de033;
+  background:linear-gradient(140deg, #8f9de024, #14101f 72%);
+}
+#settings-stage .character:has(input[value="Balanced"]:checked) svg {
+  background:radial-gradient(130% 130% at 28% 12%, #aab6ee, #8f9de08f 62%, #140f22 100%);
+  box-shadow:inset 0 1px 0 #ffffff40, 0 5px 20px #8f9de04d;
+}
+.preset-guide .guide-dot[data-character="Balanced"] {
+  background:#aab6ee; box-shadow:0 0 6px #8f9de0b3, 0 0 13px #8f9de06b;
+}
+#settings-stage .character:has(input[value="Warm"]) svg {
+  background:radial-gradient(130% 130% at 28% 12%, #ffab6ed9, #f08a4e5c 62%, #0d0a16 100%);
+  box-shadow:inset 0 1px 0 #ffffff26, 0 4px 14px #f08a4e24;
+  color:#fff;
+}
+#settings-stage .character:has(input[value="Warm"]:checked) {
+  border-color:#ffab6ec4;
+  box-shadow:0 0 0 1px #ffab6e3d, 0 0 18px #f08a4e33;
+  background:linear-gradient(140deg, #f08a4e24, #14101f 72%);
+}
+#settings-stage .character:has(input[value="Warm"]:checked) svg {
+  background:radial-gradient(130% 130% at 28% 12%, #ffab6e, #f08a4e8f 62%, #140f22 100%);
+  box-shadow:inset 0 1px 0 #ffffff40, 0 5px 20px #f08a4e4d;
+}
+.preset-guide .guide-dot[data-character="Warm"] {
+  background:#ffab6e; box-shadow:0 0 6px #f08a4eb3, 0 0 13px #f08a4e6b;
+}
+#settings-stage .character:has(input[value="Punchy"]) svg {
+  background:radial-gradient(130% 130% at 28% 12%, #ff7a9cd9, #ef5e865c 62%, #0d0a16 100%);
+  box-shadow:inset 0 1px 0 #ffffff26, 0 4px 14px #ef5e8624;
+  color:#fff;
+}
+#settings-stage .character:has(input[value="Punchy"]:checked) {
+  border-color:#ff7a9cc4;
+  box-shadow:0 0 0 1px #ff7a9c3d, 0 0 18px #ef5e8633;
+  background:linear-gradient(140deg, #ef5e8624, #14101f 72%);
+}
+#settings-stage .character:has(input[value="Punchy"]:checked) svg {
+  background:radial-gradient(130% 130% at 28% 12%, #ff7a9c, #ef5e868f 62%, #140f22 100%);
+  box-shadow:inset 0 1px 0 #ffffff40, 0 5px 20px #ef5e864d;
+}
+.preset-guide .guide-dot[data-character="Punchy"] {
+  background:#ff7a9c; box-shadow:0 0 6px #ef5e86b3, 0 0 13px #ef5e866b;
+}
+#settings-stage .character:has(input[value="Club"]) svg {
+  background:radial-gradient(130% 130% at 28% 12%, #b06bffd9, #8f4ef05c 62%, #0d0a16 100%);
+  box-shadow:inset 0 1px 0 #ffffff26, 0 4px 14px #8f4ef024;
+  color:#fff;
+}
+#settings-stage .character:has(input[value="Club"]:checked) {
+  border-color:#b06bffc4;
+  box-shadow:0 0 0 1px #b06bff3d, 0 0 18px #8f4ef033;
+  background:linear-gradient(140deg, #8f4ef024, #14101f 72%);
+}
+#settings-stage .character:has(input[value="Club"]:checked) svg {
+  background:radial-gradient(130% 130% at 28% 12%, #b06bff, #8f4ef08f 62%, #140f22 100%);
+  box-shadow:inset 0 1px 0 #ffffff40, 0 5px 20px #8f4ef04d;
+}
+.preset-guide .guide-dot[data-character="Club"] {
+  background:#b06bff; box-shadow:0 0 6px #8f4ef0b3, 0 0 13px #8f4ef06b;
+}
+#settings-stage .character:has(input[value="Open"]) svg {
+  background:radial-gradient(130% 130% at 28% 12%, #79c9ffd9, #57aaf05c 62%, #0d0a16 100%);
+  box-shadow:inset 0 1px 0 #ffffff26, 0 4px 14px #57aaf024;
+  color:#fff;
+}
+#settings-stage .character:has(input[value="Open"]:checked) {
+  border-color:#79c9ffc4;
+  box-shadow:0 0 0 1px #79c9ff3d, 0 0 18px #57aaf033;
+  background:linear-gradient(140deg, #57aaf024, #14101f 72%);
+}
+#settings-stage .character:has(input[value="Open"]:checked) svg {
+  background:radial-gradient(130% 130% at 28% 12%, #79c9ff, #57aaf08f 62%, #140f22 100%);
+  box-shadow:inset 0 1px 0 #ffffff40, 0 5px 20px #57aaf04d;
+}
+.preset-guide .guide-dot[data-character="Open"] {
+  background:#79c9ff; box-shadow:0 0 6px #57aaf0b3, 0 0 13px #57aaf06b;
+}
+@media(max-width:760px){
+  #settings-stage .character svg { width:34px; height:34px; padding:5px 7px; border-radius:10px; }
+}
+
+/* ---- Kontaktsidan, 18 september ----
+   En smal mittkolumn: ett kort med vårt märke och formuläret, ett litet
+   mejlkort under, och en tyst rad längst ner. Ämnesväljaren är vår egen,
+   inte webbläsarens grå meny. Sidan har ingen server, så knappen lämnar
+   över till mejlprogrammet med brevet färdigskrivet. */
+body[data-page=contact] section.contact-layout {
+  max-width:660px; display:grid; gap:16px; padding-bottom:20px;
+}
+.contact-card {
+  position:relative; overflow:visible; margin:0; padding:46px 44px 38px;
+  border:1px solid #a98ae02e; border-radius:20px; text-align:center;
+  background:
+    radial-gradient(120% 150% at 50% -12%, #6d51b01c, transparent 62%),
+    radial-gradient(95% 130% at 100% 100%, #5b7fc714, transparent 58%),
+    linear-gradient(150deg,#14121f,#0b0b14 58%,#0d1019);
+}
+.contact-card::before {
+  content:''; position:absolute; left:0; right:0; top:0; height:1px; border-radius:20px 20px 0 0;
+  background:linear-gradient(90deg,transparent,#b884ff8c 22%,#8bddff8c 68%,transparent);
+}
+.contact-mark {
+  display:grid; place-items:center; width:56px; height:56px; margin:0 auto; padding:9px;
+  border:1px solid #ab8ae865; border-radius:50%;
+  background:radial-gradient(circle,#151327 42%,#090a12 70%);
+  box-shadow:0 0 0 4px #b192ef08,0 0 0 5px #a48dd520,inset 0 0 14px #8f78be14;
+}
+.contact-mark img { width:100%; height:100%; }
+.contact-card > .eyebrow { margin:22px 0 0; font-size:10px; letter-spacing:2.2px; color:#9a8ab5; }
+.contact-card h2 { margin:9px 0 0; font-size:30px; line-height:1.18; letter-spacing:-1px; font-weight:540; }
+.contact-lead { margin:13px auto 0; max-width:430px; font-size:14px; line-height:1.75; color:#9e90b3; }
+.contact-body { margin-top:30px; display:grid; gap:18px; text-align:left; }
+.contact-field { display:grid; gap:9px; }
+.contact-label {
+  font:11px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:1.7px; text-transform:uppercase; color:#9a8ab5;
+}
+.contact-label small { font-size:10.5px; letter-spacing:.6px; text-transform:none; color:#7b6f92; }
+.contact-field input, .contact-field textarea, .topic-button {
+  width:100%; padding:13px 15px; border:1px solid #ac8ccd33; border-radius:12px;
+  background:#0c0a1399; color:#e6dcf5;
+  font-family:inherit; font-size:15px; line-height:1.6;
+}
+.contact-field textarea { min-height:132px; resize:vertical; }
+.contact-field ::placeholder { color:#7d7192; }
+.contact-field input:focus, .contact-field textarea:focus {
+  outline:none; border-color:#b693f7; box-shadow:0 0 0 1px #b08de833,0 0 16px #9e80d326;
+}
+
+/* Ämnesväljaren */
+.topic-picker { position:relative; }
+.topic-button {
+  display:flex; align-items:center; gap:11px; min-height:50px; text-align:left; cursor:pointer;
+}
+.topic-button:focus-visible {
+  outline:none; border-color:#b693f7; box-shadow:0 0 0 1px #b08de833,0 0 16px #9e80d326;
+}
+.topic-picker.is-open .topic-button { border-color:#b693f7a6; }
+.topic-current { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.topic-arrow {
+  flex:none; width:8px; height:8px; margin-right:2px;
+  border-right:1.5px solid #a893c4; border-bottom:1.5px solid #a893c4;
+  transform:translateY(-2px) rotate(45deg); transition:transform .2s ease,border-color .2s ease;
+}
+.topic-picker.is-open .topic-arrow { transform:translateY(2px) rotate(225deg); border-color:#d3bcff; }
+.topic-dot { flex:none; width:7px; height:7px; border-radius:50%; background:#aab6ee; }
+.topic-list {
+  position:absolute; z-index:6; left:0; right:0; top:calc(100% + 8px);
+  margin:0; padding:7px; list-style:none; overflow:hidden;
+  border:1px solid #ab8ae04a; border-radius:16px;
+  background:linear-gradient(162deg,#181427,#0d0c17 72%);
+  box-shadow:0 20px 44px #05040bd9, inset 0 1px 0 #ffffff0d;
+}
+.topic-list::before {
+  content:''; position:absolute; left:16px; right:16px; top:0; height:1px;
+  background:linear-gradient(90deg,transparent,#b884ff99 25%,#8bddff99 70%,transparent);
+}
+.topic-list li {
+  position:relative; display:grid; grid-template-columns:auto 1fr; gap:3px 11px;
+  align-items:center; padding:11px 34px 12px 13px; border-radius:12px; cursor:pointer; outline:none;
+}
+.topic-list .topic-dot { grid-row:1; }
+.topic-name { font-size:14px; color:#ddd2ee; }
+.topic-list small { grid-column:2; font-size:11.5px; line-height:1.5; color:#897d9b; }
+.topic-list li:hover, .topic-list li:focus { background:linear-gradient(100deg,#271c39,#161327); }
+.topic-list li[aria-selected=true] { background:linear-gradient(100deg,#2f2348,#191531); }
+.topic-list li[aria-selected=true]::after {
+  content:'✓'; position:absolute; right:14px; top:50%; translate:0 -50%;
+  font-size:12px; color:#c7abff;
+}
+.topic-picker.is-open .topic-list { animation:topic-open .16s cubic-bezier(.32,0,.24,1); }
+@keyframes topic-open { from { opacity:0; transform:translateY(-5px); } }
+
+.contact-card .button.primary { width:100%; justify-content:center; margin-top:26px; }
+.contact-status { margin:13px 0 0; font-size:12.5px; line-height:1.65; color:#a795c0; }
+.contact-status:empty { display:none; }
+
+.contact-aside {
+  padding:26px 30px 28px; border:1px solid #a98ae026; border-radius:16px; text-align:center;
+  background:linear-gradient(150deg,#12101c,#0b0b13);
+}
+.contact-aside .eyebrow { margin:0; font-size:10px; letter-spacing:2.2px; color:#8d7fa6; }
+.contact-mail {
+  display:inline-flex; align-items:center; gap:9px; margin-top:11px;
+  font-size:23px; letter-spacing:-.5px; color:#cbb4ff; text-decoration:none;
+}
+.contact-mail span { font-size:15px; color:#8fb9f0; }
+.contact-mail:hover { color:#ece2ff; }
+.contact-aside p:not(.eyebrow) { margin:10px auto 0; max-width:420px; font-size:13px; line-height:1.7; color:#938699; }
+.contact-explore { margin:8px 0 0; text-align:center; font-size:13px; color:#8d8199; }
+.contact-explore .text-link { margin-left:6px; }
+
+@media(max-width:760px){
+  .contact-card { padding:34px 20px 30px; border-radius:17px; }
+  .contact-card h2 { font-size:25px; letter-spacing:-.7px; }
+  .contact-lead { font-size:13px; }
+  .contact-body { margin-top:26px; gap:16px; }
+  .contact-field input, .contact-field textarea, .topic-button { font-size:16px; padding:12px 14px; }
+  .topic-list li { padding:10px 30px 11px 12px; }
+  .contact-aside { padding:22px 18px 24px; }
+  .contact-mail { font-size:19px; }
+  .contact-aside p:not(.eyebrow) { font-size:12.5px; }
+}
+@media(prefers-reduced-motion:reduce){
+  .topic-picker.is-open .topic-list { animation:none; }
+  .topic-arrow { transition:none; }
+}
+
+.topic-picker[data-tone=amber] > .topic-button .topic-dot,
+.topic-list li[data-tone=amber] .topic-dot {
+  background:#ffab6e; box-shadow:0 0 7px #f08a4eb8,0 0 15px #f08a4e5c;
+}
+.topic-picker[data-tone=violet] > .topic-button .topic-dot,
+.topic-list li[data-tone=violet] .topic-dot {
+  background:#b06bff; box-shadow:0 0 7px #8f4ef0b8,0 0 15px #8f4ef05c;
+}
+.topic-picker[data-tone=blue] > .topic-button .topic-dot,
+.topic-list li[data-tone=blue] .topic-dot {
+  background:#79c9ff; box-shadow:0 0 7px #57aaf0b8,0 0 15px #57aaf05c;
+}
+.topic-picker[data-tone=coral] > .topic-button .topic-dot,
+.topic-list li[data-tone=coral] .topic-dot {
+  background:#ff7a9c; box-shadow:0 0 7px #ef5e86b8,0 0 15px #ef5e865c;
+}
+.topic-picker[data-tone=neutral] > .topic-button .topic-dot,
+.topic-list li[data-tone=neutral] .topic-dot {
+  background:#aab6ee; box-shadow:0 0 7px #8f9de0b8,0 0 15px #8f9de05c;
+}
+
+/* ---- Mobilmenyn, 18 september ----
+   Två rader i mobil: märket till vänster och Start till höger överst, de
+   fyra sidorna utspridda på en egen rad under med en hårfin linje över sig.
+   Ingen hamburgare; knappen för den blir kvar i sidan men döljs, för site.js
+   skriver på den vid varje sidbyte.
+
+   Raderna är utsatta med grid-row, inte lämnade till automatisk placering:
+   i markup kommer nav före .header-cta, så utan grid-row hamnar knappen på
+   rad tre.
+
+   Start-knappen är mörk här, inte fylld violett som på webben. I ett litet
+   huvud skriker den fyllda för mycket. Selektorn måste vara minst tre klasser
+   djup för att slå journey.css, som laddas efter den här filen och målar
+   body[data-page] .header-cta violett. */
+@media(max-width:760px){
+  body[data-page] header.header {
+    display:grid; grid-template-columns:1fr auto; align-items:center;
+    height:auto; padding:0; gap:0; border-bottom:1px solid var(--line);
+  }
+  body[data-page] header.header .brand { grid-row:1; grid-column:1; padding:16px 0 15px 22px; }
+  body[data-page] header.header .menu-toggle { display:none; }
+  body[data-page] header.header .header-cta {
+    grid-row:1; grid-column:2; display:inline-flex; gap:0!important;
+    margin:0 22px 0 14px; min-height:40px; padding:9px 19px;
+    border:1px solid #b79bea33; border-radius:11px;
+    background:linear-gradient(155deg,#16121f,#0d0c14 70%);
+    box-shadow:inset 0 1px 0 #ffffff0a;
+    color:#e6dcf7; font-size:14px; font-weight:560; letter-spacing:-.1px;
+  }
+  body[data-page] header.header .header-cta:hover {
+    border-color:#c2a4f56b; background:linear-gradient(155deg,#1d1729,#110f1a 70%); color:#f4ecff;
+  }
+  /* Ljuset runt knappen är kvar. Det ligger inte i knappens egna stilar utan
+     i två element som skriptet lägger in i den, .cta-compositor-rim och
+     .cta-compositor-sweep. Leta inte efter en box-shadow, den finns inte. */
+  body[data-page] header.header .cta-more,
+  body[data-page] header.header .cta-arrow { display:none; }
+  body[data-page] header.header nav {
+    grid-row:2; grid-column:1/-1; width:100%; position:static;
+    display:flex; flex-direction:row; justify-content:space-between; align-items:stretch;
+    gap:0; margin:0; padding:0 8px; font-size:14px;
+    background:none; border-top:1px solid var(--line); border-bottom:0;
+  }
+  body[data-page] header.header nav a {
+    flex:1 1 0; display:grid; place-items:center;
+    min-height:53px; padding:12px 3px 17px; text-align:center;
+  }
+  body[data-page] header.header nav .nav-more { display:none; }
+}
+
+/* ---- "Understand your mix", 18 september ----
+   Sektionen var två spalter: texten låg i vänsterkanten, listan i
+   högerkanten och mitten stod tom, vilket fick hela blocket att se
+   ur balans ut. Nu en centrerad rubrik och tre lika kort under, allt
+   hängt på samma mittlinje. De gamla reglerna för .analysis-intro
+   och .intelligence-list längre upp i filen och i site.css är döda;
+   de här selektorerna är vassare och ligger sist. */
+body[data-page=home] section.analysis-intro {
+  display:block; text-align:center;
+  max-width:1060px; margin-inline:auto; padding-block:72px 78px;
+}
+body[data-page=home] section.analysis-intro .eyebrow {
+  margin:0; font:12px ui-monospace,monospace; letter-spacing:2.4px;
+  text-transform:uppercase; color:#a58fd0;
+}
+body[data-page=home] section.analysis-intro h2 {
+  margin:18px auto 0; max-width:18ch;
+  font-size:clamp(30px,3.9vw,46px); line-height:1.12; letter-spacing:-1.9px; font-weight:520;
+}
+/* Samma långsamma färgvandring som hjältarna. Nyckelbilderna
+   (release-colour-drift) ligger tidigare i den här filen. */
+body[data-page=home] section.analysis-intro h2 span {
+  background-image:linear-gradient(105deg,#85bfff 0%,#b595ff 24%,#ffffff 46%,#f7faff 54%,#b595ff 76%,#85bfff 100%);
+  background-clip:text; -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  background-size:220% 100%; background-position:0% 50%;
+  animation:release-colour-drift 9s ease-in-out infinite alternate;
+}
+body[data-page=home] section.analysis-intro .analysis-head > p:not(.eyebrow) {
+  margin:16px auto 0; max-width:58ch; font-size:16.5px; line-height:1.72; color:#a097ad;
+}
+body[data-page=home] section.analysis-intro .analysis-head .text-link {
+  display:inline-flex; margin-top:22px;
+}
+body[data-page=home] section.analysis-intro .intelligence-list {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px;
+  margin:44px 0 0; padding:0; text-align:left;
+}
+body[data-page=home] section.analysis-intro .intelligence-list > div {
+  position:relative; isolation:isolate; display:block;
+  margin:0; padding:24px 22px 26px;
+  border:1px solid #b99fe91f; border-radius:15px;
+  background:linear-gradient(150deg,#14101f,#0c0b14 72%);
+  overflow:hidden;
+}
+body[data-page=home] section.analysis-intro .intelligence-list > div::before {
+  content:''; position:absolute; pointer-events:none; inset:0; z-index:-1; border-radius:inherit;
+  background:radial-gradient(ellipse 120% 90% at 6% 0%,#a47ae51a,transparent 62%);
+}
+body[data-page=home] section.analysis-intro .intelligence-list span {
+  display:grid; place-items:center; width:27px; height:27px; padding:0; border-radius:50%;
+  border:1px solid #8b70ac4d; background:#0b0a12;
+  font:11px ui-monospace,monospace; letter-spacing:.2px; color:#c3a6ff;
+  text-shadow:0 0 10px #a77dff70,0 0 22px #8a68e04d;
+  box-shadow:0 0 14px #9c7fe52e;
+}
+body[data-page=home] section.analysis-intro .intelligence-list strong {
+  display:block; margin:16px 0 0;
+  font-size:18.5px; font-weight:530; letter-spacing:-.5px; color:#ded3f4;
+}
+body[data-page=home] section.analysis-intro .intelligence-list p {
+  margin:7px 0 0!important; font-size:14.4px!important; line-height:1.66; color:#918a9f;
+}
+@media(max-width:900px){
+  body[data-page=home] section.analysis-intro .intelligence-list > div { padding:20px 18px 22px; }
+  body[data-page=home] section.analysis-intro .intelligence-list strong { font-size:17px; }
+}
+@media(max-width:760px){
+  body[data-page=home] section.analysis-intro { padding-block:44px 50px; }
+  body[data-page=home] section.analysis-intro h2 {
+    font-size:clamp(28px,7.8vw,35px); letter-spacing:-1.1px; max-width:20ch; margin-top:14px;
+  }
+  body[data-page=home] section.analysis-intro .analysis-head > p:not(.eyebrow) {
+    font-size:15px; line-height:1.8; margin-top:13px;
+  }
+  body[data-page=home] section.analysis-intro .analysis-head .text-link { margin-top:18px; min-height:44px; }
+  body[data-page=home] section.analysis-intro .intelligence-list {
+    grid-template-columns:1fr; gap:11px; margin-top:30px;
+  }
+  body[data-page=home] section.analysis-intro .intelligence-list > div { padding:19px 18px 21px; }
+  body[data-page=home] section.analysis-intro .intelligence-list strong { margin-top:13px; font-size:17px; }
+  body[data-page=home] section.analysis-intro .intelligence-list p { font-size:13.8px!important; }
+}
+@media(prefers-reduced-motion:reduce){
+  body[data-page=home] section.analysis-intro h2 span { animation:none; background-size:100% 100%; }
+}
+
+/* Studio-remsan ligger inuti "Understand your mix", mellan rubriken och de
+   tre boxarna. Den är en egen div där nu, inte en egen sektion, så den ärver
+   sidans indrag och blir ett tyst band med hårfin linje över och under. */
+body[data-page=home] section.analysis-intro .studio-strip {
+  margin:46px 0 0; padding:34px 0 36px;
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  text-align:center;
+}
+body[data-page=home] section.analysis-intro .studio-strip > span {
+  display:block; font:12px ui-monospace,monospace; letter-spacing:2.4px;
+  text-transform:uppercase; color:#7f7596;
+}
+body[data-page=home] section.analysis-intro .studio-strip h2 {
+  margin:14px 0 0; max-width:none;
+  font-size:21px; line-height:1.3; letter-spacing:-.5px; font-weight:500; color:#a9a1bb;
+}
+body[data-page=home] section.analysis-intro .studio-strip > div {
+  margin:18px 0 0; font-size:17px; gap:24px;
+}
+body[data-page=home] section.analysis-intro .intelligence-list { margin-top:40px; }
+@media(max-width:760px){
+  body[data-page=home] section.analysis-intro .studio-strip { margin-top:32px; padding:26px 0 28px; }
+  body[data-page=home] section.analysis-intro .studio-strip > span { font-size:10px; letter-spacing:1.8px; }
+  body[data-page=home] section.analysis-intro .studio-strip h2 { font-size:17px; margin-top:11px; }
+  body[data-page=home] section.analysis-intro .studio-strip > div { font-size:15px; gap:14px; margin-top:14px; }
+  body[data-page=home] section.analysis-intro .intelligence-list { margin-top:28px; }
+}
+
+/* ---- Mätvärdenas ikoner, 18 september ----
+   Samma fem färger som karaktärskorten, satta via data-tone från journey.js.
+   Id:t behövs för att slå journey.css, som laddas senare och målar alla
+   ikoner violetta. Plattan bakom ikonen i jämförelsetabellen finns bara på
+   webben; i mobil är den borttagen där, så bakgrunden sätts inte tillbaka. */
+#result-stage .sound-icon[data-tone=neutral],
+#result-stage .comparison-icon[data-tone=neutral] { color:#dfe4ff; }
+#result-stage .sound-icon[data-tone=neutral] svg,
+#result-stage .comparison-icon[data-tone=neutral] svg {
+  filter:drop-shadow(0 0 3px #aab6ee8c) drop-shadow(0 0 8px #8f9de040);
+}
+#result-stage .sound-icon[data-tone=neutral] {
+  border-color:#aab6ee4d;
+  background:linear-gradient(145deg,#aab6ee33,#8f9de014);
+  box-shadow:inset 0 1px 0 #ffffff12,0 0 15px #8f9de01f;
+}
+#result-stage .metric-toggle[aria-expanded=true] .sound-icon[data-tone=neutral],
+#result-stage .insight-toggle[aria-expanded=true] .sound-icon[data-tone=neutral] {
+  border-color:#aab6eeb3;
+  background:linear-gradient(135deg,#aab6ee52,#8f9de024);
+  box-shadow:0 0 17px #8f9de047,inset 0 1px 0 #ffffff1f;
+}
+#result-stage .comparison-icon[data-tone=neutral] {
+  border-color:#aab6ee59;
+  background:linear-gradient(135deg,#aab6ee36,#8f9de016);
+  box-shadow:0 0 13px #8f9de02b,inset 0 1px 0 #ffffff1a;
+}
+#result-stage .sound-icon[data-tone=coral],
+#result-stage .comparison-icon[data-tone=coral] { color:#ffd3de; }
+#result-stage .sound-icon[data-tone=coral] svg,
+#result-stage .comparison-icon[data-tone=coral] svg {
+  filter:drop-shadow(0 0 3px #ff7a9c8c) drop-shadow(0 0 8px #ef5e8640);
+}
+#result-stage .sound-icon[data-tone=coral] {
+  border-color:#ff7a9c4d;
+  background:linear-gradient(145deg,#ff7a9c33,#ef5e8614);
+  box-shadow:inset 0 1px 0 #ffffff12,0 0 15px #ef5e861f;
+}
+#result-stage .metric-toggle[aria-expanded=true] .sound-icon[data-tone=coral],
+#result-stage .insight-toggle[aria-expanded=true] .sound-icon[data-tone=coral] {
+  border-color:#ff7a9cb3;
+  background:linear-gradient(135deg,#ff7a9c52,#ef5e8624);
+  box-shadow:0 0 17px #ef5e8647,inset 0 1px 0 #ffffff1f;
+}
+#result-stage .comparison-icon[data-tone=coral] {
+  border-color:#ff7a9c59;
+  background:linear-gradient(135deg,#ff7a9c36,#ef5e8616);
+  box-shadow:0 0 13px #ef5e862b,inset 0 1px 0 #ffffff1a;
+}
+#result-stage .sound-icon[data-tone=blue],
+#result-stage .comparison-icon[data-tone=blue] { color:#cfeaff; }
+#result-stage .sound-icon[data-tone=blue] svg,
+#result-stage .comparison-icon[data-tone=blue] svg {
+  filter:drop-shadow(0 0 3px #79c9ff8c) drop-shadow(0 0 8px #57aaf040);
+}
+#result-stage .sound-icon[data-tone=blue] {
+  border-color:#79c9ff4d;
+  background:linear-gradient(145deg,#79c9ff33,#57aaf014);
+  box-shadow:inset 0 1px 0 #ffffff12,0 0 15px #57aaf01f;
+}
+#result-stage .metric-toggle[aria-expanded=true] .sound-icon[data-tone=blue],
+#result-stage .insight-toggle[aria-expanded=true] .sound-icon[data-tone=blue] {
+  border-color:#79c9ffb3;
+  background:linear-gradient(135deg,#79c9ff52,#57aaf024);
+  box-shadow:0 0 17px #57aaf047,inset 0 1px 0 #ffffff1f;
+}
+#result-stage .comparison-icon[data-tone=blue] {
+  border-color:#79c9ff59;
+  background:linear-gradient(135deg,#79c9ff36,#57aaf016);
+  box-shadow:0 0 13px #57aaf02b,inset 0 1px 0 #ffffff1a;
+}
+#result-stage .sound-icon[data-tone=violet],
+#result-stage .comparison-icon[data-tone=violet] { color:#e0ccff; }
+#result-stage .sound-icon[data-tone=violet] svg,
+#result-stage .comparison-icon[data-tone=violet] svg {
+  filter:drop-shadow(0 0 3px #b06bff8c) drop-shadow(0 0 8px #8f4ef040);
+}
+#result-stage .sound-icon[data-tone=violet] {
+  border-color:#b06bff4d;
+  background:linear-gradient(145deg,#b06bff33,#8f4ef014);
+  box-shadow:inset 0 1px 0 #ffffff12,0 0 15px #8f4ef01f;
+}
+#result-stage .metric-toggle[aria-expanded=true] .sound-icon[data-tone=violet],
+#result-stage .insight-toggle[aria-expanded=true] .sound-icon[data-tone=violet] {
+  border-color:#b06bffb3;
+  background:linear-gradient(135deg,#b06bff52,#8f4ef024);
+  box-shadow:0 0 17px #8f4ef047,inset 0 1px 0 #ffffff1f;
+}
+#result-stage .comparison-icon[data-tone=violet] {
+  border-color:#b06bff59;
+  background:linear-gradient(135deg,#b06bff36,#8f4ef016);
+  box-shadow:0 0 13px #8f4ef02b,inset 0 1px 0 #ffffff1a;
+}
+#result-stage .sound-icon[data-tone=amber],
+#result-stage .comparison-icon[data-tone=amber] { color:#ffdcc2; }
+#result-stage .sound-icon[data-tone=amber] svg,
+#result-stage .comparison-icon[data-tone=amber] svg {
+  filter:drop-shadow(0 0 3px #ffab6e8c) drop-shadow(0 0 8px #f08a4e40);
+}
+#result-stage .sound-icon[data-tone=amber] {
+  border-color:#ffab6e4d;
+  background:linear-gradient(145deg,#ffab6e33,#f08a4e14);
+  box-shadow:inset 0 1px 0 #ffffff12,0 0 15px #f08a4e1f;
+}
+#result-stage .metric-toggle[aria-expanded=true] .sound-icon[data-tone=amber],
+#result-stage .insight-toggle[aria-expanded=true] .sound-icon[data-tone=amber] {
+  border-color:#ffab6eb3;
+  background:linear-gradient(135deg,#ffab6e52,#f08a4e24);
+  box-shadow:0 0 17px #f08a4e47,inset 0 1px 0 #ffffff1f;
+}
+#result-stage .comparison-icon[data-tone=amber] {
+  border-color:#ffab6e59;
+  background:linear-gradient(135deg,#ffab6e36,#f08a4e16);
+  box-shadow:0 0 13px #f08a4e2b,inset 0 1px 0 #ffffff1a;
+}
+
+/* ---- Finjusteringen, 18 september ----
+   Ihopfällningen är borta: reglagen står alltid framme, och "Optional" är
+   inte längre en knapp utan en tyst bricka i rubrikraden. Den byter till
+   "Customized" och tänds violett så fort man rör ett reglage; journey.js
+   sätter data-touched. Id:t behövs för att slå journey.css. */
+#settings-stage .tune-heading { gap:12px; padding-top:18px; font-size:14px; }
+#settings-stage .tune-heading > span:first-child { letter-spacing:-.1px; color:#e4d9f0; }
+#settings-stage .tune-flag {
+  flex:none; padding:4px 11px; border:1px solid #b79bea2e; border-radius:999px;
+  font:9px ui-monospace,monospace; letter-spacing:1.5px; text-transform:uppercase;
+  color:#8b7fa3; background:#ffffff05;
+  transition:color .3s ease,border-color .3s ease,background .3s ease,box-shadow .3s ease;
+}
+#settings-stage .tune-flag[data-touched] {
+  border-color:#c2a4f56b; color:#dccbff; background:#a77cde16; box-shadow:0 0 12px #9e80d329;
+}
+#settings-stage .fine-tune { border-top:0; padding-top:0; }
+#settings-stage .fine-tune .tune-grid { padding-top:16px; }
+@media(max-width:760px){
+  #settings-stage .tune-heading { font-size:13px; gap:9px; }
+  #settings-stage .tune-flag { padding:3px 9px; font-size:8px; letter-spacing:1.2px; }
+  #settings-stage .fine-tune .tune-grid { padding-top:12px; }
+}
+@media(prefers-reduced-motion:reduce){
+  #settings-stage .tune-flag { transition:none; }
+}
+
+/* ---- "A closer listen": ljuset i panelen, 18 september ----
+   Panelen hade sina två ljuskällor till höger och i övre vänstra hörnet, så
+   vänstra halvan där ikonerna och kvaliteterna står låg släckt. Här läggs en
+   tredje, mjuk ljuskälla på vänstra sidan. De två gamla står kvar oförändrade,
+   hela bakgrunden skrivs om i ett stycke eftersom det är en enda egenskap.
+   Id:t behövs för att slå journey.css, som laddas senare. */
+#result-stage .sound-comparison {
+  background:
+    radial-gradient(ellipse 46% 68% at 13% 44%, #8a6bd626, transparent 100%),
+    radial-gradient(ellipse 38% 58% at 81% 47%, #849de524, transparent 100%),
+    radial-gradient(ellipse at 0 0, #925ccc16, transparent 48%),
+    #0d0c17;
+}
+
+/* Jämförelseikonerna ska se likadana ut i mobil som på webb. journey.css
+   nollar plattan under 760 px (border:0, background:none, radius:0); här
+   sätts formen tillbaka i ett något mindre mått. */
+@media(max-width:760px){
+  #result-stage .sound-comparison .comparison-icon {
+    flex:0 0 25px; width:25px; height:25px; border-width:1px; border-style:solid; border-radius:7px;
+    display:grid; place-items:center;
+  }
+  #result-stage .sound-comparison .comparison-icon svg { width:14px; height:14px; }
+}
+
+/* ---- Summeringen på resultatsidan, 18 september ----
+   Upplägget är originalets: Character och Target bredvid varandra, Adjust
+   överst. Enda ändringen är att Adjust har fått en ram runt sig, och att
+   etiketterna CHARACTER och TARGET höjts från 8 till 9 px och ljusnat.
+
+   Knappen placeras uttryckligen på rad 1 och de två värdena på rad 2.
+   journey.css placerade förut knappen via .plain-action, en klass den inte
+   har längre, så utan de här raderna hamnar den under värdena.
+   I mobil ligger knappen kvar till höger om värdena och texten kortas till
+   "Adjust", annars blir raden för bred vid långa namn som "Punchy". */
+#result-stage .master-summary > div > span { font-size:9px; letter-spacing:1.6px; color:#a18fbb; }
+#result-stage .master-summary .sum-wide {
+  display:flex; align-items:center; justify-content:center; gap:9px;
+  border:1px solid #b79bea42; border-radius:11px;
+  background:linear-gradient(150deg,#191426,#100e1a);
+  color:#dbcfee; letter-spacing:-.1px; cursor:pointer;
+  transition:border-color .2s ease,background .2s ease,color .2s ease;
+}
+#result-stage .master-summary .sum-wide:hover {
+  border-color:#c2a4f57a; color:#f1e7ff; background:linear-gradient(150deg,#241b36,#161224);
+}
+#result-stage .master-summary .sum-wide i { font-style:normal; color:#b596f0; }
+
+@media(min-width:761px){
+  #result-stage .master-summary > .sum-wide {
+    grid-row:1; grid-column:1/-1; justify-self:stretch; width:100%;
+    margin:0; min-height:44px; padding:11px 16px; font-size:13.5px;
+  }
+  #result-stage .master-summary > div { grid-row:2; }
+  #result-stage .master-summary > .master-recipe { grid-row:3; grid-column:1/-1; }
+}
+@media(max-width:760px){
+  #result-stage .master-summary > .sum-wide {
+    min-height:38px; padding:8px 13px; border-radius:10px; font-size:12.5px; gap:7px;
+  }
+  #result-stage .master-summary .sum-more { display:none; }
+}
+@media(prefers-reduced-motion:reduce){
+  #result-stage .master-summary .sum-wide { transition:none; }
+}
+
+/* ==========================================================================
+   "Your master is ready" över resultatkorten, byggt som analysens kort:
+   rubriken till vänster, samma upphöjda ratt till höger med det valda
+   loudnessmålet, och detaljerna utan egna rutor under en tunn linje.
+   Innehållet kommer från mastrify.com:s färdiga mastersida. Den gröna
+   pillen och rubriken "What we protected" syns inte längre: samma sak står
+   i bockarna och i TRANSIENT-SAFE-märket, och listan har kvar rubriken för
+   skärmläsare. Pillens gröna punkt sitter nu framför överrubriken.
+
+   Sedan 20 sep är ratten en rektangulär mätare (se "Masterns
+   loudnessmätare" längst ned) och kortet har samma två rader i alla
+   bredder på datorn: texten och mätaren överst, detaljerna under.
+   ========================================================================== */
+
+/* Plats i rutnätet. Över 1100px är #result-stage ett rutnät där journey.css
+   pekar ut rad och spalt för varje kort, så det nya blocket måste läggas in
+   och de andra flyttas ned ett steg. #result-stage i väljaren behövs för att
+   slå journey.css, som laddas efter den här filen. */
+@media screen and (min-width:1100px){
+  body[data-page=master] #result-stage { grid-template-rows:auto auto 1fr auto; }
+  body[data-page=master] #result-stage .master-ready { grid-column:1/-1; grid-row:1; }
+  body[data-page=master] #result-stage .sound-comparison { grid-row:2/4; }
+  body[data-page=master] #result-stage .master-summary { grid-row:2; }
+  body[data-page=master] #result-stage .export-card { grid-row:3; }
+}
+
+#result-stage .master-ready {
+  --ratt:188px; --djup:calc(var(--ratt) * .044);
+  position:relative; isolation:isolate; overflow:hidden;
+  display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) var(--ratt);
+  grid-template-rows:auto auto; grid-template-areas:"copy facts dial" "copy protect dial";
+  column-gap:40px; row-gap:0; padding:28px 36px 30px 32px;
+}
+/* Två ljus, ett violett uppe till vänster och ett svagt grönt nere till
+   höger, så kortet inte blir platt. */
+#result-stage .master-ready::before {
+  content:''; position:absolute; inset:0; z-index:-1; pointer-events:none; border-radius:inherit;
+  background:radial-gradient(ellipse 58% 120% at 6% 0%, #9a6ce226, transparent 70%),
+             radial-gradient(ellipse 46% 110% at 96% 100%, #63e3b418, transparent 72%);
+}
+
+#result-stage .master-ready .ready-main { grid-area:copy; align-self:center; display:grid; justify-items:start; min-width:0; }
+#result-stage .master-ready .ready-kicker {
+  display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;
+  font:9px ui-monospace,monospace; letter-spacing:1.9px; text-transform:uppercase; color:#a48fc4;
+}
+/* Den gröna punkten från statuspillret, samma gröna som bockarna. */
+#result-stage .master-ready .ready-kicker i {
+  flex:none; width:6px; height:6px; border-radius:50%; background:#c6f7e6;
+  box-shadow:0 0 7px #63e3b4c4, 0 0 15px #35c79a5c;
+}
+#result-stage .master-ready h2 {
+  margin:0 0 11px; font-size:42px; font-weight:550; letter-spacing:-1.6px; line-height:1.04;
+  text-shadow:0 0 34px #a97ef53d;
+}
+#result-stage .master-ready .ready-line { margin:0; font-size:13.5px; line-height:1.6; color:#a291b4; text-wrap:pretty; }
+
+/* Detaljerna. På webben skiljer en lodrät linje dem från rubriken; låten och
+   loudnessprofilen står överst och bockarna med märkena under, och de två
+   delarna håller ihop mitt i höjden som texten på analysens kort. */
+#result-stage .master-ready .ready-facts {
+  grid-area:facts; align-self:end; min-width:0;
+  display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); align-content:start; gap:0 22px;
+  padding:0 0 16px 34px; border-left:1px solid #c1a1ed1f;
+}
+#result-stage .master-ready .ready-facts > div { display:grid; align-content:start; gap:5px; min-width:0; }
+#result-stage .master-ready .ready-facts span {
+  font:8px ui-monospace,monospace; letter-spacing:1.6px; text-transform:uppercase; color:#8b78a4;
+}
+#result-stage .master-ready .ready-facts strong {
+  font-size:15px; font-weight:560; letter-spacing:-.3px; line-height:1.3; color:#ece3ff; overflow-wrap:anywhere;
+}
+#result-stage .master-ready .ready-profile strong {
+  background-image:linear-gradient(105deg,#c6aaff,#9fc6ff);
+  background-clip:text; -webkit-background-clip:text; color:transparent;
+}
+#result-stage .master-ready .ready-note { grid-column:1/-1; margin:9px 0 0; font-size:11.5px; line-height:1.55; color:#8c7ba2; }
+#result-stage .master-ready .ready-protect {
+  grid-area:protect; align-self:start; min-width:0;
+  display:grid; gap:12px; padding:16px 0 0 34px; border-left:1px solid #c1a1ed1f;
+}
+
+#result-stage .master-ready .ready-promises { list-style:none; margin:0; padding:0; display:grid; gap:9px; }
+#result-stage .master-ready .ready-promises li {
+  position:relative; padding-left:19px; font-size:12px; line-height:1.55; color:#a795bd;
+}
+#result-stage .master-ready .ready-promises li::before {
+  content:''; position:absolute; left:0; top:.28em; width:12px; height:12px; border-radius:50%;
+  border:1px solid #63e3b45c;
+  background:#63e3b414 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2395f0d0' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.4 4 4 8-8'/%3E%3C/svg%3E") center/8px 8px no-repeat;
+}
+
+#result-stage .master-ready .ready-marks { display:flex; flex-wrap:wrap; gap:7px; margin:2px 0 0; padding:0; }
+#result-stage .master-ready .ready-marks span {
+  font:8px/1.5 ui-monospace,monospace; letter-spacing:1.3px; padding:5px 8px;
+  border:1px solid #b9a1dc35; border-radius:6px; color:#bca3d6; background:#ae86e10a;
+}
+#result-stage .master-ready .ready-marks span:first-child { border-color:#63e3b440; color:#a9e9d1; background:#63e3b40d; }
+
+#result-stage .master-ready .ready-dial { grid-area:dial; align-self:center; justify-self:end; margin-bottom:var(--djup); }
+
+/* Under 1100px är #result-stage inte längre ett rutnät, så kortet måste
+   hålla sitt eget avstånd till "A closer listen" nedanför. Från 680px:
+   texten och ratten överst, och under en tunn linje låten och profilen
+   till vänster och bockarna med märkena till höger, så ingen del av kortet
+   står tom. Texten spänner över båda spalterna men lämnar plats för
+   ratten, så rubriken får stå på en rad. */
+@media(max-width:1099px){
+  #result-stage .master-ready {
+    margin-bottom:14px;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto;
+    grid-template-areas:"copy dial" "facts protect";
+    column-gap:0; padding:28px 32px 30px 30px;
+  }
+  #result-stage .master-ready .ready-main { grid-column:1/3; grid-row:1; padding-right:calc(var(--ratt) + 32px); }
+  #result-stage .master-ready .ready-dial { grid-column:2; grid-row:1; }
+  #result-stage .master-ready .ready-facts {
+    align-self:stretch; margin-top:22px; padding:20px 28px 0 0; border-left:0; border-top:1px solid #c1a1ed1f;
+  }
+  #result-stage .master-ready .ready-protect {
+    align-self:stretch; align-content:start; margin-top:22px; padding:20px 0 0 28px; border-left:0; border-top:1px solid #c1a1ed1f;
+  }
+}
+@media(max-width:760px){
+  #result-stage .master-ready { --ratt:176px; padding:26px 28px 28px 26px; }
+  #result-stage .master-ready h2 { font-size:34px; letter-spacing:-1.2px; }
+  #result-stage .master-ready .ready-line { font-size:13px; }
+}
+/* Under 680px ryms inte två spalter under linjen: allt ligger i en spalt
+   under texten och ratten, som på analysens kort. */
+@media(max-width:679px){
+  #result-stage .master-ready {
+    grid-template-columns:minmax(0,1fr) var(--ratt); grid-template-rows:auto auto auto;
+    grid-template-areas:"copy dial" "facts facts" "protect protect"; column-gap:28px;
+  }
+  #result-stage .master-ready .ready-main { grid-area:copy; padding-right:0; }
+  #result-stage .master-ready .ready-dial { grid-area:dial; }
+  #result-stage .master-ready .ready-facts { padding:20px 0 0; }
+  #result-stage .master-ready .ready-protect { margin-top:0; padding:16px 0 0; border-top:0; }
+}
+@media(max-width:599px){
+  #result-stage .master-ready { --ratt:clamp(124px, 39vw, 158px); column-gap:14px; padding:24px 20px 22px; }
+  #result-stage .master-ready .ready-dial { align-self:start; }
+  #result-stage .master-ready .ready-kicker { margin-bottom:10px; font-size:8px; letter-spacing:1.4px; gap:7px; }
+  #result-stage .master-ready h2 { margin-bottom:9px; font-size:clamp(21px, 7vw, 28px); letter-spacing:-.9px; line-height:1.08; }
+  #result-stage .master-ready .ready-line { font-size:12.5px; line-height:1.55; }
+  #result-stage .master-ready .ready-facts { margin-top:16px; padding-top:16px; gap:0 16px; }
+  #result-stage .master-ready .ready-facts strong { font-size:14px; }
+  #result-stage .master-ready .ready-protect { padding-top:14px; gap:11px; }
+}
+/* De allra smalaste skärmarna: bara överrubriken och rubriken står bredvid
+   ratten, meningen under går över hela bredden. Annars blir textspalten så
+   lång att det står tomt under ratten. */
+@media(max-width:349px){
+  #result-stage .master-ready {
+    grid-template-rows:auto auto auto auto auto;
+    grid-template-areas:"kicker dial" "title dial" "line line" "facts facts" "protect protect";
+  }
+  #result-stage .master-ready .ready-main { display:contents; }
+  #result-stage .master-ready .ready-kicker { grid-area:kicker; align-self:end; }
+  #result-stage .master-ready h2 { grid-area:title; align-self:start; margin-bottom:0; }
+  #result-stage .master-ready .ready-line { grid-area:line; margin-top:13px; }
+}
+
+/* ==========================================================================
+   Analysens huvudkort: rubriken och sammanfattningen till vänster, mätaren
+   som en upphöjd ratt till höger och punkterna under texten.
+   Kortet har samma material som mätkorten nedanför, så sidan blir enhetlig.
+
+   Ratten ritas som en SVG i journey.js (RB_FORM): en rund kropp med
+   sidokant, ovansida, violett ljus och en fas som är ljus uppe till vänster
+   och mörk nere till höger. Allt räknas från --ratt, rattens diameter, så
+   samma ratt fungerar i alla storlekar. --djup är sidokantens höjd, 4,4 %
+   av diametern, lika mycket som SVG:n flyttar ned sidokanten.
+
+   Webb: kortet är lika brett som vågen ovanför och ratten 188 px (Linus
+   19 sep: mätaren var nästan för stor och kortet skulle gå över hela vågens
+   bredd). Från 1100px tre spalter som masterns kort: rubriken och
+   sammanfattningen, punkterna bakom en lodrät linje och ratten. Under 1100px
+   texten i en spalt till vänster och ratten mitt i höjden till höger;
+   rubriken står i underkant av sin rad och punkterna i överkant av sin, så
+   texten håller ihop och luften delas lika över och under.
+   Mobil (under 600px): ratten uppe i högra hörnet, rubriken och
+   sammanfattningen bredvid den och punkterna över hela bredden under.
+   ========================================================================== */
+#result-stage .readiness-stage {
+  --ratt:188px; --djup:calc(var(--ratt) * .044);
+  position:relative; isolation:isolate; overflow:hidden;
+  display:grid; grid-template-columns:minmax(0,1fr) var(--ratt);
+  grid-template-rows:auto auto; grid-template-areas:"copy dial" "points dial";
+  column-gap:52px; row-gap:0;
+  width:100%; margin:0 auto;
+  padding:36px 44px 38px 42px;
+  border:1px solid rgb(181 133 255 / .36); border-radius:20px;
+  background:
+    radial-gradient(ellipse at 5% 0%, rgb(181 133 255 / .20), transparent 72%),
+    radial-gradient(ellipse at 100% 100%, #6c9fec12, transparent 65%),
+    linear-gradient(145deg, #1a1427, #10101d);
+  box-shadow:inset 0 1px 0 #eee2ff10, 0 8px 28px rgb(181 133 255 / .055);
+}
+/* Samma ljuslinje i överkant som mätkorten har. */
+#result-stage .readiness-stage::before {
+  content:''; position:absolute; pointer-events:none; top:-1px; left:16px; right:16px; height:1px;
+  background:linear-gradient(90deg, transparent, rgb(181 133 255 / .8), #def0ff9c, transparent);
+}
+
+/* Rubriken i samma stil som "Your master is ready." på mastringssidan. */
+#result-stage .readiness-copy { grid-area:copy; align-self:end; min-width:0; }
+#result-stage .readiness-copy h2 {
+  margin:0 0 11px; font-size:38px; font-weight:550; letter-spacing:-1.4px; line-height:1.06;
+  text-shadow:0 0 34px #a97ef53d;
+}
+#result-stage .readiness-copy p { margin:0; font-size:14px; line-height:1.6; color:#a291b4; text-wrap:pretty; }
+
+/* Punkterna under en tunn linje, med samma lysande prickar som förut. */
+#result-stage .readiness-stage .readiness-points {
+  grid-area:points; align-self:start; min-width:0;
+  margin:22px 0 0; padding:20px 0 0; gap:10px;
+  border-top:1px solid #c1a1ed1f;
+}
+#result-stage .readiness-stage .readiness-points li { font-size:13px; line-height:1.55; }
+
+#result-stage .readiness-dial { grid-area:dial; align-self:center; justify-self:end; margin-bottom:var(--djup); }
+/* Rattens material, delat av analysens mätare och masterns vridratt. */
+#result-stage :is(.readiness-dial, .ready-dial) {
+  position:relative; isolation:isolate; display:grid; place-items:center;
+  width:var(--ratt); height:var(--ratt); border-radius:50%;
+}
+/* Golvljus och kontaktskugga under ratten. */
+#result-stage :is(.readiness-dial, .ready-dial)::before {
+  content:''; position:absolute; z-index:-2; pointer-events:none;
+  left:-30%; right:-30%; top:54%; height:74%;
+  background:radial-gradient(ellipse 50% 38% at 50% 36%, #8b5fdc30, #5d7fd612 55%, transparent 74%);
+  filter:blur(8px);
+}
+#result-stage :is(.readiness-dial, .ready-dial)::after {
+  content:''; position:absolute; z-index:-1; pointer-events:none;
+  left:10%; right:10%; bottom:calc(var(--djup) * -1 - var(--ratt) * .044); height:calc(var(--ratt) * .118); border-radius:50%;
+  background:radial-gradient(ellipse at 50% 40%, #000000d9, #00000059 45%, transparent 72%);
+  filter:blur(6px);
+}
+#result-stage :is(.readiness-dial, .ready-dial) .rb-form {
+  position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none;
+  filter:drop-shadow(0 12px 14px #000000a6);
+}
+/* Skålen mätaren ligger i. 11 % in från kanten, så ringens skalstreck
+   (0,74 av radien) ligger inne i skålen och kanten syns runt om. */
+#result-stage :is(.readiness-dial, .ready-dial) .rb-well {
+  position:absolute; inset:11%; border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle at 50% 36%, #0a0810 0%, #0f0c16 60%, #17121f 100%);
+  box-shadow:
+    inset 0 calc(var(--ratt) * .051) calc(var(--ratt) * .074) calc(var(--ratt) * -.029) #000000e6,
+    inset 0 -2px 2px -1px #ffffff1c,
+    0 -1px 0 #00000099,
+    0 1px 0 #ffffff17;
+}
+#result-stage :is(.readiness-dial, .ready-dial) .score-ring {
+  position:relative; z-index:1;
+  width:calc(var(--ratt) * .78); height:calc(var(--ratt) * .78);
+}
+#result-stage :is(.readiness-dial, .ready-dial) .score-ring strong { font-size:calc(var(--ratt) * .235); letter-spacing:-.04em; padding:0 .08em; }
+#result-stage .readiness-dial .score-ring strong small { font-size:.36em; }
+#result-stage :is(.readiness-dial, .ready-dial) .score-ring > span { font-size:max(6.5px, calc(var(--ratt) * .041)); letter-spacing:.2em; }
+/* Masterns vridratt: samma ring och typsnitt som mätaren, men bågen går
+   270 grader, färgen går från blått mot rosa ju högre målet är och bågen
+   slutar i en ljuspunkt. */
+#result-stage .target-ring .target-ticks { fill:none; stroke:#a593d4; stroke-width:1; stroke-dasharray:.65 3.5167; opacity:.36; }
+#result-stage .target-ring .target-track { fill:none; stroke:#b8a1e020; stroke-width:3; stroke-linecap:round; }
+#result-stage .target-ring .target-arc,
+#result-stage .target-ring .target-glow { fill:none; stroke:url(#target-colour); stroke-width:6; stroke-linecap:round; }
+#result-stage .target-ring .target-glow { filter:blur(4px); opacity:.45; }
+#result-stage .target-ring .target-pointer { fill:#fdfaff; filter:drop-shadow(0 0 2px #efe4ff) drop-shadow(0 0 5px #c49bff); }
+
+@media screen and (min-width:1100px){
+  #result-stage .readiness-stage:has(.readiness-points) {
+    grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) var(--ratt);
+    grid-template-rows:auto; grid-template-areas:"copy points dial";
+    column-gap:40px; padding:30px 36px 32px 34px;
+  }
+  #result-stage .readiness-stage:has(.readiness-points) .readiness-copy { align-self:center; }
+  #result-stage .readiness-stage .readiness-points {
+    align-self:center; margin:0; padding:4px 0 4px 34px;
+    border-top:0; border-left:1px solid #c1a1ed1f;
+  }
+}
+@media(max-width:760px){
+  #result-stage .readiness-stage { --ratt:196px; column-gap:32px; padding:30px 30px 32px 28px; }
+  #result-stage .readiness-copy h2 { font-size:31px; letter-spacing:-1.1px; }
+  #result-stage .readiness-copy p { font-size:13px; }
+  #result-stage .readiness-stage .readiness-points { margin-top:18px; padding-top:17px; gap:9px; }
+  #result-stage .readiness-stage .readiness-points li { font-size:12px; }
+  #result-stage :is(.readiness-dial, .ready-dial) .rb-form { filter:drop-shadow(0 10px 12px #000000a6); }
+}
+@media(max-width:599px){
+  #result-stage .readiness-stage {
+    --ratt:clamp(124px, 39vw, 158px);
+    grid-template-areas:"copy dial" "points points";
+    column-gap:14px;
+    padding:24px 20px 22px;
+  }
+  #result-stage .readiness-copy { align-self:center; }
+  #result-stage .readiness-dial { align-self:start; }
+  #result-stage .readiness-copy h2 { margin-bottom:9px; font-size:clamp(21px, 7vw, 28px); letter-spacing:-.9px; line-height:1.08; }
+  #result-stage .readiness-copy p { font-size:12.5px; line-height:1.55; }
+  #result-stage .readiness-stage .readiness-points { margin-top:16px; padding-top:16px; }
+  #result-stage :is(.readiness-dial, .ready-dial)::before { height:56%; }
+  #result-stage :is(.readiness-dial, .ready-dial) .rb-form { filter:drop-shadow(0 8px 10px #000000a6); }
+}
+
+/* Analysens kort mindre och tätare (Linus 19 sep: "denna boxen måste bli
+   mindre" och mätaren mindre så att den får plats snyggt). Ratten är 116 px
+   på webben (var 188) och kortet ungefär 170 px högt (var 260). På mobilen
+   är ratten 110 px (var 158) och raden med rubriken och ratten lika hög som
+   ratten, med mindre luft ovanför. Rubriken, texten och punkterna är som
+   förut. Masterns kort ("Your master is ready") är orört. */
+#result-stage .readiness-stage { --ratt:116px; padding:26px 40px 28px 38px; }
+@media screen and (min-width:1100px){
+  #result-stage .readiness-stage:has(.readiness-points) { padding:22px 34px 24px 34px; }
+}
+@media(max-width:760px){
+  #result-stage .readiness-stage { --ratt:124px; padding:24px 26px 26px 24px; }
+}
+@media(max-width:599px){
+  #result-stage .readiness-stage { --ratt:clamp(96px, 25vw, 110px); padding:18px 20px 22px; }
+}
+
+/* Resultatkorten i sidans bredd (Linus 19 sep: resultatvyerna ska vara
+   lika breda som resten av sidan, 1000 px, och tätare). Från 1100px är
+   korten alltid exakt 1000 px breda (journey.css).
+   Analysens kort: rubrikens spalt är smalare och punkternas bredare, så
+   punkterna bryts som förut och kortet håller samma höjd som i 1120 px.
+   Masterns kort har samma två rader i alla bredder, se mätaren nedan. */
+@media screen and (min-width:1100px){
+  #result-stage .readiness-stage:has(.readiness-points) { grid-template-columns:minmax(0,.86fr) minmax(0,1fr) var(--ratt); }
+}
+
+/* ==========================================================================
+   Masterns loudnessmätare (Linus 20 sep: "en HELT annan rektangulär mätare
+   i samma stil och vibe som vår runda poängmätare", och kortet kortare).
+   Samma material som analysens runda ratt: en upphöjd platta med sidokant,
+   ovansida med violett ljus, en fas som är ljus uppe till vänster och mörk
+   nere till höger, golvljus och kontaktskugga, och en nedsänkt skål. I
+   skålen står målet i LUFS och en vågrät skala från -18 till -6 LUFS med
+   skalstreck, fylld fram till målet i rattens färger (blått mot rosa ju
+   högre målet är) med en ljuspunkt vid målet. Allt räknas från plattans
+   bredd och höjd (--mw, --mh), så samma mätare fungerar i alla storlekar.
+   Kortet blir lägre eftersom mätaren är lägre än ratten var.
+   ========================================================================== */
+#result-stage .master-ready { --mw:224px; --mh:72px; }
+#result-stage .master-ready .ready-meter {
+  --md:calc(var(--mh) * .085); --mr:calc(var(--mh) * .3);
+  grid-area:dial; align-self:center; justify-self:end;
+  position:relative; isolation:isolate; box-sizing:border-box;
+  width:var(--mw); height:var(--mh); margin-bottom:var(--md);
+  display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center;
+  column-gap:calc(var(--mh) * .26); padding:0 calc(var(--mh) * .34) 0 calc(var(--mh) * .3);
+}
+/* Golvljus och kontaktskugga under plattan, som under ratten. */
+#result-stage .ready-meter::before {
+  content:''; position:absolute; z-index:-3; pointer-events:none;
+  left:-12%; right:-12%; top:52%; height:110%;
+  background:radial-gradient(ellipse 50% 38% at 50% 36%, #8b5fdc30, #5d7fd612 55%, transparent 74%);
+  filter:blur(8px);
+}
+#result-stage .ready-meter::after {
+  content:''; position:absolute; z-index:-2; pointer-events:none;
+  left:7%; right:7%; bottom:calc(var(--md) * -1 - var(--mh) * .09); height:calc(var(--mh) * .24); border-radius:50%;
+  background:radial-gradient(ellipse at 50% 40%, #000000d9, #00000059 45%, transparent 72%);
+  filter:blur(6px);
+}
+#result-stage .ready-meter > i { position:absolute; pointer-events:none; }
+/* Sidokanten: samma form, nedflyttad, med rattens skugga under. */
+#result-stage .ready-meter .rm-side {
+  inset:0; z-index:-1; border-radius:var(--mr); transform:translateY(var(--md));
+  background:linear-gradient(180deg, #2a2038, #140f1d 45%, #07060b);
+  box-shadow:0 calc(var(--mh) * .16) calc(var(--mh) * .2) calc(var(--mh) * -.03) #000000a6;
+}
+/* Ovansidan: violett ljus uppifrån och fasen i kanten, ljus uppe till
+   vänster, genomskinlig i mitten och blåaktig nere till höger. */
+#result-stage .ready-meter .rm-top {
+  inset:0; z-index:-1; border-radius:var(--mr); border:1.6px solid transparent;
+  background:
+    radial-gradient(ellipse 60% 130% at 34% -12%, #b690ff4d, transparent 72%) padding-box,
+    radial-gradient(ellipse 120% 190% at 20% 0%, #3a2d55, #221b30 38%, #140f1c 72%, #0d0a13) padding-box,
+    linear-gradient(162deg, #ffffff99, #e3d0ff73 20%, #ffffff12 45%, #fff0 60%, #8fc6ff33 82%, #8fc6ff52) border-box;
+  box-shadow:inset calc(var(--mh) * -.04) calc(var(--mh) * -.05) calc(var(--mh) * .07) calc(var(--mh) * -.04) #00000099;
+}
+/* Skålen mätaren ligger i, som rattens skål. */
+#result-stage .ready-meter .rm-well {
+  inset:calc(var(--mh) * .12); z-index:-1; border-radius:calc(var(--mr) - var(--mh) * .1);
+  background:radial-gradient(ellipse 80% 150% at 50% 30%, #0a0810 0%, #0f0c16 60%, #17121f 100%);
+  box-shadow:
+    inset 0 calc(var(--mh) * .09) calc(var(--mh) * .13) calc(var(--mh) * -.05) #000000e6,
+    inset 0 -2px 2px -1px #ffffff1c,
+    0 -1px 0 #00000099,
+    0 1px 0 #ffffff17;
+}
+#result-stage .ready-meter .rm-value { position:relative; display:grid; justify-items:center; min-width:0; }
+#result-stage .ready-meter .rm-value strong {
+  font:500 calc(var(--mh) * .4)/1.05 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; letter-spacing:-.04em; padding:0 .08em;
+  background:linear-gradient(120deg,#bd9eff,#aaceff 60%,#fff); background-clip:text; -webkit-background-clip:text; color:transparent;
+  text-shadow:0 0 10px #b49cff45;
+}
+#result-stage .ready-meter .rm-value span {
+  font:max(6.5px, calc(var(--mh) * .092))/1.7 ui-monospace,monospace; letter-spacing:.2em; color:#a68dc1; white-space:nowrap;
+}
+/* Skalan: streck för varje LUFS från -18 till -6 (längre vid var fjärde),
+   spåret, fyllningen i rattens färger och ljuspunkten vid målet. Färgen
+   ligger över hela skalan, så fyllningens slut har målets färg. */
+#result-stage .ready-meter .rm-scale { position:relative; height:calc(var(--mh) * .3); min-width:0; }
+#result-stage .ready-meter .rm-scale > i { position:absolute; display:block; pointer-events:none; }
+#result-stage .ready-meter .rm-ticks {
+  left:0; width:100%; top:0; height:calc(var(--mh) * .1); opacity:.42;
+  background:
+    repeating-linear-gradient(90deg, #a593d4 0 1px, #0000 1px calc((100% - 1px) / 12)) 0 100% / 100% 55% no-repeat,
+    repeating-linear-gradient(90deg, #c9b8f0 0 1px, #0000 1px calc((100% - 1px) / 3)) 0 0 / 100% 100% no-repeat;
+}
+#result-stage .ready-meter .rm-track { left:0; right:0; bottom:calc(var(--mh) * .045); height:3px; border-radius:2px; background:#b8a1e020; }
+#result-stage .ready-meter :is(.rm-fill, .rm-glow) {
+  left:0; bottom:calc(var(--mh) * .045 - 1px); height:5px; width:calc(var(--pos) * 100%); border-radius:3px;
+  background:linear-gradient(90deg, #9fd0ff, #8fb4ff 30%, #a794ff 50%, #c187ef 68%, #e37fc2 84%, #f9899f) 0 0 / calc(100% / var(--pos)) 100% no-repeat;
+}
+#result-stage .ready-meter .rm-glow { filter:blur(4px); opacity:.45; }
+#result-stage .ready-meter .rm-pointer {
+  left:calc(var(--pos) * 100%); bottom:calc(var(--mh) * .045 - 1.5px); width:6px; height:6px; margin-left:-3px; border-radius:50%;
+  background:#fdfaff; filter:drop-shadow(0 0 2px #efe4ff) drop-shadow(0 0 5px #c49bff);
+}
+
+/* Placering. Från 1100 px samma två rader som i smalare fönster (Linus
+   20 sep: "den HÄR layouten ska det vara på det fullt utsträckta läget
+   med"): rubriken och mätaren överst, låten, profilen och bockarna under en
+   tunn linje. Utan eget avstånd nedåt: där är #result-stage ett rutnät som
+   håller avståndet till korten under. */
+@media screen and (min-width:1100px){
+  #result-stage .master-ready {
+    --mw:224px; --mh:72px;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto;
+    grid-template-areas:"copy dial" "facts protect";
+    column-gap:0; padding:28px 32px 30px 30px;
+  }
+  #result-stage .master-ready .ready-main { grid-column:1/3; grid-row:1; padding-right:calc(var(--mw) + 32px); }
+  #result-stage .master-ready .ready-facts {
+    align-self:stretch; margin-top:22px; padding:20px 28px 0 0; border-left:0; border-top:1px solid #c1a1ed1f;
+  }
+  #result-stage .master-ready .ready-protect {
+    align-self:stretch; align-content:start; margin-top:22px; padding:20px 0 0 28px; border-left:0; border-top:1px solid #c1a1ed1f;
+  }
+}
+/* 761 till 1099 px: mätaren till höger om rubriken. Raden är bara så hög som
+   texten, så kortet blir mycket lägre än med ratten. */
+@media (max-width:1099px){
+  #result-stage .master-ready { --mw:clamp(196px, 26vw, 224px); --mh:72px; }
+  #result-stage .master-ready .ready-main { padding-right:calc(var(--mw) + 32px); }
+}
+@media (max-width:760px){
+  #result-stage .master-ready { --mw:196px; --mh:68px; }
+}
+/* Under 680 px: mätaren på en egen rad under texten, över hela bredden, så
+   rubriken får hela bredden och står på en rad. */
+@media (max-width:679px){
+  #result-stage .master-ready {
+    --mw:100%; --mh:64px;
+    grid-template-columns:minmax(0,1fr); grid-template-rows:auto;
+    grid-template-areas:"copy" "dial" "facts" "protect";
+  }
+  #result-stage .master-ready .ready-main { padding-right:0; }
+  #result-stage .master-ready .ready-meter { justify-self:stretch; margin-top:18px; }
+}
+@media (max-width:599px){
+  #result-stage .master-ready { --mh:60px; }
+  #result-stage .master-ready .ready-meter { margin-top:16px; }
+}
+/* Den smalaste mobillayouten ställde rubriken bredvid ratten. Med mätaren på
+   egen rad behövs den inte: samma ordning som ovan. */
+@media (max-width:349px){
+  #result-stage .master-ready { grid-template-rows:auto; grid-template-areas:"copy" "dial" "facts" "protect"; }
+  #result-stage .master-ready .ready-main { display:grid; }
+  #result-stage .master-ready :is(.ready-kicker, h2, .ready-line) { grid-area:auto; }
+  #result-stage .master-ready h2 { margin-bottom:9px; }
+  #result-stage .master-ready .ready-line { margin-top:0; }
+}
+
+/* Utsträckt fönster, sista finputsen (Linus 20 sep): mätaren är lika lång
+   som högra spalten, från bockarnas vänsterkant till kortets högerkant, som
+   på mobilen, och rubriken står i vänstra spalten. Låten, profilen och raden
+   under är större och fyller vänstra spalten. */
+@media screen and (min-width:1100px){
+  #result-stage .master-ready { --mw:calc(100% - 28px); --mh:76px; }
+  #result-stage .master-ready .ready-main { grid-column:1; padding-right:28px; }
+  #result-stage .master-ready .ready-facts { grid-template-columns:fit-content(52%) minmax(0,1fr); gap:0 26px; }
+  #result-stage .master-ready .ready-facts > div { gap:7px; }
+  #result-stage .master-ready .ready-facts span { font-size:9.5px; letter-spacing:1.8px; }
+  #result-stage .master-ready .ready-facts strong { font-size:18px; letter-spacing:-.35px; }
+  #result-stage .master-ready .ready-note { margin-top:12px; font-size:14px; text-wrap:pretty; }
+}
+
+/* Prissidan centrerad, 20 september (Linus ritning) ─────────────────────────
+   Hogerspalten sprack ut bredare an resten: brodtexten slutade 872 px in och
+   raden om testlaget gick anda ut till 989 px av sidans 1000, sa hela blocket
+   sag vansterlutat ut. Nu ar hogerspalten 348 px bred, sa de tva styckena
+   bryts jamnt ("... Listen to" / "the result, ...", och "... is collected;" /
+   "the demo WAV ..."), och hela blocket (380 + 76 + 348 = 804 px) centreras i
+   fonstret i stallet for att spanna sidans 1000 px. Uppmatt vid 1440 px:
+   blocket 318 till 1122, mitten 720, alltsa exakt fonstrets mitt. */
+
+@media(max-width:900px) {
+  /* Samma sak i en spalt: kortet och texten under fyllde hela bredden, och
+     mellan 761 och 900 px blev kortet 708 px brett. Nu ar hela blocket en
+     centrerad spalt som vaxer mjukt med fonstret: 330 px innehall vid en
+     390 px telefon (30 px luft pa var sida), 346 vid 440 px, och som mest
+     460 px pa en surfplatta. Starkare valjare an journey.css egna
+     `body[data-page] .pricing-layout.wrap`, som annars vinner pa ordningen. */
+  body[data-page] section.pricing-layout.wrap { max-width:clamp(362px, 86vw, 520px); margin-inline:auto; }
+}
+

@@ -1,0 +1,13 @@
+{
+  "name": "mastrify-site",
+  "private": true,
+  "description": "Static Mastrify site. dist-v2 is built from its own sources with build-v2.mjs.",
+  "scripts": {
+    "build": "node build-v2.mjs",
+    "build:dev": "node build-v2.mjs --dev",
+    "build:check": "node build-v2.mjs --check"
+  },
+  "devDependencies": {
+    "terser": "^5.51.2"
+  }
+}

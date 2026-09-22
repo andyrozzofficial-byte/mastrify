@@ -1,0 +1,11 @@
+/* Only the visibility controller adds this attribute. Visible effects retain
+   their original animation, colour, geometry and reduced-motion behavior. */
+[data-visibility-paused="true"],
+[data-visibility-paused="true"]::before,
+[data-visibility-paused="true"]::after,
+[data-visibility-paused="true"] *,
+[data-visibility-paused="true"] *::before,
+[data-visibility-paused="true"] *::after {
+  animation-play-state: paused !important;
+  will-change: auto !important;
+}

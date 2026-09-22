@@ -1,0 +1,168 @@
+/* Processing stage, three variants of the checklist (v2): neon, timeline,
+   meters. Same surface as the readiness card. Every rule carries
+   #processing-stage.pv so it wins over the old checklist rules in journey.css. */
+#processing-stage.pv {
+  --pv-a:#6f74ff; --pv-b:#b784ff; --pv-c:#f8879f; --pv-mint:#7fddb9; --pv-muted:#9a8cb4; --pv-dim:#6f6488; --pv-line:#ffffff12;
+  --completion:0; position:relative; isolation:isolate; overflow:hidden; box-sizing:border-box; max-width:640px; margin:auto;
+  padding:22px 26px 14px; border-radius:22px; border:1px solid #b58cff30;
+  background:radial-gradient(90% 120% at 18% 0%,#b58cff22,transparent 55%),linear-gradient(140deg,#181327,#0f0c17 60%,#130f1d);
+  box-shadow:0 26px 70px #00000066, inset 0 1px 0 #ffffff14;
+}
+#processing-stage.pv::before, #processing-stage.pv::after { content:none; }
+#processing-stage.pv .pv-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+#processing-stage.pv .pv-kicker { display:inline-flex; align-items:center; gap:8px; font:600 10px ui-monospace,monospace; letter-spacing:2.2px; color:#cdbdf0; }
+#processing-stage.pv .pv-kicker i { width:7px; height:7px; border-radius:50%; background:#dcc9ff; box-shadow:0 0 10px #b784ff; animation:pv-breathe 2.2s ease-in-out infinite; }
+#processing-stage.pv[data-done=true] .pv-kicker i { background:#c6f7e6; box-shadow:0 0 10px #7fddb9; animation:none; }
+#processing-stage.pv .pv-count { font:600 10.5px ui-monospace,monospace; letter-spacing:1.2px; color:var(--pv-muted); }
+#processing-stage.pv .pv-count b { color:#fff; font-weight:600; }
+#processing-stage.pv .pv-percent-sm { font:600 13px ui-monospace,monospace; color:#cdbdf0; }
+#processing-stage.pv .pv-percent-sm b { font-size:18px; color:#fff; letter-spacing:-.4px; }
+#processing-stage.pv .pv-rail { position:relative; height:3px; margin:16px 0 6px; border-radius:999px; background:#ffffff0e; overflow:hidden; }
+#processing-stage.pv .pv-rail i { position:absolute; inset:0; width:calc(var(--p) * 100%); border-radius:999px; background:linear-gradient(90deg,var(--pv-a),var(--pv-b) 55%,var(--pv-c)) 0 0 / calc(100% / max(var(--p), .001)) 100% no-repeat; box-shadow:0 0 10px #b784ff88; transition:width .5s linear; }
+#processing-stage.pv .pv-foot { display:flex; justify-content:space-between; align-items:center; margin-top:8px; font:10.5px ui-monospace,monospace; letter-spacing:.2px; color:var(--pv-dim); }
+#processing-stage.pv .pv-foot .plain-action { font-size:12px; padding:4px 0; min-height:32px; color:#b9aad6; }
+#processing-stage.pv .pv-phase { display:grid; gap:4px; text-align:center; }
+#processing-stage.pv .pv-phase strong { font:560 19px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:-.5px; color:#f3edff; }
+#processing-stage.pv .pv-phase small { font-size:12.5px; line-height:1.5; color:var(--pv-muted); }
+#processing-stage.pv .pv-phase .is-in { animation:pv-in .45s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes pv-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+@keyframes pv-breathe { 0%,100% { opacity:.55; transform:scale(.85); } 50% { opacity:1; transform:scale(1.15); } }
+@keyframes pv-spin { to { transform:rotate(360deg); } }
+
+/* ===== shared row bits ===== */
+#processing-stage.pv { --fam-level-a:#6f74ff; --fam-level-b:#b784ff; --fam-space-a:#b784ff; --fam-space-b:#f8879f; --fam-tone-a:#f8879f; --fam-tone-b:#ffb59b; --fam-drive-a:#7fddb9; --fam-drive-b:#b9f3d8; }
+#processing-stage.pv [data-family=level] { --fa:var(--fam-level-a); --fb:var(--fam-level-b); --fg:#8f84ff; --ficon:#9fa0ff; }
+#processing-stage.pv [data-family=space] { --fa:var(--fam-space-a); --fb:var(--fam-space-b); --fg:#d284c8; --ficon:#d49bff; }
+#processing-stage.pv [data-family=tone]  { --fa:var(--fam-tone-a);  --fb:var(--fam-tone-b);  --fg:#ff9f9b; --ficon:#ff9fae; }
+#processing-stage.pv [data-family=drive] { --fa:var(--fam-drive-a); --fb:var(--fam-drive-b); --fg:#7fddb9; --ficon:#8fe7c4; }
+#processing-stage.pv .pl-check { position:absolute; inset:0; margin:auto; width:16px; height:16px; fill:none; stroke:#c6f7e6; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; opacity:0; transform:scale(.5); transition:opacity .25s, transform .35s cubic-bezier(.2,.8,.2,1.3); }
+#processing-stage.pv [data-state=done] .pl-check { opacity:1; transform:scale(1); }
+#processing-stage.pv .pv-count .pv-sep { font-style:normal; color:var(--pv-dim); }
+@keyframes pv-halo { 0%,100% { box-shadow:0 0 0 0 #b784ff55, 0 0 14px #b784ff66; } 50% { box-shadow:0 0 0 6px #b784ff00, 0 0 22px #b784ff99; } }
+@keyframes pv-glide { from { background-position:0 0; } to { background-position:200% 0; } }
+
+/* ===== NEON ===== */
+#processing-stage.pv-neon .pl-list { list-style:none; margin:8px 0 0; padding:0; display:grid; gap:4px; }
+#processing-stage.pv-neon .pl-row { position:relative; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:14px; min-height:54px; padding:9px 14px 9px 18px; border-radius:12px; border:1px solid transparent; color:#7f7396; transition:background .35s, border-color .35s, color .35s; }
+#processing-stage.pv-neon .pl-edge { position:absolute; left:6px; top:12px; bottom:12px; width:3px; border-radius:3px; background:#ffffff10; overflow:hidden; }
+#processing-stage.pv-neon .pl-edge::after { content:''; position:absolute; left:0; right:0; top:0; height:0; border-radius:3px; background:linear-gradient(180deg,var(--fa),var(--fb)); box-shadow:0 0 10px var(--fg); transition:height .45s linear; }
+#processing-stage.pv-neon .pl-orb { position:relative; display:grid; place-items:center; width:34px; height:34px; border-radius:50%; border:1px solid #ffffff12; background:#0f0c17; color:#5f5674; transition:color .3s, border-color .3s, box-shadow .3s; }
+#processing-stage.pv-neon .pl-icon { display:grid; place-items:center; transition:opacity .25s; }
+#processing-stage.pv-neon .pl-icon svg { width:15px; height:15px; }
+#processing-stage.pv-neon .pl-ring { position:absolute; inset:-3px; width:auto; height:auto; fill:none; transform:rotate(-90deg); opacity:0; transition:opacity .3s; }
+#processing-stage.pv-neon .pl-ring-track { stroke:#ffffff10; stroke-width:2; }
+#processing-stage.pv-neon .pl-ring-arc { stroke:var(--fb); stroke-width:2; stroke-linecap:round; stroke-dasharray:0 100; transition:stroke-dasharray .45s linear; filter:drop-shadow(0 0 3px var(--fg)); }
+#processing-stage.pv-neon .pl-copy { display:grid; gap:2px; min-width:0; }
+#processing-stage.pv-neon .pl-copy b { font:500 15px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:-.2px; color:inherit; transition:color .3s; }
+#processing-stage.pv-neon .pl-copy small { font-size:11.5px; line-height:1.45; color:#5f5674; max-height:0; opacity:0; overflow:hidden; transition:max-height .4s, opacity .3s, color .3s; }
+#processing-stage.pv-neon .pl-status { font:600 9px ui-monospace,monospace; letter-spacing:1.6px; text-transform:uppercase; color:#5f5674; transition:color .3s; }
+#processing-stage.pv-neon .pl-row[data-state=active] { color:#f3edff; border-color:#ffffff10; background:linear-gradient(90deg, color-mix(in srgb, var(--fa) 14%, transparent), #ffffff04 60%, transparent); }
+#processing-stage.pv-neon .pl-row[data-state=active] .pl-edge::after { height:calc(var(--charge) * 100%); }
+#processing-stage.pv-neon .pl-row[data-state=active] .pl-orb { color:#fff; border-color:color-mix(in srgb, var(--fb) 55%, transparent); animation:pv-halo 2s ease-in-out infinite; }
+#processing-stage.pv-neon .pl-row[data-state=active] .pl-ring { opacity:1; }
+#processing-stage.pv-neon .pl-row[data-state=active] .pl-ring-arc { stroke-dasharray:calc(var(--charge) * 100) 100; }
+#processing-stage.pv-neon .pl-row[data-state=active] .pl-copy small { max-height:2.2em; opacity:1; color:#b6a6cc; }
+#processing-stage.pv-neon .pl-row[data-state=active] .pl-status { color:var(--ficon); }
+#processing-stage.pv-neon .pl-row[data-state=done] { color:#cfc3e6; }
+#processing-stage.pv-neon .pl-row[data-state=done] .pl-edge::after { height:100%; background:linear-gradient(180deg,#b9f3d8,#7fddb9); box-shadow:0 0 8px #7fddb966; }
+#processing-stage.pv-neon .pl-row[data-state=done] .pl-orb { border-color:#7fddb94a; background:#7fddb912; }
+#processing-stage.pv-neon .pl-row[data-state=done] .pl-icon { opacity:0; }
+#processing-stage.pv-neon .pl-row[data-state=done] .pl-status { color:#8fe7c4; }
+
+/* ===== TIMELINE ===== */
+#processing-stage.pv-timeline .pt-wrap { position:relative; margin-top:14px; padding-left:4px; }
+#processing-stage.pv-timeline .pt-list { list-style:none; margin:0; padding:0; display:grid; }
+#processing-stage.pv-timeline .pt-row { position:relative; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:16px; height:58px; padding:0 8px 0 0; color:#7f7396; transition:color .35s; }
+#processing-stage.pv-timeline .pt-line, #processing-stage.pv-timeline .pt-line-fill { position:absolute; left:calc(4px + 14px); top:29px; bottom:29px; width:2px; margin-left:-1px; border-radius:2px; background:#ffffff10; pointer-events:none; }
+#processing-stage.pv-timeline .pt-line-fill { bottom:auto; height:calc(var(--line) * (100% - 58px)); background:linear-gradient(180deg,var(--pv-a),var(--pv-b) 55%,var(--pv-c)) 0 0 / 100% calc(100% / max(var(--line), .001)) no-repeat; box-shadow:0 0 10px #b784ff88; transition:height .45s linear; }
+#processing-stage.pv-timeline .pt-head { position:absolute; left:calc(4px + 14px); top:calc(29px + var(--line) * (100% - 58px)); width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:50%; background:#fff; box-shadow:0 0 10px #fff, 0 0 20px #c9a9ff; transition:top .45s linear; pointer-events:none; z-index:2; }
+#processing-stage.pv-timeline[data-done=true] .pt-head { opacity:0; transition:opacity .5s, top .45s linear; }
+#processing-stage.pv-timeline .pt-node { position:relative; display:grid; place-items:center; width:28px; height:28px; border-radius:50%; border:1px solid #ffffff14; background:#0f0c17; z-index:1; transition:border-color .3s, box-shadow .3s, background .3s; }
+#processing-stage.pv-timeline .pt-node i { width:6px; height:6px; border-radius:50%; background:#5f5674; transition:background .3s, box-shadow .3s, opacity .25s; }
+#processing-stage.pv-timeline .pt-copy { display:grid; gap:2px; min-width:0; }
+#processing-stage.pv-timeline .pt-copy b { font:500 15px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:-.2px; color:inherit; transition:color .3s; }
+#processing-stage.pv-timeline .pt-copy small { font-size:11.5px; line-height:1.45; color:#5f5674; transition:color .3s; }
+#processing-stage.pv-timeline .pt-idx { font:600 9.5px ui-monospace,monospace; letter-spacing:1.4px; color:#4f4763; font-style:normal; transition:color .3s; }
+#processing-stage.pv-timeline .pt-row[data-state=active] { color:#f3edff; }
+#processing-stage.pv-timeline .pt-row[data-state=active] .pt-node { border-color:#c9a9ff8a; background:radial-gradient(circle at 40% 30%,#3b2a5c,#150f22 70%); animation:pv-halo 2s ease-in-out infinite; }
+#processing-stage.pv-timeline .pt-row[data-state=active] .pt-node i { background:#dcc9ff; box-shadow:0 0 8px #b784ff; animation:pv-breathe 1.4s ease-in-out infinite; }
+#processing-stage.pv-timeline .pt-row[data-state=active] .pt-copy small { color:#b6a6cc; }
+#processing-stage.pv-timeline .pt-row[data-state=active] .pt-idx { color:#cdbdf0; }
+#processing-stage.pv-timeline .pt-row[data-state=done] { color:#cfc3e6; }
+#processing-stage.pv-timeline .pt-row[data-state=done] .pt-node { border-color:#7fddb966; background:#0f1a18; box-shadow:0 0 12px #7fddb93a; }
+#processing-stage.pv-timeline .pt-row[data-state=done] .pt-node i { opacity:0; }
+#processing-stage.pv-timeline .pt-row[data-state=done] .pt-idx { color:#8fe7c4; }
+#processing-stage.pv-timeline .pt-row[data-state=done] .pt-copy small { color:#8f84a6; }
+#processing-stage.pv-timeline .pv-foot { margin-top:14px; }
+
+/* ===== METERS ===== */
+#processing-stage.pv-meters .pm-list { list-style:none; margin:10px 0 0; padding:0; display:grid; gap:2px; }
+#processing-stage.pv-meters .pm-row { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:14px; min-height:56px; padding:8px 4px; border-top:1px solid #ffffff08; color:#7f7396; transition:color .35s; }
+#processing-stage.pv-meters .pm-row:first-child { border-top:0; }
+#processing-stage.pv-meters .pm-icon { position:relative; display:grid; place-items:center; width:32px; height:32px; border-radius:9px; border:1px solid #ffffff10; background:#ffffff05; color:#5f5674; transition:color .3s, border-color .3s, background .3s, box-shadow .3s; }
+#processing-stage.pv-meters .pm-icon svg:not(.pl-check) { width:16px; height:16px; transition:opacity .25s; }
+#processing-stage.pv-meters .pm-copy { display:grid; gap:6px; min-width:0; }
+#processing-stage.pv-meters .pm-top { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+#processing-stage.pv-meters .pm-top b { font:500 14.5px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:-.2px; color:inherit; transition:color .3s; }
+#processing-stage.pv-meters .pm-pct { font:600 10.5px ui-monospace,monospace; letter-spacing:.4px; color:#4f4763; font-style:normal; font-variant-numeric:tabular-nums; transition:color .3s; }
+#processing-stage.pv-meters .pm-bar { position:relative; display:block; height:4px; border-radius:999px; background:#ffffff0c; }
+#processing-stage.pv-meters .pm-fill, #processing-stage.pv-meters .pm-glow { position:absolute; left:0; top:0; bottom:0; width:calc(var(--fill) * 100%); border-radius:999px; background:linear-gradient(90deg,var(--fa),var(--fb)) 0 0 / calc(100% / max(var(--fill), .001)) 100% no-repeat; transition:width .45s linear, background .4s; }
+#processing-stage.pv-meters .pm-glow { top:-2px; bottom:-2px; filter:blur(5px); opacity:0; transition:opacity .3s, width .45s linear; }
+#processing-stage.pv-meters .pm-tip { position:absolute; top:50%; left:calc(var(--fill) * 100%); width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:50%; background:#fff; box-shadow:0 0 8px #fff, 0 0 16px var(--fg); opacity:0; transition:left .45s linear, opacity .3s; }
+#processing-stage.pv-meters .pm-copy small { font-size:11px; line-height:1.4; color:#5f5674; max-height:0; opacity:0; overflow:hidden; transition:max-height .4s, opacity .3s, color .3s; }
+#processing-stage.pv-meters .pm-row[data-state=active] { color:#f3edff; }
+#processing-stage.pv-meters .pm-row[data-state=active] .pm-icon { color:#fff; border-color:color-mix(in srgb, var(--fb) 50%, transparent); background:color-mix(in srgb, var(--fa) 18%, transparent); box-shadow:0 0 14px color-mix(in srgb, var(--fg) 45%, transparent); }
+#processing-stage.pv-meters .pm-row[data-state=active] .pm-pct { color:#fff; }
+#processing-stage.pv-meters .pm-row[data-state=active] .pm-glow { opacity:.6; }
+#processing-stage.pv-meters .pm-row[data-state=active] .pm-tip { opacity:1; }
+#processing-stage.pv-meters .pm-row[data-state=active] .pm-copy small { max-height:2.2em; opacity:1; color:#b6a6cc; }
+#processing-stage.pv-meters .pm-row[data-state=done] { color:#cfc3e6; }
+#processing-stage.pv-meters .pm-row[data-state=done] .pm-icon { color:#8fe7c4; border-color:#7fddb93a; background:#7fddb912; }
+#processing-stage.pv-meters .pm-row[data-state=done] .pm-icon svg:not(.pl-check) { opacity:0; }
+#processing-stage.pv-meters .pm-row[data-state=done] .pm-fill { background:linear-gradient(90deg,#7fddb9,#b9f3d8); }
+#processing-stage.pv-meters .pm-row[data-state=done] .pm-pct { color:#8fe7c4; }
+#processing-stage.pv-meters .pv-foot { margin-top:12px; }
+
+@media(max-width:760px){
+  #processing-stage.pv-neon .pl-row { gap:11px; min-height:50px; padding:8px 10px 8px 16px; }
+  #processing-stage.pv-neon .pl-copy b { font-size:14px; }
+  #processing-stage.pv-neon .pl-status { display:none; }
+  #processing-stage.pv-neon .pl-row[data-state=active] .pl-status { display:block; font-size:8px; }
+  #processing-stage.pv-timeline .pt-row { height:54px; gap:12px; }
+  #processing-stage.pv-timeline .pt-line, #processing-stage.pv-timeline .pt-line-fill { top:27px; bottom:27px; }
+  #processing-stage.pv-timeline .pt-line-fill { height:calc(var(--line) * (100% - 54px)); }
+  #processing-stage.pv-timeline .pt-head { top:calc(27px + var(--line) * (100% - 54px)); }
+  #processing-stage.pv-timeline .pt-copy b { font-size:14px; }
+  #processing-stage.pv-timeline .pt-copy small { display:none; }
+  #processing-stage.pv-timeline .pt-row[data-state=active] .pt-copy small { display:block; }
+  #processing-stage.pv-meters .pm-row { gap:11px; min-height:52px; }
+  #processing-stage.pv-meters .pm-top b { font-size:13.5px; }
+}
+@media(prefers-reduced-motion:reduce){ #processing-stage.pv * { animation:none !important; } }
+
+/* Linus 21 sep: the "Match level" toggle is gone (it had no function). The
+   time readout sits beside the play button instead of on its own row, and
+   the waveform keeps a calm distance from the card below. */
+body[data-step=results] .wave-interaction .level-match { display:none !important; }
+body[data-step=results] .wave-interaction #time { bottom:auto; top:calc(45% - 12px); left:56px; padding:5px 9px; border-radius:999px; border:1px solid #ffffff10; background:#090a13c9; font:600 10.5px ui-monospace,monospace; letter-spacing:.4px; color:#cdbdf0; min-width:0; }
+body[data-step=results] .experience #track-stage { margin-bottom:18px; }
+body[data-step=results] #track { height:184px; }
+@media(max-width:760px){
+  body[data-step=results] #track { height:160px; }
+  body[data-step=results] .wave-interaction #time { left:52px; top:calc(45% - 11px); font-size:10px; }
+}
+
+/* Linus 21 sep: everything above the report moves down to it. The empty
+   band under the waveform is gone (shorter canvas, the report pulled up to
+   just under the wave's reflection) and the same distance is added above
+   the disc, so the disc, the Original button and the wave all sit lower. */
+body[data-step=results] .wave-interaction { padding-top:0; }
+body[data-step=results] .wave-interaction .transport, body[data-step=results] .wave-interaction #seek { top:0; height:100%; }
+body[data-step=results] #track { height:160px; }
+body[data-step=results] .experience #track-stage { margin-bottom:-6px; }
+body[data-page=analyze][data-step=results] .experience, body[data-page=master][data-step=results] .experience { padding-top:calc(22px + 76px); }
+@media(max-width:760px){
+  body[data-step=results] #track { height:150px; }
+  body[data-step=results] .experience #track-stage { margin-bottom:-4px; }
+  body[data-page=analyze][data-step=results] .experience, body[data-page=master][data-step=results] .experience { padding-top:calc(22px + 52px); }
+}

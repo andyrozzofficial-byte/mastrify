@@ -1,0 +1,261 @@
+.header nav .nav-label { display: inline-block; position: relative; }
+/* The original straight signal stays fixed; plasma circulates only inside it. */
+.header nav a[aria-current="page"] {
+  position: relative;
+  color: #f2eaff;
+}
+.header nav a[aria-current="page"] .nav-label::before,
+.header nav a[aria-current="page"] .nav-label::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.header nav a[aria-current="page"] .nav-label::before {
+  height: 2px;
+  background:
+    radial-gradient(ellipse at center, #f5efffc9, #c6a1ff80 22%, transparent 66%),
+    radial-gradient(ellipse at center, #bbe8ffe6, #8ebfff80 24%, transparent 68%),
+    radial-gradient(ellipse at center, #eee0ffb3, #a577e680 20%, transparent 65%),
+    linear-gradient(90deg, transparent, #a071de 24%, #d5b4ff 50%, #a071de 76%, transparent);
+  background-size: 56% 230%, 44% 280%, 64% 240%, 100% 100%;
+  background-position: 12% 35%, 76% 65%, 44% 20%, 0 0;
+  background-repeat: no-repeat;
+  box-shadow: 0 1px 6px #b888ed45;
+  animation: navigation-plasma-flow 5.8s ease-in-out infinite,
+    navigation-plasma-texture 3.7s ease-in-out infinite alternate;
+}
+.header nav a[aria-current="page"] .nav-label::before {
+  inset-inline: -5px;
+  bottom: -12px;
+}
+.header nav a[aria-current="page"] .nav-label::after {
+  height: 10px;
+  background: radial-gradient(ellipse, #b98ae18c, #9d6bd233 48%, transparent 74%);
+  filter: blur(4px);
+  opacity: .65;
+}
+.header nav a[aria-current="page"] .nav-label::after {
+  inset-inline: -12px;
+  bottom: -17px;
+}
+
+/* Registered on each border layer so only the light moves, never the button. */
+@property --cta-rim-angle {
+  syntax: '<angle>';
+  initial-value: 20deg;
+  inherits: false;
+}
+a.button[href="/master"],
+#start-mastering {
+  position: relative;
+  isolation: isolate;
+  color: #f6efff;
+  border-color: #b18ddd9e;
+  background: linear-gradient(130deg, #604087, #49316d);
+  box-shadow: inset 0 1px 0 #ecd7ff20, 0 4px 22px #8653b31c;
+}
+a.button[href="/master"]::before,
+a.button[href="/master"]::after,
+#start-mastering::before,
+#start-mastering::after {
+  content: '';
+  position: absolute;
+  border-radius: inherit;
+  pointer-events: none;
+}
+a.button[href="/master"]::before,
+#start-mastering::before {
+  --cta-rim-angle: 20deg;
+  z-index: 1;
+  inset: -1px;
+  padding: 1px;
+  background: conic-gradient(from var(--cta-rim-angle),
+    #b68bea18 0deg, #b68bea35 65deg, #c9a2ff 106deg,
+    #f1edff 118deg, #95d7ff 132deg, #89c8ff30 165deg,
+    #aa82e21a 225deg, #b797ec85 288deg, #b68bea18 360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: cta-light-orbit 8s linear infinite;
+}
+a.button[href="/master"]::after,
+#start-mastering::after {
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, #bda3ff16 43%, #9dd8ff2b 50%, #bda3ff16 57%, transparent 65%);
+  background-size: 250% 100%;
+  background-position: 100% 0;
+  background-repeat: no-repeat;
+  box-shadow: 0 0 17px #a77cde26;
+  opacity: .65;
+  animation: cta-light-sweep 8s ease-in-out infinite;
+}
+a.button[href="/master"]:hover,
+#start-mastering:not(:disabled):hover {
+  background: linear-gradient(130deg, #6b4a94, #533976);
+  border-color: #d3b5f7;
+  box-shadow: inset 0 1px 0 #ecd7ff2b, 0 5px 25px #9471ca30;
+}
+a.button[href="/master"]:active,
+#start-mastering:not(:disabled):active {
+  box-shadow: inset 0 2px 10px #0004;
+}
+#start-mastering:disabled::before,
+#start-mastering:disabled::after {
+  animation: none;
+  opacity: .3;
+}
+
+/* Counterflowing light pockets create texture without moving the outline. */
+@keyframes navigation-plasma-flow {
+  0%, 100% { background-position: 12% 35%, 76% 65%, 44% 20%, 0 0; }
+  25% { background-position: 42% 65%, 58% 15%, 66% 70%, 0 0; }
+  50% { background-position: 72% 20%, 24% 55%, 38% 40%, 0 0; }
+  75% { background-position: 48% 50%, 46% 75%, 16% 65%, 0 0; }
+}
+@keyframes navigation-plasma-texture {
+  0% { background-size: 56% 230%, 44% 280%, 64% 240%, 100% 100%; }
+  50% { background-size: 36% 310%, 62% 210%, 46% 300%, 100% 100%; }
+  100% { background-size: 62% 250%, 34% 330%, 56% 220%, 100% 100%; }
+}
+@keyframes cta-light-orbit {
+  to { --cta-rim-angle: 380deg; }
+}
+@keyframes cta-light-sweep {
+  0%, 12% { background-position: 100% 0; opacity: .4; }
+  50% { opacity: .85; }
+  78%, 100% { background-position: 0 0; opacity: .4; }
+}
+
+@media(max-width:760px) {
+  /* The label anchors the light; the full menu row remains clickable. */
+  .header nav a[aria-current="page"] .nav-label::before { bottom: -7px; }
+  .header nav a[aria-current="page"] .nav-label::after { bottom: -12px; }
+}
+@supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+  a.button[href="/master"]::before,
+  #start-mastering::before { display: none; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .header nav a[aria-current="page"] .nav-label::before,
+  .header nav a[aria-current="page"] .nav-label::after,
+  a.button[href="/master"]::before,
+  a.button[href="/master"]::after,
+  #start-mastering::before,
+  #start-mastering::after { animation: none; }
+}
+@media print {
+  .header nav a[aria-current="page"] .nav-label::before,
+  .header nav a[aria-current="page"] .nav-label::after,
+  a.button[href="/master"]::before,
+  a.button[href="/master"]::after,
+  #start-mastering::before,
+  #start-mastering::after { display: none; }
+}
+
+/* The same CTA light is composited from static textures, avoiding a full-page repaint in Safari. */
+a.button.cta-compositor::before,
+a.button.cta-compositor::after,
+#start-mastering.cta-compositor::before,
+#start-mastering.cta-compositor::after {
+  content: none !important;
+  animation: none !important;
+}
+.cta-compositor > .cta-compositor-rim,
+.cta-compositor > .cta-compositor-sweep {
+  position: absolute;
+  display: block;
+  margin: 0;
+  border: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  font: inherit;
+  line-height: inherit;
+}
+.cta-compositor > .cta-compositor-rim {
+  inset: -1px;
+  z-index: 1;
+  padding: 1px;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+.cta-compositor > .cta-compositor-rim::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--cta-compositor-diameter, 600px);
+  height: var(--cta-compositor-diameter, 600px);
+  background: conic-gradient(from 20deg,
+    #b68bea18 0deg, #b68bea35 65deg, #c9a2ff 106deg,
+    #f1edff 118deg, #95d7ff 132deg, #89c8ff30 165deg,
+    #aa82e21a 225deg, #b797ec85 288deg, #b68bea18 360deg);
+  transform: translate(-50%, -50%) rotate(0deg);
+  transform-origin: 50% 50%;
+  will-change: transform;
+  animation: cta-compositor-orbit 8s linear infinite;
+}
+.cta-compositor > .cta-compositor-sweep {
+  z-index: -1;
+  inset: 0;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 0 17px #a77cde26;
+  opacity: .65;
+  animation: cta-compositor-sweep-opacity 8s ease-in-out infinite;
+}
+.cta-compositor > .cta-compositor-sweep::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 250%;
+  height: 100%;
+  background: linear-gradient(110deg, transparent 35%, #bda3ff16 43%, #9dd8ff2b 50%, #bda3ff16 57%, transparent 65%);
+  transform: translateX(-60%);
+  will-change: transform;
+  animation: cta-compositor-sweep-move 8s ease-in-out infinite;
+}
+@keyframes cta-compositor-orbit {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes cta-compositor-sweep-move {
+  0%, 12% { transform: translateX(-60%); }
+  78%, 100% { transform: translateX(0); }
+}
+@keyframes cta-compositor-sweep-opacity {
+  0%, 12% { opacity: .4; }
+  50% { opacity: .85; }
+  78%, 100% { opacity: .4; }
+}
+#start-mastering.cta-compositor:disabled > .cta-compositor-rim,
+#start-mastering.cta-compositor:disabled > .cta-compositor-sweep {
+  animation: none;
+  opacity: .3;
+}
+#start-mastering.cta-compositor:disabled > .cta-compositor-rim::before,
+#start-mastering.cta-compositor:disabled > .cta-compositor-sweep::before {
+  animation: none;
+}
+@supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+  .cta-compositor > .cta-compositor-rim { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta-compositor > .cta-compositor-rim,
+  .cta-compositor > .cta-compositor-sweep,
+  .cta-compositor > .cta-compositor-rim::before,
+  .cta-compositor > .cta-compositor-sweep::before { animation: none; }
+}
+@media print {
+  .cta-compositor > .cta-compositor-rim,
+  .cta-compositor > .cta-compositor-sweep { display: none; }
+}
+
+.cta-compositor[data-light-visible="false"] > .cta-compositor-sweep,
+.cta-compositor[data-light-visible="false"] > .cta-compositor-rim::before,
+.cta-compositor[data-light-visible="false"] > .cta-compositor-sweep::before {
+  animation-play-state: paused;
+}

@@ -1,0 +1,177 @@
+/* The darker palette, chosen by Linus 21 sep (was the "sharp" preview):
+   closer to mastrify.com. Deeper black, near-black neutral surfaces instead
+   of the lilac haze, crisper borders, whiter text and more saturated family
+   colours. Loaded last. Every selector starts with html:root, which gives
+   it the same weight the preview had, so it wins over the older rules
+   without !important. */
+
+html:root { --bg:#030305; --surface:#09090d; --line:#ffffff17; --text:#f7f7fb; --muted:#8f8fa3; background:#030305; }
+
+/* the families, more saturated */
+html:root .rv,
+html:root #result-stage .sound-comparison.cmp,
+html:root #processing-stage.pv {
+  --fam-level-a:#6366ff; --fam-level-b:#b06cff; --fam-space-a:#b06cff; --fam-space-b:#ff6b8e;
+  --fam-tone-a:#ff6b8e; --fam-tone-b:#ffa27f; --fam-drive-a:#55e0ae; --fam-drive-b:#a6f5d4; }
+html:root .rv { --rv-muted:#9191a5; --rv-dim:#6d6d82; --rv-line:#ffffff14; }
+html:root #result-stage .master-ready.rd { --rd-a:#6366ff; --rd-b:#b06cff; --rd-c:#ff6b8e; --rd-mint:#55e0ae; --rd-muted:#9191a5; --rd-dim:#6d6d82; --rd-line:#ffffff14; }
+html:root #processing-stage.pv { --pv-a:#6366ff; --pv-b:#b06cff; --pv-c:#ff6b8e; --pv-mint:#55e0ae; --pv-muted:#9191a5; --pv-dim:#6d6d82; --pv-line:#ffffff14; }
+
+/* the rings */
+html:root #rv-gauge-fill stop:nth-child(1), html:root #rd-ring-fill stop:nth-child(3) { stop-color:#ff6b8e; }
+html:root #rv-gauge-fill stop:nth-child(2), html:root #rd-ring-fill stop:nth-child(2) { stop-color:#b865ff; }
+html:root #rv-gauge-fill stop:nth-child(3), html:root #rd-ring-fill stop:nth-child(1) { stop-color:#6366ff; }
+html:root .rv-gauge-glowarc, html:root .rd-gauge-glowarc { stroke:#a855ff; opacity:.6; }
+html:root .rv-gauge-track, html:root .rd-gauge-track { stroke:#ffffff12; }
+
+/* surfaces: near-black and neutral, a crisp edge, a faint violet breath */
+html:root .rv-orbit .rv-hero,
+html:root .rv-orbit .rv-issue,
+html:root .rv-orbit .rv-signals,
+html:root #result-stage .master-ready.rd,
+html:root #result-stage .master-summary,
+html:root #result-stage .sound-comparison.cmp,
+html:root #processing-stage.pv,
+html:root .flow-surface {
+  background:radial-gradient(90% 120% at 18% 0%,#8f6bff10,transparent 55%),linear-gradient(140deg,#0e0c15,#060509 60%,#09080d);
+  border-color:#ffffff1c; box-shadow:0 26px 70px #000000a6, inset 0 1px 0 #ffffff12; }
+html:root .rv-orbit .rv-next {
+  background:radial-gradient(70% 150% at 86% 50%,#6d3bd620,transparent 70%),linear-gradient(120deg,#150c28,#070609 55%,#0e0917);
+  border-color:#8f6bff38; box-shadow:0 26px 70px #000000a6, inset 0 1px 0 #ffffff12; }
+html:root #result-stage .export-card { background:radial-gradient(ellipse at 100% 0,#7a3bea26,transparent 62%),#08070c; border-color:#8f6bff38; }
+html:root .rv-tile { background:linear-gradient(180deg,#0e0c14,#070609); border-color:#ffffff17; box-shadow:0 14px 34px #00000080, inset 0 1px 0 #ffffff0e; }
+html:root .rv .metric-reveal { background:linear-gradient(180deg,#0f0d16,#09080d); }
+html:root .rv-pill { background:linear-gradient(180deg,#110f19,#08070c); border-color:#ffffff24; color:#f2f2f8; }
+html:root .rv .sound-sketch { background:radial-gradient(ellipse at 65% 30%,#5b8fd80d,transparent 65%),#050508; border-color:#ffffff14; }
+html:root .rv-signal-gain { background:#ffffff06; border-color:#ffffff1c; color:#e4e4ee; }
+
+/* text: whiter headings, neutral body copy */
+html:root .rv .eyebrow, html:root .rv-advice span, html:root .rv-tips span { color:#b4b4c6; }
+html:root .rv-observations li, html:root .rv-reveal p, html:root .rv-orbit .rv-advice p { color:#dedee8; }
+html:root .rv-tips ol, html:root .rv-orbit .rv-tips ol { color:#d9d9e4; }
+html:root .rv-track, html:root .rv-signal-copy p, html:root .rv-stub-sub, html:root .rv-tk-sub, html:root .rv-focus { color:#9a9aae; }
+html:root .rv-verdict h3, html:root .rv-stub-title, html:root .rv-signal-copy strong, html:root .rv-head h2 { color:#fff; }
+html:root .rv-pill-status { background:#8f6bff14; border-color:#8f6bff40; color:#ececf5; }
+
+/* the call to action, deeper and more saturated */
+html:root body[data-page=analyze] #master-same-track {
+  background:linear-gradient(120deg,#7a3bea,#5a2bc4 58%,#4337b5); border-color:#c8a9ff; color:#fff;
+  box-shadow:inset 0 1px 0 #ffffff66, 0 0 0 3px #7a3bea1f, 0 0 18px #7a3bea59, 0 8px 28px #4f2bb04d; }
+html:root body[data-page=analyze] #master-same-track:hover { background:linear-gradient(120deg,#8a4bf5,#6a38d6 58%,#5046c6); }
+html:root #result-stage #checkout-open.button.primary, html:root #start-mastering.button.primary, html:root #continue-flow.button.primary {
+  background:linear-gradient(120deg,#7a3bea,#5a2bc4 58%,#4337b5); border-color:#c8a9ff; color:#fff; box-shadow:inset 0 1px 0 #ffffff55, 0 0 18px #7a3bea4d, 0 8px 26px #4f2bb040; }
+
+/* the content pages follow: pricing, about, contact, blog, why, legal */
+html:root .price-panel { border-color:#8f6bff4d;
+  background:radial-gradient(ellipse at 0 0,#7a3bea1f,transparent 60%),radial-gradient(ellipse at 100% 100%,#599ede0d,transparent 55%),#07070b; }
+html:root .footer-cta, html:root .contact-card { border-color:#ffffff1a;
+  background:radial-gradient(120% 170% at 10% 0%,#6d51b012,transparent 62%),radial-gradient(95% 150% at 94% 100%,#5b7fc70c,transparent 58%),linear-gradient(140deg,#0c0b12,#060509 58%,#08090e); }
+html:root .contact-aside { border-color:#ffffff17; background:linear-gradient(150deg,#0b0a11,#060509); }
+html:root .assurance-row > div,
+html:root body[data-page=home] section.analysis-intro .intelligence-list > div { border-color:#ffffff17; background:linear-gradient(150deg,#0c0b12,#060509 72%); }
+html:root body[data-page=how-it-works] #page-content,
+html:root body[data-page=privacy] #page-content,
+html:root body[data-page=terms] #page-content { --plate:linear-gradient(150deg,#0c0b12,#060509 72%); }
+html:root .upload-button { background:radial-gradient(ellipse at 15% 20%,#7653ab1f,transparent 58%),radial-gradient(ellipse at 95% 100%,#508bbb12,transparent 62%),#07070c; }
+html:root .contact-field input, html:root .contact-field textarea, html:root .topic-button,
+html:root .character, html:root .target-choice { background:#07060bcc; }
+
+/* Linus 21 sep, spotlights "C · Fokus": very soft, centred halos straight
+   behind what the eye already looks at (the record, the headline, the page
+   title, the active card). Only background layers on main, no layout change,
+   nothing animates, violet/indigo only (no red). Each pool fades out at 70%
+   of its size. Positions are the measured centres, in px from the top of
+   main, per page and studio step; phones have their own below 760px. */
+html:root main#main { background-repeat:no-repeat; }
+:root { --spot:#7a4dff07; --spot-soft:#6a5cff05; --spot-card:#7a4dff06; --spot-title:#7a4dff07; }
+/* 40% softer again (Linus): alpha 11/9/10/12 of 255 became 7/5/6/7. */
+
+/* home: the record, the headline, "Before you master" */
+html:root body[data-page=home] main#main { background-image:
+  radial-gradient(ellipse 520px 420px at 50% 233px, var(--spot), transparent 70%),
+  radial-gradient(ellipse 600px 220px at 50% 538px, var(--spot-title), transparent 70%),
+  radial-gradient(ellipse 520px 220px at 50% 999px, var(--spot-soft), transparent 70%); }
+
+/* studio: the record, then whatever card is active */
+html:root body:is([data-page=analyze],[data-page=master]) main#main { background-image:
+  radial-gradient(ellipse 520px 420px at 50% 229px, var(--spot), transparent 70%),
+  radial-gradient(ellipse 460px 360px at 50% 660px, var(--spot-card), transparent 70%); }
+html:root body:is([data-page=analyze],[data-page=master])[data-step=settings] main#main { background-image:
+  radial-gradient(ellipse 520px 420px at 50% 229px, var(--spot), transparent 70%),
+  radial-gradient(ellipse 620px 480px at 50% 798px, var(--spot-soft), transparent 70%); }
+html:root body:is([data-page=analyze],[data-page=master])[data-step=processing] main#main { background-image:
+  radial-gradient(ellipse 520px 420px at 50% 229px, var(--spot), transparent 70%),
+  radial-gradient(ellipse 640px 180px at 50% 546px, var(--spot-soft), transparent 70%),
+  radial-gradient(ellipse 500px 360px at 50% 885px, var(--spot-card), transparent 70%); }
+html:root body:is([data-page=analyze],[data-page=master])[data-step=results] main#main { background-image:
+  radial-gradient(ellipse 520px 420px at 50% 299px, var(--spot), transparent 70%),
+  radial-gradient(ellipse 640px 180px at 50% 678px, var(--spot-soft), transparent 70%); }
+
+/* content pages: the title, then the main card */
+html:root body[data-page=pricing] main#main { background-image:
+  radial-gradient(ellipse 600px 220px at 50% 126px, var(--spot-title), transparent 70%),
+  radial-gradient(ellipse 340px 400px at calc(50% - 212px) 504px, var(--spot-card), transparent 70%); }
+html:root body[data-page=about] main#main { background-image:
+  radial-gradient(ellipse 600px 220px at 50% 126px, var(--spot-title), transparent 70%),
+  radial-gradient(ellipse 480px 440px at 50% 545px, var(--spot-card), transparent 70%); }
+html:root body[data-page=contact] main#main { background-image:
+  radial-gradient(ellipse 600px 220px at 50% 126px, var(--spot-title), transparent 70%),
+  radial-gradient(ellipse 480px 600px at 50% 742px, var(--spot-card), transparent 70%); }
+html:root body[data-page=blog] main#main { background-image:
+  radial-gradient(ellipse 600px 240px at 50% 162px, var(--spot-title), transparent 70%),
+  radial-gradient(ellipse 420px 300px at 50% 495px, var(--spot-card), transparent 70%); }
+html:root body[data-page=how-it-works] main#main { background-image:
+  radial-gradient(ellipse 600px 240px at 50% 196px, var(--spot-title), transparent 70%),
+  radial-gradient(ellipse 300px 300px at calc(50% - 324px) 1086px, var(--spot), transparent 70%); }
+html:root body:is([data-page=privacy],[data-page=terms]) main#main { background-image:
+  radial-gradient(ellipse 560px 220px at 50% 139px, var(--spot-title), transparent 70%); }
+
+@media(max-width:760px){
+  html:root body[data-page=home] main#main { background-image:
+    radial-gradient(ellipse 260px 220px at 50% 129px, var(--spot), transparent 70%),
+    radial-gradient(ellipse 260px 140px at 50% 337px, var(--spot-title), transparent 70%),
+    radial-gradient(ellipse 240px 130px at 50% 766px, var(--spot-soft), transparent 70%); }
+  html:root body:is([data-page=analyze],[data-page=master]) main#main,
+  html:root body:is([data-page=analyze],[data-page=master])[data-step=settings] main#main { background-image:
+    radial-gradient(ellipse 260px 220px at 50% 129px, var(--spot), transparent 70%); }
+  html:root body:is([data-page=analyze],[data-page=master])[data-step=processing] main#main { background-image:
+    radial-gradient(ellipse 260px 220px at 50% 129px, var(--spot), transparent 70%),
+    radial-gradient(ellipse 240px 110px at 50% 340px, var(--spot-soft), transparent 70%); }
+  html:root body:is([data-page=analyze],[data-page=master])[data-step=results] main#main { background-image:
+    radial-gradient(ellipse 260px 220px at 50% 185px, var(--spot), transparent 70%),
+    radial-gradient(ellipse 240px 100px at 50% 466px, var(--spot-soft), transparent 70%); }
+  html:root body[data-page=pricing] main#main { background-image: radial-gradient(ellipse 260px 150px at 50% 84px, var(--spot-title), transparent 70%); }
+  html:root body:is([data-page=about],[data-page=contact]) main#main { background-image: radial-gradient(ellipse 260px 150px at 50% 90px, var(--spot-title), transparent 70%); }
+  html:root body[data-page=blog] main#main { background-image: radial-gradient(ellipse 260px 160px at 50% 110px, var(--spot-title), transparent 70%); }
+  html:root body[data-page=how-it-works] main#main { background-image:
+    radial-gradient(ellipse 260px 160px at 50% 116px, var(--spot-title), transparent 70%),
+    radial-gradient(ellipse 200px 200px at 50% 1097px, var(--spot), transparent 70%); }
+  html:root body:is([data-page=privacy],[data-page=terms]) main#main { background-image: radial-gradient(ellipse 240px 150px at 50% 97px, var(--spot-title), transparent 70%); }
+}
+
+/* Linus 22 sep: the chosen-file card under the upload box is the first
+   green version (dark green surface, mint edge and check), but the same
+   tone all the way across (no darker right side) and a touch more glow. */
+html:root #upload-stage .loaded-track {
+  border-color:#55e0ae66;
+  background:radial-gradient(120% 170% at 0% 0%,#55e0ae29,transparent 62%),radial-gradient(120% 170% at 100% 0%,#55e0ae1f,transparent 62%),linear-gradient(180deg,#0f2c22,#0c2219);
+  box-shadow:0 0 32px #55e0ae2e, inset 0 1px 0 #a6f5d42b, inset 0 0 22px #55e0ae12; }
+html:root #upload-stage .loaded-check { border-color:#7ff0c4b3; background:linear-gradient(145deg,#3fdca44d,#2f9f8a33); color:#dcfff0; box-shadow:0 0 16px #55e0ae4d, inset 0 0 10px #55e0ae26; }
+html:root #upload-stage .loaded-track output { color:#effff8; }
+html:root #upload-stage .loaded-track small { color:#86c8ae; }
+html:root #upload-stage .loaded-track .plain-action { color:#9fd9c1; }
+html:root #upload-stage .loaded-track .plain-action:hover { color:#ffffff; }
+
+/* Linus 22 sep: "Analyze my mix" and "Shape my master" (#continue-flow)
+   carry the header CTA's light (control-light.js adds the rim and sweep
+   layers), a little quieter. Their colours stay as they were; only the
+   border steps back so the travelling light can be seen on it. Same 8 s
+   rhythm, paused offscreen, off with reduced motion. */
+html:root #continue-flow.button.primary.cta-compositor { border-color:#b89cf259; }
+html:root #continue-flow.cta-compositor > .cta-compositor-rim { opacity:.75; }
+html:root #continue-flow.cta-compositor > .cta-compositor-sweep { box-shadow:0 0 14px #a77cde1c; animation-name:cta-soft-sweep-opacity; }
+html:root #continue-flow.cta-compositor:disabled > .cta-compositor-rim,
+html:root #continue-flow.cta-compositor:disabled > .cta-compositor-sweep { animation:none; opacity:.2; }
+html:root #continue-flow.cta-compositor:disabled > .cta-compositor-rim::before,
+html:root #continue-flow.cta-compositor:disabled > .cta-compositor-sweep::before { animation:none; }
+@keyframes cta-soft-sweep-opacity { 0%,12% { opacity:.2; } 50% { opacity:.5; } 78%,100% { opacity:.2; } }

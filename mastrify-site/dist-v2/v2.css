@@ -1,0 +1,120 @@
+/* v2 additions: live vocabulary in the studio, about/blog pages, the
+   email-after-payment dialog, action tips and the empty master state.
+   Everything reuses the existing surfaces and tones. */
+
+/* Settings: genres under the character, hints under each slider. */
+.style-genres { margin-top:4px; color:#7f7396; }
+.style-genres:empty { display:none; }
+.tune-grid label { grid-template-columns:1fr auto; }
+.slider-hint {
+  grid-column:1 / -1; display:block; margin-top:-2px; font-size:10.5px; line-height:1.5;
+  color:#8a7ca2; letter-spacing:.1px; min-height:2.6em;
+}
+.slider-hint:empty { display:none; }
+
+/* Guide dialog: the five characters with their four lines and genres. */
+.preset-guide-rich > div { padding:12px 0 14px; border-bottom:1px solid #ffffff0d; }
+.preset-guide-rich > div:last-child { border-bottom:0; }
+.preset-guide-rich dt { flex-wrap:wrap; }
+.preset-tagline { flex-basis:100%; margin-left:23px; font-size:11px; font-weight:450; color:#9a8bb3; letter-spacing:.2px; }
+.preset-guide dd > p { margin:0 0 6px; }
+.preset-details { margin:0 0 8px; padding-left:18px; font-size:12px; line-height:1.6; color:#b4a6cb; }
+.preset-details li { margin:2px 0; }
+.preset-details b { color:#d8ccf2; font-weight:600; margin-right:4px; }
+.preset-genres { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0; font-size:11px; color:#8d7fa6; }
+.preset-genres span { margin-right:2px; }
+.preset-genres b {
+  font:10px/1.6 ui-monospace,monospace; letter-spacing:.8px; padding:2px 8px; border-radius:999px;
+  border:1px solid #b79cdd3a; color:#cdbdf0; background:#ae86e10d; font-weight:500;
+}
+.guide-dialog .preset-name small { font-size:11px; color:#8d7fa6; font-weight:450; margin-left:4px; }
+
+/* Analysis results: recommendation, subtitles, action tips. */
+.readiness-recommendation {
+  display:inline-flex; align-items:center; gap:8px; margin:2px 0 10px; padding:6px 12px 6px 9px;
+  border:1px solid #b9a1dc30; border-radius:999px; font-size:11.5px; color:#d6c8f2; background:#ae86e10c;
+}
+.readiness-recommendation .guide-dot { width:7px; height:7px; }
+.insight-subtitle { display:block; margin-top:3px; font-size:11.5px; line-height:1.5; color:#9a8bb3; font-weight:400; }
+.action-tips { margin:14px 0 0; padding:24px 26px; }
+.action-tips .eyebrow { margin:0 0 8px; font-size:10px; letter-spacing:2.2px; color:#9a8ab5; }
+.action-tips h3 { margin:0; font-size:20px; letter-spacing:-.4px; font-weight:560; }
+.action-tips > p { margin:6px 0 12px; font-size:13px; color:#9f92b8; }
+.tips-list { margin:0; padding:0; list-style:none; counter-reset:tip; display:grid; gap:8px; }
+.tips-list li {
+  counter-increment:tip; display:grid; grid-template-columns:26px 1fr; gap:10px; align-items:start;
+  font-size:13.5px; line-height:1.55; color:#d4cae8;
+}
+.tips-list li::before {
+  content:counter(tip,decimal-leading-zero); font:10px/26px ui-monospace,monospace; text-align:center;
+  height:26px; border-radius:8px; border:1px solid #b79cdd35; color:#bca3d6; background:#ae86e10a;
+}
+
+/* Master results: tags may be longer than before. */
+.ready-marks { flex-wrap:wrap; }
+
+/* Empty master session. */
+.empty-result { text-align:center; padding:40px 28px; }
+.empty-result .eyebrow { margin:0 0 10px; font-size:10px; letter-spacing:2.2px; color:#9a8ab5; }
+.empty-result h2 { margin:0; font-size:28px; letter-spacing:-.8px; font-weight:550; }
+.empty-result p { margin:10px auto 20px; max-width:420px; font-size:14px; line-height:1.65; color:#9f92b8; }
+
+/* Email after payment. */
+.email-dialog h2 { margin-top:18px; }
+.email-dialog #email-lead { margin:0 0 18px; font-size:14px; line-height:1.65; color:#b8abd0; }
+.email-dialog .contact-field { text-align:left; }
+.email-dialog .contact-field input {
+  width:100%; box-sizing:border-box; padding:13px 14px; border-radius:12px; border:1px solid #b79cdd3a;
+  background:#0a0a14; color:var(--text); font:inherit;
+}
+.email-dialog .contact-field input:focus { outline:none; border-color:#cbb4ff; box-shadow:0 0 0 3px #ae8aff22; }
+.email-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; flex-wrap:wrap; }
+.email-actions .button { flex:1 1 auto; }
+#email-status { margin:12px 0 0; font-size:12.5px; line-height:1.6; color:#a698c0; }
+#email-status:empty { display:none; }
+
+/* About and Blog pages: reuse the contact surfaces. */
+body[data-page=about] section.about-layout,
+body[data-page=blog] section.about-layout { max-width:660px; display:grid; gap:16px; padding-bottom:20px; }
+.about-card {
+  position:relative; margin:0; padding:46px 44px 38px; text-align:center;
+  border:1px solid #a98ae02e; border-radius:20px;
+  background:
+    radial-gradient(120% 150% at 50% -12%, #6d51b01c, transparent 62%),
+    radial-gradient(95% 130% at 100% 100%, #5b7fc714, transparent 58%),
+    linear-gradient(150deg,#14121f,#0b0b14 58%,#0d1019);
+}
+.about-card > .eyebrow { margin:22px 0 0; font-size:10px; letter-spacing:2.2px; color:#9a8ab5; }
+.about-card h2 { margin:9px 0 0; font-size:30px; line-height:1.18; letter-spacing:-1px; font-weight:540; }
+.about-card > p { margin:14px auto 0; max-width:480px; font-size:15px; line-height:1.7; color:#b3a7c8; }
+.about-facts { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:26px 0 8px; }
+.about-facts div { padding:14px 12px; border:1px solid #ffffff10; border-radius:14px; background:#ffffff05; display:grid; gap:4px; }
+.about-facts strong { font-size:14px; font-weight:600; letter-spacing:-.2px; }
+.about-facts span { font-size:11.5px; line-height:1.5; color:#9a8bb3; }
+.about-card .hero-actions { justify-content:center; margin-top:22px; }
+.about-layout .contact-aside .contact-mail { margin:11px 8px 0; font-size:19px; }
+@media(max-width:640px){
+  .about-card { padding:34px 22px 30px; }
+  .about-facts { grid-template-columns:1fr; }
+}
+
+/* Linus 21 sep: the brand word on About carries the same slow colour drift
+   as the home hero, Why Mastrify and Pricing (keyframes in refinement.css).
+   The Blog page's empty state is a smaller card. */
+body[data-page=about] .page-head h1 span {
+  background-image:linear-gradient(105deg,#85bfff 0%,#b595ff 24%,#ffffff 46%,#f7faff 54%,#b595ff 76%,#85bfff 100%);
+  background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
+  background-size:220% 100%; background-position:0% 50%;
+  animation:release-colour-drift 9s ease-in-out infinite alternate;
+}
+@media(prefers-reduced-motion:reduce){ body[data-page=about] .page-head h1 span { animation:none; background-size:100% 100%; } }
+body[data-page=blog] section.about-layout { max-width:540px; gap:12px; }
+body[data-page=blog] .about-card { padding:36px 32px 30px; border-radius:18px; }
+body[data-page=blog] .about-card .contact-mark { transform:scale(.9); }
+body[data-page=blog] .about-card > .eyebrow { margin-top:14px; }
+body[data-page=blog] .about-card h2 { font-size:25px; letter-spacing:-.8px; }
+body[data-page=blog] .about-card > p { font-size:14px; line-height:1.65; max-width:400px; margin-top:10px; }
+body[data-page=blog] .about-card .hero-actions { margin-top:18px; }
+body[data-page=blog] .about-layout .contact-aside { padding:22px 20px; }
+body[data-page=blog] .about-layout .contact-aside .contact-mail { font-size:17px; margin-top:8px; }
+@media(max-width:640px){ body[data-page=blog] .about-card { padding:28px 20px 26px; } }

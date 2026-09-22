@@ -1,0 +1,296 @@
+/* Privacy och Terms. Samma språk som Why Mastrify: samma plattor, samma
+   hårfina linjer, samma numrerade skena och samma avslöjande vid rullning.
+   Allt ligger bakom body[data-page=privacy] och body[data-page=terms], så
+   ingen annan sida kan röra sig av den här filen. Det som rör sig gör det
+   med transform och opacity, aldrig layout. */
+
+body[data-page=privacy] #page-content,
+body[data-page=terms] #page-content {
+  --rail:#ffffff12;
+  --plate:linear-gradient(150deg,#14101f,#0c0b14 72%);
+}
+
+/* Avslöjandet: ett mönster för hela sidan, satt av legal-motion.js. */
+body[data-page=privacy] [data-rise],
+body[data-page=terms] [data-rise] {
+  opacity:0;
+  transform:translate3d(0,16px,0);
+  transition:opacity .72s cubic-bezier(.22,.74,.26,1),transform .82s cubic-bezier(.2,.78,.24,1);
+  transition-delay:calc(var(--i,0) * 68ms);
+  will-change:transform,opacity;
+}
+body[data-page=privacy] [data-rise][data-shown],
+body[data-page=terms] [data-rise][data-shown] {opacity:1;transform:none;will-change:auto;}
+
+/* ── 1. Öppningen ─────────────────────────────────────────────────────── */
+body[data-page=privacy] .doc-hero,
+body[data-page=terms] .doc-hero {
+  position:relative;text-align:center;
+  max-width:1120px;margin-inline:auto;padding:70px 48px 78px;
+}
+body[data-page=privacy] .doc-hero::before,
+body[data-page=terms] .doc-hero::before {
+  content:'';position:absolute;pointer-events:none;inset:-16% -22% 4%;z-index:-1;
+  background:radial-gradient(ellipse 52% 48% at 50% 40%,#8a63e022,#5d7fd110 46%,transparent 74%);
+}
+body[data-page=privacy] .doc-hero .eyebrow,
+body[data-page=terms] .doc-hero .eyebrow {
+  font:12px ui-monospace,monospace;letter-spacing:2.4px;text-transform:uppercase;color:#a58fd0;margin:0;
+}
+body[data-page=privacy] .doc-hero h1,
+body[data-page=terms] .doc-hero h1 {
+  font-size:clamp(40px,5.2vw,64px);line-height:1.07;letter-spacing:-2.6px;font-weight:540;
+  margin:20px auto 20px;max-width:16ch;text-wrap:balance;
+}
+/* Samma långsamma färgvandring som rubrikerna på Why Mastrify och hemsidan.
+   Nyckelbilderna ligger i refinement.css, som laddas före den här filen. */
+body[data-page=privacy] .doc-hero h1 span,
+body[data-page=terms] .doc-hero h1 span {
+  background-image:linear-gradient(105deg,#85bfff 0%,#b595ff 24%,#ffffff 46%,#f7faff 54%,#b595ff 76%,#85bfff 100%);
+  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  background-size:220% 100%;background-position:0% 50%;
+  animation:release-colour-drift 9s ease-in-out infinite alternate;
+}
+body[data-page=privacy] .doc-lead,
+body[data-page=terms] .doc-lead {
+  color:#9e97af;font-size:18px;line-height:1.7;max-width:600px;margin:0 auto 34px;
+}
+body[data-page=privacy] .doc-pillars,
+body[data-page=terms] .doc-pillars {
+  list-style:none;padding:0;margin:0 auto;max-width:960px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+}
+body[data-page=privacy] .doc-pillars li,
+body[data-page=terms] .doc-pillars li {
+  position:relative;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;
+  padding:20px 20px 22px;border:1px solid #b99fe91f;border-radius:14px;
+  background:var(--plate);text-align:left;overflow:hidden;
+}
+body[data-page=privacy] .doc-pillars li::after,
+body[data-page=terms] .doc-pillars li::after {
+  content:'';position:absolute;pointer-events:none;inset:0;border-radius:inherit;
+  background:linear-gradient(128deg,#ad7ee516,transparent 54%,#7fb6f10e);
+  opacity:0;transition:opacity .8s ease;
+}
+body[data-page=privacy] .doc-pillars li[data-shown]::after,
+body[data-page=terms] .doc-pillars li[data-shown]::after {
+  opacity:1;transition-delay:calc(var(--i,0) * 68ms + .2s);
+}
+body[data-page=privacy] .doc-pillars i,
+body[data-page=terms] .doc-pillars i {
+  width:7px;height:7px;margin-top:8px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#e3d3ff,#9d7ae6);box-shadow:0 0 12px #a87ff055;
+}
+body[data-page=privacy] .doc-pillars span,
+body[data-page=terms] .doc-pillars span {color:#a9a0b8;font-size:14.5px;line-height:1.62;}
+body[data-page=privacy] .doc-stamp,
+body[data-page=terms] .doc-stamp {
+  display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;
+  margin:34px 0 0;font:11px ui-monospace,monospace;letter-spacing:1.6px;
+  text-transform:uppercase;color:#7d7391;
+}
+body[data-page=privacy] .doc-stamp b,
+body[data-page=terms] .doc-stamp b {font-weight:400;color:#564e69;}
+body[data-page=privacy] .doc-stamp .text-link,
+body[data-page=terms] .doc-stamp .text-link {font-size:11px;letter-spacing:1.6px;}
+
+/* ── 2. Innehållet, med en skena som följer med ───────────────────────── */
+body[data-page=privacy] .doc-body,
+body[data-page=terms] .doc-body {
+  max-width:1120px;margin-inline:auto;padding:26px 48px 40px;
+  display:grid;grid-template-columns:.8fr 1.2fr;column-gap:64px;align-items:start;
+  border-top:1px solid var(--line);
+}
+body[data-page=privacy] .doc-side,
+body[data-page=terms] .doc-side {position:sticky;top:56px;}
+body[data-page=privacy] .doc-side-head .eyebrow,
+body[data-page=terms] .doc-side-head .eyebrow {
+  font:12px ui-monospace,monospace;letter-spacing:2.2px;text-transform:uppercase;color:#a58fd0;margin:34px 0 0;
+}
+body[data-page=privacy] .doc-side-head h2,
+body[data-page=terms] .doc-side-head h2 {
+  font-size:clamp(28px,3.2vw,38px);line-height:1.14;letter-spacing:-1.5px;font-weight:520;margin:14px 0 0;
+}
+body[data-page=privacy] .doc-index,
+body[data-page=terms] .doc-index {
+  list-style:none;margin:26px 0 0;padding:0;display:grid;gap:2px;
+}
+body[data-page=privacy] .doc-index button,
+body[data-page=terms] .doc-index button {
+  display:grid;grid-template-columns:26px 1fr;gap:13px;align-items:baseline;
+  width:100%;padding:11px 12px 12px;border:0;border-radius:10px;
+  background:transparent;text-align:left;cursor:pointer;
+  transition:background .3s ease,color .3s ease;
+}
+body[data-page=privacy] .doc-index b,
+body[data-page=terms] .doc-index b {
+  font:11px ui-monospace,monospace;font-weight:400;color:#6e6485;transition:color .3s ease;
+}
+body[data-page=privacy] .doc-index span,
+body[data-page=terms] .doc-index span {
+  font-size:14.5px;line-height:1.5;color:#8a8199;transition:color .3s ease;
+}
+body[data-page=privacy] .doc-index button:hover,
+body[data-page=terms] .doc-index button:hover {background:#b191e20a;}
+body[data-page=privacy] .doc-index button:hover span,
+body[data-page=terms] .doc-index button:hover span {color:#c4b8d8;}
+body[data-page=privacy] .doc-index li[data-current] button,
+body[data-page=terms] .doc-index li[data-current] button {
+  background:linear-gradient(100deg,#2a1f3d,#16132700);
+}
+body[data-page=privacy] .doc-index li[data-current] b,
+body[data-page=terms] .doc-index li[data-current] b {color:#c2a4f5;}
+body[data-page=privacy] .doc-index li[data-current] span,
+body[data-page=terms] .doc-index li[data-current] span {color:#eee4ff;}
+
+body[data-page=privacy] .doc-sections,
+body[data-page=terms] .doc-sections {
+  position:relative;list-style:none;margin:34px 0 0;padding:0 0 0 46px;
+}
+body[data-page=privacy] .doc-sections::before,
+body[data-page=terms] .doc-sections::before {
+  content:'';position:absolute;left:12px;top:14px;bottom:24px;width:1px;background:var(--rail);
+}
+body[data-page=privacy] .doc-sections > li,
+body[data-page=terms] .doc-sections > li {
+  position:relative;padding:26px 0 28px;border-bottom:1px solid var(--line);scroll-margin-top:42px;
+}
+body[data-page=privacy] .doc-sections > li:last-child,
+body[data-page=terms] .doc-sections > li:last-child {border-bottom:0;}
+body[data-page=privacy] .doc-sections > li > span,
+body[data-page=terms] .doc-sections > li > span {
+  position:absolute;left:-46px;top:28px;display:grid;place-items:center;
+  width:25px;height:25px;border-radius:50%;
+  border:1px solid #8b70ac3a;background:#0b0a12;
+  font:11px ui-monospace,monospace;color:#7b6e91;
+  transition:border-color .45s ease,color .45s ease,box-shadow .45s ease,background .45s ease;
+}
+body[data-page=privacy] .doc-sections > li[data-shown] > span,
+body[data-page=terms] .doc-sections > li[data-shown] > span {
+  border-color:#c2a4f5;color:#efe4ff;
+  background:linear-gradient(145deg,#3a2a56,#22304d);box-shadow:0 0 16px #a578ee3d;
+}
+body[data-page=privacy] .doc-sections h3,
+body[data-page=terms] .doc-sections h3 {
+  margin:0;font-size:clamp(20px,2.1vw,25px);font-weight:500;letter-spacing:-.7px;color:#cfc4e0;
+}
+body[data-page=privacy] .doc-sections p,
+body[data-page=terms] .doc-sections p {
+  margin:12px 0 0;font-size:15.5px;line-height:1.75;color:#938aa5;max-width:60ch;
+}
+body[data-page=privacy] .doc-sections .doc-mark,
+body[data-page=terms] .doc-sections .doc-mark {
+  position:relative;margin-top:18px;padding:15px 18px 16px;
+  border:1px solid #b99fe91f;border-radius:13px;background:var(--plate);color:#a79cba;
+}
+body[data-page=privacy] .doc-sections .doc-mark::before,
+body[data-page=terms] .doc-sections .doc-mark::before {
+  content:'';position:absolute;left:0;top:14px;bottom:14px;width:2px;border-radius:2px;
+  background:linear-gradient(180deg,#b28cf0,#8dc3f6);box-shadow:0 0 10px #9c7fe555;
+}
+body[data-page=privacy] .doc-list,
+body[data-page=terms] .doc-list {
+  list-style:none;margin:16px 0 0;padding:0;display:grid;gap:2px;max-width:62ch;
+}
+body[data-page=privacy] .doc-list li,
+body[data-page=terms] .doc-list li {
+  position:relative;padding:13px 0 13px 22px;border-top:1px solid var(--line);
+  font-size:15px;line-height:1.7;color:#9d94ae;
+}
+body[data-page=privacy] .doc-list li::before,
+body[data-page=terms] .doc-list li::before {
+  content:'';position:absolute;left:2px;top:1.32em;width:6px;height:6px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#e3d3ff,#9d7ae6);box-shadow:0 0 10px #a87ff04d;
+}
+
+/* ── 3. Slutet ────────────────────────────────────────────────────────── */
+body[data-page=privacy] .doc-close,
+body[data-page=terms] .doc-close {
+  max-width:1120px;margin-inline:auto;padding:62px 48px 92px;text-align:center;
+  border-top:1px solid var(--line);
+}
+body[data-page=privacy] .doc-close .eyebrow,
+body[data-page=terms] .doc-close .eyebrow {
+  font:12px ui-monospace,monospace;letter-spacing:2.2px;text-transform:uppercase;color:#a58fd0;margin:0;
+}
+body[data-page=privacy] .doc-close h2,
+body[data-page=terms] .doc-close h2 {
+  font-size:clamp(26px,3.2vw,38px);line-height:1.16;letter-spacing:-1.4px;font-weight:530;
+  margin:16px auto 30px;max-width:19ch;
+}
+body[data-page=privacy] .doc-actions,
+body[data-page=terms] .doc-actions {
+  display:flex;justify-content:center;align-items:center;gap:28px;flex-wrap:wrap;
+}
+body[data-page=privacy] .doc-note,
+body[data-page=terms] .doc-note {
+  margin:40px auto 0;max-width:680px;font-size:12.5px;line-height:1.7;color:#7a7090;
+}
+
+/* ── Plattor och mobil ────────────────────────────────────────────────── */
+@media (max-width:1040px) {
+  body[data-page=privacy] .doc-body,
+  body[data-page=terms] .doc-body {grid-template-columns:1fr;row-gap:4px;}
+  body[data-page=privacy] .doc-side,
+  body[data-page=terms] .doc-side {position:static;}
+  body[data-page=privacy] .doc-index,
+  body[data-page=terms] .doc-index {display:none;}
+  body[data-page=privacy] .doc-pillars,
+  body[data-page=terms] .doc-pillars {grid-template-columns:1fr;max-width:460px;}
+}
+@media (max-width:760px) {
+  body[data-page=privacy] .doc-hero,
+  body[data-page=terms] .doc-hero {padding:44px 22px 52px;}
+  body[data-page=privacy] .doc-hero h1,
+  body[data-page=terms] .doc-hero h1 {font-size:clamp(32px,8.6vw,44px);letter-spacing:-1.5px;line-height:1.12;}
+  body[data-page=privacy] .doc-lead,
+  body[data-page=terms] .doc-lead {font-size:16px;line-height:1.8;margin-bottom:28px;}
+  body[data-page=privacy] .doc-pillars li,
+  body[data-page=terms] .doc-pillars li {padding:16px 17px 18px;}
+  body[data-page=privacy] .doc-pillars span,
+  body[data-page=terms] .doc-pillars span {font-size:14px;}
+  body[data-page=privacy] .doc-stamp,
+  body[data-page=terms] .doc-stamp {margin-top:26px;gap:10px;font-size:10px;letter-spacing:1.3px;}
+  body[data-page=privacy] .doc-body,
+  body[data-page=terms] .doc-body {padding:18px 22px 28px;}
+  body[data-page=privacy] .doc-side-head .eyebrow,
+  body[data-page=terms] .doc-side-head .eyebrow {margin-top:26px;}
+  body[data-page=privacy] .doc-side-head h2,
+  body[data-page=terms] .doc-side-head h2 {font-size:28px;letter-spacing:-1.1px;}
+  body[data-page=privacy] .doc-sections,
+  body[data-page=terms] .doc-sections {padding-left:38px;margin-top:24px;}
+  body[data-page=privacy] .doc-sections::before,
+  body[data-page=terms] .doc-sections::before {left:11px;}
+  body[data-page=privacy] .doc-sections > li,
+  body[data-page=terms] .doc-sections > li {padding:22px 0 24px;}
+  body[data-page=privacy] .doc-sections > li > span,
+  body[data-page=terms] .doc-sections > li > span {left:-38px;top:24px;width:23px;height:23px;font-size:10px;}
+  body[data-page=privacy] .doc-sections h3,
+  body[data-page=terms] .doc-sections h3 {font-size:20px;letter-spacing:-.4px;}
+  body[data-page=privacy] .doc-sections p,
+  body[data-page=terms] .doc-sections p {font-size:14.8px;line-height:1.78;}
+  body[data-page=privacy] .doc-list li,
+  body[data-page=terms] .doc-list li {font-size:14.5px;line-height:1.75;padding-left:20px;}
+  body[data-page=privacy] .doc-close,
+  body[data-page=terms] .doc-close {padding:44px 22px 70px;}
+  body[data-page=privacy] .doc-close h2,
+  body[data-page=terms] .doc-close h2 {font-size:26px;letter-spacing:-1px;}
+  body[data-page=privacy] .doc-actions,
+  body[data-page=terms] .doc-actions {flex-direction:column;align-items:stretch;gap:15px;max-width:370px;margin-inline:auto;}
+  body[data-page=privacy] .doc-actions .text-link,
+  body[data-page=terms] .doc-actions .text-link {justify-content:center;min-height:44px;}
+  body[data-page=privacy] .doc-note,
+  body[data-page=terms] .doc-note {margin-top:32px;font-size:12px;}
+}
+
+/* ── Reducerad rörelse: allt syns, inget flyttar sig ──────────────────── */
+@media (prefers-reduced-motion:reduce) {
+  body[data-page=privacy] [data-rise],
+  body[data-page=terms] [data-rise] {opacity:1;transform:none;transition:none;}
+  body[data-page=privacy] .doc-pillars li::after,
+  body[data-page=terms] .doc-pillars li::after {opacity:1;transition:none;}
+  body[data-page=privacy] .doc-hero h1 span,
+  body[data-page=terms] .doc-hero h1 span {animation:none;background-size:100% 100%;}
+  body[data-page=privacy] .doc-sections > li > span,
+  body[data-page=terms] .doc-sections > li > span {transition:none;}
+}

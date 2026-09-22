@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /wave-lab/
+Disallow: /analyze-lab/
+Disallow: /sonic-lab/
+Sitemap: https://mastrify.com/sitemap.xml
