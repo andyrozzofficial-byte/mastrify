@@ -1,4 +1,4 @@
-/* Mastrify live backend adapter (Fas 0.4 analyze · Fas 0.5 master).
+/* Mastrify live backend adapter (Fas 0.4 analyze · Fas 0.5 master · Fas 0.6 quote/checkout).
  *
  * Thin bridge between Linus dist-v2 UI and the existing Mastrify stack.
  * Does NOT replace or modify server/, mastering, Stripe, email, or Next.js APIs.
@@ -60,6 +60,66 @@
   function apiUrl(path) {
     const p = path.startsWith("/") ? path : `/${path}`
     return p
+  }
+
+  async function postJson(path, body, signal) {
+    assertNotAborted(signal)
+    const response = await fetch(apiUrl(path), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal,
+    })
+    assertNotAborted(signal)
+    const text = await response.text()
+    let data = null
+    try {
+      data = text ? JSON.parse(text) : null
+    } catch (_) {}
+    return { response, data }
+  }
+
+  function requireCheckoutSession(resultId) {
+    const session = getSession(resultId)
+    if (!session?.objectKey) {
+      throw new Error(strings().checkoutFailed || "Could not start checkout. Please try again.")
+    }
+    return session
+  }
+
+  function quoteFromValidate(data, fallbackCode) {
+    const finalCents = Number(data.finalCents)
+    const free = Boolean(data.isFree)
+    const code = (typeof data.code === "string" && data.code) || fallbackCode
+    const pct = Number(data.percentOff) || 0
+    const label = free
+      ? "Free code applied · $0.00"
+      : pct > 0
+        ? `Code applied · ${pct}% off`
+        : data.finalLabel
+          ? `Code applied · ${data.finalLabel}`
+          : "Code applied"
+    return {
+      amount: free ? 0 : (Number.isFinite(finalCents) ? finalCents : MASTER_PRICE_USD * 100) / 100,
+      currency: "USD",
+      free,
+      code,
+      label,
+    }
+  }
+
+  function receiptFromPayment({ id, resultId, amount, free, code }) {
+    const value = free ? 0 : Number.isFinite(amount) ? amount : MASTER_PRICE_USD
+    return {
+      id: id || uuid(),
+      resultId,
+      test: false,
+      amount: value,
+      currency: "USD",
+      charged: value,
+      free: !!free,
+      code: code || "",
+    }
   }
 
   function stylePresetFromSettings(settings) {
@@ -802,17 +862,65 @@
     async quote({ resultId, discountCode, signal }) {
       assertNotAborted(signal)
       void resultId
-      if (!discountCode) {
+      const code = String(discountCode || "").trim()
+      if (!code) {
         return { amount: MASTER_PRICE_USD, currency: "USD", free: false, code: "", label: "" }
       }
-      throw notImplemented("0.6", "POST /api/discount/validate not wired yet")
+      const { response, data } = await postJson("/api/discount/validate", { code }, signal)
+      if (!response.ok || !data?.valid) {
+        throw new Error(data?.error || strings().invalidCode || "Invalid discount code.")
+      }
+      return quoteFromValidate(data, code.toUpperCase())
     },
 
     async checkout({ resultId, discountCode, signal }) {
       assertNotAborted(signal)
-      void resultId
-      void discountCode
-      throw notImplemented("0.6", "POST /api/checkout/session or /api/discount/redeem not wired yet")
+      const session = requireCheckoutSession(resultId)
+      const code = String(discountCode || "").trim()
+
+      if (code) {
+        const validated = await postJson("/api/discount/validate", { code }, signal)
+        if (!validated.response.ok || !validated.data?.valid) {
+          throw new Error(validated.data?.error || strings().invalidCode || "Invalid discount code.")
+        }
+        if (validated.data.isFree) {
+          const redeemed = await postJson(
+            "/api/discount/redeem",
+            { code: validated.data.code || code, objectKey: session.objectKey },
+            signal,
+          )
+          if (!redeemed.response.ok || !redeemed.data?.ok || !redeemed.data?.freeOrderId) {
+            throw new Error(redeemed.data?.error || strings().checkoutFailed || "Could not start checkout. Please try again.")
+          }
+          const normalized = validated.data.code || code.toUpperCase()
+          mergeSession(resultId, { freeOrderId: redeemed.data.freeOrderId, stripeSessionId: "" })
+          return receiptFromPayment({ id: redeemed.data.freeOrderId, resultId, amount: 0, free: true, code: normalized })
+        }
+      }
+
+      const payload = {
+        objectKey: session.objectKey,
+        trackTitle: session.trackTitle || "",
+        returnPath: "/master",
+      }
+      if (code) payload.promoCode = code
+
+      const { response, data } = await postJson("/api/checkout/session", payload, signal)
+      if (!response.ok || !data?.url) {
+        if (data?.isFree) {
+          throw new Error(
+            data.error || "This code makes your master free. Apply the code, then continue without Stripe checkout.",
+          )
+        }
+        throw new Error(data?.error || strings().checkoutFailed || "Could not start checkout. Please try again.")
+      }
+
+      mergeSession(resultId, {
+        stripeSessionId: typeof data.sessionId === "string" ? data.sessionId : "",
+        trackTitle: session.trackTitle,
+        objectKey: session.objectKey,
+      })
+      return { redirect: data.url }
     },
 
     async verify({ resultId, query, signal }) {
