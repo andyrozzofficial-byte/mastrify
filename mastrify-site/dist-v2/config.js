@@ -5,7 +5,7 @@ window.MastrifyConfig=Object.assign({
  siteUrl:'https://mastrify.com',
  supportEmail:'hello@mastrify.com',
  // POST JSON {topic,name,email,message,page,sentAt}; any 2xx means received.
- supportEndpoint:'/api/support',
+ supportEndpoint:'/api/support/tickets',
  // Milliseconds to wait for the support endpoint before opening the mail app.
  supportTimeout:6000,
  // Query parameter a hosted payment page adds when it sends the user back to
