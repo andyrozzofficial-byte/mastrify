@@ -3,6 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import SiteChrome from "./components/SiteChrome"
 import { MasterSessionRootProvider } from "./MasterSessionRootProvider"
+import JsonLd from "./components/JsonLd"
+import {
+  buildPageMetadata,
+  organizationJsonLd,
+  websiteJsonLd,
+} from "../lib/seo"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,29 +21,22 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Mastrify",
-  description: "AI-powered mix & mastering. Release-ready in seconds.",
-
-  openGraph: {
-    title: "Mastrify",
-    description: "AI-powered mix & mastering. Release-ready in seconds.",
-    url: "https://mastrify.com",
-    siteName: "Mastrify",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-      },
+  metadataBase: new URL("https://www.mastrify.com"),
+  ...buildPageMetadata({
+    title: "Mastrify — AI Mastering Online | Streaming-Ready Masters",
+    description:
+      "Mastrify delivers AI mastering and online audio mastering for release-ready music. Upload your mix, preview the master, and download a streaming-ready WAV — no subscription.",
+    path: "/",
+    ogTitle: "Mastrify | AI Mastering & Online Audio Mastering",
+    keywords: [
+      "Mastrify",
+      "AI mastering",
+      "online mastering",
+      "AI audio mastering",
+      "streaming-ready master",
+      "mastering online",
     ],
-    type: "website",
-  },
-
-  icons: {
-    icon: "/brand-mark.svg",
-    shortcut: "/brand-mark.svg",
-    apple: "/brand-mark.svg",
-  },
+  }),
 }
 
 export default function RootLayout({
@@ -50,6 +49,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} site-overflow-guard flex min-h-screen flex-col bg-black text-white antialiased`}
       >
+        <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
         <MasterSessionRootProvider>
           <SiteChrome>{children}</SiteChrome>
         </MasterSessionRootProvider>

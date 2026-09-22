@@ -1,3 +1,13 @@
+import type { Metadata } from "next"
+import { buildPageMetadata } from "../../lib/seo"
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "About Mastrify",
+  description:
+    "Mastrify is AI-powered online mastering built for modern artists who want professional, streaming-ready sound without complicated workflows.",
+  path: "/about",
+})
+
 export default function About() {
   return (
     <main className="min-h-screen bg-black px-6 py-20 text-white">

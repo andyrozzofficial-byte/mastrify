@@ -47,6 +47,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/about") ||
     pathname.startsWith("/pricing") ||
     pathname.startsWith("/how-it-works") ||
+    pathname.startsWith("/ai-mastering") ||
     pathname.startsWith("/blog") ||
     pathname === "/privacy" ||
     pathname === "/terms" ||
@@ -60,11 +61,14 @@ export async function middleware(request: NextRequest) {
   }
 
   if (
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/icon") ||
     pathname.startsWith("/audio") ||
-    pathname.startsWith("/og-image")
+    pathname.startsWith("/og-image") ||
+    pathname.startsWith("/og-flow")
   ) {
     return NextResponse.next()
   }

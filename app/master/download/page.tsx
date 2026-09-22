@@ -1,5 +1,14 @@
+import type { Metadata } from "next"
 import { Suspense } from "react"
 import SecureDownloadClient from "./SecureDownloadClient"
+import { buildPageMetadata } from "../../../lib/seo"
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Secure Download | Mastrify",
+  description: "Private master download link for Mastrify customers.",
+  path: "/master/download",
+  noIndex: true,
+})
 
 export default function SecureDownloadPage() {
   return (
