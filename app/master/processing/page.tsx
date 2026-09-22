@@ -17,6 +17,9 @@ import { getOrCreateWorkflowSessionId } from "../../../lib/workflowSessionId"
 
 const API = PUBLIC_BACKEND_API_BASE
 
+/** Safari A/B diagnostic — set false or remove after confirming root cause. */
+const DIAG_DISABLE_PROCESSING_WAVEFORM = true
+
 const STEP_DELAYS_MS = [520, 680, 680, 780, 480] as const
 
 function stringField(value: unknown): string {
@@ -263,7 +266,7 @@ export default function MasterProcessingPage() {
           </div>
         </motion.div>
 
-        {(audioUrl || file) && (
+        {(audioUrl || file) && !DIAG_DISABLE_PROCESSING_WAVEFORM ? (
           <motion.div
             className="relative mt-5 min-h-[4.75rem] w-full max-w-lg overflow-hidden px-0.5 md:mt-6 md:min-h-[5rem] md:max-w-xl"
             initial={{ opacity: 0, y: 8 }}
@@ -278,7 +281,7 @@ export default function MasterProcessingPage() {
               className="shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_rgba(0,0,0,0.35)]"
             />
           </motion.div>
-        )}
+        ) : null}
 
         <motion.div
           className="relative mt-2 w-full max-w-lg min-w-0 px-0.5 md:mt-4 md:max-w-xl"
