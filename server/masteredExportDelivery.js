@@ -42,7 +42,7 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;")
 }
 
-async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle }) {
+async function sendMasterReadyEmail({ email, downloadPageUrl, expiresAt, trackTitle }) {
   const apiKey = process.env.RESEND_API_KEY?.trim()
   if (!apiKey) return { sent: false, reason: "resend_not_configured" }
 
@@ -50,7 +50,7 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
   const replyTo = process.env.MASTRIFY_EMAIL_REPLY_TO?.trim() || "support@mastrify.com"
   const title = cleanTrackTitle(trackTitle)
   const escapedTitle = escapeHtml(title)
-  const escapedPlaybackUrl = escapeHtml(playbackUrl)
+  const escapedDownloadPageUrl = escapeHtml(downloadPageUrl)
   const heading = title ? `Your master of '${escapedTitle}' is ready` : "Your master is ready"
   const subject = title ? `Your master of '${title}' is ready` : "Your master is ready"
   const html = `
@@ -90,7 +90,7 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
                       </tr>
                       <tr>
                         <td align="center" style="padding:0;">
-                          <a class="primary-cta" href="${escapedPlaybackUrl}" style="display:inline-block;border-radius:999px;background:#6d5dfc;background-image:linear-gradient(90deg,#8b5cf6,#2563eb);color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;letter-spacing:-0.01em;line-height:20px;padding:16px 24px;box-shadow:0 12px 30px rgba(79,70,229,0.26);transition:box-shadow 180ms ease,filter 180ms ease;">Open secure download</a>
+                          <a class="primary-cta" href="${escapedDownloadPageUrl}" style="display:inline-block;border-radius:999px;background:#6d5dfc;background-image:linear-gradient(90deg,#8b5cf6,#2563eb);color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;letter-spacing:-0.01em;line-height:20px;padding:16px 24px;box-shadow:0 12px 30px rgba(79,70,229,0.26);transition:box-shadow 180ms ease,filter 180ms ease;">Open secure download</a>
                         </td>
                       </tr>
                       <tr>
@@ -115,7 +115,7 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
     </html>
   `
   const textHeading = title ? `Your master of '${title}' is ready` : "Your master is ready"
-  const text = `${textHeading}\n\nYour mastered track is ready. Open your secure 12-hour download link:\n${playbackUrl}\n\n${EXPIRY_COPY}\n\nSent by Mastrify Audio Engine`
+  const text = `${textHeading}\n\nYour mastered track is ready. Open your secure 12-hour download link:\n${downloadPageUrl}\n\n${EXPIRY_COPY}\n\nSent by Mastrify Audio Engine`
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -145,10 +145,21 @@ async function sendMasterReadyEmail({ email, playbackUrl, expiresAt, trackTitle 
 /**
  * Best-effort delivery: never block a successful master response if DB/email fails.
  */
-export async function deliverMasterExportEmail({ email, objectKey, playbackUrl, expiresAt, trackTitle, amountCents, stripeSessionId }) {
+export async function deliverMasterExportEmail({
+  email,
+  objectKey,
+  playbackUrl,
+  downloadPageUrl,
+  expiresAt,
+  trackTitle,
+  amountCents,
+  stripeSessionId,
+}) {
   const to = normalizeEmail(email)
   if (!to) return { requested: false }
-  if (!objectKey || !playbackUrl) return { requested: true, delivered: false, reason: "missing_export_link" }
+  if (!objectKey || !playbackUrl || !downloadPageUrl) {
+    return { requested: true, delivered: false, reason: "missing_export_link" }
+  }
 
   const result = { requested: true, email: to, objectKey, expiresAt }
 
@@ -160,7 +171,7 @@ export async function deliverMasterExportEmail({ email, objectKey, playbackUrl, 
   }
 
   try {
-    result.email = await sendMasterReadyEmail({ email: to, playbackUrl, expiresAt, trackTitle })
+    result.email = await sendMasterReadyEmail({ email: to, downloadPageUrl, expiresAt, trackTitle })
   } catch (err) {
     result.email = { sent: false, error: err?.message || String(err) }
     console.warn("[delivery] failed to send master email:", result.email.error)

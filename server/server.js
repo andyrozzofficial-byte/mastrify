@@ -14,6 +14,7 @@ import {
   persistMasterExport,
   createMasterPlaybackSignedUrl,
   createPreviewPlaybackSignedUrl,
+  getSupabaseServiceClient,
   isSupabaseStorageConfigured,
   uploadMasterPreviewMp3,
   safeUnlink,
@@ -21,6 +22,7 @@ import {
   startMasterStorageCleanupScheduler,
 } from "./supabaseStorage.js"
 import { deliverMasterExportEmail } from "./masteredExportDelivery.js"
+import { buildMasterDownloadPageUrl, verifyMasterDownloadLink } from "./masterDownloadLink.js"
 import { generateMasterPreviewMp3, previewFileNameForMaster } from "./masterPreview.js"
 import { verifyPaidCheckoutForObjectKey } from "./stripeCheckout.js"
 import { verifyFreeOrderForObjectKey } from "./discountCodes.js"
@@ -1283,6 +1285,73 @@ app.post("/master",
   }
 )
 
+app.get("/master/download-session", async (req, res) => {
+  try {
+    const verified = verifyMasterDownloadLink(req.query.key, req.query.exp, req.query.sig)
+    if (!verified.ok) {
+      return res.status(verified.status).json({ success: false, error: verified.error })
+    }
+
+    const { objectKey, expiresAt } = verified
+    let playbackUrl = ""
+    if (isSupabaseStorageConfigured()) {
+      try {
+        playbackUrl = await createMasterPlaybackSignedUrl(objectKey)
+      } catch (err) {
+        console.error("[download-session] failed to create signed playback URL:", err?.message || err)
+        return res.status(500).json({ success: false, error: "Could not load master file" })
+      }
+    } else {
+      const basename = path.basename(objectKey)
+      const privatePath = path.join(mastersPrivateDir, basename)
+      if (!fs.existsSync(privatePath)) {
+        return res.status(404).json({ success: false, error: "Master export is not available" })
+      }
+      const publicPath = path.join(mastersDir, basename)
+      if (!fs.existsSync(publicPath)) {
+        try {
+          fs.copyFileSync(privatePath, publicPath)
+        } catch (copyErr) {
+          console.error("[download-session] failed to stage master:", copyErr?.message || copyErr)
+          return res.status(500).json({ success: false, error: "Could not prepare master download" })
+        }
+      }
+      const forwardedProto = req.headers["x-forwarded-proto"]
+      const proto = (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto || req.protocol)
+        .split(",")[0]
+        .trim()
+      const baseUrl = `${proto}://${req.get("host")}`
+      playbackUrl = `${baseUrl}/masters/${basename}`
+    }
+
+    let trackTitle = ""
+    if (isSupabaseStorageConfigured()) {
+      try {
+        const { data } = await getSupabaseServiceClient()
+          .from("mastered_exports")
+          .select("track_title")
+          .eq("object_key", objectKey)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (typeof data?.track_title === "string") trackTitle = data.track_title.trim()
+      } catch {
+        /* optional metadata */
+      }
+    }
+
+    return res.json({
+      success: true,
+      playbackUrl,
+      expiresAt,
+      trackTitle: trackTitle || null,
+    })
+  } catch (err) {
+    console.error("[download-session] failed:", err)
+    return res.status(500).json({ success: false, error: "Could not open download session" })
+  }
+})
+
 app.post("/master/deliver", deliverRateLimiter, async (req, res) => {
   try {
     const body = req.body || {}
@@ -1344,17 +1413,26 @@ app.post("/master/deliver", deliverRateLimiter, async (req, res) => {
     }
 
     const amountCents = payment.amountCents ?? null
+    let downloadPageUrl = ""
+    try {
+      downloadPageUrl = buildMasterDownloadPageUrl(objectKey, resolvedExpiresAt || signedUrlExpiresAt())
+    } catch (linkErr) {
+      console.error("[deliver] failed to build download page URL:", linkErr?.message || linkErr)
+      return res.status(500).json({ success: false, error: "Could not create secure download link" })
+    }
+
     const delivery = await deliverMasterExportEmail({
       email,
       objectKey,
       playbackUrl,
+      downloadPageUrl,
       expiresAt: resolvedExpiresAt,
       trackTitle,
       amountCents,
       stripeSessionId: stripeSessionId || null,
     })
 
-    res.json({ success: true, delivery, playbackUrl, expiresAt: resolvedExpiresAt })
+    res.json({ success: true, delivery, playbackUrl, downloadPageUrl, expiresAt: resolvedExpiresAt })
   } catch (err) {
     console.error("Master delivery failed:", err)
     res.status(500).json({ success: false, error: "Delivery failed" })
