@@ -34,7 +34,7 @@ import {
   type PreviewSource,
 } from "../../../lib/audioPreviewTimeline"
 import { parseTrackDisplayName } from "../../../lib/parseTrackDisplayName"
-import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
+import { PUBLIC_BACKEND_API_BASE, publicBackendUrl } from "../../../lib/publicBackendUrl"
 import {
   type AppliedPromo,
   clearStoredCheckoutSession,
@@ -117,6 +117,72 @@ function objectKeyFromPlaybackUrl(url: string | null): string {
   }
 }
 
+function resolveAbsoluteMasterUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url
+  if (url.startsWith("/")) return publicBackendUrl(url)
+  return url
+}
+
+function isRailwayMasterFileUrl(url: string): boolean {
+  return /\/masters\/[^/?#]+/i.test(url)
+}
+
+function masterFileDownloadUrl(url: string): string {
+  const absolute = resolveAbsoluteMasterUrl(url)
+  if (!isRailwayMasterFileUrl(absolute)) return absolute
+  try {
+    const parsed = new URL(absolute)
+    parsed.searchParams.set("download", "1")
+    return parsed.toString()
+  } catch {
+    const joiner = absolute.includes("?") ? "&" : "?"
+    return `${absolute}${joiner}download=1`
+  }
+}
+
+function masterFileDownloadName(url: string, trackTitle?: string | null): string {
+  const match = url.match(/\/([^/?#]+\.(?:wav|mp3|aiff?|flac))(?:[?#]|$)/i)
+  if (match?.[1]) {
+    try {
+      return decodeURIComponent(match[1])
+    } catch {
+      return match[1]
+    }
+  }
+  const safe = (trackTitle || "master").replace(/[^\w.\-]+/g, "_").slice(0, 80)
+  return `${safe}_master.wav`
+}
+
+async function triggerMasterFileDownload(url: string, filename: string): Promise<void> {
+  const absolute = resolveAbsoluteMasterUrl(url)
+  const downloadUrl = masterFileDownloadUrl(absolute)
+
+  if (isRailwayMasterFileUrl(absolute)) {
+    const anchor = document.createElement("a")
+    anchor.href = downloadUrl
+    anchor.rel = "noopener"
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    return
+  }
+
+  const res = await fetch(absolute)
+  if (!res.ok) throw new Error(`Download failed (${res.status})`)
+  const blob = await res.blob()
+  const blobUrl = URL.createObjectURL(blob)
+  try {
+    const anchor = document.createElement("a")
+    anchor.href = blobUrl
+    anchor.download = filename
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+  } finally {
+    URL.revokeObjectURL(blobUrl)
+  }
+}
+
 export default function MasterResultClient() {
   const {
     file,
@@ -164,6 +230,8 @@ export default function MasterResultClient() {
   const [deliveryOpen, setDeliveryOpen] = useState(false)
   const [deliverySending, setDeliverySending] = useState(false)
   const [deliveryError, setDeliveryError] = useState("")
+  const [downloadLoading, setDownloadLoading] = useState(false)
+  const [downloadError, setDownloadError] = useState("")
 
   const originalAudioRef = useRef<HTMLAudioElement | null>(null)
   const masteredAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -982,6 +1050,20 @@ export default function MasterResultClient() {
     }
   }
 
+  const handleDownloadMaster = async () => {
+    if (!isPaid || !masteredWavUrl) return
+    setDownloadLoading(true)
+    setDownloadError("")
+    try {
+      const title = file?.name ? parseTrackDisplayName(file.name).title : undefined
+      await triggerMasterFileDownload(masteredWavUrl, masterFileDownloadName(masteredWavUrl, title || file?.name))
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : "Download failed. Please try again.")
+    } finally {
+      setDownloadLoading(false)
+    }
+  }
+
   const windowStart = PREVIEW_START
   const windowLen = PREVIEW_DURATION
   const playHeadSec = absoluteFromProgressPercent(playProgress)
@@ -1268,6 +1350,20 @@ export default function MasterResultClient() {
                   </div>
                 </div>
               </div>
+
+              {isPaid && masteredWavUrl ? (
+                <div className="mt-3 flex flex-col items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => void handleDownloadMaster()}
+                    disabled={downloadLoading}
+                    className={`inline-flex min-h-[40px] items-center justify-center rounded-xl px-5 text-[12px] font-semibold sm:text-[13px] ${btnMastrifySecondaryCore}`}
+                  >
+                    {downloadLoading ? "Preparing download…" : "Download Master"}
+                  </button>
+                  {downloadError ? <p className="text-center text-[11px] text-rose-300/85">{downloadError}</p> : null}
+                </div>
+              ) : null}
             </div>
 
             <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 sm:items-stretch">
