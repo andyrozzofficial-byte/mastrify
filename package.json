@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run build --prefix mastrify-site && npm run build:check --prefix mastrify-site && node scripts/sync-dist-v2.mjs && next build",
+    "build:check": "npm run build:check --prefix mastrify-site",
     "start": "next start",
     "lint": "eslint"
   },
