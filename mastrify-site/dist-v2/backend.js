@@ -1,31 +1,14 @@
-/* Mastrify live backend adapter (Fas 0.4 analyze · Fas 0.5 master · Fas 0.6 quote/checkout).
- *
- * Thin bridge between Linus dist-v2 UI and the existing Mastrify stack.
- * Does NOT replace or modify server/, mastering, Stripe, email, or Next.js APIs.
- *
- * Wiring target (unchanged production):
- *   Railway  POST /upload, POST /master, POST /master/deliver
- *   Next.js  POST /api/discount/validate, POST /api/discount/redeem
- *            POST /api/checkout/session, GET /api/checkout/verify
- *
- * See mastrify-site/BACKEND-CONTRACT.md and Fas 0 integration plan.
- * Run `npm run build` in mastrify-site/ after editing this file.
- */
+/* Mastrify live backend adapter — Linus dist-v2 ↔ existing Mastrify stack. See BACKEND-CONTRACT.md. */
 (() => {
   "use strict"
-
-  /** @typedef {'analyze'|'master'} ProcessKind */
-  /** @typedef {{style:string,target:number,width:number,low:number,clarity:number}} StudioSettings */
-  /** @typedef {{objectKey:string,trackTitle:string,previewUrl:string,expiresAt:string|null,file:File|null,stripeSessionId:string,freeOrderId:string}} SessionRecord */
 
   const RAILWAY_API = "https://mastrify-backend-production.up.railway.app"
   const MASTER_PRICE_USD = 9
   const UPLOAD_PROGRESS = 0.15
-  /** Railway masterPreview.js — 30 s clip from 60 s in the mastered file. */
+  const DL_FAIL = "Could not prepare the WAV. Please try again."
   const RAILWAY_PREVIEW_START = 60
   const RAILWAY_PREVIEW_DURATION = 30
 
-  /** Linus studio labels → existing Railway stylePreset values (server/master.js). */
   const STYLE_TO_PRESET = {
     Balanced: "STREAM",
     Warm: "WARM",
@@ -34,9 +17,8 @@
     Open: "FESTIVAL",
   }
 
-  /** resultId → session metadata for checkout / verify / download / email (Fas 0.6+). */
   const sessions = new Map()
-  /** Same File → last Railway /upload JSON (analyze then master without re-upload). */
+  const SESS_KEY = "mastrify:adapter-session:"
   const uploadCache = new Map()
 
   const config = () => window.MastrifyConfig || {}
@@ -46,10 +28,6 @@
 
   function assertNotAborted(signal) {
     if (signal?.aborted) throw cancelled()
-  }
-
-  function notImplemented(phase, detail) {
-    return new Error(`Adapter skeleton (${phase}): ${detail}`)
   }
 
   function railwayUrl(path) {
@@ -62,14 +40,15 @@
     return p
   }
 
-  async function postJson(path, body, signal) {
+  async function fetchJson(path, { method = "POST", body, signal, railway = false } = {}) {
     assertNotAborted(signal)
-    const response = await fetch(apiUrl(path), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal,
-    })
+    const url = railway ? railwayUrl(path) : apiUrl(path)
+    const init = { method, signal }
+    if (body !== undefined) {
+      init.headers = { "Content-Type": "application/json" }
+      init.body = JSON.stringify(body)
+    }
+    const response = await fetch(url, init)
     assertNotAborted(signal)
     const text = await response.text()
     let data = null
@@ -85,6 +64,42 @@
       throw new Error(strings().checkoutFailed || "Could not start checkout. Please try again.")
     }
     return session
+  }
+
+  function requirePaidSession(resultId) {
+    const session = requireCheckoutSession(resultId)
+    if (!session.freeOrderId && !session.stripeSessionId) {
+      throw new Error(strings().verifyFailed || "Could not verify payment.")
+    }
+    return session
+  }
+
+  async function resolveSecurePlaybackUrl(resultId, session, signal) {
+    const page = session.downloadPageUrl
+    if (page) {
+      let key = ""
+      let exp = ""
+      let sig = ""
+      try {
+        const u = new URL(page, config().siteUrl || "https://mastrify.com")
+        key = u.searchParams.get("key")?.trim() || ""
+        exp = u.searchParams.get("exp")?.trim() || ""
+        sig = u.searchParams.get("sig")?.trim() || ""
+      } catch (_) {}
+      if (key && exp && sig) {
+        const { response, data } = await fetchJson(`/master/download-session?${new URLSearchParams({ key, exp, sig })}`, { method: "GET", signal, railway: true })
+        if (!response.ok || data?.success === false || typeof data?.playbackUrl !== "string" || !data.playbackUrl.trim()) {
+          throw new Error(data?.error || DL_FAIL)
+        }
+        const updates = { playbackUrl: data.playbackUrl.trim() }
+        if (typeof data.expiresAt === "string" && data.expiresAt.trim()) updates.expiresAt = data.expiresAt.trim()
+        mergeSession(resultId, updates)
+        return updates.playbackUrl
+      }
+    }
+    const cached = typeof session.playbackUrl === "string" ? session.playbackUrl.trim() : ""
+    if (cached) return cached
+    throw new Error(DL_FAIL)
   }
 
   function quoteFromValidate(data, fallbackCode) {
@@ -134,13 +149,27 @@
 
   function saveSession(resultId, record) {
     sessions.set(resultId, record)
+    try {
+      const stored = { ...record }
+      delete stored.file
+      sessionStorage.setItem(SESS_KEY + resultId, JSON.stringify(stored))
+    } catch (_) {}
   }
 
   function getSession(resultId) {
-    return sessions.get(resultId) || null
+    const cached = sessions.get(resultId)
+    if (cached) return cached
+    try {
+      const raw = sessionStorage.getItem(SESS_KEY + resultId)
+      if (!raw) return null
+      const parsed = JSON.parse(raw)
+      sessions.set(resultId, parsed)
+      return parsed
+    } catch (_) {
+      return null
+    }
   }
 
-  /** @param {SessionRecord} partial */
   function mergeSession(resultId, partial) {
     const prev = getSession(resultId) || {}
     const next = { ...prev, ...partial }
@@ -172,7 +201,6 @@
     return NaN
   }
 
-  /** Railway serves a 30 s clip from 60 s; Linus requires sourceStart + duration <= sourceDuration. */
   function resolvePreviewMetadata(previewWindow) {
     const sourceDuration = Math.max(0, num(previewWindow.sourceDuration, previewWindow.end, 0))
     const longTrackMin = RAILWAY_PREVIEW_START + RAILWAY_PREVIEW_DURATION
@@ -727,10 +755,14 @@
       objectKey,
       trackTitle: file.name,
       previewUrl: "",
+      masteredUrl: "",
+      playbackUrl: "",
+      downloadPageUrl: "",
       expiresAt: null,
       file: null,
       stripeSessionId: "",
       freeOrderId: "",
+      email: "",
     })
 
     onProgress?.({ progress: 1, phase: phaseAt(1, "analyze"), eta: 0 })
@@ -808,16 +840,23 @@
       (typeof data.expiresAt === "string" && data.expiresAt) ||
       (typeof data.expires_at === "string" && data.expires_at) ||
       null
+    const masteredUrl =
+      (typeof data.afterUrl === "string" && data.afterUrl) ||
+      (typeof data.fullUrl === "string" && data.fullUrl) ||
+      (typeof data.after === "string" && data.after ? absoluteRailwayUrl(data.after) : "")
 
     const resultId = uuid()
     mergeSession(resultId, {
       objectKey,
       trackTitle: file.name,
       previewUrl: absoluteRailwayUrl(previewUrl),
+      masteredUrl,
+      playbackUrl: "",
       expiresAt,
       file,
       stripeSessionId: "",
       freeOrderId: "",
+      email: "",
       analysisBefore: data.analysisBefore || null,
       analysisAfter: data.analysisAfter || null,
       masteringInsights: data.masteringInsights || null,
@@ -843,10 +882,6 @@
   window.MastrifyBackend = {
     mode: "live",
 
-    /**
-     * Fas 0.4 — analyze: POST /upload (FormData: file, mode=mix)
-     * Fas 0.5 — master:  POST /master (FormData: file, stylePreset, targetLufs, sliders, trackTitle)
-     */
     async process({ kind, file, settings, previewWindow, signal, onProgress }) {
       assertNotAborted(signal)
 
@@ -866,7 +901,7 @@
       if (!code) {
         return { amount: MASTER_PRICE_USD, currency: "USD", free: false, code: "", label: "" }
       }
-      const { response, data } = await postJson("/api/discount/validate", { code }, signal)
+      const { response, data } = await fetchJson("/api/discount/validate", { body: { code }, signal })
       if (!response.ok || !data?.valid) {
         throw new Error(data?.error || strings().invalidCode || "Invalid discount code.")
       }
@@ -879,16 +914,15 @@
       const code = String(discountCode || "").trim()
 
       if (code) {
-        const validated = await postJson("/api/discount/validate", { code }, signal)
+        const validated = await fetchJson("/api/discount/validate", { body: { code }, signal })
         if (!validated.response.ok || !validated.data?.valid) {
           throw new Error(validated.data?.error || strings().invalidCode || "Invalid discount code.")
         }
         if (validated.data.isFree) {
-          const redeemed = await postJson(
-            "/api/discount/redeem",
-            { code: validated.data.code || code, objectKey: session.objectKey },
+          const redeemed = await fetchJson("/api/discount/redeem", {
+            body: { code: validated.data.code || code, objectKey: session.objectKey },
             signal,
-          )
+          })
           if (!redeemed.response.ok || !redeemed.data?.ok || !redeemed.data?.freeOrderId) {
             throw new Error(redeemed.data?.error || strings().checkoutFailed || "Could not start checkout. Please try again.")
           }
@@ -905,7 +939,7 @@
       }
       if (code) payload.promoCode = code
 
-      const { response, data } = await postJson("/api/checkout/session", payload, signal)
+      const { response, data } = await fetchJson("/api/checkout/session", { body: payload, signal })
       if (!response.ok || !data?.url) {
         if (data?.isFree) {
           throw new Error(
@@ -925,22 +959,109 @@
 
     async verify({ resultId, query, signal }) {
       assertNotAborted(signal)
-      void resultId
-      void query
-      throw notImplemented("0.6", "GET /api/checkout/verify not wired yet")
+      const session = requireCheckoutSession(resultId)
+
+      if (session.freeOrderId) {
+        const receipt = receiptFromPayment({
+          id: session.freeOrderId,
+          resultId,
+          amount: 0,
+          free: true,
+          code: "",
+        })
+        if (session.email) receipt.email = session.email
+        return receipt
+      }
+
+      const params = query && typeof query === "object" ? query : {}
+      const returnKey = config().checkoutReturnParam || "session_id"
+      const sessionId =
+        (typeof params[returnKey] === "string" && params[returnKey].trim()) ||
+        (typeof session.stripeSessionId === "string" && session.stripeSessionId.trim()) ||
+        ""
+
+      if (!sessionId) {
+        throw new Error(strings().verifyFailed || "Could not verify payment.")
+      }
+
+      const qs = new URLSearchParams({ session_id: sessionId, object_key: session.objectKey })
+      const { response, data } = await fetchJson(`/api/checkout/verify?${qs.toString()}`, { method: "GET", signal })
+      if (!response.ok || !data?.paid) {
+        throw new Error(data?.error || strings().verifyFailed || "Could not verify payment.")
+      }
+
+      const verifiedSessionId = (typeof data.sessionId === "string" && data.sessionId.trim()) || sessionId
+      const email = typeof data.email === "string" ? data.email.trim() : session.email || ""
+      mergeSession(resultId, { stripeSessionId: verifiedSessionId, freeOrderId: "", email })
+
+      const receipt = receiptFromPayment({
+        id: verifiedSessionId,
+        resultId,
+        amount: MASTER_PRICE_USD,
+        free: false,
+        code: "",
+      })
+      if (email) receipt.email = email
+      return receipt
     },
 
     async download({ resultId, signal }) {
       assertNotAborted(signal)
-      void resultId
-      throw notImplemented("0.7", "full master download not wired yet")
+      const session = requirePaidSession(resultId)
+      const playbackUrl = await resolveSecurePlaybackUrl(resultId, session, signal)
+      const absolute = absoluteRailwayUrl(playbackUrl)
+      if (/\/masters\/[^/?#]+/i.test(absolute)) {
+        try {
+          const parsed = new URL(absolute)
+          parsed.searchParams.set("download", "1")
+          return fetchBlob(parsed.toString(), signal)
+        } catch (_) {
+          return fetchBlob(`${absolute}${absolute.includes("?") ? "&" : "?"}download=1`, signal)
+        }
+      }
+      assertNotAborted(signal)
+      const response = await fetch(absolute, { signal })
+      if (signal?.aborted) throw cancelled()
+      if (!response.ok) throw new Error(DL_FAIL)
+      return response.blob()
     },
 
     async email({ resultId, email, signal }) {
       assertNotAborted(signal)
-      void resultId
-      void email
-      throw notImplemented("0.7", "POST /master/deliver not wired yet")
+      const session = requirePaidSession(resultId)
+      const address = String(email || "").trim()
+      if (!address) {
+        throw new Error(strings().emailInvalid || "Enter a valid email address.")
+      }
+
+      const payload = {
+        email: address,
+        objectKey: session.objectKey,
+        playbackUrl: session.playbackUrl || session.masteredUrl || "",
+        expiresAt: session.expiresAt || null,
+        trackTitle: session.trackTitle || "",
+      }
+      if (session.freeOrderId) payload.freeOrderId = session.freeOrderId
+      else if (session.stripeSessionId) payload.stripeSessionId = session.stripeSessionId
+
+      const { response, data } = await fetchJson("/master/deliver", { body: payload, signal, railway: true })
+      if (!response.ok || data?.success === false) {
+        throw new Error(data?.error || strings().emailFailed || "Could not send email. Please try again.")
+      }
+
+      const updates = { email: address }
+      if (typeof data.playbackUrl === "string" && data.playbackUrl.trim()) {
+        updates.playbackUrl = data.playbackUrl.trim()
+      }
+      if (typeof data.downloadPageUrl === "string" && data.downloadPageUrl.trim()) {
+        updates.downloadPageUrl = data.downloadPageUrl.trim()
+      }
+      if (typeof data.expiresAt === "string" && data.expiresAt.trim()) {
+        updates.expiresAt = data.expiresAt.trim()
+      }
+      mergeSession(resultId, updates)
+
+      return { sent: true, test: false, to: address }
     },
   }
 })()
