@@ -1,48 +1,44 @@
-/* Mastrify live backend adapter — Linus dist-v2 ↔ existing Mastrify stack. See BACKEND-CONTRACT.md. */
 (() => {
   "use strict"
-
   const RAILWAY_API = "https://mastrify-backend-production.up.railway.app"
   const MASTER_PRICE_USD = 9
   const UPLOAD_PROGRESS = 0.15
   const DL_FAIL = "Could not prepare the WAV. Please try again."
   const RAILWAY_PREVIEW_START = 60
   const RAILWAY_PREVIEW_DURATION = 30
-
-  const STYLE_TO_PRESET = {
-    Balanced: "STREAM",
-    Warm: "WARM",
-    Punchy: "LOUD",
-    Club: "CLUB",
-    Open: "FESTIVAL",
+  const STYLE_TO_PRESET = { Balanced: "STREAM", Warm: "WARM", Punchy: "LOUD", Club: "CLUB", Open: "FESTIVAL" }
+  const FB = {
+    mf: "Mastering failed. Please try again.",
+    mfn: "Mastering failed. Check your connection.",
+    af: "Analysis failed. Please try again.",
+    afn: "Analysis failed. Check your connection.",
+    and: "Analysis returned no data",
+    cf: "Could not start checkout. Please try again.",
+    vf: "Could not verify payment.",
   }
-
   const sessions = new Map()
   const SESS_KEY = "mastrify:adapter-session:"
+  const VID_KEY = "mastrify:visitor-id"
+  const SITE_SID_KEY = "mastrify:site-session-id"
+  const WF_SID_KEY = "mastrify:workflow-session-id"
   const uploadCache = new Map()
-
   const config = () => window.MastrifyConfig || {}
   const copy = () => window.MastrifyCopy || null
   const strings = () => (copy() && copy().STRINGS) || {}
+  const str = (k, fb) => strings()[k] || fb
+  const kindFail = (kind) => (kind === "master" ? str("masterFailed", FB.mf) : str("analysisNoData", FB.and))
+  const kindNet = (kind) => (kind === "master" ? str("masterFailedNetwork", FB.mfn) : str("analysisFailedNetwork", FB.afn))
   const cancelled = () => new DOMException("Operation cancelled", "AbortError")
-
   function assertNotAborted(signal) {
     if (signal?.aborted) throw cancelled()
   }
-
-  function railwayUrl(path) {
+  function svcUrl(path, railway = false) {
     const p = path.startsWith("/") ? path : `/${path}`
-    return `${RAILWAY_API}${p}`
+    return railway ? RAILWAY_API + p : p
   }
-
-  function apiUrl(path) {
-    const p = path.startsWith("/") ? path : `/${path}`
-    return p
-  }
-
   async function fetchJson(path, { method = "POST", body, signal, railway = false } = {}) {
     assertNotAborted(signal)
-    const url = railway ? railwayUrl(path) : apiUrl(path)
+    const url = svcUrl(path, railway)
     const init = { method, signal }
     if (body !== undefined) {
       init.headers = { "Content-Type": "application/json" }
@@ -57,23 +53,16 @@
     } catch (_) {}
     return { response, data }
   }
-
   function requireCheckoutSession(resultId) {
     const session = getSession(resultId)
-    if (!session?.objectKey) {
-      throw new Error(strings().checkoutFailed || "Could not start checkout. Please try again.")
-    }
+    if (!session?.objectKey) throw new Error(str("checkoutFailed", FB.cf))
     return session
   }
-
   function requirePaidSession(resultId) {
     const session = requireCheckoutSession(resultId)
-    if (!session.freeOrderId && !session.stripeSessionId) {
-      throw new Error(strings().verifyFailed || "Could not verify payment.")
-    }
+    if (!session.freeOrderId && !session.stripeSessionId) throw new Error(str("verifyFailed", FB.vf))
     return session
   }
-
   async function resolveSecurePlaybackUrl(resultId, session, signal) {
     const page = session.downloadPageUrl
     if (page) {
@@ -101,52 +90,26 @@
     if (cached) return cached
     throw new Error(DL_FAIL)
   }
-
   function quoteFromValidate(data, fallbackCode) {
     const finalCents = Number(data.finalCents)
     const free = Boolean(data.isFree)
     const code = (typeof data.code === "string" && data.code) || fallbackCode
     const pct = Number(data.percentOff) || 0
-    const label = free
-      ? "Free code applied · $0.00"
-      : pct > 0
-        ? `Code applied · ${pct}% off`
-        : data.finalLabel
-          ? `Code applied · ${data.finalLabel}`
-          : "Code applied"
-    return {
-      amount: free ? 0 : (Number.isFinite(finalCents) ? finalCents : MASTER_PRICE_USD * 100) / 100,
-      currency: "USD",
-      free,
-      code,
-      label,
-    }
+    const label = free ? "Free code applied · $0.00" : pct > 0 ? `Code applied · ${pct}% off` : data.finalLabel ? `Code applied · ${data.finalLabel}` : "Code applied"
+    return { amount: free ? 0 : (Number.isFinite(finalCents) ? finalCents : MASTER_PRICE_USD * 100) / 100, currency: "USD", free, code, label }
   }
-
   function receiptFromPayment({ id, resultId, amount, free, code }) {
     const value = free ? 0 : Number.isFinite(amount) ? amount : MASTER_PRICE_USD
-    return {
-      id: id || uuid(),
-      resultId,
-      test: false,
-      amount: value,
-      currency: "USD",
-      charged: value,
-      free: !!free,
-      code: code || "",
-    }
+    return { id: id || uuid(), resultId, test: false, amount: value, currency: "USD", charged: value, free: !!free, code: code || "" }
   }
-
   function stylePresetFromSettings(settings) {
     const style = settings && settings.style
     return STYLE_TO_PRESET[style] || STYLE_TO_PRESET.Balanced
   }
-
   function targetLufsFromSettings(settings) {
     const t = Number(settings && settings.target)
     return Number.isFinite(t) ? t : -14
   }
-
   function saveSession(resultId, record) {
     sessions.set(resultId, record)
     try {
@@ -155,7 +118,6 @@
       sessionStorage.setItem(SESS_KEY + resultId, JSON.stringify(stored))
     } catch (_) {}
   }
-
   function getSession(resultId) {
     const cached = sessions.get(resultId)
     if (cached) return cached
@@ -169,14 +131,12 @@
       return null
     }
   }
-
   function mergeSession(resultId, partial) {
     const prev = getSession(resultId) || {}
     const next = { ...prev, ...partial }
     saveSession(resultId, next)
     return next
   }
-
   function uuid() {
     const source = typeof crypto !== "undefined" ? crypto : null
     if (source && typeof source.randomUUID === "function") return source.randomUUID()
@@ -188,11 +148,41 @@
     const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
   }
-
+  function storedId(k, s) {
+    try {
+      const hit = s.getItem(k)?.trim()
+      if (hit) return hit
+      const id = uuid()
+      s.setItem(k, id)
+      return id
+    } catch (_) {
+      return uuid()
+    }
+  }
+  const visitorId = () => storedId(VID_KEY, localStorage)
+  const siteSid = () => storedId(SITE_SID_KEY, sessionStorage)
+  const wfSid = () => storedId(WF_SID_KEY, sessionStorage)
+  function trackBeacon(url, payload) {
+    try {
+      const body = JSON.stringify(payload)
+      if (navigator.sendBeacon?.(url, new Blob([body], { type: "application/json" }))) return
+      fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {})
+    } catch (_) {}
+  }
+  function trackPageView(rawPath) {
+    try {
+      const u = new URL(rawPath || location.pathname + location.search, location.origin)
+      if (!u.pathname || u.pathname.startsWith("/admin")) return
+      trackBeacon("/api/track/pageview", { visitorId: visitorId(), sessionId: siteSid(), path: u.pathname, search: u.search, referrer: document.referrer || "" })
+    } catch (_) {}
+  }
+  function trackPipe(sessionId, eventType, trackName) {
+    if (!sessionId?.trim()) return
+    trackBeacon("/api/track/pipeline", { sessionId, eventType, trackName: trackName || null, visitorId: visitorId() })
+  }
   function fileKey(file) {
     return `${file.name}:${file.size}:${file.lastModified}`
   }
-
   function num(...values) {
     for (const value of values) {
       const n = Number(value)
@@ -200,82 +190,46 @@
     }
     return NaN
   }
-
   function resolvePreviewMetadata(previewWindow) {
     const sourceDuration = Math.max(0, num(previewWindow.sourceDuration, previewWindow.end, 0))
     const longTrackMin = RAILWAY_PREVIEW_START + RAILWAY_PREVIEW_DURATION
-
     if (sourceDuration >= longTrackMin - 0.01) {
-      return {
-        sourceStart: RAILWAY_PREVIEW_START,
-        duration: RAILWAY_PREVIEW_DURATION,
-        sourceDuration,
-        cueTime: Number.isFinite(previewWindow.cueTime) ? previewWindow.cueTime : RAILWAY_PREVIEW_START,
-        method: previewWindow.method || "energy",
-      }
+      return { sourceStart: RAILWAY_PREVIEW_START, duration: RAILWAY_PREVIEW_DURATION, sourceDuration, cueTime: Number.isFinite(previewWindow.cueTime) ? previewWindow.cueTime : RAILWAY_PREVIEW_START, method: previewWindow.method || "energy" }
     }
-
     let start = Number.isFinite(previewWindow.start) ? previewWindow.start : 0
     start = Math.max(0, Math.min(start, sourceDuration))
-
     let duration = num(previewWindow.duration, 0)
-    if (!(duration > 0) && Number.isFinite(previewWindow.end)) {
-      duration = previewWindow.end - (Number.isFinite(previewWindow.start) ? previewWindow.start : 0)
-    }
+    if (!(duration > 0) && Number.isFinite(previewWindow.end)) duration = previewWindow.end - (Number.isFinite(previewWindow.start) ? previewWindow.start : 0)
     if (!(duration > 0) && sourceDuration > 0 && sourceDuration <= 40) {
       start = 0
       duration = sourceDuration
     }
-    if (!(duration > 0) && sourceDuration > 0) {
-      duration = Math.min(40, sourceDuration - start)
-    }
-
+    if (!(duration > 0) && sourceDuration > 0) duration = Math.min(40, sourceDuration - start)
     duration = Math.min(Math.max(0, duration), 40)
     if (sourceDuration > 0) duration = Math.min(duration, Math.max(0, sourceDuration - start))
-
-    const method =
-      sourceDuration <= 40 && start === 0 && duration >= sourceDuration - 0.01
-        ? "short-track"
-        : previewWindow.method || "energy"
-
-    return {
-      sourceStart: start,
-      duration,
-      sourceDuration: sourceDuration > 0 ? sourceDuration : duration,
-      cueTime: Number.isFinite(previewWindow.cueTime) ? previewWindow.cueTime : start,
-      method,
-    }
+    const method = sourceDuration <= 40 && start === 0 && duration >= sourceDuration - 0.01 ? "short-track" : previewWindow.method || "energy"
+    return { sourceStart: start, duration, sourceDuration: sourceDuration > 0 ? sourceDuration : duration, cueTime: Number.isFinite(previewWindow.cueTime) ? previewWindow.cueTime : start, method }
   }
-
   function isSafariBrowser() {
     if (typeof navigator === "undefined") return false
     const ua = navigator.userAgent || ""
-    const isWebKit = /WebKit/i.test(ua)
-    const isNonSafari = /Chrome|Chromium|CriOS|Edg|OPR|FxiOS/i.test(ua)
-    return isWebKit && !isNonSafari
+    return /WebKit/i.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|FxiOS/i.test(ua)
   }
-
   function phasesForKind(kind) {
     const rows = copy()?.PHASES?.[kind === "analyze" ? "analyze" : "master"]
-    if (Array.isArray(rows) && rows.length) return rows.map((row) => row[0])
-    return kind === "analyze"
-      ? ["Reading dynamics", "Mapping stereo field", "Listening to tonal balance", "Evaluating loudness", "Tracing transient energy", "Building your mix portrait"]
-      : ["Listening to your mix", "Balancing tone", "Shaping dynamics", "Refining stereo space", "Finishing your master"]
+    return Array.isArray(rows) && rows.length ? rows.map((row) => row[0]) : ["Working"]
   }
-
   function phaseAt(progress, kind) {
     const phases = phasesForKind(kind)
     const index = Math.min(phases.length - 1, Math.floor(Math.max(0, Math.min(1, progress)) * phases.length))
     return phases[index]
   }
-
   function absoluteRailwayUrl(urlOrPath) {
     if (!urlOrPath) return ""
     const value = String(urlOrPath)
     if (/^https?:\/\//i.test(value)) return value
-    return railwayUrl(value.startsWith("/") ? value : `/${value}`)
+    return svcUrl(value.startsWith("/") ? value : `/${value}`, true)
   }
-
   function normalizeSettings(settings) {
     const style = settings && settings.style
     const styles = copy()?.STYLES || []
@@ -288,93 +242,23 @@
       clarity: Math.max(0, Math.min(100, Math.round(Number(settings?.clarity) || 50))),
     }
   }
-
   const fmt = (v) => (Number.isFinite(v) ? (v < 0 ? "−" : "") + Math.abs(v).toFixed(1) : "—")
   const lufsText = (v) => (Number.isFinite(v) ? `≈ ${fmt(v)} LUFS` : "—")
   const pctOf = (v) => `${Math.round(Math.max(0, Math.min(1, v)) * 100)}%`
-
   function normaliseProfile(profile) {
     const p = profile || {}
-    return {
-      loudness: Number.isFinite(p.loudness) ? p.loudness : -18,
-      crest: Number.isFinite(p.crest) ? p.crest : 10,
-      range: Number.isFinite(p.range) ? p.range : 8,
-      width: Number.isFinite(p.width) ? p.width : 0.4,
-      widthSpread: Number(p.widthSpread) || 0,
-      bassShare: Number.isFinite(p.bassShare) ? p.bassShare : 0.45,
-      midShare: Number.isFinite(p.midShare) ? p.midShare : 0.4,
-      airShare: Number.isFinite(p.airShare) ? p.airShare : 0.15,
-      bassSpread: Number(p.bassSpread) || 0,
-      accent: Number(p.accent) || 0,
-      movement: Number(p.movement) || 0,
-      channels: Number(p.channels) || 2,
-      measured: !!profile,
-    }
+    return { loudness: Number.isFinite(p.loudness) ? p.loudness : -18, crest: Number.isFinite(p.crest) ? p.crest : 10, range: Number.isFinite(p.range) ? p.range : 8, width: Number.isFinite(p.width) ? p.width : 0.4, widthSpread: Number(p.widthSpread) || 0, bassShare: Number.isFinite(p.bassShare) ? p.bassShare : 0.45, midShare: Number.isFinite(p.midShare) ? p.midShare : 0.4, airShare: Number.isFinite(p.airShare) ? p.airShare : 0.15, bassSpread: Number(p.bassSpread) || 0, accent: Number(p.accent) || 0, movement: Number(p.movement) || 0, channels: Number(p.channels) || 2, measured: !!profile }
   }
-
   function describeProfile(p) {
     const C = copy()
-    const loud =
-      p.loudness > -9
-        ? ["Hot", "Very little headroom is left; mastering will focus on tone and control rather than level."]
-        : p.loudness > -14
-          ? ["Release level", "Already close to streaming level, so the master can stay transparent."]
-          : p.loudness > -20
-            ? ["Controlled", "Headroom is healthy, with room to lift level in mastering without crushing dynamics."]
-            : ["Quiet", "Plenty of headroom. The master can bring the whole song up without strain."]
-    const dyn =
-      p.crest < 7
-        ? ["Dense", "The level barely moves. A gentle touch keeps it from feeling flat."]
-        : p.range < 4
-          ? ["Consistent", "The level stays even across the arrangement, with transients intact."]
-          : p.range < 8
-            ? ["Glued", "Tight and consistent, with peaks under control."]
-            : p.range < 14
-              ? ["Open", "Big swings between loud and soft. A touch more glue could feel more release-ready."]
-              : ["Very open", "Wide swings between sections. Some glue will help small speakers."]
-    const ste =
-      p.channels < 2
-        ? ["Mono", "A single channel. Width will not change in mastering."]
-        : p.width < 0.18
-          ? ["Narrow", "The image sits close to the center; pads and effects could use more room."]
-          : p.width < 0.3
-            ? ["Focused", "A tight, centered image with a little space at the sides."]
-            : p.width < 0.5
-              ? ["Balanced", "A stable center with room at the sides."]
-              : ["Wide", "The stereo field feels open and spacious, with good depth for streaming and clubs."]
-    const low =
-      p.bassShare < 0.25
-        ? ["Light", "The foundation could carry more weight."]
-        : p.bassShare < 0.72
-          ? ["Balanced", "Low end feels controlled and supportive, a solid anchor for the rest of the mix."]
-          : ["Heavy", "The low end leads the mix; keep it controlled so it stays clean."]
-    const tone =
-      p.airShare > 0.18
-        ? ["Bright", "Lots of top-end energy. Keep an eye on harshness."]
-        : p.airShare < 0.025
-          ? ["Dark", "The top end is soft; a little air could open it up."]
-          : p.bassShare > 0.6
-            ? ["Warm", "Weight below, gentle above. A little air could open the top end."]
-            : ["Even", "Lows, mids and highs sit in a natural balance."]
-    const energy = (C?.ENERGY?.levels || []).find((level) => {
-      try {
-        return level.when(p)
-      } catch (_) {
-        return false
-      }
-    }) || { id: "Steady", text: "Energy feels even and controlled across the arrangement.", level: "Medium energy" }
-    const pres =
-      p.midShare < 0.2
-        ? ["Soft", "Vocals and leads sit slightly behind the mix."]
-        : p.midShare < 0.5
-          ? ["Clear", "The lead elements have space to speak."]
-          : ["Forward", "Mids lead the mix; detail is upfront."]
-    const high =
-      p.airShare > 0.2
-        ? ["Edgy", "Top end could feel silkier and less edgy."]
-        : p.airShare > 0.05
-          ? ["Smooth", "Keep the sheen gentle and natural."]
-          : ["Soft", "Top end could use more air and presence."]
+    const loud = p.loudness > -9 ? ["Hot", "Very little headroom is left; mastering will focus on tone and control rather than level."] : p.loudness > -14 ? ["Release level", "Already close to streaming level, so the master can stay transparent."] : p.loudness > -20 ? ["Controlled", "Headroom is healthy, with room to lift level in mastering without crushing dynamics."] : ["Quiet", "Plenty of headroom. The master can bring the whole song up without strain."]
+    const dyn = p.crest < 7 ? ["Dense", "The level barely moves. A gentle touch keeps it from feeling flat."] : p.range < 4 ? ["Consistent", "The level stays even across the arrangement, with transients intact."] : p.range < 8 ? ["Glued", "Tight and consistent, with peaks under control."] : p.range < 14 ? ["Open", "Big swings between loud and soft. A touch more glue could feel more release-ready."] : ["Very open", "Wide swings between sections. Some glue will help small speakers."]
+    const ste = p.channels < 2 ? ["Mono", "A single channel. Width will not change in mastering."] : p.width < 0.18 ? ["Narrow", "The image sits close to the center; pads and effects could use more room."] : p.width < 0.3 ? ["Focused", "A tight, centered image with a little space at the sides."] : p.width < 0.5 ? ["Balanced", "A stable center with room at the sides."] : ["Wide", "The stereo field feels open and spacious, with good depth for streaming and clubs."]
+    const low = p.bassShare < 0.25 ? ["Light", "The foundation could carry more weight."] : p.bassShare < 0.72 ? ["Balanced", "Low end feels controlled and supportive, a solid anchor for the rest of the mix."] : ["Heavy", "The low end leads the mix; keep it controlled so it stays clean."]
+    const tone = p.airShare > 0.18 ? ["Bright", "Lots of top-end energy. Keep an eye on harshness."] : p.airShare < 0.025 ? ["Dark", "The top end is soft; a little air could open it up."] : p.bassShare > 0.6 ? ["Warm", "Weight below, gentle above. A little air could open the top end."] : ["Even", "Lows, mids and highs sit in a natural balance."]
+    const energy = (C?.ENERGY?.levels || []).find((level) => { try { return level.when(p) } catch (_) { return false } }) || { id: "Steady", text: "Energy feels even and controlled across the arrangement.", level: "Medium energy" }
+    const pres = p.midShare < 0.2 ? ["Soft", "Vocals and leads sit slightly behind the mix."] : p.midShare < 0.5 ? ["Clear", "The lead elements have space to speak."] : ["Forward", "Mids lead the mix; detail is upfront."]
+    const high = p.airShare > 0.2 ? ["Edgy", "Top end could feel silkier and less edgy."] : p.airShare > 0.05 ? ["Smooth", "Keep the sheen gentle and natural."] : ["Soft", "Top end could use more air and presence."]
     return [
       { label: "Loudness", value: loud[0], description: loud[1], detail: lufsText(p.loudness) },
       { label: "Dynamics", value: dyn[0], description: dyn[1], detail: `${fmt(p.range)} dB range` },
@@ -386,50 +270,26 @@
       { label: "Highs", value: high[0], description: high[1], detail: high[0] },
     ]
   }
-
+  const GOOD_VALUES = ["Release level", "Controlled", "Consistent", "Glued", "Open", "Balanced", "Wide", "Even", "Warm", "Clear", "Smooth", "Punchy", "Steady", "Driven"]
   function buildAnalysis(profile, readinessOverride) {
     const C = copy()
     const p = normaliseProfile(profile)
     const metrics = describeProfile(p)
-    let issues = (C?.ISSUES || []).filter((issue) => {
-      try {
-        return issue.when(p)
-      } catch (_) {
-        return false
-      }
-    })
+    let issues = (C?.ISSUES || []).filter((issue) => { try { return issue.when(p) } catch (_) { return false } })
     const seen = new Set()
     issues = issues.filter((issue) => (seen.has(issue.metric) ? false : (seen.add(issue.metric), true)))
     issues.sort((a, b) => b.gain - a.gain)
     issues = issues.slice(0, 4)
-    const insights = issues.map((issue, index) => ({
-      title: issue.title,
-      subtitle: issue.subtitle,
-      text: issue.advice,
-      metric: issue.metric,
-      severity: index === 0 ? "main" : index === 1 ? "medium" : "low",
-      gain: issue.gain,
-      tips: issue.tips,
-    }))
-    let readiness =
-      Number.isFinite(readinessOverride) && readinessOverride >= 0
-        ? Math.round(readinessOverride)
-        : 92 - issues.reduce((sum, issue) => sum + issue.gain, 0) - (p.loudness < -22 ? 4 : 0)
+    const insights = issues.map((issue, index) => ({ title: issue.title, subtitle: issue.subtitle, text: issue.advice, metric: issue.metric, severity: index === 0 ? "main" : index === 1 ? "medium" : "low", gain: issue.gain, tips: issue.tips }))
+    let readiness = Number.isFinite(readinessOverride) && readinessOverride >= 0 ? Math.round(readinessOverride) : 92 - issues.reduce((sum, issue) => sum + issue.gain, 0) - (p.loudness < -22 ? 4 : 0)
     readiness = Math.max(0, Math.min(100, Math.round(readiness)))
-    const tier = (C?.READINESS || []).find((t) => readiness >= t.min) || {
-      headline: "A strong foundation, with room for a final polish.",
-      recommendation: "",
-      focus: "",
-    }
-    const good = metrics.filter((m) =>
-      ["Release level", "Controlled", "Consistent", "Glued", "Open", "Balanced", "Wide", "Even", "Warm", "Clear", "Smooth", "Punchy", "Steady", "Driven"].includes(m.value),
-    )
+    const tier = (C?.READINESS || []).find((t) => readiness >= t.min) || { headline: "A strong foundation, with room for a final polish.", recommendation: "", focus: "" }
+    const good = metrics.filter((m) => GOOD_VALUES.includes(m.value))
     const highlights = []
     for (const m of good) {
       if (m.label === "Stereo") highlights.push("Stereo width feels open enough for a modern, release-ready master.")
-      else if (m.label === "Dynamics") {
-        highlights.push(m.value === "Open" ? "Dynamics have room to breathe. Light bus glue can make the drop hit harder." : "Dynamics are consistent and controlled.")
-      } else if (m.label === "Loudness") highlights.push(`Integrated loudness sits around ${fmt(p.loudness)} LUFS, a solid starting point for mastering.`)
+      else if (m.label === "Dynamics") highlights.push(m.value === "Open" ? "Dynamics have room to breathe. Light bus glue can make the drop hit harder." : "Dynamics are consistent and controlled.")
+      else if (m.label === "Loudness") highlights.push(`Integrated loudness sits around ${fmt(p.loudness)} LUFS, a solid starting point for mastering.`)
       else if (m.label === "Low end") highlights.push("The low end is controlled and supportive.")
       else if (m.label === "Tone") highlights.push("Tonal balance is even across lows, mids and highs.")
       if (highlights.length >= 3) break
@@ -437,41 +297,12 @@
     if (!highlights.length) highlights.push(`Integrated loudness sits around ${fmt(p.loudness)} LUFS.`)
     const tipKey = (insights.find((i) => i.tips) || {}).tips
     const tips = tipKey && C ? C.TIPS[tipKey] : null
-    return {
-      readiness,
-      summary: tier.headline,
-      recommendation: tier.recommendation,
-      focus: tier.focus,
-      highlights,
-      metrics,
-      insights,
-      tips,
-      measured: p.measured,
-      profile: {
-        loudness: p.loudness,
-        range: p.range,
-        width: p.width,
-        channels: p.channels,
-        bassShare: p.bassShare,
-        midShare: p.midShare,
-        airShare: p.airShare,
-        accent: p.accent,
-      },
-    }
+    return { readiness, summary: tier.headline, recommendation: tier.recommendation, focus: tier.focus, highlights, metrics, insights, tips, measured: p.measured, profile: { loudness: p.loudness, range: p.range, width: p.width, channels: p.channels, bassShare: p.bassShare, midShare: p.midShare, airShare: p.airShare, accent: p.accent } }
   }
-
   function profileFromMasterAnalysis(analysis) {
     if (!analysis || typeof analysis !== "object") return null
-    return profileFromRailway({
-      lufs: analysis.lufs,
-      dynamicRange: analysis.dynamicRange,
-      stereoWidth: analysis.stereoWidth,
-      bassWeight: analysis.bassWeight,
-      brightness: analysis.brightness,
-      energy: analysis.energy,
-    })
+    return profileFromRailway({ lufs: analysis.lufs, dynamicRange: analysis.dynamicRange, stereoWidth: analysis.stereoWidth, bassWeight: analysis.bassWeight, brightness: analysis.brightness, energy: analysis.energy })
   }
-
   function buildMasterComparison(settings, beforeProfile, afterProfile, afterRaw) {
     const C = copy()
     const before = normaliseProfile(beforeProfile)
@@ -488,54 +319,13 @@
     const drB = before.range
     const drA = after.range
     return [
-      {
-        label: "Loudness",
-        family: "level",
-        before: lufsText(before.loudness),
-        after: targetLabel,
-        afterDetail: lufsText(afterLufs),
-        pos: { before: u((before.loudness + 26) / 20), after: u((afterLufs + 26) / 20) },
-      },
-      {
-        label: "Dynamics",
-        family: "level",
-        before: by("Dynamics").value,
-        beforeDetail: by("Dynamics").detail,
-        after: drA < 4 ? "Preserved" : "Punch preserved",
-        afterDetail: drA < 4 ? "Minimal touch" : `≈ ${fmt(drA)} dB`,
-        pos: { before: u(drB / 20), after: u(drA / 20) },
-      },
-      {
-        label: "Stereo image",
-        family: "space",
-        before: by("Stereo").value,
-        beforeDetail: by("Stereo").detail,
-        after: after.channels < 2 ? "Mono" : wide ? "Open & spacious" : "Focused",
-        pos: {
-          before: u(before.channels < 2 ? 0 : before.width),
-          after: u(after.channels < 2 ? 0 : wide ? Math.min(1, after.width + 0.18) : Math.max(0.3, after.width)),
-        },
-      },
-      {
-        label: "Low end",
-        family: "space",
-        before: by("Low end").value,
-        after: tight ? "Tight low-end" : settings.style === "Club" ? "Full lows" : "Grounded",
-        pos: {
-          before: u(before.bassShare),
-          after: u(tight ? after.bassShare * 0.85 : settings.style === "Club" ? after.bassShare + 0.1 : after.bassShare + 0.03),
-        },
-      },
-      {
-        label: "Presence",
-        family: "drive",
-        before: by("Presence").value,
-        after: bright ? "Clear" : "Natural detail",
-        pos: { before: u(before.midShare / 0.7), after: u((bright ? after.midShare + 0.08 : after.midShare + 0.03) / 0.7) },
-      },
+      { label: "Loudness", family: "level", before: lufsText(before.loudness), after: targetLabel, afterDetail: lufsText(afterLufs), pos: { before: u((before.loudness + 26) / 20), after: u((afterLufs + 26) / 20) } },
+      { label: "Dynamics", family: "level", before: by("Dynamics").value, beforeDetail: by("Dynamics").detail, after: drA < 4 ? "Preserved" : "Punch preserved", afterDetail: drA < 4 ? "Minimal touch" : `≈ ${fmt(drA)} dB`, pos: { before: u(drB / 20), after: u(drA / 20) } },
+      { label: "Stereo image", family: "space", before: by("Stereo").value, beforeDetail: by("Stereo").detail, after: after.channels < 2 ? "Mono" : wide ? "Open & spacious" : "Focused", pos: { before: u(before.channels < 2 ? 0 : before.width), after: u(after.channels < 2 ? 0 : wide ? Math.min(1, after.width + 0.18) : Math.max(0.3, after.width)) } },
+      { label: "Low end", family: "space", before: by("Low end").value, after: tight ? "Tight low-end" : settings.style === "Club" ? "Full lows" : "Grounded", pos: { before: u(before.bassShare), after: u(tight ? after.bassShare * 0.85 : settings.style === "Club" ? after.bassShare + 0.1 : after.bassShare + 0.03) } },
+      { label: "Presence", family: "drive", before: by("Presence").value, after: bright ? "Clear" : "Natural detail", pos: { before: u(before.midShare / 0.7), after: u((bright ? after.midShare + 0.08 : after.midShare + 0.03) / 0.7) } },
     ]
   }
-
   function profileFromRailway(data) {
     const lufs = num(data.lufs, data.analysis?.lufs, -18)
     const range = num(data.dynamicRange, data.analysis?.dynamicRange, 8)
@@ -543,62 +333,35 @@
     const bassShare = num(data.bassWeight, 0.45)
     const airShare = num(data.brightness, 0.15)
     const rawEnergy = data.energy ?? data.analysis?.energy
-    const accent =
-      typeof rawEnergy === "string"
-        ? { high: 0.28, medium: 0.16, low: 0.07 }[rawEnergy] ?? 0.16
-        : num(rawEnergy, 0.5) * 0.35
-    const movement =
-      typeof rawEnergy === "string"
-        ? { high: 0.35, medium: 0.15, low: 0.08 }[rawEnergy] ?? 0.15
-        : accent * 1.1
-    return {
-      loudness: lufs,
-      crest: range,
-      range,
-      width,
-      widthSpread: 0,
-      bassShare,
-      midShare: Math.max(0.15, Math.min(0.55, 0.85 - bassShare - airShare)),
-      airShare,
-      bassSpread: 0,
-      accent,
-      movement,
-      channels: width < 0.02 ? 1 : 2,
-      measured: true,
-    }
+    const accent = typeof rawEnergy === "string" ? { high: 0.28, medium: 0.16, low: 0.07 }[rawEnergy] ?? 0.16 : num(rawEnergy, 0.5) * 0.35
+    const movement = typeof rawEnergy === "string" ? { high: 0.35, medium: 0.15, low: 0.08 }[rawEnergy] ?? 0.15 : accent * 1.1
+    return { loudness: lufs, crest: range, range, width, widthSpread: 0, bassShare, midShare: Math.max(0.15, Math.min(0.55, 0.85 - bassShare - airShare)), airShare, bassSpread: 0, accent, movement, channels: width < 0.02 ? 1 : 2, measured: true }
   }
-
   function parseJsonError(responseText, status, network, kind) {
-    const s = strings()
     let detail = ""
     try {
       const body = JSON.parse(responseText)
       if (body && typeof body.error === "string") detail = body.error
     } catch (_) {}
     if (kind === "master") {
-      if (status === 0 || network) throw new Error(s.masterFailedNetwork || "Mastering failed. Check your connection.")
-      throw new Error(detail || s.masterFailed || "Mastering failed. Please try again.")
+      if (status === 0 || network) throw new Error(kindNet("master"))
+      throw new Error(detail || str("masterFailed", FB.mf))
     }
-    if (status === 0 || network) throw new Error(s.analysisFailedNetwork || "Analysis failed. Check your connection.")
-    if (status >= 400 && status < 500) throw new Error(detail || s.uploadFailed || "Upload failed")
-    throw new Error(detail || s.analysisFailed || "Analysis failed. Please try again.")
+    if (status === 0 || network) throw new Error(str("analysisFailedNetwork", FB.afn))
+    if (status >= 400 && status < 500) throw new Error(detail || strings().uploadFailed || "Upload failed")
+    throw new Error(detail || str("analysisFailed", FB.af))
   }
-
   async function fetchBlob(url, signal) {
     assertNotAborted(signal)
     const response = await fetch(absoluteRailwayUrl(url), { signal })
     if (signal?.aborted) throw cancelled()
-    if (!response.ok) {
-      throw new Error(strings().masterFailed || "Mastering failed. Please try again.")
-    }
+    if (!response.ok) throw new Error(str("masterFailed", FB.mf))
     return response.blob()
   }
-
   function postFormData(url, formData, signal, onProgress, kind) {
     if (isSafariBrowser()) return postFormDataFetch(url, formData, signal, onProgress, kind)
     return postFormDataXhr(url, formData, signal, onProgress, kind)
   }
-
   function postFormDataXhr(url, formData, signal, onProgress, kind) {
     return new Promise((resolve, reject) => {
       assertNotAborted(signal)
@@ -608,37 +371,30 @@
       let started = performance.now()
       let paceTimer = null
       let lastProgress = 0
-
       const report = (progress, eta) => {
         const p = Math.max(lastProgress, Math.min(0.995, progress))
         lastProgress = p
         onProgress?.({ progress: p, phase: phaseAt(p, kind), eta })
       }
-
       const cleanup = () => {
         if (paceTimer) clearInterval(paceTimer)
         signal?.removeEventListener("abort", onAbort)
       }
-
       const onAbort = () => {
         xhr.abort()
         cleanup()
         reject(cancelled())
       }
-
       signal?.addEventListener("abort", onAbort, { once: true })
-
       xhr.upload.addEventListener("progress", (event) => {
         if (!event.lengthComputable) return
         const p = (event.loaded / event.total) * UPLOAD_PROGRESS
         report(p, Math.max(0, totalSec * (1 - p)))
       })
-
       xhr.upload.addEventListener("loadend", () => {
         uploadDone = true
         started = performance.now()
       })
-
       paceTimer = setInterval(() => {
         if (signal?.aborted) return
         const elapsed = (performance.now() - started) / 1000
@@ -647,7 +403,6 @@
         const paced = base + Math.min(span * 0.92, (elapsed / totalSec) * span)
         report(paced, Math.max(0, totalSec - elapsed))
       }, 220)
-
       xhr.addEventListener("load", () => {
         cleanup()
         if (signal?.aborted) return reject(cancelled())
@@ -657,7 +412,7 @@
             report(0.96, 1)
             resolve(data)
           } catch (_) {
-            reject(new Error(kind === "master" ? strings().masterFailed || "Mastering failed. Please try again." : strings().analysisNoData || "Analysis returned no data"))
+            reject(new Error(kindFail(kind)))
           }
           return
         }
@@ -667,22 +422,18 @@
           reject(err)
         }
       })
-
       xhr.addEventListener("error", () => {
         cleanup()
-        reject(new Error(kind === "master" ? strings().masterFailedNetwork || "Mastering failed. Check your connection." : strings().analysisFailedNetwork || "Analysis failed. Check your connection."))
+        reject(new Error(kindNet(kind)))
       })
-
       xhr.addEventListener("abort", () => {
         cleanup()
         reject(cancelled())
       })
-
       xhr.open("POST", url)
       xhr.send(formData)
     })
   }
-
   async function postFormDataFetch(url, formData, signal, onProgress, kind) {
     assertNotAborted(signal)
     const totalSec = config().processingSeconds?.[kind] ?? (kind === "master" ? 45 : 30)
@@ -695,7 +446,6 @@
       lastProgress = p
       onProgress?.({ progress: p, phase: phaseAt(p, kind), eta: Math.max(0, totalSec - elapsed) })
     }, 220)
-
     try {
       const response = await fetch(url, { method: "POST", body: formData, signal })
       clearInterval(paceTimer)
@@ -706,7 +456,7 @@
       try {
         data = JSON.parse(text)
       } catch (_) {
-        throw new Error(kind === "master" ? strings().masterFailed || "Mastering failed. Please try again." : strings().analysisNoData || "Analysis returned no data")
+        throw new Error(kindFail(kind))
       }
       onProgress?.({ progress: 0.96, phase: phaseAt(0.96, kind), eta: 1 })
       return data
@@ -714,10 +464,9 @@
       clearInterval(paceTimer)
       if (signal?.aborted || err?.name === "AbortError") throw cancelled()
       if (err instanceof Error && /Analysis|Upload|Master|connection|data/i.test(err.message)) throw err
-      throw new Error(kind === "master" ? strings().masterFailedNetwork || "Mastering failed. Check your connection." : strings().analysisFailedNetwork || "Analysis failed. Check your connection.")
+      throw new Error(kindNet(kind))
     }
   }
-
   async function railwayUpload(file, signal, onProgress) {
     const key = fileKey(file)
     const cached = uploadCache.get(key)
@@ -728,172 +477,90 @@
     const formData = new FormData()
     formData.append("file", file)
     formData.append("mode", "mix")
-    const data = await postFormData(railwayUrl("/upload"), formData, signal, onProgress, "analyze")
-    if (!data || typeof data !== "object") {
-      throw new Error(strings().analysisNoData || "Analysis returned no data")
-    }
+    const data = await postFormData(svcUrl("/upload", true), formData, signal, onProgress, "analyze")
+    if (!data || typeof data !== "object") throw new Error(str("analysisNoData", FB.and))
     uploadCache.set(key, data)
     return data
   }
-
   async function processAnalyze({ file, settings, signal, onProgress }) {
     if (!file?.size) throw new Error(strings().rejectUpload || "Choose an audio file first.")
     assertNotAborted(signal)
+    const wfId = wfSid()
+    trackPipe(wfId, "upload", file.name)
     onProgress?.({ progress: 0, phase: phaseAt(0, "analyze"), eta: config().processingSeconds?.analyze ?? 30 })
-
     const data = await railwayUpload(file, signal, onProgress)
     assertNotAborted(signal)
-
     const normalized = normalizeSettings(settings)
     const profile = profileFromRailway(data)
     const readiness = num(data.mixQuality, data.score)
     const analysis = buildAnalysis(profile, readiness)
     const resultId = uuid()
     const objectKey = typeof data.file === "string" ? data.file : ""
-
-    mergeSession(resultId, {
-      objectKey,
-      trackTitle: file.name,
-      previewUrl: "",
-      masteredUrl: "",
-      playbackUrl: "",
-      downloadPageUrl: "",
-      expiresAt: null,
-      file: null,
-      stripeSessionId: "",
-      freeOrderId: "",
-      email: "",
-    })
-
+    mergeSession(resultId, { objectKey, trackTitle: file.name, previewUrl: "", masteredUrl: "", playbackUrl: "", downloadPageUrl: "", expiresAt: null, file: null, stripeSessionId: "", freeOrderId: "", email: "" })
+    trackPipe(wfId, "analyze", file.name)
     onProgress?.({ progress: 1, phase: phaseAt(1, "analyze"), eta: 0 })
-
-    return {
-      id: resultId,
-      kind: "analyze",
-      demo: false,
-      createdAt: new Date().toISOString(),
-      name: file.name,
-      settings: normalized,
-      analysis,
-    }
+    return { id: resultId, kind: "analyze", demo: false, createdAt: new Date().toISOString(), name: file.name, settings: normalized, analysis }
   }
-
   async function processMaster({ file, settings, previewWindow, signal, onProgress }) {
     if (!file?.size) throw new Error(strings().rejectUpload || "Choose an audio file first.")
-    if (
-      !previewWindow ||
-      !(previewWindow.duration > 0) ||
-      previewWindow.duration > 40 ||
-      !Number.isFinite(previewWindow.start)
-    ) {
-      throw new Error(strings().masterFailed || "Mastering failed. Please try again.")
+    if (!previewWindow || !(previewWindow.duration > 0) || previewWindow.duration > 40 || !Number.isFinite(previewWindow.start)) {
+      throw new Error(str("masterFailed", FB.mf))
     }
-
     assertNotAborted(signal)
-    const normalized = normalizeSettings(settings)
-    onProgress?.({ progress: 0, phase: phaseAt(0, "master"), eta: config().processingSeconds?.master ?? 45 })
-
-    const formData = new FormData()
-    formData.append("file", file)
-    formData.append("stylePreset", stylePresetFromSettings(normalized))
-    formData.append("targetLufs", String(targetLufsFromSettings(normalized)))
-    formData.append("stereoEnhance", String(normalized.width))
-    formData.append("lowEndControl", String(normalized.low))
-    formData.append("clarityPresence", String(normalized.clarity))
-    formData.append("trackTitle", file.name)
-
-    const data = await postFormData(railwayUrl("/master"), formData, signal, onProgress, "master")
-    assertNotAborted(signal)
-
-    if (!data || typeof data !== "object") {
-      throw new Error(strings().masterFailed || "Mastering failed. Please try again.")
-    }
-
-    const previewUrl = data.previewAfterMp3Url || data.previewAfterMp3
-    if (!previewUrl) {
-      throw new Error(strings().masterFailed || "Mastering failed. Please try again.")
-    }
-
-    onProgress?.({ progress: 0.97, phase: phaseAt(0.97, "master"), eta: 1 })
-    const previewAudio = await fetchBlob(previewUrl, signal)
-    assertNotAborted(signal)
-
-    const preview = {
-      audio: previewAudio,
-      ...resolvePreviewMetadata(previewWindow),
-    }
-
-    const beforeProfile = profileFromMasterAnalysis(data.analysisBefore)
-    const afterProfile = profileFromMasterAnalysis(data.analysisAfter)
-    const comparison = buildMasterComparison(normalized, beforeProfile, afterProfile, data.analysisAfter)
-    const C = copy()
-    const beforeNorm = normaliseProfile(beforeProfile)
-    const masterName = C ? C.masterName(normalized) : "Smart Master"
-    const tags = C ? C.masterTags(normalized, beforeNorm) : []
-    const loudnessNotes = C ? C.loudnessNotes(normalized, beforeNorm) : []
-
-    const objectKey =
-      (typeof data.objectKey === "string" && data.objectKey) ||
-      (typeof data.object_key === "string" && data.object_key) ||
-      ""
-    const expiresAt =
-      (typeof data.expiresAt === "string" && data.expiresAt) ||
-      (typeof data.expires_at === "string" && data.expires_at) ||
-      null
-    const masteredUrl =
-      (typeof data.afterUrl === "string" && data.afterUrl) ||
-      (typeof data.fullUrl === "string" && data.fullUrl) ||
-      (typeof data.after === "string" && data.after ? absoluteRailwayUrl(data.after) : "")
-
-    const resultId = uuid()
-    mergeSession(resultId, {
-      objectKey,
-      trackTitle: file.name,
-      previewUrl: absoluteRailwayUrl(previewUrl),
-      masteredUrl,
-      playbackUrl: "",
-      expiresAt,
-      file,
-      stripeSessionId: "",
-      freeOrderId: "",
-      email: "",
-      analysisBefore: data.analysisBefore || null,
-      analysisAfter: data.analysisAfter || null,
-      masteringInsights: data.masteringInsights || null,
-    })
-
-    onProgress?.({ progress: 1, phase: phaseAt(1, "master"), eta: 0 })
-
-    return {
-      id: resultId,
-      kind: "master",
-      demo: false,
-      createdAt: new Date().toISOString(),
-      name: file.name,
-      settings: normalized,
-      preview,
-      masterName,
-      tags,
-      loudnessNotes,
-      comparison,
+    const wfId = wfSid()
+    const t0 = performance.now()
+    trackPipe(wfId, "upload", file.name)
+    try {
+      const normalized = normalizeSettings(settings)
+      onProgress?.({ progress: 0, phase: phaseAt(0, "master"), eta: config().processingSeconds?.master ?? 45 })
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("stylePreset", stylePresetFromSettings(normalized))
+      formData.append("targetLufs", String(targetLufsFromSettings(normalized)))
+      formData.append("stereoEnhance", String(normalized.width))
+      formData.append("lowEndControl", String(normalized.low))
+      formData.append("clarityPresence", String(normalized.clarity))
+      formData.append("trackTitle", file.name)
+      const data = await postFormData(svcUrl("/master", true), formData, signal, onProgress, "master")
+      assertNotAborted(signal)
+      if (!data || typeof data !== "object") throw new Error(str("masterFailed", FB.mf))
+      const previewUrl = data.previewAfterMp3Url || data.previewAfterMp3
+      if (!previewUrl) throw new Error(str("masterFailed", FB.mf))
+      onProgress?.({ progress: 0.97, phase: phaseAt(0.97, "master"), eta: 1 })
+      const previewAudio = await fetchBlob(previewUrl, signal)
+      assertNotAborted(signal)
+      const preview = { audio: previewAudio, ...resolvePreviewMetadata(previewWindow) }
+      const beforeProfile = profileFromMasterAnalysis(data.analysisBefore)
+      const afterProfile = profileFromMasterAnalysis(data.analysisAfter)
+      const comparison = buildMasterComparison(normalized, beforeProfile, afterProfile, data.analysisAfter)
+      const C = copy()
+      const beforeNorm = normaliseProfile(beforeProfile)
+      const masterName = C ? C.masterName(normalized) : "Smart Master"
+      const tags = C ? C.masterTags(normalized, beforeNorm) : []
+      const loudnessNotes = C ? C.loudnessNotes(normalized, beforeNorm) : []
+      const objectKey = (typeof data.objectKey === "string" && data.objectKey) || (typeof data.object_key === "string" && data.object_key) || ""
+      const expiresAt = (typeof data.expiresAt === "string" && data.expiresAt) || (typeof data.expires_at === "string" && data.expires_at) || null
+      const masteredUrl = (typeof data.afterUrl === "string" && data.afterUrl) || (typeof data.fullUrl === "string" && data.fullUrl) || (typeof data.after === "string" && data.after ? absoluteRailwayUrl(data.after) : "")
+      const resultId = uuid()
+      mergeSession(resultId, { objectKey, trackTitle: file.name, previewUrl: absoluteRailwayUrl(previewUrl), masteredUrl, playbackUrl: "", expiresAt, file, stripeSessionId: "", freeOrderId: "", email: "", analysisBefore: data.analysisBefore || null, analysisAfter: data.analysisAfter || null, masteringInsights: data.masteringInsights || null })
+      const aa = data.analysisAfter
+      if (wfId.trim()) trackBeacon("/api/track/master-complete", { sessionId: wfId, objectKey: objectKey || null, trackName: file.name, masteringStyle: stylePresetFromSettings(normalized), processingTimeMs: Math.round(performance.now() - t0), masterLufs: typeof aa?.lufs === "number" ? aa.lufs : null })
+      onProgress?.({ progress: 1, phase: phaseAt(1, "master"), eta: 0 })
+      return { id: resultId, kind: "master", demo: false, createdAt: new Date().toISOString(), name: file.name, settings: normalized, preview, masterName, tags, loudnessNotes, comparison }
+    } catch (err) {
+      if (signal?.aborted || err?.name === "AbortError") throw err
+      if (wfId.trim()) trackBeacon("/api/track/master-failed", { sessionId: wfId, trackName: file.name, errorLog: err instanceof Error ? err.message : "Mastering failed" })
+      throw err
     }
   }
-
   window.MastrifyBackend = {
     mode: "live",
-
     async process({ kind, file, settings, previewWindow, signal, onProgress }) {
       assertNotAborted(signal)
-
-      if (kind === "analyze") {
-        return processAnalyze({ file, settings, signal, onProgress })
-      }
-      if (kind === "master") {
-        return processMaster({ file, settings, previewWindow, signal, onProgress })
-      }
-      throw new Error(strings().analysisFailed || "Analysis failed. Please try again.")
+      if (kind === "analyze") return processAnalyze({ file, settings, signal, onProgress })
+      if (kind === "master") return processMaster({ file, settings, previewWindow, signal, onProgress })
+      throw new Error(str("analysisFailed", FB.af))
     },
-
     async quote({ resultId, discountCode, signal }) {
       assertNotAborted(signal)
       void resultId
@@ -907,12 +574,10 @@
       }
       return quoteFromValidate(data, code.toUpperCase())
     },
-
     async checkout({ resultId, discountCode, signal }) {
       assertNotAborted(signal)
       const session = requireCheckoutSession(resultId)
       const code = String(discountCode || "").trim()
-
       if (code) {
         const validated = await fetchJson("/api/discount/validate", { body: { code }, signal })
         if (!validated.response.ok || !validated.data?.valid) {
@@ -924,21 +589,19 @@
             signal,
           })
           if (!redeemed.response.ok || !redeemed.data?.ok || !redeemed.data?.freeOrderId) {
-            throw new Error(redeemed.data?.error || strings().checkoutFailed || "Could not start checkout. Please try again.")
+            throw new Error(redeemed.data?.error || str("checkoutFailed", FB.cf))
           }
           const normalized = validated.data.code || code.toUpperCase()
           mergeSession(resultId, { freeOrderId: redeemed.data.freeOrderId, stripeSessionId: "" })
           return receiptFromPayment({ id: redeemed.data.freeOrderId, resultId, amount: 0, free: true, code: normalized })
         }
       }
-
       const payload = {
         objectKey: session.objectKey,
         trackTitle: session.trackTitle || "",
         returnPath: "/master",
       }
       if (code) payload.promoCode = code
-
       const { response, data } = await fetchJson("/api/checkout/session", { body: payload, signal })
       if (!response.ok || !data?.url) {
         if (data?.isFree) {
@@ -946,9 +609,8 @@
             data.error || "This code makes your master free. Apply the code, then continue without Stripe checkout.",
           )
         }
-        throw new Error(data?.error || strings().checkoutFailed || "Could not start checkout. Please try again.")
+        throw new Error(data?.error || str("checkoutFailed", FB.cf))
       }
-
       mergeSession(resultId, {
         stripeSessionId: typeof data.sessionId === "string" ? data.sessionId : "",
         trackTitle: session.trackTitle,
@@ -956,11 +618,9 @@
       })
       return { redirect: data.url }
     },
-
     async verify({ resultId, query, signal }) {
       assertNotAborted(signal)
       const session = requireCheckoutSession(resultId)
-
       if (session.freeOrderId) {
         const receipt = receiptFromPayment({
           id: session.freeOrderId,
@@ -972,28 +632,23 @@
         if (session.email) receipt.email = session.email
         return receipt
       }
-
       const params = query && typeof query === "object" ? query : {}
       const returnKey = config().checkoutReturnParam || "session_id"
       const sessionId =
         (typeof params[returnKey] === "string" && params[returnKey].trim()) ||
         (typeof session.stripeSessionId === "string" && session.stripeSessionId.trim()) ||
         ""
-
       if (!sessionId) {
-        throw new Error(strings().verifyFailed || "Could not verify payment.")
+        throw new Error(str("verifyFailed", FB.vf))
       }
-
       const qs = new URLSearchParams({ session_id: sessionId, object_key: session.objectKey })
       const { response, data } = await fetchJson(`/api/checkout/verify?${qs.toString()}`, { method: "GET", signal })
       if (!response.ok || !data?.paid) {
-        throw new Error(data?.error || strings().verifyFailed || "Could not verify payment.")
+        throw new Error(data?.error || str("verifyFailed", FB.vf))
       }
-
       const verifiedSessionId = (typeof data.sessionId === "string" && data.sessionId.trim()) || sessionId
       const email = typeof data.email === "string" ? data.email.trim() : session.email || ""
       mergeSession(resultId, { stripeSessionId: verifiedSessionId, freeOrderId: "", email })
-
       const receipt = receiptFromPayment({
         id: verifiedSessionId,
         resultId,
@@ -1004,7 +659,6 @@
       if (email) receipt.email = email
       return receipt
     },
-
     async download({ resultId, signal }) {
       assertNotAborted(signal)
       const session = requirePaidSession(resultId)
@@ -1025,7 +679,6 @@
       if (!response.ok) throw new Error(DL_FAIL)
       return response.blob()
     },
-
     async email({ resultId, email, signal }) {
       assertNotAborted(signal)
       const session = requirePaidSession(resultId)
@@ -1033,7 +686,6 @@
       if (!address) {
         throw new Error(strings().emailInvalid || "Enter a valid email address.")
       }
-
       const payload = {
         email: address,
         objectKey: session.objectKey,
@@ -1043,12 +695,10 @@
       }
       if (session.freeOrderId) payload.freeOrderId = session.freeOrderId
       else if (session.stripeSessionId) payload.stripeSessionId = session.stripeSessionId
-
       const { response, data } = await fetchJson("/master/deliver", { body: payload, signal, railway: true })
       if (!response.ok || data?.success === false) {
         throw new Error(data?.error || strings().emailFailed || "Could not send email. Please try again.")
       }
-
       const updates = { email: address }
       if (typeof data.playbackUrl === "string" && data.playbackUrl.trim()) {
         updates.playbackUrl = data.playbackUrl.trim()
@@ -1060,8 +710,8 @@
         updates.expiresAt = data.expiresAt.trim()
       }
       mergeSession(resultId, updates)
-
       return { sent: true, test: false, to: address }
     },
   }
+  document.addEventListener("mastrify:route", (e) => trackPageView(e.detail?.path))
 })()
