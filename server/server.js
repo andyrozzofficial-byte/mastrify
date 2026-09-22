@@ -44,6 +44,10 @@ const __dirname = path.dirname(__filename)
 
 const app = express()
 
+// Railway terminates TLS at edge and forwards X-Forwarded-For (one hop to this container).
+// Required so express-rate-limit keys on the real client IP, not the proxy peer.
+app.set("trust proxy", 1)
+
 const ALLOWED_CORS_ORIGINS = new Set([
   "https://www.mastrify.com",
   "https://mastrify.com",
