@@ -3,9 +3,11 @@
  * moving), eta and learned run times set the pace, finish glides to 100%. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const src=fs.readFileSync(__dirname+'/../dist-v2/assets/engine/processing-flow.js','utf8');
-function load(){let t=0;const store={};const context={performance:{now:()=>t},localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>{store[k]=String(v);}},MastrifyConfig:{processingSeconds:{analyze:30,master:45}},MastrifyAudio:{getState:()=>({sources:{original:{loaded:true,duration:180}}})}};
+function load(config={processingSeconds:{analyze:30,master:45}}){let t=0;const store={};const context={performance:{now:()=>t},localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>{store[k]=String(v);}},MastrifyConfig:config,MastrifyAudio:{getState:()=>({sources:{original:{loaded:true,duration:180}}})}};
  context.window=context;vm.createContext(context);vm.runInContext(src,context);
  return {clock:context.MastrifyProcessing,tick:(s,step=1/60)=>{const clock=context.MastrifyProcessing;for(let i=0;i<Math.round(s/step);i++){t+=step*1000;clock.advance(step);}},store};}
+const analyzeCfg={processingSeconds:{analyze:15,master:45},minimumSeconds:{analyze:15},pacedWhenQuiet:true};
+function loadAnalyze(){return load(analyzeCfg);}
 
 // demo: unchanged 36 s clock
 {const {clock,tick}=load();clock.enter({demo:true,duration:36,loop:false});let last=0;
@@ -32,9 +34,22 @@ function load(){let t=0;const store={};const context={performance:{now:()=>t},lo
  assert(JSON.parse(store['mastrify-processing-times']).length===1);
  clock.enter({demo:false,kind:'master'});clock.setProgress(.99);tick(6);const p=clock.getState().progress;assert(p>.4&&p<.56,'learned pace '+p);}
 
-// an engine that never reports stays at 0, then finish glides to 100% in under half a second
-{const {clock,tick}=load();clock.enter({demo:false,kind:'analyze'});clock.setProgress(0);tick(8);assert.equal(clock.getState().progress,0);
+// analyze pacing (production config): no engine reports — bar paces immediately
+{const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'analyze'});tick(3);const p3=clock.getState().progress;assert(p3>0&&p3<.95,'analyze quiet pace at 3s '+p3);
+ tick(5);const p8=clock.getState().progress;assert(p8>p3&&p8<.95,'analyze quiet pace at 8s '+p8);
  clock.finish();tick(.45);assert.equal(clock.getState().progress,1);}
+// analyze pacing: after an early report, bar keeps moving without passing the engine
+{const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'analyze'});clock.setProgress(.05);tick(3);const p3=clock.getState().progress;
+ tick(5);const p8=clock.getState().progress;assert(p8>p3&&p8>0&&p8<=.05+1e-3,'analyze respects engine cap '+p8);
+ clock.finish();tick(.45);assert.equal(clock.getState().progress,1);}
+// master: unchanged — a quiet engine stays at 0 until finish (even with analyze config present)
+{const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'master'});clock.setProgress(0);tick(8);assert.equal(clock.getState().progress,0);
+ clock.finish();tick(.45);assert.equal(clock.getState().progress,1);}
+// analyze: minimumSeconds holds the screen before finish
+{const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'analyze'});clock.setProgress(.99);tick(2);assert(clock.holdSeconds()>0,'analyze hold before minimum');
+ tick(clock.holdSeconds());assert(clock.holdSeconds()<0.01,'analyze hold clears at minimum');}
+// cancellation still works
+{const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'analyze'});clock.setProgress(.2);tick(1);clock.leave();assert.equal(clock.getState().active,false);}
 // a fast, evenly reporting engine (the old test case): 11 s job, reports up to 95% at 9 s
 {const {clock,tick}=load();clock.enter({demo:false,kind:'analyze'});
  const plan=[[.5,.05],[2,.30],[2.2,.35],[6,.60],[9,.95]];let t=0;

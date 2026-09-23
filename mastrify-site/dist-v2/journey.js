@@ -135,6 +135,9 @@ ${(()=>{const pv=processView();if(!pv)return `<section id="processing-stage" cla
    MastrifyProcessing.engineDone();
    if(!isAnalysis)await adoptMaster(value,file,controller.signal,originalCut);
    if(disposed||controller.signal.aborted||revision!==session.revision)return;
+   // analyze: an engine faster than minimumSeconds — let the screen run
+   if(isAnalysis){const hold=MastrifyProcessing.holdSeconds();if(hold>0)await new Promise((resolve,reject)=>{const timer=setTimeout(done,hold*1000);function done(){controller.signal.removeEventListener('abort',stop);resolve();}function stop(){clearTimeout(timer);reject(new DOMException('Cancelled','AbortError'));}controller.signal.addEventListener('abort',stop,{once:true});});}
+   if(disposed||controller.signal.aborted||revision!==session.revision)return;
    MastrifyProcessing.finish();updateProgress(MastrifyProcessing.getState().progress);
    await new Promise((resolve,reject)=>{const timer=setTimeout(done,650);function done(){controller.signal.removeEventListener('abort',stop);resolve();}function stop(){clearTimeout(timer);reject(new DOMException('Cancelled','AbortError'));}controller.signal.addEventListener('abort',stop,{once:true});});
    if(disposed||controller.signal.aborted||revision!==session.revision)return;
