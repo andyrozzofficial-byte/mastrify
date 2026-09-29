@@ -1,6 +1,6 @@
 {
  "note": "Approved design of dist-v2. Written by node build-v2.mjs --lock (design owner only). Checked by npm run build:check.",
- "approved": "2026-09-23",
+ "approved": "2026-09-29",
  "files": {
   "404.html": "15aaab3c35303cec",
   "about/index.html": "9491a140f8a16016",
@@ -25,7 +25,7 @@
   "assets/engine/playback-band-glow.js": "97f1c3603517c977",
   "assets/engine/playback-bands.js": "e1671e6fe095c73a",
   "assets/engine/playback-depth.js": "d16ab5a4911b89db",
-  "assets/engine/processing-flow.js": "57501d10673ec74d",
+  "assets/engine/processing-flow.js": "6dabd1a5ac2e200e",
   "assets/engine/processing-motion.js": "27a5c3af480b97d9",
   "assets/engine/radial-deploy.js": "63edd6138651ec38",
   "assets/engine/rim-spectrum.js": "f97af92395a8ef63",
@@ -54,8 +54,8 @@
   "index.html": "3afbd87c2758a152",
   "interaction.js": "f9de26b0cc29b190",
   "issue-sketches.js": "9b5048ab27179fea",
-  "journey.css": "82013d6802b1f240",
-  "journey.js": "16c934529a377cdf",
+  "journey.css": "81f37103feb63d8a",
+  "journey.js": "cc97c050db29bf93",
   "legal-motion.js": "9010a563e5730f43",
   "legal.css": "4d72ff6b7df5d73d",
   "legal.js": "3dba868cc4544405",

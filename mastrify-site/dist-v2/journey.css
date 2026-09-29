@@ -1024,6 +1024,54 @@ body[data-step] #upload-stage .upload-source {display:flow-root;}
 body[data-step] #upload-stage #upload-title {white-space:nowrap;}
 body[data-step] #upload-stage .upload-button.reading .upload-plus {opacity:0;}
 
+body[data-step] #upload-stage .reading-dots {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: .16em;
+  margin-left: .16em;
+  height: 1em;
+  vertical-align: baseline;
+}
+
+body[data-step] #upload-stage .reading-dots i {
+  display: block;
+  width: .15em;
+  height: .15em;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .3;
+  animation: reading-dot 1.05s infinite cubic-bezier(.3,.1,.3,1);
+}
+
+body[data-step] #upload-stage .reading-dots i:nth-child(2) {
+  animation-delay: .13s;
+}
+
+body[data-step] #upload-stage .reading-dots i:nth-child(3) {
+  animation-delay: .26s;
+}
+
+@keyframes reading-dot {
+  0%, 62%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: .3;
+    box-shadow: none;
+  }
+
+  31% {
+    transform: translateY(-.126em) scale(1.45);
+    opacity: 1;
+    box-shadow: 0 0 10px #c2a5ff8c;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-step] #upload-stage .reading-dots i {
+    animation: none;
+    opacity: .55;
+  }
+}
+
 /* Filraden fälls ut under rutan (Linus 19 sep): när filen är inläst kommer
    den gröna filraden fram direkt under rutan, lika bred som den, som en meny
    som fälls ut. Knappen (Analyze my mix / Shape my master) flyttas upp under

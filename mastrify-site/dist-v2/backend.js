@@ -362,22 +362,22 @@
     if (isSafariBrowser()) return postFormDataFetch(url, formData, signal, onProgress, kind)
     return postFormDataXhr(url, formData, signal, onProgress, kind)
   }
+  function reportProgress(onProgress, kind, lastProgress, progress, eta) {
+    const p = Math.max(lastProgress, Math.min(0.995, progress))
+    const payload = { progress: p, phase: phaseAt(p, kind) }
+    if (Number.isFinite(eta) && eta >= 0) payload.eta = eta
+    onProgress?.(payload)
+    return p
+  }
   function postFormDataXhr(url, formData, signal, onProgress, kind) {
     return new Promise((resolve, reject) => {
       assertNotAborted(signal)
       const xhr = new XMLHttpRequest()
-      const totalSec = config().processingSeconds?.[kind] ?? 30
-      let uploadDone = false
-      let started = performance.now()
-      let paceTimer = null
       let lastProgress = 0
       const report = (progress, eta) => {
-        const p = Math.max(lastProgress, Math.min(0.995, progress))
-        lastProgress = p
-        onProgress?.({ progress: p, phase: phaseAt(p, kind), eta })
+        lastProgress = reportProgress(onProgress, kind, lastProgress, progress, eta)
       }
       const cleanup = () => {
-        if (paceTimer) clearInterval(paceTimer)
         signal?.removeEventListener("abort", onAbort)
       }
       const onAbort = () => {
@@ -388,28 +388,18 @@
       signal?.addEventListener("abort", onAbort, { once: true })
       xhr.upload.addEventListener("progress", (event) => {
         if (!event.lengthComputable) return
-        const p = (event.loaded / event.total) * UPLOAD_PROGRESS
-        report(p, Math.max(0, totalSec * (1 - p)))
+        report((event.loaded / event.total) * UPLOAD_PROGRESS)
       })
       xhr.upload.addEventListener("loadend", () => {
-        uploadDone = true
-        started = performance.now()
+        if (lastProgress < UPLOAD_PROGRESS) report(UPLOAD_PROGRESS)
       })
-      paceTimer = setInterval(() => {
-        if (signal?.aborted) return
-        const elapsed = (performance.now() - started) / 1000
-        const base = uploadDone ? UPLOAD_PROGRESS : 0
-        const span = 1 - UPLOAD_PROGRESS
-        const paced = base + Math.min(span * 0.92, (elapsed / totalSec) * span)
-        report(paced, Math.max(0, totalSec - elapsed))
-      }, 220)
       xhr.addEventListener("load", () => {
         cleanup()
         if (signal?.aborted) return reject(cancelled())
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const data = JSON.parse(xhr.responseText)
-            report(0.96, 1)
+            report(0.96)
             resolve(data)
           } catch (_) {
             reject(new Error(kindFail(kind)))
@@ -436,19 +426,9 @@
   }
   async function postFormDataFetch(url, formData, signal, onProgress, kind) {
     assertNotAborted(signal)
-    const totalSec = config().processingSeconds?.[kind] ?? (kind === "master" ? 45 : 30)
-    const started = performance.now()
     let lastProgress = 0
-    const paceTimer = setInterval(() => {
-      if (signal?.aborted) return
-      const elapsed = (performance.now() - started) / 1000
-      const p = Math.max(lastProgress, Math.min(0.995, elapsed / totalSec))
-      lastProgress = p
-      onProgress?.({ progress: p, phase: phaseAt(p, kind), eta: Math.max(0, totalSec - elapsed) })
-    }, 220)
     try {
       const response = await fetch(url, { method: "POST", body: formData, signal })
-      clearInterval(paceTimer)
       const text = await response.text()
       if (signal?.aborted) throw cancelled()
       if (!response.ok) parseJsonError(text, response.status, false, kind)
@@ -458,10 +438,9 @@
       } catch (_) {
         throw new Error(kindFail(kind))
       }
-      onProgress?.({ progress: 0.96, phase: phaseAt(0.96, kind), eta: 1 })
+      lastProgress = reportProgress(onProgress, kind, lastProgress, 0.96)
       return data
     } catch (err) {
-      clearInterval(paceTimer)
       if (signal?.aborted || err?.name === "AbortError") throw cancelled()
       if (err instanceof Error && /Analysis|Upload|Master|connection|data/i.test(err.message)) throw err
       throw new Error(kindNet(kind))
@@ -471,7 +450,7 @@
     const key = fileKey(file)
     const cached = uploadCache.get(key)
     if (cached) {
-      onProgress?.({ progress: 1, phase: phaseAt(1, "analyze"), eta: 0 })
+      onProgress?.({ progress: 1, phase: phaseAt(1, "analyze") })
       return cached
     }
     const formData = new FormData()
@@ -487,7 +466,7 @@
     assertNotAborted(signal)
     const wfId = wfSid()
     trackPipe(wfId, "upload", file.name)
-    onProgress?.({ progress: 0, phase: phaseAt(0, "analyze"), eta: config().processingSeconds?.analyze ?? 30 })
+    onProgress?.({ progress: 0, phase: phaseAt(0, "analyze") })
     const data = await railwayUpload(file, signal, onProgress)
     assertNotAborted(signal)
     const normalized = normalizeSettings(settings)
@@ -498,7 +477,7 @@
     const objectKey = typeof data.file === "string" ? data.file : ""
     mergeSession(resultId, { objectKey, trackTitle: file.name, previewUrl: "", masteredUrl: "", playbackUrl: "", downloadPageUrl: "", expiresAt: null, file: null, stripeSessionId: "", freeOrderId: "", email: "" })
     trackPipe(wfId, "analyze", file.name)
-    onProgress?.({ progress: 1, phase: phaseAt(1, "analyze"), eta: 0 })
+    onProgress?.({ progress: 1, phase: phaseAt(1, "analyze") })
     return { id: resultId, kind: "analyze", demo: false, createdAt: new Date().toISOString(), name: file.name, settings: normalized, analysis }
   }
   async function processMaster({ file, settings, previewWindow, signal, onProgress }) {
@@ -512,7 +491,7 @@
     trackPipe(wfId, "upload", file.name)
     try {
       const normalized = normalizeSettings(settings)
-      onProgress?.({ progress: 0, phase: phaseAt(0, "master"), eta: config().processingSeconds?.master ?? 45 })
+      onProgress?.({ progress: 0, phase: phaseAt(0, "master") })
       const formData = new FormData()
       formData.append("file", file)
       formData.append("stylePreset", stylePresetFromSettings(normalized))
@@ -526,7 +505,7 @@
       if (!data || typeof data !== "object") throw new Error(str("masterFailed", FB.mf))
       const previewUrl = data.previewAfterMp3Url || data.previewAfterMp3
       if (!previewUrl) throw new Error(str("masterFailed", FB.mf))
-      onProgress?.({ progress: 0.97, phase: phaseAt(0.97, "master"), eta: 1 })
+      onProgress?.({ progress: 0.97, phase: phaseAt(0.97, "master") })
       const previewAudio = await fetchBlob(previewUrl, signal)
       assertNotAborted(signal)
       const preview = { audio: previewAudio, ...resolvePreviewMetadata(previewWindow) }
@@ -545,7 +524,7 @@
       mergeSession(resultId, { objectKey, trackTitle: file.name, previewUrl: absoluteRailwayUrl(previewUrl), masteredUrl, playbackUrl: "", expiresAt, file, stripeSessionId: "", freeOrderId: "", email: "", analysisBefore: data.analysisBefore || null, analysisAfter: data.analysisAfter || null, masteringInsights: data.masteringInsights || null })
       const aa = data.analysisAfter
       if (wfId.trim()) trackBeacon("/api/track/master-complete", { sessionId: wfId, objectKey: objectKey || null, trackName: file.name, masteringStyle: stylePresetFromSettings(normalized), processingTimeMs: Math.round(performance.now() - t0), masterLufs: typeof aa?.lufs === "number" ? aa.lufs : null })
-      onProgress?.({ progress: 1, phase: phaseAt(1, "master"), eta: 0 })
+      onProgress?.({ progress: 1, phase: phaseAt(1, "master") })
       return { id: resultId, kind: "master", demo: false, createdAt: new Date().toISOString(), name: file.name, settings: normalized, preview, masterName, tags, loudnessNotes, comparison }
     } catch (err) {
       if (signal?.aborted || err?.name === "AbortError") throw err

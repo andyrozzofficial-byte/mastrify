@@ -6,7 +6,7 @@ const src=fs.readFileSync(__dirname+'/../dist-v2/assets/engine/processing-flow.j
 function load(config={processingSeconds:{analyze:30,master:45}}){let t=0;const store={};const context={performance:{now:()=>t},localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>{store[k]=String(v);}},MastrifyConfig:config,MastrifyAudio:{getState:()=>({sources:{original:{loaded:true,duration:180}}})}};
  context.window=context;vm.createContext(context);vm.runInContext(src,context);
  return {clock:context.MastrifyProcessing,tick:(s,step=1/60)=>{const clock=context.MastrifyProcessing;for(let i=0;i<Math.round(s/step);i++){t+=step*1000;clock.advance(step);}},store};}
-const analyzeCfg={processingSeconds:{analyze:15,master:45},minimumSeconds:{analyze:15},pacedWhenQuiet:true};
+const analyzeCfg={processingSeconds:{analyze:15,master:60},minimumSeconds:{analyze:15,master:27},pacedWhenQuiet:true};
 function loadAnalyze(){return load(analyzeCfg);}
 
 // demo: unchanged 36 s clock
@@ -42,12 +42,19 @@ function loadAnalyze(){return load(analyzeCfg);}
 {const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'analyze'});clock.setProgress(.05);tick(3);const p3=clock.getState().progress;
  tick(5);const p8=clock.getState().progress;assert(p8>p3&&p8>0&&p8<=.05+1e-3,'analyze respects engine cap '+p8);
  clock.finish();tick(.45);assert.equal(clock.getState().progress,1);}
-// master: unchanged — a quiet engine stays at 0 until finish (even with analyze config present)
-{const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'master'});clock.setProgress(0);tick(8);assert.equal(clock.getState().progress,0);
+// master pacing: no engine reports — bar paces immediately
+{const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'master'});tick(3);const p3=clock.getState().progress;assert(p3>0&&p3<.95,'master quiet pace at 3s '+p3);
+ tick(5);const p8=clock.getState().progress;assert(p8>p3&&p8<.95,'master quiet pace at 8s '+p8);
  clock.finish();tick(.45);assert.equal(clock.getState().progress,1);}
-// analyze: minimumSeconds holds the screen before finish
+// upload-only report, then silence: bar keeps pacing (no stall at ~15%)
+{const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'master'});clock.setProgress(.15);tick(8);const p8=clock.getState().progress;
+ assert(p8>.08&&p8<.95,'master paces after upload-only report '+p8);tick(22);const p30=clock.getState().progress;assert(p30>p8&&p30>.35&&p30<.95,'master keeps pacing toward quiet ceiling '+p30);
+ clock.setProgress(.96);tick(6);assert(clock.getState().progress>.85,'master reaches engine report smoothly');}
+// minimumSeconds holds the screen before finish
 {const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'analyze'});clock.setProgress(.99);tick(2);assert(clock.holdSeconds()>0,'analyze hold before minimum');
  tick(clock.holdSeconds());assert(clock.holdSeconds()<0.01,'analyze hold clears at minimum');}
+{const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'master'});clock.setProgress(.99);tick(2);assert(clock.holdSeconds()>0,'master hold before minimum');
+ tick(clock.holdSeconds());assert(clock.holdSeconds()<0.01,'master hold clears at minimum');}
 // cancellation still works
 {const {clock,tick}=loadAnalyze();clock.enter({demo:false,loop:false,kind:'analyze'});clock.setProgress(.2);tick(1);clock.leave();assert.equal(clock.getState().active,false);}
 // a fast, evenly reporting engine (the old test case): 11 s job, reports up to 95% at 9 s
@@ -70,10 +77,10 @@ function loadAnalyze(){return load(analyzeCfg);}
  clock.enter({demo:true,duration:36,loop:false,kind:'master'});tick(36);const p=clock.getState().progress;assert(Math.abs(p-36/(36+runs[0].after))<.01,'learned after part '+p);}
 
 // live master with eta: the engine's share leaves room, the bar carries on after it
-{const {clock,tick}=load();clock.enter({demo:false,kind:'master',loop:false});let t=0,last=0;
+{const {clock,tick}=load({processingSeconds:{analyze:30,master:45},minimumSeconds:{master:0}});clock.enter({demo:false,kind:'master',loop:false});let t=0,last=0;
  for(;t<8;t+=.5){clock.setProgress(Math.min(.99,t<1?.9*t:.9+.09*(t-1)/7),{eta:8-t});tick(.5);const p=clock.getState().progress;assert(p>=last);last=p;}
  assert(last<.82,'engine part leaves room for the audition: '+last);
- clock.engineDone();for(let i=0;i<20;i++){tick(.1);const p=clock.getState().progress;assert(p>=last);last=p;}
+ clock.engineDone();for(let i=0;i<120;i++){tick(.1);const p=clock.getState().progress;assert(p>=last);last=p;}
  assert(last>.8&&last<.99,'moves on through the audition: '+last);
  clock.finish();tick(.45);assert.equal(clock.getState().progress,1);}
 

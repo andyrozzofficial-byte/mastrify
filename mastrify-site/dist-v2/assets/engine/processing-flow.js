@@ -26,11 +26,11 @@
  const now=()=>typeof root.performance?.now==='function'?root.performance.now():Date.now();
  const HISTORY_KEY='mastrify-processing-times',HISTORY_LENGTH=5;
  const DEFAULT_AFTER={master:2,analyze:0};
- const DEFAULT_MINIMUM={analyze:15};
+ const DEFAULT_MINIMUM={analyze:15,master:27};
  // An engine that only says "started" and "finished" would leave the bar
  // standing still. After this many seconds without a rising report, the bar
  // is paced by the clock instead, up to QUIET_CEILING.
- const QUIET_AFTER=4,QUIET_CEILING=.95;
+ const QUIET_AFTER=4,QUIET_CEILING=.95,UPLOAD_ONLY=.16;
  let active=false,elapsed=0,duration=36,progress=0,target=0,demo=true,loop=true,generation=0,startedAt=0;
  let kind=null,goal=null,character=null;
  let finishing=false,etaTotal=null,expectedHint=null,lastReport=null,pairTotal=null;
@@ -52,12 +52,12 @@
   return track&&perSecond?perSecond*track:median(runs.map(r=>r.seconds));
  }
  function expectedSeconds(){
-  const floor=kind==='analyze'?minimum:0;
+  const floor=minimum;
   if(Number.isFinite(etaTotal)&&etaTotal>0)return Math.max(2,floor,etaTotal+after);
   const configured=root.MastrifyConfig?.processingSeconds?.[kind];
   const base=learnedSeconds()??(Number.isFinite(configured)&&configured>0?configured:null)??expectedHint??duration;
   // an engine that reports slowly tells us the job is longer than we thought
-  const lowerBound=target>.04?elapsed/target:0;
+  const lowerBound=target>UPLOAD_ONLY?elapsed/target:0;
   // two rising reports show the engine's own speed; trust it down to half
   // the expected time (an engine that front-loads its numbers stays paced)
   const paced=Number.isFinite(pairTotal)?Math.max(pairTotal+after,base*.5):base;
@@ -70,7 +70,7 @@
  // Demo with work after the engine: linear, then a soft approach to 99%.
  const demoCurve=s=>s<.97?s:.97+.02*(1-Math.exp(-(s-.97)/.03));
 
- function enter(options={}){active=true;elapsed=0;progress=target=0;finishing=false;etaTotal=null;lastReport=null;pairTotal=null;kind=options.kind==='analyze'||options.kind==='master'?options.kind:null;goal=Number.isFinite(options.goal)?options.goal:null;character=typeof options.character==='string'&&options.character?options.character:null;demo=options.demo!==false;loop=options.loop!==false;startedAt=now();duration=Number.isFinite(options.duration)?Math.max(1,options.duration):36;expectedHint=Number.isFinite(options.expected)&&options.expected>0?options.expected:null;engineAt=null;clock=0;after=kind&&!loop?learnedAfter():0;const floor=kind==='analyze'?root.MastrifyConfig?.minimumSeconds?.analyze:null;minimum=kind==='analyze'&&!loop?(Number.isFinite(floor)&&floor>=0?floor:DEFAULT_MINIMUM.analyze||0):0;generation++;}
+ function enter(options={}){active=true;elapsed=0;progress=target=0;finishing=false;etaTotal=null;lastReport=null;pairTotal=null;kind=options.kind==='analyze'||options.kind==='master'?options.kind:null;goal=Number.isFinite(options.goal)?options.goal:null;character=typeof options.character==='string'&&options.character?options.character:null;demo=options.demo!==false;loop=options.loop!==false;startedAt=now();duration=Number.isFinite(options.duration)?Math.max(1,options.duration):36;expectedHint=Number.isFinite(options.expected)&&options.expected>0?options.expected:null;engineAt=null;clock=0;after=kind&&!loop?learnedAfter():0;const floor=kind?root.MastrifyConfig?.minimumSeconds?.[kind]:null;minimum=kind&&!loop?(Number.isFinite(floor)&&floor>=0?floor:DEFAULT_MINIMUM[kind]||0):0;generation++;}
  function leave(){active=false;finishing=false;}
  function advance(seconds){
   if(!active||!Number.isFinite(seconds)||seconds<=0)return;
@@ -84,11 +84,16 @@
   elapsed=Math.max(elapsed+seconds,(now()-startedAt)/1000);
   if(demo)elapsed=Math.min(duration+after,elapsed);  // the demo's reading position ends with the track
   if(finishing){progress=Math.min(1,progress+Math.max(seconds*2.4,(1-progress)*(1-Math.exp(-seconds/.1))));return;}
-  const quiet=kind==='analyze'&&root.MastrifyConfig?.pacedWhenQuiet!==false&&(!lastReport||(now()-startedAt)/1000-lastReport.t>QUIET_AFTER);
-  // analyze quiet with no reports: pace toward QUIET_CEILING. Once the engine
-  // has reported, the bar still never passes it (same rule as master).
-  const ceiling=quiet&&!lastReport?Math.max(target,QUIET_CEILING):target;
-  const aim=Math.min(ceiling,schedule(expectedSeconds()));
+  const pacedWhenQuiet=(kind==='analyze'||kind==='master')&&root.MastrifyConfig?.pacedWhenQuiet!==false;
+  const stale=lastReport&&(now()-startedAt)/1000-lastReport.t>QUIET_AFTER;
+  const uploadOnly=lastReport&&lastReport.p>UPLOAD_ONLY*.5&&lastReport.p<=UPLOAD_ONLY;
+  // Quiet with no engine reports, or only an old upload report: pace toward
+  // QUIET_CEILING. Once the engine reports real job progress, the bar never
+  // passes that target.
+  const engineQuiet=pacedWhenQuiet&&(!lastReport||(stale&&uploadOnly));
+  const ceiling=engineQuiet?Math.max(target,QUIET_CEILING):target;
+  const paced=schedule(expectedSeconds());
+  const aim=engineQuiet?Math.min(ceiling,Math.max(progress,paced)):Math.min(ceiling,paced);
   if(aim>progress)progress+=(aim-progress)*(1-Math.exp(-seconds/.35));
  }
  // value: 0..1 from the engine. options.eta: seconds the engine still needs (optional).
@@ -112,7 +117,7 @@
  }
  // Seconds still to wait before the screen has been shown for `minimum`.
  function holdSeconds(){
-  if(kind!=='analyze'||!active||finishing||!minimum)return 0;
+  if(!kind||!active||finishing||!minimum)return 0;
   return Math.max(0,minimum-(now()-startedAt)/1000);
  }
  function finish(){
