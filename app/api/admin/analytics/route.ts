@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server"
 import { requireAdminApi } from "../../../../lib/adminApi"
-import { fetchAdminAnalytics } from "../../../../lib/adminData"
+import { fetchAdminBusinessAnalytics } from "../../../../lib/adminBusinessAnalytics"
+import { parseAnalyticsPeriod } from "../../../../lib/adminAnalyticsPeriods"
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAdminApi("/api/admin/analytics")
   if (auth.error) return auth.error
 
-  const data = await fetchAdminAnalytics()
+  const { searchParams } = new URL(request.url)
+  const period = parseAnalyticsPeriod(searchParams.get("period"))
+
+  const data = await fetchAdminBusinessAnalytics(period)
   if ("error" in data) {
     console.error("[admin-api] analytics failed", data.error)
-    // Never white-screen admin: return safe empty analytics payload.
-    return NextResponse.json({ error: data.error, series: [], totals: {}, points: [] }, { status: 200 })
+    return NextResponse.json({ error: data.error, period }, { status: 200 })
   }
   return NextResponse.json(data)
 }

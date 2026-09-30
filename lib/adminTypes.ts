@@ -294,3 +294,77 @@ export type AdminAnalyticsExtended = {
   recommendOverTime: { date: string; avgRecommend: number; count: number }[]
   siteTraffic: AdminSiteTraffic | null
 }
+
+export type PeriodMetrics = {
+  revenue: number
+  masters: number
+  uploads: number
+  visitors: number
+  paidExports: number
+  failedJobs: number
+  uploadToMasterRate: number | null
+  masterToPaidRate: number | null
+}
+
+export type RevenueSummary = {
+  today: number
+  yesterday: number
+  thisMonth: number
+  lastMonth: number
+  allTime: number
+}
+
+export type AnalyticsTimeSeriesPoint = {
+  date: string
+  revenue?: number
+  masters?: number
+  uploads?: number
+  visitors?: number
+  pageViews?: number
+}
+
+export type MasteringAnalytics = {
+  completed: number
+  failed: number
+  avgProcessingMs: number | null
+  avgLufs: number | null
+  avgTrackDurationSec: number | null
+  /** Where avgTrackDurationSec was sourced — feedback only when completions lack duration. */
+  trackDurationSource: "feedback" | null
+  masterToPaidRate: number | null
+  topStyle: { style: string; count: number } | null
+  styleDistribution: { label: string; count: number }[]
+}
+
+export type PeriodTraffic = {
+  visitors: number
+  pageViews: number
+  sessions: number
+  topPages: { label: string; count: number }[]
+  topReferrers: { label: string; count: number }[]
+  devices: { label: string; count: number }[]
+  countries: { label: string; count: number }[]
+  dailyTraffic: { date: string; visitors: number; sessions: number; pageViews: number }[]
+}
+
+export type AdminBusinessAnalytics = {
+  period: string
+  periodLabel: string
+  comparisonLabel: string | null
+  overview: PeriodMetrics
+  comparison: PeriodMetrics | null
+  revenue: RevenueSummary
+  timeSeries: {
+    revenue: AnalyticsTimeSeriesPoint[]
+    masters: AnalyticsTimeSeriesPoint[]
+    uploads: AnalyticsTimeSeriesPoint[]
+    visitors: AnalyticsTimeSeriesPoint[]
+  }
+  mastering: MasteringAnalytics
+  traffic: PeriodTraffic | null
+  funnel: { step: string; count: number }[]
+  /** False when upload/master steps use non-overlapping session populations. */
+  funnelComparable: boolean
+  funnelNote: string | null
+  genreDistribution: { label: string; count: number }[]
+}
