@@ -48,6 +48,8 @@ async function sendMasterReadyEmail({ email, downloadPageUrl, expiresAt, trackTi
 
   const from = process.env.MASTRIFY_EMAIL_FROM?.trim() || "Mastrify <masters@mastrify.com>"
   const replyTo = process.env.MASTRIFY_EMAIL_REPLY_TO?.trim() || "support@mastrify.com"
+  // Mastrify-symbolen, samma ikon som mastrify.com använder (public/icon-192.png).
+  const logoUrl = process.env.MASTRIFY_EMAIL_LOGO_URL?.trim() || "https://www.mastrify.com/icon-192.png"
   const title = cleanTrackTitle(trackTitle)
   const escapedTitle = escapeHtml(title)
   const escapedDownloadPageUrl = escapeHtml(downloadPageUrl)
@@ -83,7 +85,12 @@ async function sendMasterReadyEmail({ email, downloadPageUrl, expiresAt, trackTi
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td>
-                          <p class="email-brand" style="margin:0 0 20px;color:#ffffff;font-size:20px;font-weight:800;letter-spacing:-0.035em;line-height:1.1;text-shadow:0 0 18px rgba(139,92,246,0.24);">Mastrify</p>
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px;">
+                            <tr>
+                              <td style="padding:0 10px 0 0;vertical-align:middle;"><img src="${escapeHtml(logoUrl)}" width="32" height="32" alt="" style="display:block;width:32px;height:32px;border:0;border-radius:8px;"></td>
+                              <td style="vertical-align:middle;"><p class="email-brand" style="margin:0;color:#ffffff;font-size:20px;font-weight:800;letter-spacing:-0.035em;line-height:1.1;text-shadow:0 0 18px rgba(139,92,246,0.24);">Mastrify</p></td>
+                            </tr>
+                          </table>
                           <h1 class="email-heading" style="margin:0;color:#ffffff;font-size:29px;line-height:1.14;letter-spacing:-0.035em;font-weight:800;overflow-wrap:break-word;word-break:break-word;">${heading}</h1>
                           <p class="email-copy" style="margin:18px 0 26px;color:rgba(255,255,255,0.72);font-size:15px;line-height:1.72;">Your mastered track is ready. Open the secure link below to download the final WAV export. ${EXPIRY_COPY}</p>
                         </td>
