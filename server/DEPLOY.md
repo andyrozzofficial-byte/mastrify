@@ -19,6 +19,7 @@ Required env (Railway):
 - `MASTRIFY_RETENTION_SEC` or `MASTRIFY_SIGNED_URL_TTL_SEC` (optional; default **43200** = 12 hours — signed URLs and Supabase WAV/MP3 deletion)
 - `MASTRIFY_STORAGE_CLEANUP_INTERVAL_MS` (optional; default **900000** = 15 minutes)
 - `RESEND_API_KEY` (email delivery via `POST /master/deliver`)
+- `MASTRIFY_EMAIL_LOGO_URL` (optional; logo in the delivery email, default `https://www.mastrify.com/icon-192.png`)
 - `STRIPE_SECRET_KEY` (same test/live secret as Vercel — verifies `POST /master/download` and `POST /master/deliver`)
 
 Frontend env: see `mastrify/.env.example` (Stripe Checkout runs on Vercel/Next API routes).
