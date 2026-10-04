@@ -143,6 +143,30 @@ async function sendMasterReadyEmail({ email, downloadPageUrl, expiresAt, trackTi
 }
 
 /**
+ * Desktop download (POST /master/download, Mastrify Master): record the paid export like a delivery so
+ * revenue and export stats keep counting it, but send no email. Best-effort, and idempotent per objectKey
+ * so "download again" in the app does not count the sale twice.
+ */
+export async function recordMasteredExportDownload({ email, objectKey, expiresAt, trackTitle, amountCents, stripeSessionId }) {
+  const to = normalizeEmail(email)
+  if (!objectKey) return { stored: false, reason: "missing_object_key" }
+  if (!to) return { stored: false, reason: "no_buyer_email" }
+  if (!isSupabaseStorageConfigured()) return { stored: false, reason: "supabase_not_configured" }
+  try {
+    const { data, error } = await getSupabaseServiceClient()
+      .from("mastered_exports")
+      .select("object_key")
+      .eq("object_key", objectKey)
+      .limit(1)
+    if (!error && Array.isArray(data) && data.length > 0) return { stored: false, reason: "already_recorded" }
+    return await storeMasteredExport({ email: to, objectKey, expiresAt, trackTitle, amountCents, stripeSessionId })
+  } catch (err) {
+    console.warn("[download] failed to record mastered export:", err?.message || err)
+    return { stored: false, error: err?.message || String(err) }
+  }
+}
+
+/**
  * Best-effort delivery: never block a successful master response if DB/email fails.
  */
 export async function deliverMasterExportEmail({

@@ -21,7 +21,7 @@ import {
   signedUrlExpiresAt,
   startMasterStorageCleanupScheduler,
 } from "./supabaseStorage.js"
-import { deliverMasterExportEmail } from "./masteredExportDelivery.js"
+import { deliverMasterExportEmail, recordMasteredExportDownload } from "./masteredExportDelivery.js"
 import { buildMasterDownloadPageUrl, verifyMasterDownloadLink } from "./masterDownloadLink.js"
 import { generateMasterPreviewMp3, previewFileNameForMaster } from "./masterPreview.js"
 import { verifyPaidCheckoutForObjectKey } from "./stripeCheckout.js"
@@ -89,6 +89,14 @@ const deliverRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many delivery requests. Please try again later." },
+})
+
+const downloadRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 25,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many download requests. Please try again later." },
 })
 
 // Entry: Railway with Root Directory "server" runs `npm start` → `node server.js` (this file).
@@ -1353,6 +1361,87 @@ app.get("/master/download-session", async (req, res) => {
   } catch (err) {
     console.error("[download-session] failed:", err)
     return res.status(500).json({ success: false, error: "Could not open download session" })
+  }
+})
+
+/**
+ * Desktop download (Mastrify Master app): the same payment check as /master/deliver, then the link to the
+ * full WAV (Supabase signed URL, or Railway /masters/<file>, which the app fetches with ?download=1).
+ * No email is sent. The website keeps using /master/deliver unchanged.
+ */
+app.post("/master/download", downloadRateLimiter, async (req, res) => {
+  try {
+    const body = req.body || {}
+    const objectKey = typeof body.objectKey === "string" ? body.objectKey.trim() : ""
+    const stripeSessionId =
+      typeof body.stripeSessionId === "string"
+        ? body.stripeSessionId.trim()
+        : typeof body.stripe_session_id === "string"
+          ? body.stripe_session_id.trim()
+          : ""
+    const freeOrderId =
+      typeof body.freeOrderId === "string"
+        ? body.freeOrderId.trim()
+        : typeof body.free_order_id === "string"
+          ? body.free_order_id.trim()
+          : ""
+    const trackTitle = typeof body.trackTitle === "string" ? body.trackTitle.trim() : ""
+
+    if (!objectKey || (!stripeSessionId && !freeOrderId)) {
+      return res.status(400).json({ success: false, error: "Missing download details" })
+    }
+
+    const payment = freeOrderId
+      ? await verifyFreeOrderForObjectKey(freeOrderId, objectKey)
+      : await verifyPaidCheckoutForObjectKey(stripeSessionId, objectKey)
+    if (!payment.ok) {
+      return res.status(payment.status).json({ success: false, error: payment.error })
+    }
+
+    let playbackUrl = ""
+    let expiresAt = null
+    if (isSupabaseStorageConfigured()) {
+      try {
+        playbackUrl = await createMasterPlaybackSignedUrl(objectKey)
+        expiresAt = signedUrlExpiresAt()
+      } catch (err) {
+        console.error("[download] failed to create signed playback URL:", err?.message || err)
+        return res.status(500).json({ success: false, error: "Could not create secure download link" })
+      }
+    } else {
+      const basename = path.basename(objectKey)
+      const privatePath = path.join(mastersPrivateDir, basename)
+      if (!fs.existsSync(privatePath)) {
+        return res.status(404).json({ success: false, error: "Master export is not available" })
+      }
+      try {
+        fs.copyFileSync(privatePath, path.join(mastersDir, basename))
+      } catch (copyErr) {
+        console.error("[download] failed to stage master for download:", copyErr?.message || copyErr)
+        return res.status(500).json({ success: false, error: "Could not prepare master download" })
+      }
+      const forwardedProto = req.headers["x-forwarded-proto"]
+      const proto = (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto || req.protocol)
+        .split(",")[0]
+        .trim()
+      playbackUrl = `${proto}://${req.get("host")}/masters/${basename}`
+    }
+
+    const buyerEmail = typeof payment.session?.customer_details?.email === "string" ? payment.session.customer_details.email : ""
+    const recorded = await recordMasteredExportDownload({
+      email: buyerEmail,
+      objectKey,
+      expiresAt,
+      trackTitle,
+      amountCents: payment.amountCents ?? null,
+      stripeSessionId: stripeSessionId || null,
+    })
+    console.log("[download] desktop download", { objectKey, free: Boolean(freeOrderId), recorded: recorded.stored ? "stored" : recorded.reason || "error" })
+
+    res.json({ success: true, playbackUrl, expiresAt })
+  } catch (err) {
+    console.error("Master download failed:", err)
+    res.status(500).json({ success: false, error: "Download failed" })
   }
 })
 
