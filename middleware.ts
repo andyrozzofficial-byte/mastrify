@@ -117,6 +117,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Mastrify Help (mastrify.com/help): a static page in public/help, linked from the Mastrify Desktop installers.
+  if (pathname === "/help" || pathname === "/help/") {
+    url.pathname = "/help/index.html"
+    return NextResponse.rewrite(url)
+  }
+  if (pathname.startsWith("/help/")) {
+    return NextResponse.next()
+  }
+
   const linusTarget = linusRewriteTarget(pathname)
   if (linusTarget) {
     url.pathname = linusTarget

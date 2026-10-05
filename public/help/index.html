@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07070e"><title>Mastrify | Help</title><meta name="description" content="Get Mastrify Desktop up and running: Mastrify Master, Mastrify Analysis, plugin setup, supported audio files and support."><link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" type="image/svg+xml" href="/assets/logo.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="canonical" href="https://mastrify.com/help"><meta property="og:type" content="website"><meta property="og:site_name" content="Mastrify"><meta property="og:title" content="Mastrify | Help"><meta property="og:description" content="Get Mastrify Desktop up and running: Mastrify Master, Mastrify Analysis, plugin setup, supported audio files and support."><meta property="og:url" content="https://mastrify.com/help"><meta property="og:image" content="https://mastrify.com/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Mastrify, intelligent mastering engine"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Mastrify | Help"><meta name="twitter:description" content="Get Mastrify Desktop up and running: Mastrify Master, Mastrify Analysis, plugin setup, supported audio files and support."><meta name="twitter:image" content="https://mastrify.com/og-image.png">
+<link rel="stylesheet" href="/mastrify.css">
+<style>
+/* Mastrify Help (mastrify.com/help). A static page outside the locked site build (mastrify-site/dist-v2): it uses the
+   site's shared stylesheet for the header, footer, colours and type, and only adds the help sections below. */
+.help-head { max-width: 1000px; margin: 0 auto; padding: 44px 30px 34px; text-align: center; }
+.help-head .eyebrow { margin: 12px 0; font: 500 12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 2px; color: #ada7c2; text-transform: uppercase; }
+.help-head h1 { font-size: clamp(44px, 5vw, 72px); line-height: 1.04; letter-spacing: -3px; font-weight: 590; margin: 14px 0 18px; }
+.help-head h1 span { background: linear-gradient(100deg, #c3a2ff 5%, #85bfff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.help-head p.help-intro { font-size: 18px; line-height: 1.7; color: #a6a3b9; margin: 0 auto; max-width: 560px; }
+.help-jump { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 26px 0 0; padding: 0; list-style: none; }
+.help-jump a { display: inline-block; padding: 7px 13px; border: 1px solid #ffffff1a; border-radius: 999px; font-size: 13px; color: #c9c0dc; }
+.help-jump a:hover { border-color: #b39aea66; color: #fff; }
+
+.help { max-width: 1060px; margin: 0 auto; padding: 0 30px 90px; }
+.help-card { position: relative; border: 1px solid #ffffff1a; border-radius: 20px; padding: 34px 34px 30px;
+  background: radial-gradient(120% 170% at 10% 0%, #6d51b012, transparent 62%), radial-gradient(95% 150% at 94% 100%, #5b7fc70c, transparent 58%), linear-gradient(140deg, #0c0b12, #08070e); }
+.help-card .eyebrow { margin: 0; font: 500 10px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 2.2px; color: #9a8ab5; text-transform: uppercase; }
+.help-card h2 { font-size: 30px; line-height: 1.15; letter-spacing: -1px; font-weight: 600; margin: 10px 0 20px; }
+.help-card h3 { font-size: 19px; line-height: 1.3; letter-spacing: -.4px; font-weight: 600; margin: 8px 0 14px; }
+.help-mark { display: inline-grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; margin-bottom: 18px;
+  background: radial-gradient(circle, #151327 42%, #090a12 70%); border: 1px solid #ab8ae865; }
+.help-mark img { width: 28px; height: auto; }
+
+.help-apps { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; scroll-margin-top: 24px; }
+.help-steps { counter-reset: s; list-style: none; margin: 0; padding: 0; }
+.help-steps li { counter-increment: s; position: relative; padding: 11px 0 11px 44px; border-top: 1px solid #ffffff10; font-size: 15.5px; line-height: 1.55; color: #e4e0f2; }
+.help-steps li:first-child { border-top: 0; }
+.help-steps li::before { content: counter(s); position: absolute; left: 0; top: 10px; width: 27px; height: 27px; border-radius: 50%; display: grid; place-items: center;
+  font: 600 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace; color: #f5edff; background: linear-gradient(125deg, #7549a5, #583780 70%, #494573); border: 1px solid #bc96ed80; }
+.help-path { display: block; margin-top: 3px; font: 500 12.5px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; color: #c6b1ed; }
+
+.help-fix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 18px; }
+.help-fix .help-card { padding: 28px 26px 24px; }
+.help-fix ul { list-style: none; margin: 0; padding: 0; }
+.help-fix li { position: relative; padding: 6px 0 6px 20px; font-size: 14.5px; line-height: 1.55; color: #cfcadf; }
+.help-fix li::before { content: ""; position: absolute; left: 2px; top: 14px; width: 6px; height: 6px; border-radius: 50%; background: #ae8aff; }
+.help-formats { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 0; padding: 0; list-style: none; }
+.help-formats li { padding: 9px 14px 8px; border: 1px solid #b39aea4d; border-radius: 10px; background: #ae8aff0d; font: 600 13px/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 1.5px; color: #e6dcff; }
+.help-formats li::before { display: none; }
+.help-label { margin: 0 0 12px; font-size: 14.5px; color: #a6a3b9; }
+
+.help-more { margin-top: 18px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.help-more h2 { margin: 8px 0 0; }
+.help-more .button { white-space: nowrap; }
+.help-anchor { scroll-margin-top: 24px; }
+
+@media (max-width: 980px) { .help-fix { grid-template-columns: 1fr 1fr; } .help-fix > :last-child { grid-column: 1 / -1; } }
+@media (max-width: 760px) {
+  .help-head { padding: 32px 16px 24px; }
+  .help-head .eyebrow { font-size: 10px; letter-spacing: 1.65px; margin: 10px 0; }
+  .help-head h1 { letter-spacing: -1.4px; margin: 12px 0 14px; }
+  .help-head p.help-intro { font-size: 16px; }
+  .help { padding: 0 16px 60px; }
+  .help-apps, .help-fix { grid-template-columns: 1fr; gap: 14px; }
+  .help-fix { margin-top: 14px; }
+  .help-fix > :last-child { grid-column: auto; }
+  .help-card { padding: 26px 20px 22px; border-radius: 17px; }
+  .help-card h2 { font-size: 25px; }
+  .help-more { margin-top: 14px; }
+  .help-more .button { width: 100%; justify-content: center; }
+}
+</style>
+</head>
+<body data-page="help"><a class="skip" href="#main">Skip to content</a>
+<header class="header"><a class="brand" href="/" aria-label="Mastrify home"><span>Mastrify</span></a><nav aria-label="Main navigation"><a href="/analyze"><span class="nav-label">Analyze</span></a><a href="/master"><span class="nav-label">Master</span></a><a href="/how-it-works"><span class="nav-label">Why<span class="nav-more"> Mastrify</span></span></a><a href="/pricing"><span class="nav-label">Pricing</span></a></nav><a class="button small header-cta" href="/master"><span class="cta-text">Start<span class="cta-more"> mastering</span></span><span class="cta-arrow">↗</span></a><button class="menu-toggle" id="menu-toggle" aria-label="Open navigation" aria-expanded="false">☰</button></header>
+
+<main id="main">
+  <section class="help-head">
+    <p class="eyebrow">Mastrify Desktop</p>
+    <h1>Mastrify <span>Help</span></h1>
+    <p class="help-intro">Everything you need to get Mastrify Desktop up and running.</p>
+    <ul class="help-jump" aria-label="On this page">
+      <li><a href="#master">Mastrify Master</a></li>
+      <li><a href="#analysis">Mastrify Analysis</a></li>
+      <li><a href="#plugin">Plugin missing</a></li>
+      <li><a href="#start">App won't start</a></li>
+      <li><a href="#formats">Audio files</a></li>
+      <li><a href="#support">Support</a></li>
+    </ul>
+  </section>
+
+  <div class="help">
+    <section class="help-apps" aria-label="Getting started">
+      <article class="help-card help-anchor" id="master">
+        <span class="help-mark" aria-hidden="true"><img src="/assets/logo.svg" alt=""></span>
+        <p class="eyebrow">01 / Master</p>
+        <h2>Mastrify Master</h2>
+        <ol class="help-steps">
+          <li>Open Applications › Mastrify › Mastrify Master.</li>
+          <li>Drop your WAV, AIFF, FLAC or MP3 into the app.</li>
+          <li>Choose your mastering settings.</li>
+          <li>Process the track.</li>
+          <li>Listen to the preview.</li>
+          <li>Pay when you're happy.</li>
+          <li>Download the full WAV.</li>
+        </ol>
+      </article>
+
+      <article class="help-card help-anchor" id="analysis">
+        <span class="help-mark" aria-hidden="true"><img src="/assets/logo.svg" alt=""></span>
+        <p class="eyebrow">02 / Analysis</p>
+        <h2>Mastrify Analysis</h2>
+        <ol class="help-steps">
+          <li>Add Mastrify Analysis last on your master bus.<span class="help-path">In Logic: Audio Units › Mastrify › Mastrify Analysis</span></li>
+          <li>Click Analyze my mix.</li>
+          <li>Press Play in your DAW.</li>
+          <li>Let the track play.</li>
+          <li>Run the analysis.</li>
+          <li>Use the results to improve your mix before mastering.</li>
+        </ol>
+      </article>
+    </section>
+
+    <section class="help-fix" aria-label="Troubleshooting">
+      <article class="help-card help-anchor" id="plugin">
+        <p class="eyebrow">Troubleshooting</p>
+        <h3>If the plugin doesn't appear</h3>
+        <ul>
+          <li>Restart your DAW.</li>
+          <li>Open the DAW's plugin manager.</li>
+          <li>Rescan plugins.</li>
+          <li>In Logic, check Audio Units › Mastrify › Mastrify Analysis.</li>
+        </ul>
+      </article>
+
+      <article class="help-card help-anchor" id="start">
+        <p class="eyebrow">Troubleshooting</p>
+        <h3>If Mastrify Master doesn't start</h3>
+        <ul>
+          <li>Make sure you're running macOS 12 or later.</li>
+          <li>Make sure you have an internet connection.</li>
+          <li>Quit and reopen Mastrify Master.</li>
+        </ul>
+      </article>
+
+      <article class="help-card help-anchor" id="formats">
+        <p class="eyebrow">Audio files</p>
+        <h3>Supported formats</h3>
+        <ul class="help-formats">
+          <li>WAV</li>
+          <li>AIFF</li>
+          <li>FLAC</li>
+          <li>MP3</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="help-card help-more help-anchor" id="support" aria-label="Support">
+      <div>
+        <p class="eyebrow">Support</p>
+        <h2>Need more help?</h2>
+      </div>
+      <a class="button primary" href="mailto:support@mastrify.com">support@mastrify.com ↗</a>
+    </section>
+  </div>
+</main>
+
+<footer class="footer wrap"><section class="footer-cta" aria-label="Start mastering"><div><p class="eyebrow">READY WHEN YOUR MIX IS</p><h2>Ready to master <span>your track?</span></h2><p class="footer-cta-note">Hear your master against the original first. Pay only when you export.</p></div><div class="footer-cta-actions"><p class="footer-cta-meta">$9 PER MASTER · NO SUBSCRIPTION</p><a class="button primary" href="/master">Start mastering ↗</a><a class="text-link" href="/analyze">Analyze a mix first ↗</a></div></section><div class="footer-grid"><div class="footer-brand"><a class="brand" href="/"><span>Mastrify</span></a><p>Intelligent mastering for music that deserves its full emotional weight, release-ready, without the noise.</p></div><nav class="footer-col" aria-label="Product"><span>PRODUCT</span><a href="/analyze">Analyze</a><a href="/master">Master</a><a href="/how-it-works">Why Mastrify</a><a href="/pricing">Pricing</a></nav><nav class="footer-col" aria-label="Support"><span>SUPPORT</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav><nav class="footer-col" aria-label="Follow Mastrify"><span>FOLLOW</span><a href="https://www.instagram.com/mastrify.app" target="_blank" rel="noopener">Instagram ↗</a><a href="https://www.tiktok.com/@mastrify.app" target="_blank" rel="noopener">TikTok ↗</a></nav></div><div class="footer-bottom"><span>© 2026 Mastrify</span><span class="footer-sign">MASTRIFY / NEURAL MASTERING ENGINE</span><span>Designed &amp; engineered by <a href="https://lunov.dev" target="_blank" rel="noopener">Lunov</a></span></div></footer>
+<script>
+/* The mobile menu (the rest of the site gets this from its app bundle, which this page does not load). */
+(function () {
+  var header = document.querySelector('.header'), button = document.getElementById('menu-toggle');
+  if (!header || !button) return;
+  button.addEventListener('click', function () {
+    var open = header.classList.toggle('open');
+    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    button.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  });
+})();
+</script>
+</body></html>
