@@ -23,6 +23,21 @@ export function masterFileDownloadUrl(url: string): string {
   }
 }
 
+/**
+ * Startar en nedladdning från en URL som själv svarar med Content-Disposition: attachment (Supabase-länk
+ * med ?download=<namn>, eller Railway /masters/<fil>?download=1). Ingen blob och inget <a download>:
+ * filnamn och MIME-typ kommer från servern, vilket alla webbläsare och Androids nedladdningshanterare följer.
+ * Sidan står kvar eftersom svaret är en bilaga.
+ */
+export function startAttachmentDownload(url: string): void {
+  const anchor = document.createElement("a")
+  anchor.href = resolveAbsoluteMasterUrl(url)
+  anchor.rel = "noopener"
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+}
+
 export function masterFileDownloadName(url: string, trackTitle?: string | null): string {
   const match = url.match(/\/([^/?#]+\.(?:wav|mp3|aiff?|flac))(?:[?#]|$)/i)
   if (match?.[1]) {
@@ -51,16 +66,17 @@ export async function triggerMasterFileDownload(url: string, filename: string): 
 
   const res = await fetch(absolute)
   if (!res.ok) throw new Error(`Download failed (${res.status})`)
-  const blob = await res.blob()
+  const fetched = await res.blob()
+  // En WAV ska vara audio/wav även om servern svarade med en annan eller tom typ.
+  const blob = /\.wav$/i.test(filename) && fetched.type !== "audio/wav" ? new Blob([fetched], { type: "audio/wav" }) : fetched
   const blobUrl = URL.createObjectURL(blob)
-  try {
-    const anchor = document.createElement("a")
-    anchor.href = blobUrl
-    anchor.download = filename
-    document.body.appendChild(anchor)
-    anchor.click()
-    anchor.remove()
-  } finally {
-    URL.revokeObjectURL(blobUrl)
-  }
+  const anchor = document.createElement("a")
+  anchor.href = blobUrl
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  // Inte direkt: på Android hämtar nedladdningshanteraren blob-URL:en asynkront efter klicket, och en
+  // återkallad URL ger en fil utan namn och ändelse.
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000)
 }

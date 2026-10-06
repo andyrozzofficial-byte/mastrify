@@ -13,6 +13,7 @@ import { MASTRIFY_LUFS_TRACE as LUFS_TRACE, MASTRIFY_PIPELINE_DEBUG as PIPELINE_
 import {
   persistMasterExport,
   createMasterPlaybackSignedUrl,
+  createMasterDownloadSignedUrl,
   createPreviewPlaybackSignedUrl,
   getSupabaseServiceClient,
   isSupabaseStorageConfigured,
@@ -23,6 +24,7 @@ import {
 } from "./supabaseStorage.js"
 import { deliverMasterExportEmail, recordMasteredExportDownload } from "./masteredExportDelivery.js"
 import { buildMasterDownloadPageUrl, verifyMasterDownloadLink } from "./masterDownloadLink.js"
+import { attachmentContentDisposition, masterDownloadFileName, normalizeUploadedAudio, safeWavFileName } from "./audioFileIdentity.js"
 import { generateMasterPreviewMp3, previewFileNameForMaster } from "./masterPreview.js"
 import { verifyPaidCheckoutForObjectKey } from "./stripeCheckout.js"
 import { verifyFreeOrderForObjectKey } from "./discountCodes.js"
@@ -214,8 +216,9 @@ function sendMasterFile(req, res, headOnly) {
   res.setHeader("X-Content-Type-Options", "nosniff")
 
   if (forceDownload) {
-    const fname = attachmentNameForMaster(basename, mime)
-    res.setHeader("Content-Disposition", `attachment; filename="${fname}"`)
+    const requested = typeof req.query.name === "string" ? req.query.name : ""
+    const fname = requested && mime === "audio/wav" ? safeWavFileName(requested) : attachmentNameForMaster(basename, mime)
+    res.setHeader("Content-Disposition", attachmentContentDisposition(fname))
   } else {
     res.setHeader("Content-Disposition", "inline")
   }
@@ -672,6 +675,7 @@ app.post(
 "/upload",
 uploadRateLimiter,
 upload.single("file"),
+normalizeUploadedAudio,
 async (req,res)=>{
 
 try {
@@ -799,7 +803,7 @@ brightness: analysis.highEnergy ?? 0.25,
 
 /* ANALYZE TRACK */
 
-app.post("/analyze", upload.single("file"), async (req, res) => {
+app.post("/analyze", upload.single("file"), normalizeUploadedAudio, async (req, res) => {
   try {
 
     if (!req.file) {
@@ -1012,6 +1016,7 @@ MASTER TRACK
 app.post("/master",
   uploadRateLimiter,
   upload.single("file"),
+  normalizeUploadedAudio,
   async (req, res) => {
   res.setTimeout(0) // 🔥 LÄGG DEN HÄR
 
@@ -1352,9 +1357,27 @@ app.get("/master/download-session", async (req, res) => {
       }
     }
 
+    // Nedladdning: en egen länk där servern (Supabase eller /masters) sätter Content-Disposition med
+    // "<titel>_master.wav" och Content-Type audio/wav. Webbläsare och Androids nedladdningshanterare
+    // namnger då filen själva, utan att förlita sig på <a download> på en tillfällig blob-URL.
+    const downloadFileName = masterDownloadFileName(trackTitle)
+    let downloadUrl = ""
+    if (isSupabaseStorageConfigured()) {
+      try {
+        downloadUrl = await createMasterDownloadSignedUrl(objectKey, downloadFileName)
+      } catch (err) {
+        console.error("[download-session] failed to create signed download URL:", err?.message || err)
+      }
+    } else {
+      downloadUrl = `${playbackUrl}?download=1&name=${encodeURIComponent(downloadFileName)}`
+    }
+    console.log("[download-session] master download", { objectKey, trackTitle: trackTitle || null, downloadFileName, hasDownloadUrl: Boolean(downloadUrl) })
+
     return res.json({
       success: true,
       playbackUrl,
+      downloadUrl: downloadUrl || null,
+      downloadFileName,
       expiresAt,
       trackTitle: trackTitle || null,
     })

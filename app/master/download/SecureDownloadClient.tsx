@@ -6,12 +6,16 @@ import CinematicBackground from "../../components/CinematicBackground"
 import { btnMastrifySecondaryCore } from "../../components/buttonEffects"
 import {
   masterFileDownloadName,
+  startAttachmentDownload,
   triggerMasterFileDownload,
 } from "../../../lib/masterDownload"
 import { PUBLIC_BACKEND_API_BASE } from "../../../lib/publicBackendUrl"
 
 type DownloadSession = {
   playbackUrl: string
+  /** Serverns nedladdningslänk (Content-Disposition med "<titel>_master.wav", Content-Type audio/wav). */
+  downloadUrl: string | null
+  downloadFileName: string | null
   expiresAt: string
   trackTitle: string | null
 }
@@ -53,6 +57,8 @@ export default function SecureDownloadClient() {
         }
         setSession({
           playbackUrl: data.playbackUrl.trim(),
+          downloadUrl: typeof data.downloadUrl === "string" && data.downloadUrl.trim() ? data.downloadUrl.trim() : null,
+          downloadFileName: typeof data.downloadFileName === "string" && data.downloadFileName.trim() ? data.downloadFileName.trim() : null,
           expiresAt: typeof data.expiresAt === "string" ? data.expiresAt : query.exp,
           trackTitle: typeof data.trackTitle === "string" ? data.trackTitle : null,
         })
@@ -76,9 +82,15 @@ export default function SecureDownloadClient() {
     setDownloadLoading(true)
     setDownloadError("")
     try {
+      if (session.downloadUrl) {
+        // Servern bestämmer filnamn och typ (Content-Disposition + audio/wav); fungerar likadant på iPhone,
+        // Android (även nedladdningshanterare och e-postappars inbyggda webbläsare) och desktop.
+        startAttachmentDownload(session.downloadUrl)
+        return
+      }
       await triggerMasterFileDownload(
         session.playbackUrl,
-        masterFileDownloadName(session.playbackUrl, session.trackTitle),
+        session.downloadFileName || masterFileDownloadName(session.playbackUrl, session.trackTitle),
       )
     } catch (err) {
       setDownloadError(err instanceof Error ? err.message : "Download failed. Please try again.")

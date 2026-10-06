@@ -263,6 +263,23 @@ export async function createMasterPlaybackSignedUrl(objectKey) {
 }
 
 /**
+ * Signerad länk för nedladdning av mastern: Supabase svarar med Content-Type audio/wav (sattes vid uppladdning)
+ * och Content-Disposition: attachment; filename="<fileName>", så filen alltid sparas med namn och .wav-ändelse.
+ */
+export async function createMasterDownloadSignedUrl(objectKey, fileName) {
+  const bucket = getMastersBucket()
+  const key = masterObjectKey(objectKey)
+  const name = /\.wav$/i.test(String(fileName || "")) ? String(fileName) : `${String(fileName || "Mastrify_master")}.wav`
+  const { data, error } = await getSupabaseServiceClient()
+    .storage.from(bucket)
+    .createSignedUrl(key, signedUrlTtlSec(), { download: name })
+  if (error || !data?.signedUrl) {
+    throw new Error(`Supabase signed download URL failed: ${error?.message || "missing signedUrl"}`)
+  }
+  return data.signedUrl
+}
+
+/**
  * Persist master to Supabase when configured; optional Railway URL fallback.
  * Cleans up local tmp only after successful Supabase upload.
  */
