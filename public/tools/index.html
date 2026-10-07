@@ -9,6 +9,9 @@
 .tl-head .eyebrow, .tl .eyebrow { font: 500 12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 2px; color: #ada7c2; text-transform: uppercase; margin: 12px 0; }
 .tl-head h1 { font-size: clamp(44px, 5vw, 72px); line-height: 1.04; letter-spacing: -3px; font-weight: 590; margin: 14px 0 18px; }
 .tl-head h1 span, .tl-card h2 span { background: linear-gradient(100deg, #c3a2ff 5%, #85bfff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* The gradient is painted only inside the word's box, and the tight letter spacing puts the last letter's edge right on
+   that edge. Extra room on the right, given back by the margin, so nothing moves. */
+.tl-head h1 span { padding-right: .08em; margin-right: -.08em; }
 .tl-intro { font-size: 18px; line-height: 1.7; color: #a6a3b9; margin: 0 auto; max-width: 600px; }
 .tl-flow { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; margin: 28px 0 0; padding: 0; list-style: none; }
 .tl-flow a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; border: 1px solid #ffffff1a; border-radius: 999px; font-size: 14px; color: #d9d2ea; background: #ffffff05; }
