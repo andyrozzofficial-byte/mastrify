@@ -347,6 +347,21 @@ export type PeriodTraffic = {
   dailyTraffic: { date: string; visitors: number; sessions: number; pageViews: number }[]
 }
 
+/** Installer download clicks from /tools (admin_site_downloads). Anonymous counts only. */
+export type AdminDownloadStats = {
+  /** Fixed windows, independent of the selected period. */
+  totals: { allTime: number; last7d: number; last30d: number }
+  /** Downloads in the selected period. */
+  total: number
+  byOs: { label: string; count: number }[]
+  byProduct: { label: string; count: number }[]
+  byProductOs: { label: string; count: number }[]
+  /** Clicks on the Reference / Meter / Inspect links. The installer is the same, so this is interest, not installs. */
+  interest: { label: string; count: number }[]
+  interestTotal: number
+  timeSeries: { date: string; downloads: number }[]
+}
+
 export type AdminBusinessAnalytics = {
   period: string
   periodLabel: string
@@ -367,4 +382,6 @@ export type AdminBusinessAnalytics = {
   funnelComparable: boolean
   funnelNote: string | null
   genreDistribution: { label: string; count: number }[]
+  /** Null when the admin_site_downloads table is missing. */
+  downloads: AdminDownloadStats | null
 }

@@ -165,6 +165,7 @@ export default function AdminAnalyticsPage() {
   const funnel = synced ? data.funnel : []
   const funnelComparable = synced ? data.funnelComparable : true
   const funnelNote = synced ? data.funnelNote : null
+  const downloads = synced ? (data.downloads ?? null) : null
 
   return (
     <div>
@@ -430,6 +431,60 @@ export default function AdminAnalyticsPage() {
         </p>
       ) : (
         <p className="text-sm text-white/45">Refreshing traffic metrics…</p>
+      )}
+
+      <h2 className="mb-4 mt-10 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/70">
+        Downloads — {periodLabel}
+      </h2>
+
+      {synced && downloads ? (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <KpiCard label={`Downloads · ${periodLabel}`} value={String(downloads.total)} accent="emerald" />
+            <KpiCard label="Last 7 days" value={String(downloads.totals.last7d)} accent="emerald" />
+            <KpiCard label="Last 30 days" value={String(downloads.totals.last30d)} accent="emerald" />
+            <KpiCard label="All time" value={String(downloads.totals.allTime)} accent="emerald" />
+          </div>
+
+          <AdminWhenVisible>
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <BarChartCard title="Operating system" items={downloads.byOs} />
+              <BarChartCard title="Product" items={downloads.byProduct} />
+            </div>
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <SparklineChart
+                title="Downloads over time"
+                points={downloads.timeSeries}
+                dataKey="downloads"
+                color="bg-emerald-500/75"
+                emptyLabel="No downloads in this period yet"
+              />
+              <BarChartCard title="Product and operating system" items={downloads.byProductOs} />
+            </div>
+          </AdminWhenVisible>
+
+          <h2 className="mb-2 mt-10 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/70">
+            Audio Tools interest — {periodLabel}
+          </h2>
+          <p className="mb-4 max-w-3xl text-[12px] leading-relaxed text-white/45">
+            Clicks on the Reference, Meter and Inspect download links on /tools. All three use the same Audio Tools
+            installer, so these clicks are already counted as Audio Tools downloads above. They show interest, not
+            which plugin was installed.
+          </p>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <BarChartCard title="Plugin link clicks" items={downloads.interest} />
+            <div>
+              <KpiCard label="Plugin link clicks" value={String(downloads.interestTotal)} accent="violet" />
+            </div>
+          </div>
+        </>
+      ) : synced ? (
+        <p className="text-sm text-white/50">
+          No download data yet. Downloads appear once the admin_site_downloads migration is applied and visitors
+          download from /tools.
+        </p>
+      ) : (
+        <p className="text-sm text-white/45">Refreshing download metrics…</p>
       )}
     </div>
   )

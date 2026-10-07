@@ -219,4 +219,25 @@ html.is-mobile .tl-mobile { display: block; }
   });
 })();
 </script>
+<script>
+/* Anonymous download count for Admin Analytics: product, OS and, for the Reference/Meter/Inspect links, which plugin.
+   Sent in the background with sendBeacon; the link itself is never stopped or delayed. */
+(function () {
+  document.addEventListener('click', function (e) {
+    try {
+      var a = e.target && e.target.closest ? e.target.closest('a[href^="/downloads/"]') : null;
+      if (!a) return;
+      var href = a.getAttribute('href') || '';
+      var product = href.indexOf('/downloads/audio-tools/') === 0 ? 'audio_tools' : href.indexOf('/downloads/desktop/') === 0 ? 'desktop' : '';
+      var os = /macOS\.(dmg|pkg)$/i.test(href) ? 'mac' : /Windows\.exe$/i.test(href) ? 'windows' : '';
+      if (!product || !os) return;
+      var card = product === 'audio_tools' ? a.closest('.tl-product') : null;
+      var plugin = card && /^(reference|meter|inspect)$/.test(card.id) ? card.id : null;
+      var body = JSON.stringify({ product: product, os: os, plugin: plugin });
+      if (navigator.sendBeacon && navigator.sendBeacon('/api/track/download', new Blob([body], { type: 'application/json' }))) return;
+      fetch('/api/track/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function () {});
+    } catch (_) {}
+  });
+})();
+</script>
 </body></html>

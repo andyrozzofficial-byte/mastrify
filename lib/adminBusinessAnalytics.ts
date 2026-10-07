@@ -13,10 +13,12 @@ import {
   MASTERED_EXPORTS_TABLE,
   MASTER_JOBS_TABLE,
   PIPELINE_EVENTS_TABLE,
+  SITE_DOWNLOADS_TABLE,
   SITE_PAGE_VIEWS_TABLE,
 } from "./adminData"
 import type {
   AdminBusinessAnalytics,
+  AdminDownloadStats,
   MasteringAnalytics,
   PeriodMetrics,
   PeriodTraffic,
@@ -642,6 +644,94 @@ async function fetchGenreDistribution(
   return topCounts(genres.map((label) => ({ label, count: 1 })))
 }
 
+type DownloadRow = {
+  created_at: string
+  product: string
+  os: string
+  plugin: string | null
+}
+
+const DOWNLOAD_PRODUCT_LABELS: [string, string][] = [
+  ["audio_tools", "Audio Tools"],
+  ["desktop", "Desktop"],
+]
+const DOWNLOAD_OS_LABELS: [string, string][] = [
+  ["mac", "macOS"],
+  ["windows", "Windows"],
+]
+const DOWNLOAD_PLUGIN_LABELS: [string, string][] = [
+  ["reference", "Reference"],
+  ["meter", "Meter"],
+  ["inspect", "Inspect"],
+]
+
+/** All download rows (null when the table is missing, so the section can say so). */
+/** Never throws: a problem here must not take down the rest of Analytics. */
+async function fetchAllDownloads(supabase: SupabaseClient): Promise<DownloadRow[] | null> {
+  try {
+    const probe = await supabase.from(SITE_DOWNLOADS_TABLE).select("id").limit(1)
+    if (probe.error) {
+      if (!isMissingTable(probe.error.message)) console.error("[admin-business-analytics] downloads", probe.error.message)
+      return null
+    }
+    return await paginateRows<DownloadRow>(supabase, SITE_DOWNLOADS_TABLE, "created_at, product, os, plugin", null, null)
+  } catch (err) {
+    console.error("[admin-business-analytics] downloads", err instanceof Error ? err.message : err)
+    return null
+  }
+}
+
+function inRange(iso: string, start: string | null, end: string | null): boolean {
+  const t = new Date(iso).getTime()
+  if (start && t < new Date(start).getTime()) return false
+  if (end && t > new Date(end).getTime()) return false
+  return true
+}
+
+function buildDownloadStats(
+  rows: DownloadRow[],
+  range: PeriodRange,
+  granularity: TimeSeriesGranularity,
+): AdminDownloadStats {
+  const since7 = resolvePeriodRange("7d").start
+  const since30 = resolvePeriodRange("30d").start
+  const inPeriod = rows.filter((r) => inRange(r.created_at, range.start, range.end))
+  const count = (pred: (r: DownloadRow) => boolean) => inPeriod.filter(pred).length
+
+  const seriesMap = new Map<string, number>()
+  for (const row of inPeriod) incrementBucket(seriesMap, bucketKey(row.created_at, granularity))
+
+  return {
+    totals: {
+      allTime: rows.length,
+      last7d: rows.filter((r) => inRange(r.created_at, since7, null)).length,
+      last30d: rows.filter((r) => inRange(r.created_at, since30, null)).length,
+    },
+    total: inPeriod.length,
+    byOs: DOWNLOAD_OS_LABELS.map(([os, label]) => ({ label, count: count((r) => r.os === os) })),
+    byProduct: DOWNLOAD_PRODUCT_LABELS.map(([product, label]) => ({
+      label,
+      count: count((r) => r.product === product),
+    })),
+    byProductOs: DOWNLOAD_PRODUCT_LABELS.flatMap(([product, pLabel]) =>
+      DOWNLOAD_OS_LABELS.map(([os, oLabel]) => ({
+        label: `${pLabel} · ${oLabel}`,
+        count: count((r) => r.product === product && r.os === os),
+      })),
+    ),
+    interest: DOWNLOAD_PLUGIN_LABELS.flatMap(([plugin, pLabel]) =>
+      DOWNLOAD_OS_LABELS.map(([os, oLabel]) => ({
+        label: `${pLabel} · ${oLabel}`,
+        count: count((r) => r.plugin === plugin && r.os === os),
+      })),
+    ),
+    interestTotal: count((r) => r.plugin != null),
+    timeSeries: [...seriesMap.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([date, downloads]) => ({ date, downloads })),
+  }
+}
+
 export async function fetchAdminBusinessAnalytics(
   periodInput?: AnalyticsPeriod | string | null,
 ): Promise<AdminBusinessAnalytics | { error: string }> {
@@ -655,7 +745,7 @@ export async function fetchAdminBusinessAnalytics(
   const exportCtx = await loadExportClassificationContext()
 
   try {
-    const [primary, comparison, revenueSummary, uploadEventsWithTime, genreDistribution] =
+    const [primary, comparison, revenueSummary, uploadEventsWithTime, genreDistribution, downloadRows] =
       await Promise.all([
         loadRangeBundle(supabase, exportCtx, range.start, range.end),
         range.compareStart && range.compareEnd
@@ -664,6 +754,7 @@ export async function fetchAdminBusinessAnalytics(
         buildRevenueSummary(supabase, exportCtx),
         fetchUploadEventsWithTime(supabase, range.start, range.end),
         fetchGenreDistribution(supabase, range.start, range.end),
+        fetchAllDownloads(supabase),
       ])
 
     const funnelAssessment = assessUploadMasterFunnel({
@@ -747,6 +838,7 @@ export async function fetchAdminBusinessAnalytics(
       funnelComparable: funnelAssessment.comparable,
       funnelNote: funnelAssessment.note,
       genreDistribution,
+      downloads: downloadRows ? buildDownloadStats(downloadRows, range, granularity) : null,
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
