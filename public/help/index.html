@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07070e"><title>Mastrify | Help</title><meta name="description" content="Get Mastrify Desktop up and running on macOS and Windows: Mastrify Master, Mastrify Analysis, plugin setup, supported audio files and support."><link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" type="image/svg+xml" href="/assets/logo.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="canonical" href="https://mastrify.com/help"><meta property="og:type" content="website"><meta property="og:site_name" content="Mastrify"><meta property="og:title" content="Mastrify | Help"><meta property="og:description" content="Get Mastrify Desktop up and running on macOS and Windows: Mastrify Master, Mastrify Analysis, plugin setup, supported audio files and support."><meta property="og:url" content="https://mastrify.com/help"><meta property="og:image" content="https://mastrify.com/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Mastrify, intelligent mastering engine"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Mastrify | Help"><meta name="twitter:description" content="Get Mastrify Desktop up and running on macOS and Windows: Mastrify Master, Mastrify Analysis, plugin setup, supported audio files and support."><meta name="twitter:image" content="https://mastrify.com/og-image.png">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07070e"><title>Mastrify | Help</title><meta name="description" content="Get Mastrify Desktop and Mastrify Audio Tools up and running on macOS and Windows: Mastrify Master, Mastrify Analysis, Mastrify Reference, Mastrify Meter, Mastrify Inspect, plugin setup, supported audio files and support."><link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" type="image/svg+xml" href="/assets/logo.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="canonical" href="https://mastrify.com/help"><meta property="og:type" content="website"><meta property="og:site_name" content="Mastrify"><meta property="og:title" content="Mastrify | Help"><meta property="og:description" content="Get Mastrify Desktop and Mastrify Audio Tools up and running on macOS and Windows: Mastrify Master, Mastrify Analysis, Mastrify Reference, Mastrify Meter, Mastrify Inspect, plugin setup, supported audio files and support."><meta property="og:url" content="https://mastrify.com/help"><meta property="og:image" content="https://mastrify.com/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Mastrify, intelligent mastering engine"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Mastrify | Help"><meta name="twitter:description" content="Get Mastrify Desktop and Mastrify Audio Tools up and running on macOS and Windows: Mastrify Master, Mastrify Analysis, Mastrify Reference, Mastrify Meter, Mastrify Inspect, plugin setup, supported audio files and support."><meta name="twitter:image" content="https://mastrify.com/og-image.png">
 <link rel="stylesheet" href="/mastrify.css">
 <style>
 /* Mastrify Help (mastrify.com/help). A static page outside the locked site build (mastrify-site/dist-v2): it uses the
@@ -32,9 +32,9 @@
 
 .help-fix { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
 .help-fix .help-card { padding: 28px 26px 24px; }
-.help-fix ul { list-style: none; margin: 0; padding: 0; }
-.help-fix li { position: relative; padding: 6px 0 6px 20px; font-size: 14.5px; line-height: 1.55; color: #cfcadf; }
-.help-fix li::before { content: ""; position: absolute; left: 2px; top: 14px; width: 6px; height: 6px; border-radius: 50%; background: #ae8aff; }
+.help-fix ul, .help-list { list-style: none; margin: 0; padding: 0; }
+.help-fix li, .help-list li { position: relative; padding: 6px 0 6px 20px; font-size: 14.5px; line-height: 1.55; color: #cfcadf; }
+.help-fix li::before, .help-list li::before { content: ""; position: absolute; left: 2px; top: 14px; width: 6px; height: 6px; border-radius: 50%; background: #ae8aff; }
 .help-formats { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 0; padding: 0; list-style: none; }
 .help-formats li { padding: 9px 14px 8px; border: 1px solid #b39aea4d; border-radius: 10px; background: #ae8aff0d; font: 600 13px/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 1.5px; color: #e6dcff; }
 .help-formats li::before { display: none; }
@@ -60,8 +60,16 @@
 .help-more h2 { margin: 8px 0 0; }
 .help-more .button { white-space: nowrap; }
 .help-anchor { scroll-margin-top: 24px; }
+/* 03 / Audio Tools: the same cards, steps, lists and platform rows as 01 and 02. */
+.help-tools { display: grid; gap: 18px; margin-top: 18px; }
+.help-text { margin: 0 0 18px; max-width: 760px; font-size: 15.5px; line-height: 1.6; color: #cfcadf; }
+.help-split { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
+.help-split > div > p.eyebrow { margin-bottom: 6px; }
+.help-split .help-plat { margin-top: 0; padding-top: 0; border-top: 0; align-content: start; }
+.help-list li b { color: #f2f0ff; font-weight: 600; }
+.help-formats + .help-label { margin: 14px 0 0; }
 
-@media (max-width: 980px) { .help-apps, .help-fix, .help-end { grid-template-columns: 1fr; } }
+@media (max-width: 980px) { .help-apps, .help-fix, .help-end, .help-split { grid-template-columns: 1fr; } }
 @media (max-width: 760px) {
   .help-head { padding: 32px 16px 24px; }
   .help-head .eyebrow { font-size: 10px; letter-spacing: 1.65px; margin: 10px 0; }
@@ -69,7 +77,9 @@
   .help-head p.help-intro { font-size: 16px; }
   .help { padding: 0 16px 60px; }
   .help-apps, .help-fix, .help-end { grid-template-columns: 1fr; gap: 14px; }
-  .help-fix, .help-end { margin-top: 14px; }
+  .help-fix, .help-end, .help-tools { margin-top: 14px; }
+  .help-tools { gap: 14px; }
+  .help-split { gap: 22px; }
   .help-os, .help-fix .help-os { grid-template-columns: 1fr; gap: 6px; }
   .help-card { padding: 26px 20px 22px; border-radius: 17px; }
   .help-card h2 { font-size: 25px; }
@@ -82,10 +92,10 @@
 
 <main id="main">
   <section class="help-head">
-    <p class="eyebrow">Mastrify Desktop · macOS · Windows</p>
+    <p class="eyebrow">Mastrify Desktop · Audio Tools · macOS · Windows</p>
     <h1>Mastrify <span>Help</span>
 </h1>
-    <p class="help-intro">Everything you need to get Mastrify Desktop up and running.</p>
+    <p class="help-intro">Everything you need to get Mastrify Desktop and Mastrify Audio Tools up and running.</p>
     <ul class="help-jump" aria-label="On this page">
       <li>
 <a href="#master">Mastrify Master</a>
@@ -94,10 +104,19 @@
 <a href="#analysis">Mastrify Analysis</a>
 </li>
       <li>
+<a href="#reference">Mastrify Reference</a>
+</li>
+      <li>
+<a href="#meter">Mastrify Meter</a>
+</li>
+      <li>
+<a href="#inspect">Mastrify Inspect</a>
+</li>
+      <li>
 <a href="#plugin">Plugin missing</a>
 </li>
       <li>
-<a href="#start">Master won't start</a>
+<a href="#start">App won't start</a>
 </li>
       <li>
 <a href="#formats">Audio files</a>
@@ -182,10 +201,224 @@
       </article>
     </section>
 
+    <section class="help-tools" aria-label="Mastrify Audio Tools">
+      <article class="help-card help-anchor" id="tools">
+        <span class="help-mark" aria-hidden="true">
+<img src="/assets/logo.svg" alt="">
+</span>
+        <p class="eyebrow">03 / Audio Tools</p>
+        <h2>Mastrify Audio Tools</h2>
+        <p class="help-text">One installer for three tools: Mastrify Reference and Mastrify Meter are plugins for your DAW, Mastrify Inspect is an app. You choose which ones to install, and it installs alongside Mastrify Desktop.</p>
+        <div class="help-split">
+          <div>
+            <p class="eyebrow">Installation</p>
+            <ol class="help-steps">
+              <li>Quit your DAW.</li>
+              <li>Open the Mastrify Audio Tools installer for your computer.</li>
+              <li>Choose Mastrify Reference, Mastrify Meter, Mastrify Inspect or all three.</li>
+              <li>Finish the installation. On a Mac, enter your administrator password when asked.</li>
+              <li>Open your DAW. Reference and Meter are listed with your other plugins.</li>
+            </ol>
+            <p class="help-label">To update, run a newer installer. The tools you choose are replaced, the others and your settings stay as they are.</p>
+          </div>
+          <div class="help-plat">
+            <p class="eyebrow">What gets installed</p>
+            <div class="help-os">
+<span class="help-tag">macOS</span>
+<div>
+<p>
+<b>Reference and Meter:</b> AU and VST3.</p>
+<p class="help-code">/Library/Audio/Plug-Ins/Components</p>
+<p class="help-code">/Library/Audio/Plug-Ins/VST3</p>
+<p>
+<b>Inspect:</b> app in <b>Applications › Mastrify</b>.</p>
+<p>macOS 12 or later.</p>
+</div>
+</div>
+            <div class="help-os">
+<span class="help-tag win">Windows</span>
+<div>
+<p>
+<b>Reference and Meter:</b> VST3.</p>
+<p class="help-code">C:\Program Files\Common Files\VST3</p>
+<p>
+<b>Inspect:</b> app in <b>Start › Mastrify › Mastrify Inspect</b>.</p>
+<p class="help-code">C:\Program Files\Mastrify\Mastrify Inspect</p>
+<p>Windows 10 or later (64-bit).</p>
+</div>
+</div>
+          </div>
+        </div>
+      </article>
+
+      <div class="help-apps">
+        <article class="help-card help-anchor" id="reference">
+        <span class="help-mark" aria-hidden="true">
+<img src="/assets/logo.svg" alt="">
+</span>
+          <p class="eyebrow">03 / Reference</p>
+          <h2>Mastrify Reference</h2>
+          <p class="help-text">Compare your mix with a reference track inside your DAW, at the same loudness.</p>
+          <ol class="help-steps">
+            <li>Add Mastrify Reference last on your master bus.</li>
+            <li>Click Load audio file and choose a reference track (WAV, AIFF, MP3 or FLAC).</li>
+            <li>Press Play in your DAW. The reference plays in sync with your session.</li>
+            <li>Turn on Level match.</li>
+            <li>Switch between A (your mix) and B (the reference).</li>
+            <li>Use what you hear and see to bring your mix closer before mastering.</li>
+          </ol>
+          <div class="help-plat">
+            <p class="eyebrow">In the plugin</p>
+            <ul class="help-list">
+              <li><b>A/B comparison:</b> A is your mix, live from the DAW. B is the reference. Switch with the space bar, the A and B buttons or the button in the middle of the globe.</li>
+              <li><b>Level match:</b> plays both at the same loudness (LUFS), so you compare the sound, not the volume.</li>
+              <li><b>Reference gain:</b> a manual trim for the reference. With Level match on, it is added on top of the matched level.</li>
+              <li><b>Spectrum:</b> View › Spectrum, Waveform or Both. Compare shows low end, midrange, high end and stereo width of your mix against the reference.</li>
+              <li><b>LUFS:</b> the A and B buttons show the integrated loudness of each. Your mix is measured while the DAW plays. Reset it under Settings (the gear).</li>
+              <li><b>Stereo, Mono, Dim:</b> Mode › Stereo, Mono (left and right summed) or Dim (12 dB quieter).</li>
+            </ul>
+          </div>
+        <div class="help-plat">
+          <p class="eyebrow">Where to find it</p>
+          <div class="help-os">
+<span class="help-tag">macOS</span>
+<div>
+<p>
+<b>AU:</b> Logic Pro, GarageBand and other Audio Unit hosts.</p>
+<p>
+<b>VST3:</b> Ableton Live, Cubase, Studio One, Bitwig, Reaper and other VST3 hosts.</p>
+<p>In Logic: <b>Audio Units › Mastrify › Mastrify Reference</b>.</p>
+</div>
+</div>
+          <div class="help-os">
+<span class="help-tag win">Windows</span>
+<div>
+<p>
+<b>VST3:</b> Ableton Live, Cubase, Studio One, Bitwig, Reaper and other VST3 hosts.</p>
+<p>In your DAW's plugin browser, look in the VST3 effects for <b>Mastrify Reference</b> by Mastrify.</p>
+<p class="help-code">C:\Program Files\Common Files\VST3</p>
+</div>
+</div>
+        </div>
+        </article>
+
+        <article class="help-card help-anchor" id="meter">
+        <span class="help-mark" aria-hidden="true">
+<img src="/assets/logo.svg" alt="">
+</span>
+          <p class="eyebrow">03 / Meter</p>
+          <h2>Mastrify Meter</h2>
+          <p class="help-text">Real-time metering for mixing and mastering. Meter never changes your audio.</p>
+          <ol class="help-steps">
+            <li>Add Mastrify Meter last on your master bus (Stereo Out in Logic).</li>
+            <li>Choose your loudness target.</li>
+            <li>Play the song from the start.</li>
+            <li>Read LUFS-I, True Peak and LRA, and follow the loudness history against your target.</li>
+            <li>Press R, or click a loudness value, to start a new measurement.</li>
+          </ol>
+          <div class="help-plat">
+            <p class="eyebrow">In the plugin</p>
+            <ul class="help-list">
+              <li><b>LUFS-I, S and M:</b> integrated loudness of what has played (EBU R128), short-term (3 s) and momentary (400 ms).</li>
+              <li><b>True Peak:</b> the highest peak in dBTP per channel, including peaks between samples.</li>
+              <li><b>Stereo Image:</b> where your mix sits between left and right. Width 0 is mono, 1 is fully wide.</li>
+              <li><b>Correlation:</b> +1 is mono, 0 is very wide, below 0 means parts cancel when played in mono.</li>
+              <li><b>Dynamics (LRA):</b> loudness range in LU, how much the loudness varies over the song.</li>
+              <li><b>Loudness History:</b> short-term loudness over time against your target.</li>
+              <li><b>Streaming targets:</b> Streaming −14, Apple Music −16 and Broadcast −23 LUFS, plus YouTube, Spotify Loud, Podcast and ATSC A/85 in the menu.</li>
+              <li><b>Spectrum, EQ Curve, RMS, Waterfall:</b> four views, keys 1 to 4. Spectrum has Hold and Average, EQ Curve shows the tonal balance, Waterfall shows the spectrum over time.</li>
+            </ul>
+          </div>
+        <div class="help-plat">
+          <p class="eyebrow">Where to find it</p>
+          <div class="help-os">
+<span class="help-tag">macOS</span>
+<div>
+<p>
+<b>AU:</b> Logic Pro, GarageBand and other Audio Unit hosts.</p>
+<p>
+<b>VST3:</b> Ableton Live, Cubase, Studio One, Bitwig, Reaper and other VST3 hosts.</p>
+<p>In Logic: <b>Audio Units › Mastrify › Mastrify Meter</b>.</p>
+</div>
+</div>
+          <div class="help-os">
+<span class="help-tag win">Windows</span>
+<div>
+<p>
+<b>VST3:</b> Ableton Live, Cubase, Studio One, Bitwig, Reaper and other VST3 hosts.</p>
+<p>In your DAW's plugin browser, look in the VST3 effects for <b>Mastrify Meter</b> by Mastrify.</p>
+<p class="help-code">C:\Program Files\Common Files\VST3</p>
+</div>
+</div>
+        </div>
+        </article>
+      </div>
+
+      <div class="help-apps">
+        <article class="help-card help-anchor" id="inspect">
+        <span class="help-mark" aria-hidden="true">
+<img src="/assets/logo.svg" alt="">
+</span>
+          <p class="eyebrow">03 / Inspect</p>
+          <h2>Mastrify Inspect</h2>
+          <p class="help-text">A release check for a finished track. Everything is analysed on your computer, nothing is uploaded.</p>
+          <ol class="help-steps">
+            <li>Open Mastrify Inspect.</li>
+            <li>Drag in a WAV, AIFF, MP3, FLAC or M4A file, or click Add audio files.</li>
+            <li>Wait for the analysis.</li>
+            <li>Read the Release Score and the cards.</li>
+            <li>Press Play and switch between Original and Checked.</li>
+            <li>Fix what needs fixing, then analyze again or master the track with Mastrify.</li>
+          </ol>
+          <div class="help-plat">
+            <p class="eyebrow">Where to find it</p>
+            <div class="help-os">
+<span class="help-tag">macOS</span>
+<div>
+<p>Mastrify Inspect is installed in <b>Applications › Mastrify</b>.</p>
+</div>
+</div>
+            <div class="help-os">
+<span class="help-tag win">Windows</span>
+<div>
+<p>Open it from <b>Start › Mastrify › Mastrify Inspect</b>.</p>
+<p class="help-code">C:\Program Files\Mastrify\Mastrify Inspect</p>
+</div>
+</div>
+          </div>
+        </article>
+
+        <article class="help-card help-anchor" id="inspect-report">
+        <span class="help-mark" aria-hidden="true">
+<img src="/assets/logo.svg" alt="">
+</span>
+          <p class="eyebrow">03 / Inspect</p>
+          <h2>Reading the report</h2>
+          <ul class="help-list">
+            <li><b>Release Score:</b> 0 to 100, a weighted average of the six cards below.</li>
+            <li><b>Loudness:</b> integrated loudness (LUFS, EBU R128) of the whole track. Streaming services turn louder tracks down, so being far above the target only costs dynamics.</li>
+            <li><b>True Peak:</b> the highest peak, including peaks between samples. At or below −1 dBTP leaves room for MP3 and AAC encoding. Clipped samples are flagged.</li>
+            <li><b>Dynamics:</b> peak to loudness ratio (true peak minus LUFS). Around 8 to 14 dB keeps punch and clarity, much lower means heavy limiting.</li>
+            <li><b>Low End:</b> how much of the energy sits below 150 Hz (kick, bass, sub), compared with balanced releases.</li>
+            <li><b>Stereo Image:</b> width, left/right correlation and how much level is lost in mono.</li>
+            <li><b>Spectral Balance:</b> the overall slope of the spectrum and any region that stands out.</li>
+          </ul>
+          <div class="help-plat">
+            <p class="eyebrow">Listening and targets</p>
+            <ul class="help-list">
+              <li><b>Original and Checked:</b> Original is your file as it is. Checked plays it at the level a streaming service would, never above −1 dBTP. Keys A and B.</li>
+              <li><b>Streaming, Apple and Broadcast:</b> choose the target under Settings (the gear): Streaming −14, Apple Music −16 or Broadcast −23 LUFS. The loudness verdict and Checked use it.</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section class="help-fix" aria-label="Troubleshooting">
       <article class="help-card help-anchor" id="plugin">
         <p class="eyebrow">Troubleshooting</p>
-        <h3>If Mastrify Analysis doesn't appear</h3>
+        <h3>If a Mastrify plugin doesn't appear</h3>
+        <p class="help-label">Mastrify Analysis, Mastrify Reference or Mastrify Meter.</p>
         <ul>
           <li>Restart your DAW.</li>
           <li>Open the DAW's plugin manager.</li>
@@ -196,7 +429,7 @@
 <span class="help-tag">macOS</span>
 <div>
 <ul>
-<li>In Logic, check Audio Units › Mastrify › Mastrify Analysis.</li>
+<li>In Logic, check Audio Units › Mastrify.</li>
 </ul>
 </div>
 </div>
@@ -209,12 +442,20 @@
 </ul>
 </div>
 </div>
+          <div class="help-os">
+<span class="help-tag both">Both</span>
+<div>
+<ul>
+<li>Reference and Meter come with Mastrify Audio Tools. Run its installer again and choose them.</li>
+</ul>
+</div>
+</div>
         </div>
       </article>
 
       <article class="help-card help-anchor" id="start">
         <p class="eyebrow">Troubleshooting</p>
-        <h3>If Mastrify Master doesn't start</h3>
+        <h3>If Mastrify Master or Mastrify Inspect doesn't start</h3>
         <div class="help-plat">
           <div class="help-os">
 <span class="help-tag">macOS</span>
@@ -236,8 +477,8 @@
 <span class="help-tag both">Both</span>
 <div>
 <ul>
-<li>Make sure you have an internet connection.</li>
-<li>Quit and reopen Mastrify Master.</li>
+<li>Mastrify Master needs an internet connection.</li>
+<li>Quit and reopen the app.</li>
 </ul>
 </div>
 </div>
@@ -255,6 +496,7 @@
           <li>FLAC</li>
           <li>MP3</li>
         </ul>
+        <p class="help-label">Mastrify Inspect also opens M4A.</p>
       </article>
 
       <section class="help-card help-more help-anchor" id="support" aria-label="Support">
