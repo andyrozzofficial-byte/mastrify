@@ -40,6 +40,8 @@
 
 .tl-products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 28px 0 0; }
 .tl-product { border: 1px solid #ffffff14; border-radius: 16px; padding: 22px 22px 18px; background: #ffffff04; display: flex; flex-direction: column; }
+.tl-shot { margin: 0 0 16px; max-width: 340px; border-radius: 10px; overflow: hidden; border: 1px solid #ffffff1a; background: #0c0b12; aspect-ratio: 3 / 2; }
+.tl-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .tl-product h3 { margin: 0 0 4px; font-size: 13px; font: 600 12px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 2.4px; color: #d9c8ff; text-transform: uppercase; }
 .tl-product .tl-name { margin: 0 0 10px; font-size: 18px; font-weight: 600; letter-spacing: -.3px; color: #f2f0ff; }
 .tl-product .tl-say { margin: 0 0 14px; font-size: 15px; line-height: 1.55; color: #cfcadf; }
@@ -115,6 +117,7 @@ html.is-mobile .tl-mobile { display: block; }
 
       <div class="tl-products">
         <article class="tl-product" id="reference">
+          <figure class="tl-shot"><img src="/tools/img/reference.jpg" width="720" height="480" alt="Mastrify Reference plugin: your mix and a reference track side by side" loading="lazy" decoding="async"></figure>
           <h3>Reference</h3>
           <p class="tl-name">Mastrify Reference</p>
           <p class="tl-say">Reference comparison directly in your DAW.</p>
@@ -122,6 +125,7 @@ html.is-mobile .tl-mobile { display: block; }
           <p class="tl-mini">Download: <a href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-macOS.dmg" download>Mac</a><a href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-Windows.exe" download>Windows</a></p>
         </article>
         <article class="tl-product" id="meter">
+          <figure class="tl-shot"><img src="/tools/img/meter.jpg" width="720" height="480" alt="Mastrify Meter plugin: loudness, spectrum, stereo image and dynamics" loading="lazy" decoding="async"></figure>
           <h3>Meter</h3>
           <p class="tl-name">Mastrify Meter</p>
           <p class="tl-say">Live loudness, spectrum, stereo and dynamics.</p>
@@ -129,6 +133,7 @@ html.is-mobile .tl-mobile { display: block; }
           <p class="tl-mini">Download: <a href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-macOS.dmg" download>Mac</a><a href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-Windows.exe" download>Windows</a></p>
         </article>
         <article class="tl-product" id="inspect">
+          <figure class="tl-shot"><img src="/tools/img/inspect.jpg" width="720" height="480" alt="Mastrify Inspect app: release score and analysis of a track" loading="lazy" decoding="async"></figure>
           <h3>Inspect</h3>
           <p class="tl-name">Mastrify Inspect</p>
           <p class="tl-say">Understand your track before release.</p>
