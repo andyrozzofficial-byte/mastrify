@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07070e"><title>Mastrify | Tools</title><meta name="description" content="Mastrify Audio Tools (Reference, Meter, Inspect), Mastrify Desktop and Mastrify Analysis for macOS and Windows. Analyze, refine, then master."><link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" type="image/svg+xml" href="/assets/logo.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="canonical" href="https://mastrify.com/tools"><meta property="og:type" content="website"><meta property="og:site_name" content="Mastrify"><meta property="og:title" content="Mastrify | Tools"><meta property="og:description" content="Mastrify Audio Tools, Mastrify Desktop and Mastrify Analysis for macOS and Windows."><meta property="og:url" content="https://mastrify.com/tools"><meta property="og:image" content="https://mastrify.com/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Mastrify, intelligent mastering engine"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Mastrify | Tools"><meta name="twitter:description" content="Mastrify Audio Tools, Mastrify Desktop and Mastrify Analysis for macOS and Windows."><meta name="twitter:image" content="https://mastrify.com/og-image.png">
+<link rel="stylesheet" href="/mastrify.css">
+<style>
+/* Mastrify Tools (mastrify.com/tools). A static page outside the locked site build (mastrify-site/dist-v2), like /help:
+   the shared stylesheet gives the header, footer, colours and type; this adds only the product sections.
+   Installers are static files in public/downloads/<product>/<version>/. */
+.tl-head { max-width: 1000px; margin: 0 auto; padding: 44px 30px 30px; text-align: center; }
+.tl-head .eyebrow, .tl .eyebrow { font: 500 12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 2px; color: #ada7c2; text-transform: uppercase; margin: 12px 0; }
+.tl-head h1 { font-size: clamp(44px, 5vw, 72px); line-height: 1.04; letter-spacing: -3px; font-weight: 590; margin: 14px 0 18px; }
+.tl-head h1 span, .tl-card h2 span { background: linear-gradient(100deg, #c3a2ff 5%, #85bfff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tl-intro { font-size: 18px; line-height: 1.7; color: #a6a3b9; margin: 0 auto; max-width: 600px; }
+.tl-flow { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; margin: 28px 0 0; padding: 0; list-style: none; }
+.tl-flow a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; border: 1px solid #ffffff1a; border-radius: 999px; font-size: 14px; color: #d9d2ea; background: #ffffff05; }
+.tl-flow a:hover { border-color: #b39aea66; color: #fff; }
+.tl-flow a.is-main { border-color: #bc96ed80; background: #ae8aff14; color: #f2ecff; }
+.tl-flow i { font: 500 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace; color: #9a8ab5; font-style: normal; }
+.tl-flow .tl-arrow { color: #6f6b84; font-size: 14px; }
+
+.tl { max-width: 1060px; margin: 0 auto; padding: 0 30px 90px; display: grid; gap: 18px; }
+.tl-card { position: relative; border: 1px solid #ffffff1a; border-radius: 20px; padding: 36px 36px 32px; scroll-margin-top: 24px;
+  background: radial-gradient(120% 170% at 10% 0%, #6d51b012, transparent 62%), radial-gradient(95% 150% at 94% 100%, #5b7fc70c, transparent 58%), linear-gradient(140deg, #0c0b12, #08070e); }
+.tl-card.is-feature { border-color: #b39aea40; }
+.tl .tl-card > .eyebrow { margin: 0; font-size: 10px; letter-spacing: 2.2px; color: #9a8ab5; }
+.tl-card h2 { font-size: clamp(30px, 3.4vw, 42px); line-height: 1.08; letter-spacing: -1.4px; font-weight: 600; margin: 10px 0 6px; }
+.tl-sub { margin: 0 0 14px; font: 500 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 1.5px; color: #c6b1ed; text-transform: uppercase; }
+.tl-lead { margin: 0 0 6px; font-size: 21px; line-height: 1.4; letter-spacing: -.3px; color: #f2f0ff; }
+.tl-text { margin: 0 0 22px; max-width: 720px; font-size: 15.5px; line-height: 1.65; color: #b9b4cb; }
+.tl-mark { display: inline-grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; margin-bottom: 18px; background: radial-gradient(circle, #151327 42%, #090a12 70%); border: 1px solid #ab8ae865; }
+.tl-mark img { width: 28px; height: auto; }
+
+.tl-dls { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; }
+.tl-dl.button { display: inline-flex; align-items: center; gap: 12px; padding: 13px 20px; border-radius: 12px; text-align: left; }
+.tl-dl svg { width: 20px; height: 20px; fill: currentColor; flex: none; }
+.tl-dl small { display: block; margin-top: 2px; font: 500 10.5px/1.3 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .6px; opacity: .78; }
+.tl-meta { margin: 0; font: 500 11px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 1px; color: #807b92; text-transform: uppercase; }
+
+.tl-products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 28px 0 0; }
+.tl-product { border: 1px solid #ffffff14; border-radius: 16px; padding: 22px 22px 18px; background: #ffffff04; display: flex; flex-direction: column; }
+.tl-product h3 { margin: 0 0 4px; font-size: 13px; font: 600 12px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 2.4px; color: #d9c8ff; text-transform: uppercase; }
+.tl-product .tl-name { margin: 0 0 10px; font-size: 18px; font-weight: 600; letter-spacing: -.3px; color: #f2f0ff; }
+.tl-product .tl-say { margin: 0 0 14px; font-size: 15px; line-height: 1.55; color: #cfcadf; }
+.tl-formats { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
+.tl-formats li { padding: 5px 9px 4px; border-radius: 999px; font: 600 10px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 1.2px; text-transform: uppercase; border: 1px solid #b39aea55; color: #d9c8ff; background: #ae8aff12; }
+.tl-formats li.win { border-color: #8dcaff55; color: #cfe8ff; background: #8dcaff12; }
+.tl-mini { margin: auto 0 0; font-size: 13.5px; color: #807b92; }
+.tl-mini a { margin-left: 10px; color: #c6b1ed; }
+.tl-mini a:hover { color: #fff; }
+
+.tl-includes { list-style: none; margin: 0 0 24px; padding: 0; display: grid; gap: 10px; max-width: 760px; }
+.tl-includes li { position: relative; padding: 0 0 0 20px; font-size: 15px; line-height: 1.55; color: #cfcadf; }
+.tl-includes li::before { content: ""; position: absolute; left: 2px; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: #ae8aff; }
+.tl-includes b { color: #f2f0ff; font-weight: 600; }
+.tl-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 6px 0 0; }
+.tl-two > div { border: 1px solid #ffffff14; border-radius: 16px; padding: 22px; background: #ffffff04; }
+.tl-two p { margin: 0 0 14px; font-size: 15px; line-height: 1.55; color: #cfcadf; }
+.tl-two h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; color: #f2f0ff; }
+.tl-next { margin: 22px 0 0; font-size: 15px; color: #a6a3b9; }
+.tl-next a { color: #c6b1ed; font-weight: 550; margin-left: 6px; }
+.tl-next a:hover { color: #fff; }
+.tl-note { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.tl-note p { margin: 0; font-size: 14px; line-height: 1.6; color: #b9b4cb; }
+.tl-note b { color: #f2f0ff; }
+.tl-tag { display: inline-block; margin-bottom: 8px; padding: 5px 9px 4px; border-radius: 999px; font: 600 10px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 1.4px; text-transform: uppercase; border: 1px solid #b39aea55; color: #d9c8ff; background: #ae8aff12; }
+.tl-tag.win { border-color: #8dcaff55; color: #cfe8ff; background: #8dcaff12; }
+.tl-mobile { display: none; margin: 0 0 14px; font-size: 14px; color: #a6a3b9; }
+html.is-mobile .tl-mobile { display: block; }
+
+@media (max-width: 980px) { .tl-products { grid-template-columns: 1fr; } }
+@media (max-width: 760px) {
+  .tl-head { padding: 32px 16px 22px; }
+  .tl-head .eyebrow { font-size: 10px; letter-spacing: 1.65px; margin: 10px 0; }
+  .tl-head h1 { letter-spacing: -1.4px; margin: 12px 0 14px; }
+  .tl-intro { font-size: 16px; }
+  .tl { padding: 0 16px 60px; gap: 14px; }
+  .tl-card { padding: 28px 20px 24px; border-radius: 17px; }
+  .tl-two, .tl-note { grid-template-columns: 1fr; }
+  .tl-dl.button { width: 100%; }
+}
+</style>
+</head>
+<body data-page="tools"><a class="skip" href="#main">Skip to content</a>
+<header class="header"><a class="brand" href="/" aria-label="Mastrify home"><span>Mastrify</span></a><nav aria-label="Main navigation"><a href="/analyze"><span class="nav-label">Analyze</span></a><a href="/master"><span class="nav-label">Master</span></a><a href="/tools" aria-current="page"><span class="nav-label">Tools</span></a><a href="/how-it-works"><span class="nav-label">Why<span class="nav-more"> Mastrify</span></span></a><a href="/pricing"><span class="nav-label">Pricing</span></a></nav><a class="button small header-cta" href="/master"><span class="cta-text">Start<span class="cta-more"> mastering</span></span><span class="cta-arrow">↗</span></a><button class="menu-toggle" id="menu-toggle" aria-label="Open navigation" aria-expanded="false">☰</button></header>
+
+<main id="main">
+  <section class="tl-head">
+    <p class="eyebrow">Mastrify Tools · macOS · Windows</p>
+    <h1>Mastrify <span>Tools</span></h1>
+    <p class="tl-intro">Check your mix, refine it with free tools, then master it. Everything you need around Mastrify mastering.</p>
+    <ol class="tl-flow" aria-label="From mix to master">
+      <li><a href="/analyze"><i>01</i>Analyze</a></li>
+      <li class="tl-arrow" aria-hidden="true">→</li>
+      <li><a href="#audio-tools"><i>02</i>Tools</a></li>
+      <li class="tl-arrow" aria-hidden="true">→</li>
+      <li><a class="is-main" href="/master"><i>03</i>Master</a></li>
+    </ol>
+  </section>
+
+  <div class="tl">
+    <section class="tl-card is-feature" id="audio-tools" aria-labelledby="at-title">
+      <span class="tl-mark" aria-hidden="true"><img src="/assets/logo.svg" alt=""></span>
+      <p class="eyebrow">01 / Audio Tools · Free</p>
+      <h2 id="at-title">Mastrify <span>Audio Tools</span></h2>
+      <p class="tl-sub">Reference · Meter · Inspect</p>
+      <p class="tl-text">One installer for all three tools. Choose the ones you want during installation, and run it again to update.</p>
+      <p class="tl-mobile">Mastrify Tools run on macOS and Windows. Open this page on your computer to install them.</p>
+      <div class="tl-dls">
+        <a class="button tl-dl" data-os="mac" href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-macOS.dmg" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v9H4V6a1 1 0 0 1 1-1zm1 2v6h12V7zM2 16.5h20l-1.2 2.1a1 1 0 0 1-.87.5H4.07a1 1 0 0 1-.87-.5z"/></svg><span>Download for Mac<small>.dmg · 19 MB</small></span></a>
+        <a class="button tl-dl" data-os="win" href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-Windows.exe" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-7v2h3v2H7v-2h3v-2H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm1 2v9h16V6z"/></svg><span>Download for Windows<small>.exe · 6 MB</small></span></a>
+      </div>
+      <p class="tl-meta">Version 1.0.0 · macOS 12 or later · Windows 10 or later (64-bit)</p>
+
+      <div class="tl-products">
+        <article class="tl-product" id="reference">
+          <h3>Reference</h3>
+          <p class="tl-name">Mastrify Reference</p>
+          <p class="tl-say">Reference comparison directly in your DAW.</p>
+          <ul class="tl-formats" aria-label="Formats"><li>Mac AU</li><li>Mac VST3</li><li class="win">Windows VST3</li></ul>
+          <p class="tl-mini">Download: <a href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-macOS.dmg" download>Mac</a><a href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-Windows.exe" download>Windows</a></p>
+        </article>
+        <article class="tl-product" id="meter">
+          <h3>Meter</h3>
+          <p class="tl-name">Mastrify Meter</p>
+          <p class="tl-say">Live loudness, spectrum, stereo and dynamics.</p>
+          <ul class="tl-formats" aria-label="Formats"><li>Mac AU</li><li>Mac VST3</li><li class="win">Windows VST3</li></ul>
+          <p class="tl-mini">Download: <a href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-macOS.dmg" download>Mac</a><a href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-Windows.exe" download>Windows</a></p>
+        </article>
+        <article class="tl-product" id="inspect">
+          <h3>Inspect</h3>
+          <p class="tl-name">Mastrify Inspect</p>
+          <p class="tl-say">Understand your track before release.</p>
+          <ul class="tl-formats" aria-label="Formats"><li>Mac app</li><li class="win">Windows app</li></ul>
+          <p class="tl-mini">Download: <a href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-macOS.dmg" download>Mac</a><a href="/downloads/audio-tools/1.0.0/Mastrify-Audio-Tools-1.0.0-Windows.exe" download>Windows</a></p>
+        </article>
+      </div>
+      <p class="tl-next">Mix sounds right?<a href="/master">Master it with Mastrify ↗</a></p>
+    </section>
+
+    <section class="tl-card" id="desktop" aria-labelledby="dk-title">
+      <span class="tl-mark" aria-hidden="true"><img src="/assets/logo.svg" alt=""></span>
+      <p class="eyebrow">02 / Desktop</p>
+      <h2 id="dk-title">Mastrify <span>Desktop</span></h2>
+      <p class="tl-lead">Your Mastrify studio on desktop.</p>
+      <p class="tl-text">Mastrify mastering as an app, and the Mastrify Analysis plugin for your DAW, in one installer. Free to download; you pay $9 per master when you export.</p>
+      <ul class="tl-includes">
+        <li><b>Mastrify Master:</b> master your track, compare Original and Master, and save the full WAV.</li>
+        <li><b>Mastrify Analysis:</b> the analysis plugin for your DAW. AU and VST3 on Mac, VST3 on Windows.</li>
+      </ul>
+      <div class="tl-dls">
+        <a class="button tl-dl" data-os="mac" href="/downloads/desktop/0.1.0/Mastrify-Installer-macOS.pkg" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v9H4V6a1 1 0 0 1 1-1zm1 2v6h12V7zM2 16.5h20l-1.2 2.1a1 1 0 0 1-.87.5H4.07a1 1 0 0 1-.87-.5z"/></svg><span>Download for Mac<small>.pkg · 22 MB</small></span></a>
+        <a class="button tl-dl" data-os="win" href="/downloads/desktop/0.1.0/Mastrify-Installer-Windows.exe" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-7v2h3v2H7v-2h3v-2H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm1 2v9h16V6z"/></svg><span>Download for Windows<small>.exe · 7 MB</small></span></a>
+      </div>
+      <p class="tl-meta">Version 0.1.0 · macOS 12 or later · Windows 10 or later (64-bit)</p>
+    </section>
+
+    <section class="tl-card" id="analysis" aria-labelledby="an-title">
+      <span class="tl-mark" aria-hidden="true"><img src="/assets/logo.svg" alt=""></span>
+      <p class="eyebrow">03 / Analysis</p>
+      <h2 id="an-title">Mastrify <span>Analysis</span></h2>
+      <p class="tl-lead">Understand your mix with clarity.</p>
+      <div class="tl-two">
+        <div>
+          <h3>In your browser</h3>
+          <p>Upload your mix and see loudness, dynamics, stereo, low end and the main issue to fix.</p>
+          <a class="button primary" href="/analyze">Analyze your mix ↗</a>
+        </div>
+        <div>
+          <h3>In your DAW</h3>
+          <p>The Mastrify Analysis plugin comes with Mastrify Desktop. Put it last on your master bus.</p>
+          <a class="text-link" href="#desktop">Get Mastrify Desktop ↗</a>
+        </div>
+      </div>
+      <p class="tl-next">Then take it all the way.<a href="/master">Start mastering ↗</a></p>
+    </section>
+
+    <section class="tl-card" aria-label="Installing">
+      <p class="eyebrow">Installing</p>
+      <div class="tl-note">
+        <p><span class="tl-tag">macOS</span><br>If macOS stops the installer, open <b>System Settings › Privacy &amp; Security</b> and choose <b>Open Anyway</b>.</p>
+        <p><span class="tl-tag win">Windows</span><br>If Windows shows "Windows protected your PC", choose <b>More info</b> and then <b>Run anyway</b>.</p>
+      </div>
+      <p class="tl-next">Setup and troubleshooting:<a href="/help">mastrify.com/help ↗</a></p>
+    </section>
+  </div>
+</main>
+
+<footer class="footer wrap"><section class="footer-cta" aria-label="Start mastering"><div><p class="eyebrow">READY WHEN YOUR MIX IS</p><h2>Ready to master <span>your track?</span></h2><p class="footer-cta-note">Hear your master against the original first. Pay only when you export.</p></div><div class="footer-cta-actions"><p class="footer-cta-meta">$9 PER MASTER · NO SUBSCRIPTION</p><a class="button primary" href="/master">Start mastering ↗</a><a class="text-link" href="/analyze">Analyze a mix first ↗</a></div></section><div class="footer-grid"><div class="footer-brand"><a class="brand" href="/"><span>Mastrify</span></a><p>Intelligent mastering for music that deserves its full emotional weight, release-ready, without the noise.</p></div><nav class="footer-col" aria-label="Product"><span>PRODUCT</span><a href="/analyze">Analyze</a><a href="/master">Master</a><a href="/tools">Tools</a><a href="/how-it-works">Why Mastrify</a><a href="/pricing">Pricing</a></nav><nav class="footer-col" aria-label="Support"><span>SUPPORT</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav><nav class="footer-col" aria-label="Follow Mastrify"><span>FOLLOW</span><a href="https://www.instagram.com/mastrify.app" target="_blank" rel="noopener">Instagram ↗</a><a href="https://www.tiktok.com/@mastrify.app" target="_blank" rel="noopener">TikTok ↗</a></nav></div><div class="footer-bottom"><span>© 2026 Mastrify</span><span class="footer-sign">MASTRIFY / NEURAL MASTERING ENGINE</span><span>Designed &amp; engineered by <a href="https://lunov.dev" target="_blank" rel="noopener">Lunov</a></span></div></footer>
+<script>
+/* The mobile menu (the rest of the site gets this from its app bundle, which this page does not load). */
+(function () {
+  var header = document.querySelector('.header'), button = document.getElementById('menu-toggle');
+  if (!header || !button) return;
+  button.addEventListener('click', function () {
+    var open = header.classList.toggle('open');
+    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    button.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  });
+})();
+</script>
+<script>
+/* Highlights the download for the visitor's system. Both buttons always work; phones get a short note. */
+(function () {
+  var ua = navigator.userAgent || '', plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+  var mobile = /iPhone|iPad|iPod|Android/i.test(ua) || (/Mac/i.test(plat) && navigator.maxTouchPoints > 1);
+  if (mobile) { document.documentElement.classList.add('is-mobile'); return; }
+  var os = /Win/i.test(plat + ua) ? 'win' : /Mac/i.test(plat + ua) ? 'mac' : '';
+  if (!os) return;
+  document.querySelectorAll('.tl-dls').forEach(function (box) {
+    var mine = box.querySelector('.tl-dl[data-os="' + os + '"]');
+    if (mine) { mine.classList.add('primary'); box.insertBefore(mine, box.firstChild); }
+  });
+})();
+</script>
+</body></html>

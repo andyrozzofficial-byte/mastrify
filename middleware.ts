@@ -126,6 +126,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Mastrify Tools (mastrify.com/tools): a static page in public/tools with the downloads for Mastrify Audio Tools,
+  // Mastrify Desktop and Mastrify Analysis.
+  if (pathname === "/tools" || pathname === "/tools/") {
+    url.pathname = "/tools/index.html"
+    return NextResponse.rewrite(url)
+  }
+  if (pathname.startsWith("/tools/")) {
+    return NextResponse.next()
+  }
+  // The installers: static files in public/downloads/<product>/<version>/.
+  if (pathname.startsWith("/downloads/")) {
+    return NextResponse.next()
+  }
+
   const linusTarget = linusRewriteTarget(pathname)
   if (linusTarget) {
     url.pathname = linusTarget

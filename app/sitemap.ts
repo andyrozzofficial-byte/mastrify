@@ -8,6 +8,8 @@ const PUBLIC_PATHS = [
   "/analyze",
   "/pricing",
   "/how-it-works",
+  "/tools",
+  "/help",
   "/about",
   "/contact",
   "/privacy",
