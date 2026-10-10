@@ -66,6 +66,8 @@ if (!fs.existsSync(DIST)) {
 rmrf(LINUS)
 mkdirp(LINUS)
 copyFile(path.join(DIST, "index.html"), path.join(LINUS, "index.html"))
+// The 404 page, served by middleware.ts with status 404 for unknown addresses.
+copyFile(path.join(DIST, "404.html"), path.join(LINUS, "404.html"))
 
 for (const route of ROUTE_DIRS) {
   const src = path.join(DIST, route, "index.html")

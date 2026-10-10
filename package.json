@@ -8,7 +8,8 @@
     "build": "npm run build --prefix mastrify-site && npm run build:check --prefix mastrify-site && node scripts/sync-dist-v2.mjs && next build",
     "build:check": "npm run build:check --prefix mastrify-site",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:404": "node scripts/check-404.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.3",

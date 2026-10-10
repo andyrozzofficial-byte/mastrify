@@ -170,6 +170,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  url.pathname = "/landing"
-  return NextResponse.redirect(url)
+  // Unknown address: show the designed 404 page (public/linus/404.html, copied from dist-v2 by
+  // scripts/sync-dist-v2.mjs) with a real 404 status. The address in the browser stays the same.
+  url.pathname = "/linus/404.html"
+  url.search = ""
+  return NextResponse.rewrite(url, { status: 404 })
 }
