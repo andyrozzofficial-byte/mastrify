@@ -3,7 +3,6 @@ import { absoluteUrl } from "../lib/seo"
 
 const PUBLIC_PATHS = [
   "/",
-  "/ai-mastering",
   "/master",
   "/analyze",
   "/pricing",
@@ -22,7 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return PUBLIC_PATHS.map((path) => ({
     url: absoluteUrl(path),
     lastModified,
-    changeFrequency: path === "/" || path === "/ai-mastering" ? "weekly" : "monthly",
-    priority: path === "/" ? 1 : path === "/ai-mastering" ? 0.95 : 0.7,
+    changeFrequency: path === "/" ? "weekly" : "monthly",
+    priority: path === "/" ? 1 : 0.7,
   }))
 }

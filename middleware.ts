@@ -91,10 +91,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  if (pathname.startsWith("/ai-mastering")) {
-    return NextResponse.next()
-  }
-
   if (isMasterNextJsRoute(pathname)) {
     return NextResponse.next()
   }

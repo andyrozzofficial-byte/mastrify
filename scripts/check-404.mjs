@@ -38,7 +38,7 @@ const fromSitemap = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new
 const pages = [...new Set([
   ...fromSitemap,
   "/", "/about", "/analyze", "/master", "/pricing", "/how-it-works", "/blog", "/contact", "/privacy", "/terms",
-  "/tools", "/help", "/landing", "/ai-mastering", "/flow", "/robots.txt",
+  "/tools", "/help", "/landing", "/flow", "/robots.txt",
   "/mastrify.css", "/og-image.png", "/tools/img/meter.jpg",
 ])]
 for (const path of pages) {
@@ -66,7 +66,7 @@ for (const [path, to] of Object.entries(redirects)) {
 
 const unknown = [
   "/this-does-not-exist", "/404", "/blog/old-post", "/pricing/extra", "/about/team",
-  "/nope?utm_source=google&gclid=test", "/index.php", "/wp-login.php",
+  "/nope?utm_source=google&gclid=test", "/ai-mastering",
 ]
 for (const path of unknown) {
   const r = await get(path)
@@ -74,8 +74,17 @@ for (const path of unknown) {
   check(ok, `404  ${path}`, `got ${r.status} "${r.title}"${r.location ? " -> " + r.location : ""}`)
 }
 
+// Typical attack probes: Vercel's firewall may block them with 403 before they reach the site.
+// Either answer is fine, as long as there is no redirect and no page.
+const probes = ["/index.php", "/wp-login.php"]
+for (const path of probes) {
+  const r = await get(path)
+  const ok = (r.status === 404 || r.status === 403) && !r.location
+  check(ok, `404/403  ${path}`, `got ${r.status}${r.location ? " -> " + r.location : ""}`)
+}
+
 if (fails.length) {
   console.log(`\n${fails.length} FAILED:\n${fails.join("\n")}`)
   process.exit(1)
 }
-console.log(`\nPASS: ${pages.length + installers.length + 1} addresses 200, ${Object.keys(redirects).length} redirects kept, ${unknown.length} wrong addresses 404`)
+console.log(`\nPASS: ${pages.length + installers.length + 1} addresses 200, ${Object.keys(redirects).length} redirects kept, ${unknown.length} wrong addresses 404, ${probes.length} probes 404/403`)
