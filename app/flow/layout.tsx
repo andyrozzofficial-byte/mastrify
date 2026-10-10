@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   title: {
     absolute: "Mastrify Flow",
   },
-  description: "AI-powered mix & mastering. Release-ready in seconds.",
+  description: "Online mastering for release-ready music. Pay only when you export.",
   alternates: {
     canonical: "/flow",
   },
   openGraph: {
     title: "Mastrify Flow",
-    description: "AI-powered mix & mastering. Release-ready in seconds.",
+    description: "Online mastering for release-ready music. Pay only when you export.",
     url: "https://mastrify.com/flow",
     siteName: "Mastrify",
     images: [
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Mastrify Flow",
-    description: "AI-powered mix & mastering. Release-ready in seconds.",
+    description: "Online mastering for release-ready music. Pay only when you export.",
     images: ["/og-flow.svg"],
   },
 }

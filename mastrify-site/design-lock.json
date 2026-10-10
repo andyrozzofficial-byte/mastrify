@@ -1,9 +1,9 @@
 {
  "note": "Approved design of dist-v2. Written by node build-v2.mjs --lock (design owner only). Checked by npm run build:check.",
- "approved": "2026-10-07",
+ "approved": "2026-10-10",
  "files": {
-  "404.html": "87550602386d024f",
-  "about/index.html": "7cad1a7266157f3d",
+  "404.html": "6ab3c88735986838",
+  "about/index.html": "9cd46a35bb1de1c3",
   "analyze/index.html": "b563981ee31a0df7",
   "apple-touch-icon.png": "4f3a5c510393532f",
   "assets/First-light.wav": "e88346a7b00b2377",
@@ -51,7 +51,7 @@
   "how-it-works/index.html": "df6e749ece676b10",
   "icon-192.png": "6c202d46777fddf0",
   "icon-512.png": "658747498d727715",
-  "index.html": "2a7af3b69c37fe46",
+  "index.html": "aa0ea70c95a8727a",
   "interaction.js": "f9de26b0cc29b190",
   "issue-sketches.js": "9b5048ab27179fea",
   "journey.css": "81f37103feb63d8a",
