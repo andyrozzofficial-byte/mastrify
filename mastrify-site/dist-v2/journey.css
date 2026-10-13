@@ -47,7 +47,6 @@ body[data-step] .upload-source.dragging .upload-button {border-color:#c9b5ff;bac
 #upload-stage .flow-actions {margin:14px auto 0;gap:6px 22px;}
 #upload-stage .flow-actions .button {min-width:240px;}
 #upload-stage .flow-caption {text-align:center;font-size:10px;color:#786d89;margin:10px 0 0;}
-#upload-stage #sample-flow {font-size:12px;}
 .settings-file {display:flex;align-items:center;gap:16px;border-bottom:1px solid #b399dd1a;padding-bottom:10px;margin-bottom:20px;}
 .settings-file .plain-action {font-size:12px;min-height:32px;padding:4px 0;white-space:nowrap;}
 .settings-file>span {font-size:11px;color:#8c7e9e;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;margin-left:auto;}
@@ -948,11 +947,11 @@ body[data-page=analyze] #master-same-track:hover {
 #upload-stage .flow-actions {flex-direction:column;gap:12px;margin:18px auto 0;max-width:420px;}
 #upload-stage .flow-actions .button {width:100%;min-width:0;}
 /* Det andra valet ska läsa som ett val, inte som en andra knapp. */
-#upload-stage .flow-actions #analyze-first,#upload-stage .flow-actions #sample-flow {
+#upload-stage .flow-actions #analyze-first {
   min-height:40px;padding:8px 6px;border:0;border-radius:8px;background:none;box-shadow:none;
   font-size:13.5px;font-weight:500;color:#a394bb;
 }
-#upload-stage .flow-actions #analyze-first:hover,#upload-stage .flow-actions #sample-flow:hover {
+#upload-stage .flow-actions #analyze-first:hover {
   background:none;border:0;color:#f0e6ff;
 }
 #upload-stage .flow-caption {margin:14px 0 0;font-size:11px;}

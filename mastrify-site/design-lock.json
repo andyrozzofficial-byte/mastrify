@@ -1,6 +1,6 @@
 {
  "note": "Approved design of dist-v2. Written by node build-v2.mjs --lock (design owner only). Checked by npm run build:check.",
- "approved": "2026-10-07",
+ "approved": "2026-10-13",
  "files": {
   "404.html": "87550602386d024f",
   "about/index.html": "7cad1a7266157f3d",
@@ -54,8 +54,8 @@
   "index.html": "2a7af3b69c37fe46",
   "interaction.js": "f9de26b0cc29b190",
   "issue-sketches.js": "9b5048ab27179fea",
-  "journey.css": "81f37103feb63d8a",
-  "journey.js": "cc97c050db29bf93",
+  "journey.css": "5be7bda531e927d5",
+  "journey.js": "0a28adde34e8dea3",
   "legal-motion.js": "9010a563e5730f43",
   "legal.css": "4d72ff6b7df5d73d",
   "legal.js": "3dba868cc4544405",
