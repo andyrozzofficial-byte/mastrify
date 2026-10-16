@@ -172,3 +172,13 @@ export async function middleware(request: NextRequest) {
   url.search = ""
   return NextResponse.rewrite(url, { status: 404 })
 }
+
+// Only run the middleware where it can change the response. Every path skipped here
+// already got NextResponse.next() above (static assets, /_next, /api, /linus, /assets,
+// /downloads, sub-pages of /help and /tools, icons and root files such as /bridge.js),
+// so skipping it changes nothing for visitors but avoids a function invocation per file.
+export const config = {
+  matcher: [
+    "/((?!api/|_next|assets/|linus/|downloads/|help/.|tools/.|audio|mastrify|favicon|icon|og-image|og-flow|apple-touch-icon\\.png$|robots\\.txt$|sitemap\\.xml$|[^/]+\\.(?:css|js|png|ico|svg|webp|woff2?)$).*)",
+  ],
+}
